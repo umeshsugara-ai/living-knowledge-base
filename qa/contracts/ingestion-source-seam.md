@@ -15,9 +15,15 @@ readers/fixtures, matching the transport-injection pattern from T-019.
 
 1. **One `Source` interface** (`packages/ingest/src/source.ts`): `detect(input: unknown):
    boolean`, `fetch(input, consent: ConsentContext): Promise<{source: SourceDoc, media: MediaDoc[]}>`,
-   `toTurns(source: SourceDoc): Promise<Turn[]>`. `SourceDoc`/`MediaDoc`/`Turn`/`ConsentContext`
-   types imported from `packages/core/src/generated/*` (T-018's generated types) — no re-declared
-   shapes.
+   `toTurns(source: SourceDoc): Promise<Turn[]>`. `SourceDoc`/`MediaDoc`/`ConsentContext` types are
+   imported from `packages/core/src/generated/*` (T-018's generated types) — no re-declared
+   shapes. `Turn` — the *pre-persistence* shape (`toTurns()`'s return value: text + timing, no
+   `_id`/`tenantId`/`sessionId`) — is re-exported from `packages/ai/src/stt/transcribe.ts`'s
+   `Turn` (T-019), not from `core/generated`: `core/generated/turns.ts`'s `Turns` is the
+   *post-persistence* shape (has `_id`/`tenantId`/`sessionId`), a different concept from what an
+   adapter's `toTurns()` produces before the ingest pipeline assigns those ids. Reusing `@lkb/ai`'s
+   `Turn` avoids a third near-duplicate turn type; `ingest → ai` is an allowed edge per
+   ARCHITECTURE §5. (Amended 2026-09-03, routine — see amendment log.)
 2. **`recording` adapter** (`packages/ingest/src/sources/recording.ts`, ≤300 LOC): `detect`
    matches audio/video file extensions or a `{kind: 'recording'}` hint; `fetch` computes a content
    hash (injectable hasher) and returns a `sources` doc with `captureMode` defaulted from the
@@ -54,3 +60,14 @@ readers/fixtures, matching the transport-injection pattern from T-019.
 ## Non-goals for T-020
 - No `url`, `whatsapp`, `meeting-bot` adapters (separate units). No live TOC file reads (T-002
   wires this seam to real data). No claim-extraction pipeline wiring (later unit).
+
+## Amendment log
+- 2026-09-03 · routine · Reworded C1 so `Turn` is sourced from `@lkb/ai`'s `stt/transcribe.ts`
+  (T-019's pre-persistence shape) instead of `core/generated` · `core/generated/turns.ts`'s
+  `Turns` is the post-`_id` persisted shape and does not match what `toTurns()` actually returns;
+  `@lkb/ai`'s `Turn` already is that exact pre-id shape (built in T-019 for this purpose).
+  Declaring a third near-identical turn type in `ingest` would violate the contract's own
+  "no re-declared shapes" intent more than it upholds the literal C1 wording. `ingest → ai` is
+  architecturally legal per ARCHITECTURE §5 either way. Verified against
+  `packages/core/src/generated/turns.ts` and `packages/ai/src/stt/transcribe.ts` during T-020
+  cycle-1 check.
