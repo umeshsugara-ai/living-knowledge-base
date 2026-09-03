@@ -27,7 +27,7 @@
 | ID | Status | Task | Notes |
 |---|---|---|---|
 | T-002 | open | Migrate 23 TOC sessions into schema v2 (via Claude Code backend) | depends T-018 |
-| T-003 | open | Scale Gemini transcription 1→23 sessions | Gemini tokens (D-005), sequenced |
+| T-003 | BLOCKED | Scale Gemini transcription 1→23 sessions | ISS-015: GEMINI_API_KEY in .env is invalid (Google API_KEY_INVALID) — needs a valid key from Umesh |
 | T-004b | open | Tree topic/speaker child nodes + incremental regen by `sessionRef` | depends T-002 |
 | T-006 | open | Recording-gap rows + standing-ask process | depends T-018 |
 | T-021 | open | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | depends T-002 |
