@@ -38,7 +38,7 @@
 
 | ID | Status | Task | Notes |
 |---|---|---|---|
-| T-023 | open | URL adapter (Jina Reader / Firecrawl → paragraphs-as-turns) | depends T-020 |
+| T-023 | done | URL adapter (Jina Reader / Firecrawl → paragraphs-as-turns) | depends T-020; checker-verified commit `bcc6f1e`, verdict `qa/verdicts/url-adapter.md` |
 | T-024 | done | **FIRST DEMO SHIPPED (grill Q9/Q10):** paste-a-link capture CLI `lkb capture <url>` → platform adapter (Vexa: Meet/Teams · browser-profile join: Zoom/others · system-audio fallback) → record → diarize → `sources/sessions/turns` w/ `captureMode`+`platform`+`joinStrategy`; provided-first soft gate warns before silent join; private vault | D-002/D-004/D-008; depends T-018 (bot fields), T-019 (STT), T-020 (recording adapter) |
 | T-025 | open | Google Calendar connect + auto-join | depends T-024 |
 
