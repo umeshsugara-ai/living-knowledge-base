@@ -25,3 +25,14 @@
   management karenge, tho baad mein dekh lenge." → priority order restated: (1) knowledge base
   build (current work) (2) Developer API so external devs/the counsellor client can hit it
   (3) counsellor user-management/accounts — explicitly deferred, not now.
+
+## 2026-09-03T11:02:09Z — Umesh, mid-session (GEMINI_API_KEY fix) — reinforces existing design, no new build needed
+- "aur humko tho system adaptive banana hai naa, like langchain ki koi bhi api key chal jaaye
+  ya phir anthropic ho toh sab chal jaaye easy fallback se" → system should be adaptive: any
+  provider's API key should work, with easy fallback if e.g. Anthropic fails. This is ALREADY
+  the design (D-008/T-019): five provider adapters (gemini/anthropic/openai/ollama/claude-code)
+  behind one `Provider` interface, `config/ai-routing.yaml`'s per-jobKind ORDERED chain, and
+  `packages/ai/src/router.ts`'s `complete()` tries each provider in order, records every attempt
+  to the `jobs` ledger, only throws `AllProvidersFailedError` if every provider in the chain
+  fails. No contract amendment needed — confirms the existing fallback architecture is the right
+  call, not a new requirement.
