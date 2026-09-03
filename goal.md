@@ -268,7 +268,7 @@ Like CEO ka goal kya hai, yeh mein bata djeta hoon.So, unka plan yeh ki, hume is
 **[09:51] Speaker 1:** thank you.
 
 
-------
+----------------------------------------------------------------------
 
 ये फाइल एक call/meeting transcript है (Hindi/Hinglish में) — किसी internal discussion की recording का transcript लगता है, TOC docs और AIOS/internal tool development के बारे में। Breakdown:
 
@@ -300,12 +300,23 @@ Summary: Ye transcript basically un TOC documents (jo humne pehle banaye the —
 
 
 
-
+-------------------------------------------
 
 
 Aur tere knowledge base mein toh yeh wale features bhi aeenghe, right? Ki live meeting join karenke leh meeting ka bot ho ga, toh aisa ho jayegi, jiasse let suppose meere pats eek meeting ka link hai, woh meeting ka mein url đalou, toh dedicated is system ke pats aapna chrome ka browser ho, Aur, jab woh system se, ke browser mein hi, mein user as a user join kariun, yaa, मतलब, मेरे, उससे access, le system, aur, mere via app pe join, kare le, mir ko, ye login, wogare bhi, na, aur, apne aaphi kalender, dhek ke, directly, kudhi join, kare le, aur, uske hesaap se, meeting wogare, kud record, kare le, aise record, kare le, ki, same njalay ko, pata bhi na, lakhe, kyunki, jaysse, siu nne, bula ki, like, isse, same njalay bula, bula bhi, maan saktay, But, ki, we are a paid member, to, hume, hum kuch galat nahi kar rahe hai, but, Kyunki, agar recording provide nix kertate hai, to, hum aapne leo, kanga le raha hai, taak ki, kal ke din, humara manual, woh recording, dhek sakta hai, aur, Is sab ke alaba, yeh bhi rahna chahiye ki like, aur, kya features am plan karenge raha hai, Ki, agar ham urls, agar e, ndaal rhen, toh, wahan se data properly ajae ga. Aur, aysi, aur, kya possibilities hai, woh, pahle souch lhe, aur, dhek lhe, market mein, kuch aysa products hai, agar free products hai, toh, unko api ke through integrate kiya jasa siktai kya, aur, ai, johoga, woh, api based hooga, ya cloud code, hum, apna max subscription ke through, woh, kar dhinge, So, dono ka system day one se, do integrate karega system mein, is tariqe se plan per.
 
 
 
+
+-----------------------------------------------------------
+
+and schema and all with proper webresearch bhi final ho gya hai kyaa or that is in plan or later thing. like schema research krkee tune khi rakh liya hai Acha, Ek Baat yeh batha, kya haam ek aisa. Features, log type ka kuch aisa rakh saktay hai, like kya baar kya hootah hai, cloud code me hai, feature baatay hai, aur woh feature aisa rata hai ki, Haam bana raha hai kuch, phir woh features mein kuch issue aayenge, ya woh features abhi eek soch ke hesaap se bantah hai, baat mein woh update ho jata hai, like amhar koos se badhya ya better vision mil jata hai, toh haam us me edit karatay hai, toh eek finalize, agar feature woh hooga, jis me overall schema, overall flow and everything hooga, तो इससे क्या है कि clock code की memory and all में हम हर बार इसको mention करेंगे कि तुम जाओ, ये वाले document को end to end rate करो, तो तुमें project का summary या वो मिल जाएगा snapshot, इसको क्या होगा, tokens भी बचेंगे, और बाद मा clock code को, जिस specific part पर काम करना है, तो वो उसी specific part पर focus करेगा, जैसे product बढ़ता जाएगा, तो इसको सारे, उसका context रखने की जरुवत नी होगी तो context के लिए भी काम आएगा ये चीज और इसमें ऐसा कुछ रहेगी, like, Summary kind of, overall overview कैसा है, schema काँचा है, directories कैसे divided है, कहाँ पर क्या-क्या हमने plan किया है, और उनका क्या description है, purpose क्या है वो, और फिर overall summary kind of ऐसा कुछ हो, और फिर हमारे जो features live होते जाएंगे, date wise क्या-क्या feature है वो, और अगर कोई features date के हिसाब से edit या वो हो जाते हैं तो, उन features में date wise. की let's suppose day one में उसमें एक कोई capability बनी, day three में वो feature को update करके, कुछ और capability बनी, तो इससे हमारे ये भी रहेगा कि अच्छा पहले क्या था, हमने वो feature क्यों remove कर दिया, discard कर दिया, या update कर दिया, उसकी reasoning जिससे क्या होगा, कल के दिन, sometimes it happens कि system फिर से cyclic way में जाता है, तो उसके पास वो होगा कि हमने वो system update करा था और उसके reasons this था तो अगली बार अगर वैसा सा ही कुछ बनना होगा तो पहले system देख लेगा और user से confirm करेगा कि तुमने यह system तो इसले change कर दियाता है, इस region की वज़े से, तो क्या तुम दुबारे इसी को बनाना चाहरे हो, या कुछ और बनाना चाहरे हो, या जो तुम update करना चाहरे हो, उसका reason kyaa hai. iss type se
+
+
+this was my past work. this was not perfect but you can consider it as a reference might be it will helpful jut for understand the overview and what i am trying to ask you or understand you : "D:\pathlynks-combined-report\directory_map.md"
+
+
+
+Iske alawah yeh dhek lo ki kiya yeh sach meh helpful bhi hai ya nahi hai, ya tum aapne code meh joh summary ya is tarikay say cloud maintain karta hai, us te kama ban jayega.Aur. Haa ki ach haa, ab vohan jaake directory map update kar do, ab directory map read kar lo, toh system meh yhe automated integrated hoonan chayye, memory meh, dot, cloud code meh, her jage na, ya memory learning, yhe wali files meh, jis se kya hooga ki, yhe automated way meh update hooga, ek ledger ki tere, toh, woh cloud ko hi fayde mand rheega.
 
 
