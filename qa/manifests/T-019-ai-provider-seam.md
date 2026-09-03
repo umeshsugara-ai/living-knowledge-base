@@ -182,4 +182,5 @@ OK: docs/SNAPSHOT.md matches a fresh regeneration (105 lines, budget 200)
 Non-goal note: no CRAG web-search provider was added — out of scope per contract, folds into a
 separate `ask-router` v2 unit.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-019-ai-provider-seam.md (Cycle checked: 1, commit 424bb38) — 8/8 criteria met.
