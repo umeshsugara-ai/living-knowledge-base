@@ -1,7 +1,8 @@
 # Manifest — sync-real-turns-to-mongo (T-003 phase 3)
 
-Status: ready-for-check
+Status: checked-PASS
 Contract: `qa/contracts/sync-real-turns-to-mongo.md`
+Cycle checked: 1 — verdict `qa/verdicts/sync-real-turns-to-mongo.md`
 
 ## What changed
 
