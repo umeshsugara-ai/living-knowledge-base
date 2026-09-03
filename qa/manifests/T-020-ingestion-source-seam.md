@@ -176,4 +176,5 @@ OK: docs/SNAPSHOT.md matches a fresh regeneration (105 lines, budget 200)
 6. C6 — met: 15 tests across 4 files, `node --test`, all fakes/fixtures, no real file I/O.
 7. C7 (no regression) — met: all six verify commands above are clean.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-020-ingestion-source-seam.md (Cycle checked: 1, commit 3d2bb6f) — 7/7 criteria met; C1 amended (Turn reuse ruled correct).
