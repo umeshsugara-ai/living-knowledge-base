@@ -1,6 +1,6 @@
 # Feedback inbox — verbatim user feedback, timestamped. Any session may append; checker folds in.
 
-## 2026-09-03 — Umesh (chat, mid-session, verbatim intent)
+## 2026-09-03 — Umesh (chat, mid-session, verbatim intent) — folded 2026-09-03 (partial: design-first→T-016 via monorepo-restructure.md amendment log; bot/URL/seam await contracts T-017..T-025)
 - "AUR SABSE important iska schema essaa rakhna jo scalable ho and system design ko bhi phle plan krr le properly ... DRY principle use ho ... ERP me schema aur system design decide nahi hua tha, cloud code itne zyada tokens kharch hota hai just for holding the context, code repeated hai, human engineer control nahi le paata — aisa nahi hona chahiye." → design-first gate (plan §6a), monorepo + CI budgets (§6c.1).
 - "live meeting join karne ke liye meeting ka bot hoga ... meeting ka URL daalu, dedicated system ke paas apna chrome browser ho, mere via / user as a user join kare, apne aap calendar dekh ke directly join kare, meeting khud record kare ... hum paid member hain ... recording provide nahi karte to hum apne liye rakh rahe hain taaki manual review ho sake" → meeting bot + calendar + vault (A10/A11, T-024/T-025).
 - "URLs daalein to wahan se data properly aa jaye" → URL ingestion (T-023).

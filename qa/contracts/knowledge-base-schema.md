@@ -35,3 +35,6 @@ covers: `sources`, `sessions`, `turns`, `speakers`, `session_pages`, `claims`, `
 - No live MongoDB connection required — schema + validator only. Wiring to an actual Mongo
   instance is a later unit.
 - No API/route code — that's T-005/T-009.
+
+## Amendment log
+- 2026-09-03 · routine · scope note: validate.py now covers 10 schemas (tree_index added by T-004) — C6/C7/C8 apply to every `*.schema.json` present under `schema/`; "nine collections" in Scope predates `schema/tree_index.schema.json` and 10 is the correct count · ISS-004 cycle-1 check

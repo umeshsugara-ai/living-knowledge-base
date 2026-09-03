@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-03T08:26:01",
+  "updated": "2026-09-03T08:31:05",
   "progress": {
-    "total": 27,
+    "total": 29,
     "done": 3,
     "in_progress": 0,
     "blocked": 0,
-    "pending": 24,
+    "pending": 26,
     "current": "T-002",
-    "percent": 11
+    "percent": 10
   },
   "tasks": [
     {
@@ -22,7 +22,8 @@
       "base_criticality": "LOW",
       "deps": [],
       "criticality": "low",
-      "completed": "2026-09-03T07:05:00"
+      "reopen_reason": "sweep 2026-09-03T02:15Z: contract C8 (validate.py exit 0) no longer held — ISS-004",
+      "completed": "2026-09-03T08:31:05"
     },
     {
       "id": "T-002",
@@ -301,7 +302,8 @@
       "base_criticality": "LOW",
       "deps": [
         "T-023"
-      ]
+      ],
+      "criticality": "low"
     },
     {
       "id": "T-017b",
@@ -310,7 +312,8 @@
       "base_criticality": "LOW",
       "deps": [
         "T-017"
-      ]
+      ],
+      "criticality": "low"
     }
   ],
   "decisions": [],
@@ -318,7 +321,7 @@
     {
       "ts": "2026-09-03T07:01:48",
       "level": "warn",
-      "message": "STALLED \u2014 last agentic tick never; open work is not advancing",
+      "message": "STALLED — last agentic tick never; open work is not advancing",
       "task_id": null,
       "kind": "stalled",
       "acked": false
@@ -330,8 +333,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 53.31,
+    "velocity_per_day": 50.21,
     "eta_days": 0.5
   },
-  "last_deterministic_tick": "2026-09-03T08:26:01"
+  "last_deterministic_tick": "2026-09-03T08:31:01"
 }

@@ -54,3 +54,6 @@ tree — nothing is copied, only moved (git history preserved via `git mv`).
 ## Non-goals for T-016
 - No CI workflow, no lint scripts (T-017). No schema changes, no new collections, no migrations
   tool (T-018). No provider code (T-019). No Express routes, no Mongo connection.
+
+## Amendment log
+- 2026-09-03 · routine · folded inbox 2026-09-03 design-first line (already covered by C5/C7/C8/C9) · sweep #1
