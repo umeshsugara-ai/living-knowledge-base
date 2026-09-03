@@ -36,11 +36,11 @@ Entries in `TASKS.md` carry a stable ID + status field (open / in_progress / don
 blocked). DECISIONS entries cross-reference those IDs in **Links**.
 
 ## Project specifics
-- Sample data location: `TOC/TOC-Materials/` (23 session transcripts, 1 already piloted
+- Sample data location: `raw/TOC/TOC-Materials/` (23 session transcripts, 1 already piloted
   through the Gemini diarization pipeline: `27th-August-In-Focus`).
 - Pipeline run command: `[ASSUMPTION]` not yet created — first `/maker` unit (T-001).
 - Validator: `contracts/verify_contracts.py` (currently trivial — no frozen contracts yet).
-- This repo governs `TOC/` directly. `whatsapp_msg/` is a sibling source with its own
+- This repo governs `raw/TOC/` directly. `sources/whatsapp_msg/` is a git submodule source with its own
   independent Lab Protocol repo (own `.git`/ARCHITECTURE.md/DECISIONS.md) — do not
   duplicate its governance here, reference it instead.
 - Full feature catalogue: `C:\Users\Lenovo\.claude\plans\thik-hai-and-you-nested-cat.md`.

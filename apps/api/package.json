@@ -1,0 +1,10 @@
+{
+  "name": "@lkb/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": { "typecheck": "tsc --noEmit -p tsconfig.json" },
+  "dependencies": { "@lkb/core": "workspace:*" },
+  "devDependencies": { "typescript": "5.9.3", "@types/node": "^24.0.0" }
+}

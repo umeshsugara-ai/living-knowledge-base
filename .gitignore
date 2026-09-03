@@ -5,15 +5,16 @@
 
 # node
 **/node_modules/
+**/dist/
 
 # playwright artifacts
 **/.playwright-mcp/
 
-# large media
-TOC/TOC-Materials/Audio/
-TOC/TOC-Materials/Recordings/
-whatsapp_msg/media/
-whatsapp_msg/sessions/
+# large media (raw data lives under raw/, never in the code tree — D-003)
+raw/TOC/TOC-Materials/Audio/
+raw/TOC/TOC-Materials/Recordings/
+
+# sources/whatsapp_msg is a git submodule with its own .gitignore (media/, sessions/, .env)
 
 # reference screenshots (large, regenerable)
 reference/kb-deck-screens/*.jpg
@@ -21,7 +22,6 @@ reference/kb-deck-screens/*.png
 
 # logs
 *.log
-whatsapp_msg/
 
 # python bytecode
 **/__pycache__/

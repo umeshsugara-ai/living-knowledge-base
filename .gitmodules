@@ -1,0 +1,3 @@
+[submodule "sources/whatsapp_msg"]
+	path = sources/whatsapp_msg
+	url = https://github.com/umeshsugara-ai/whatsapp-archiver.git

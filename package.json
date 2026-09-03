@@ -1,0 +1,19 @@
+{
+  "name": "living-knowledge-base",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "gen:types": "node scripts/gen-types.mjs",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "json-schema-to-typescript": "16.0.0",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3"
+  }
+}
