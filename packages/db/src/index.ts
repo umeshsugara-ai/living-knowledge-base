@@ -7,3 +7,4 @@ export * from "./collections/sessions.js";
 export * from "./collections/turns.js";
 export * from "./collections/claims.js";
 export * from "./collections/eval-runs.js";
+export * from "./collections/watched-sources.js";

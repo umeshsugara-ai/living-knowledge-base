@@ -21,5 +21,6 @@ export * from "./generated/tenants.js";
 export * from "./generated/topics.js";
 export * from "./generated/tree_index.js";
 export * from "./generated/turns.js";
+export * from "./generated/watched_sources.js";
 
 export * from "./domain/purge-policy.js";
