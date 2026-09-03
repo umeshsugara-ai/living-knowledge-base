@@ -6,7 +6,10 @@
  *   core         → nothing (no workspace imports)
  *   meeting-bot  → ingest | core
  *   workers      → nothing
- * Run: npx depcruise --validate packages apps workers
+ * Run: npx depcruise --config .dependency-cruiser.cjs packages apps workers
+ *   (the bare "--validate packages apps workers" form is mis-parsed by depcruise's CLI --
+ *    commander treats "packages" as --validate's config-file argument, cruising 2 modules
+ *    instead of the real graph. Use --config explicitly, or `pnpm lint:structure`.)
  * Workspace packages (@lkb/*) resolve through pnpm symlinks to their real packages/<name>/ path,
  * so every rule is expressed on real paths. `$1` = the importing package's own name (self-imports ok).
  */
