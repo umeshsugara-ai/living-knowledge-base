@@ -79,3 +79,74 @@ test("regenerate is a no-op when changedSessionIds don't touch this tenant's tre
   const result = regenerate(original, ["does-not-exist"], SESSIONS, SESSION_PAGES);
   assert.equal(result, original, "no matching changed session should return the same tree reference");
 });
+
+test("T-004c C1: a session that moved year is cleaned up from its old year, present in the new one", () => {
+  const sessOld: Sessions = { _id: "sessMover", tenantId: "toc", sourceId: "srcMover",
+    title: "Mover-Session", date: "2026-04-21", status: { transcribe: "done", index: "done" } };
+  const original = buildTree([sessOld], [])["toc"]!;
+  assert.ok(original.children.some((y) => y.title === "2026"), "fixture sanity: starts in 2026");
+
+  // Session moves to 2027 — no OTHER changed session remains in 2026, so the old naive
+  // implementation would have left a stale 2026 node forever.
+  const moved: Sessions = { ...sessOld, date: "2027-01-15" };
+  const result = regenerate(original, ["sessMover"], [moved], []);
+
+  const year2026 = result.children.find((y) => y.title === "2026");
+  assert.equal(year2026, undefined, "2026 had only the moved session, so it must vanish entirely");
+
+  const year2027 = result.children.find((y) => y.title === "2027");
+  assert.ok(year2027, "2027 must now exist");
+  const sessNode = year2027!.children.flatMap((m) => m.children)
+    .find((s) => s.node_id.endsWith("session:sessMover"));
+  assert.ok(sessNode, "moved session must be present under its new year");
+});
+
+test("T-004c C1: old year survives (rebuilt, not vanished) when it still has other sessions", () => {
+  const stays: Sessions = { _id: "sessStays", tenantId: "toc", sourceId: "srcStays",
+    title: "Stays-2026", date: "2026-03-01", status: { transcribe: "done", index: "done" } };
+  const mover: Sessions = { _id: "sessMover2", tenantId: "toc", sourceId: "srcMover2",
+    title: "Mover-Session-2", date: "2026-04-21", status: { transcribe: "done", index: "done" } };
+  const original = buildTree([stays, mover], [])["toc"]!;
+
+  const moved: Sessions = { ...mover, date: "2027-06-01" };
+  const result = regenerate(original, ["sessMover2"], [stays, moved], []);
+
+  const year2026 = result.children.find((y) => y.title === "2026");
+  assert.ok(year2026, "2026 must survive — sessStays is still there");
+  const stillThere = year2026!.children.flatMap((m) => m.children)
+    .find((s) => s.node_id.endsWith("session:sessStays"));
+  assert.ok(stillThere, "sessStays must still be present in the rebuilt 2026");
+  const goneFrom2026 = year2026!.children.flatMap((m) => m.children)
+    .find((s) => s.node_id.endsWith("session:sessMover2"));
+  assert.equal(goneFrom2026, undefined, "moved session must not linger in the rebuilt old year");
+});
+
+test("T-004c C3: a touched year's topic node picks up cross-year sessionRefs from an untouched year", () => {
+  const s2026: Sessions = { _id: "s2026", tenantId: "toc", sourceId: "src2026",
+    title: "2026 NZ Session", date: "2026-03-01", status: { transcribe: "done", index: "done" } };
+  const s2027: Sessions = { _id: "s2027", tenantId: "toc", sourceId: "src2027",
+    title: "2027 NZ Session", date: "2027-03-01", status: { transcribe: "done", index: "done" } };
+  const pages: SessionPages[] = [
+    { _id: "p2026", tenantId: "toc", sessionId: "s2026",
+      summary: "New Zealand post-study visas explained.", evidence: [{ turnId: "t1", sessionId: "s2026" }] },
+    { _id: "p2027", tenantId: "toc", sessionId: "s2027",
+      summary: "New Zealand scholarship deadlines.", evidence: [{ turnId: "t2", sessionId: "s2027" }] },
+  ];
+  const original = buildTree([s2026, s2027], pages)["toc"]!;
+
+  // Retitle s2026 only — 2027 (with s2027) is untouched.
+  const updated = [{ ...s2026, title: "2026 NZ Session (retitled)" }, s2027];
+  const result = regenerate(original, ["s2026"], updated, pages);
+
+  const year2026 = result.children.find((y) => y.title === "2026")!;
+  const topicNode = year2026.children.flatMap((m) => m.children)
+    .flatMap((s) => s.children).find((c) => c.level === "topic" && /New Zealand/i.test(c.title));
+  assert.ok(topicNode, "expected a New Zealand topic node under the rebuilt 2026 session");
+  const sessionRefs = topicNode!.evidence?.sessionRefs as string[] | undefined;
+  assert.ok(sessionRefs?.includes("s2027"),
+    "touched year's topic node must include the untouched year's session in sessionRefs");
+
+  const year2027 = result.children.find((y) => y.title === "2027")!;
+  assert.equal(year2027, original.children.find((y) => y.title === "2027"),
+    "2027 must remain untouched (=== to the input)");
+});

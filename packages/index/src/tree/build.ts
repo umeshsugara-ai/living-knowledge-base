@@ -17,6 +17,13 @@
  * `evidence.sessionRefs` lists every session (in this `sessions` call) that surfaced it — not
  * just the one it's nested under — while `evidence.sessionRef` keeps pointing at its own parent
  * session (same field T-004 already used for session nodes).
+ *
+ * `topicContextSessions` (T-004c, optional, defaults to `sessions`): used ONLY for the
+ * cross-session topic-map pass (which sessions share a topic slug) — rendering (which sessions
+ * actually get year/month/session nodes built) still comes from `sessions` alone. This lets
+ * `regenerate.ts` rebuild just the touched years while still computing accurate cross-year
+ * `sessionRefs` on those years' topic nodes, without touching (and so without invalidating the
+ * `===`-preservation of) untouched years.
  */
 import type { SessionPages, Sessions, TreeIndexNode } from "@lkb/core";
 import { extractTopicRefs, type ExtractTopicRefs } from "./extract-topics.js";
@@ -55,15 +62,19 @@ function childById(parent: TreeIndexNode, nodeId: string): TreeIndexNode | undef
  * derive each session's topic children (see module doc above).
  */
 export function buildTree(sessions: Sessions[], sessionPages: SessionPages[],
-  summarize?: Summarize, extractFn: ExtractTopicRefs = extractTopicRefs):
+  summarize?: Summarize, extractFn: ExtractTopicRefs = extractTopicRefs,
+  topicContextSessions: Sessions[] = sessions):
   Record<string, TreeIndexNode> {
   const roots: Record<string, TreeIndexNode> = {};
 
   // Pass 1: cross-session topic map (slug -> {displayName, sessionIds}) so a topic node nested
-  // under any one session can still report every session (in this call) that shares it.
+  // under any one session can still report every session that shares it. Iterates
+  // `topicContextSessions` (T-004c) rather than `sessions` so a caller can widen the topic-sharing
+  // context (e.g. regenerate.ts passing the full tenant) without also widening which sessions get
+  // rendered.
   const topicSessionIds = new Map<string, Set<string>>();
   const topicDisplayName = new Map<string, string>();
-  for (const session of sessions) {
+  for (const session of topicContextSessions) {
     const page = sessionPageFor(session._id, sessionPages);
     for (const name of extractFn(page)) {
       const slug = slugify(name);
