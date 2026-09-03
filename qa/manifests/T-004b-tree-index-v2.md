@@ -216,4 +216,5 @@ All well under budget; no `structure.config.json` changes were needed or made.
 - C4 (real integration test, 23 leaves, cross-session topic, schema-shape valid): **met**
 - C5 (no regression across typecheck/test/gen:types/schema validate/lint:structure): **met**
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-004b-tree-index-v2.md (Cycle checked: 1, commit 15e4ecf) — 5/5 criteria met; NZ cross-session claim independently confirmed; follow-up T-004c logged.
