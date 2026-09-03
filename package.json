@@ -21,6 +21,7 @@
     "json-schema-to-typescript": "16.0.0",
     "migrate-mongo": "14.0.7",
     "tsx": "4.23.13",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "undici": "^8.10.1"
   }
 }

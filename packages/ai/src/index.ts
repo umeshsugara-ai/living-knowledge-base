@@ -13,3 +13,4 @@ export * from "./providers/claude-code.js";
 export * from "./stt/transcribe.js";
 export * from "./stt/whisper.js";
 export * from "./stt/gemini.js";
+export * from "./stt/gemini-file-upload.js";
