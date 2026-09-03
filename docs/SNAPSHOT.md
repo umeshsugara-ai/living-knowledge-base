@@ -20,6 +20,7 @@ a client of that API — with the long-range goal of beating top human counsello
 - `apps/`
   - `apps/api/`
 - `brainstorms/`
+- `config/`
 - `contracts/`
 - `docs/`
   - `docs/adr/`
