@@ -1,6 +1,6 @@
 # Manifest — toc-transcription-scale-up (T-003, phase 2: scale to 23/23)
 
-Status: ready-for-check
+Status: checked-PASS (Cycle checked: 1, verdict `qa/verdicts/toc-transcription-scale-up.md`)
 Contract: `qa/contracts/toc-transcription-scale-up.md`
 
 ## Final tally (all 23 real sessions, independently counted)

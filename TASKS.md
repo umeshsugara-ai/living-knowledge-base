@@ -27,7 +27,7 @@
 | ID | Status | Task | Notes |
 |---|---|---|---|
 | T-002 | done | Migrate 23 TOC sessions into schema v2 | checker PASS 7/7, verdict `b59e0ff`; content ground-truthed against source transcripts. Follow-up: `session-pages-accessor` unit (missing `session_pages` Mongo accessor found during T-002 gap review) — checker PASS, verdict `qa/verdicts/session-pages-accessor.md`, commit `7e6185a`; `lkb.session_pages` backfilled to 23 real docs via one-off insert. |
-| T-003 | in_progress | Scale Gemini transcription 1→23 sessions | ISS-015 resolved (key now valid). Phase 1 done: pipeline built (`gemini-file-upload.ts` + `transcribe-toc-session.mjs`) + 1/23 real session (`2026-05-23-uniaccess-atlas-skilltech`) transcribed with real diarization, checker PASS cycle 1, verdict `qa/verdicts/gemini-audio-transcription.md`, commit `a7fb04e`. Scaling to remaining 21 sessions is deliberate follow-up, not yet started. Bug-fix mid-scale-up: batch run caught a real silent-data-loss bug (62.7MB file, `outputTokens:1`, empty turns overwriting 107 real placeholder turns) — caught before commit, restored via `git checkout --`, zero net data loss. Two-layer empty-result guard added + 2 new tests; `2026-05-08-funding-dreams-loans-forex` genuinely transcribed (83 real turns, kept). checker PASS cycle 1, verdict `qa/verdicts/transcription-empty-result-guard.md`, commit `99846a3`. Batch scale-up safe to resume for remaining 20 sessions. |
+| T-003 | in_progress | Scale Gemini transcription 1→23 sessions | ISS-015 resolved (key now valid). Phase 1 done: pipeline + 1/23 real session, checker PASS cycle 1, verdict `qa/verdicts/gemini-audio-transcription.md`, commit `a7fb04e`. Phase 1.5 (empty-result guard): checker PASS cycle 1, verdict `qa/verdicts/transcription-empty-result-guard.md`, commit `99846a3`. **Phase 2 (scale-up) checker PASS cycle 1**, verdict `qa/verdicts/toc-transcription-scale-up.md`, commit `e0fef9c`: **19/23 sessions now have real diarized transcription**, independently re-verified turn-by-turn. 4 remain placeholder, honestly disclosed, NOT this unit's scope to fix: `2026-04-21-visa-blueprint-part2-italy-france-nz` + `2026-07-15-creative-futures` (both ~62MB, confirmed structurally blocked — MAX_TOKENS/MALFORMED_RESPONSE, needs audio-chunking follow-up), `2026-07-30-in-focus-3` + `2026-08-24-uniaccess-leeds-arts-university` (finishReason=STOP with empty text, unexplained, needs raw-response investigation pass). Data-loss guard held throughout (git-history-verified: neither placeholder file was ever touched by the scale-up commit). Remaining before T-003 can be marked `done`: (a) resolve the 2 failure modes above to reach 23/23, (b) re-run `scripts/seed-toc.mjs`'s turns insertion (or targeted update) to sync newly-real turns into the live `lkb` Mongo database — explicitly deferred, not automated in phase 2. |
 | T-004b | done | Tree topic/org child nodes + incremental regen (real T-002 data) | checker PASS 5/5, verdict `15e4ecf`; found real cross-session "New Zealand" topic |
 | T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |
 | T-006 | done | Recording-gap tracking (never silently drop) | checker PASS 7/7, verdict `819262a` |
@@ -62,8 +62,10 @@
 | T-017b | done | SNAPSHOT.md generator + FEATURES.jsonl ledger + anti-cyclic hook | checker PASS 9/9, verdict `45b1b88` (cycle 2, D-009 hook wiring) |
 
 **Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009,
-T-004b, T-012, T-009b — all checker-PASSed and pushed. **T-003 in_progress**: ISS-015 resolved
-(key valid), phase 1 (pipeline + 1/23 real session) checker-PASSed cycle 1 — scaling to remaining
-21 sessions is deliberate follow-up, not yet started.
+T-004b, T-012, T-009b — all checker-PASSed and pushed. **T-003 in_progress**: phases 1, 1.5, and 2
+all checker-PASSed (commits `a7fb04e`, `99846a3`, `e0fef9c`) — 19/23 sessions now have real
+Gemini diarized transcription. 4 sessions remain placeholder (2 structurally-blocked oversized
+files, 2 unexplained STOP-empty-text failures) — real follow-up engineering work, not yet started;
+Mongo re-seed of the newly-real turns also deferred. T-003 stays `in_progress`, not `done`.
 **Maker picks next:**
 T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.

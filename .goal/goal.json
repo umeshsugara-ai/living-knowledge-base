@@ -4,13 +4,13 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-03T16:46:01",
+  "updated": "2026-09-04T00:26:02",
   "progress": {
     "total": 29,
     "done": 21,
-    "in_progress": 0,
+    "in_progress": 1,
     "blocked": 0,
-    "pending": 8,
+    "pending": 7,
     "current": "T-003",
     "percent": 72
   },
@@ -44,8 +44,8 @@
       "deps": [
         "T-019"
       ],
-      "note": "ISS-015 resolved (key valid). Phase 1 (pipeline + 1/23 real session) checker-PASSed cycle 1, commit a7fb04e, verdict qa/verdicts/gemini-audio-transcription.md. Scaling to remaining 21 sessions is deliberate follow-up, not started — real API spend, sequence deliberately.",
-      "criticality": "low"
+      "note": "ISS-015 resolved (key valid). Phase 1 (pipeline + 1/23 real session) checker-PASSed cycle 1, commit a7fb04e. Phase 1.5 (empty-result guard) checker-PASSed cycle 1, commit 99846a3. Phase 2 (scale-up) checker-PASSed cycle 1, commit e0fef9c, verdict qa/verdicts/toc-transcription-scale-up.md: 19/23 sessions now real diarized transcription, independently re-verified. 4 remain placeholder (2 structurally-blocked oversized files needing audio-chunking, 2 unexplained STOP-empty-text failures needing investigation) -- disclosed follow-up, not yet started. Mongo re-seed of newly-real turns also deferred. Not done until 23/23 + Mongo sync.",
+      "criticality": "critical"
     },
     {
       "id": "T-004",
@@ -343,6 +343,13 @@
       "task_id": null,
       "kind": "stalled",
       "acked": false
+    },
+    {
+      "ts": "2026-09-03T16:51:01",
+      "level": "critical",
+      "message": "T-003 is CRITICAL — human required",
+      "task_id": "T-003",
+      "acked": false
     }
   ],
   "preferences": {
@@ -351,8 +358,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 47.31,
-    "eta_days": 0.2
+    "velocity_per_day": 26.35,
+    "eta_days": 0.3
   },
-  "last_deterministic_tick": "2026-09-03T16:46:01"
+  "last_deterministic_tick": "2026-09-04T00:26:02"
 }
