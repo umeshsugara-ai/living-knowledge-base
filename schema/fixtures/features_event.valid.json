@@ -1,0 +1,9 @@
+{
+  "id": "T-017",
+  "feature": "structure-lint",
+  "event": "shipped",
+  "date": "2026-09-03",
+  "unit": "scripts/lint-*.mjs",
+  "reason": null,
+  "links": ["qa/manifests/T-017-structure-lint.md", "qa/verdicts/T-017-structure-lint.md"]
+}

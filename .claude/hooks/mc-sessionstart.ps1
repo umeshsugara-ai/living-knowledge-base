@@ -46,6 +46,19 @@ if (Test-Path 'qa/.last-tick') {
   }
 }
 if ((Test-Path 'qa/adapter.json') -and -not (Test-Path 'qa/loop.md')) { Write-Output "LOOP SPEC MISSING: qa/adapter.json exists but qa/loop.md does not -- run /loopify for this project." }
+# T-017b feature-level anti-cyclic guard (mirrors the decision-level DECISION INDEX above):
+# surface any removed/updated docs/FEATURES.jsonl row from the last 30 days.
+if (Test-Path 'docs/FEATURES.jsonl') {
+  $cutoff = (Get-Date).AddDays(-30)
+  foreach ($line in Get-Content 'docs/FEATURES.jsonl') {
+    if ([string]::IsNullOrWhiteSpace($line)) { continue }
+    try { $evt = $line | ConvertFrom-Json } catch { continue }
+    if ($evt.event -ne 'removed' -and $evt.event -ne 'updated') { continue }
+    try { $d = [datetime]$evt.date } catch { continue }
+    if ($d -lt $cutoff) { continue }
+    Write-Output ("FEATURE CHANGED: " + $evt.feature + " " + $evt.event + " on " + $evt.date + " -- " + $evt.reason)
+  }
+}
 if (Test-Path 'qa/.paused') {
   Write-Output ("PAUSED by user: " + (Get-Content 'qa/.paused' -TotalCount 1) + " - auto-continue SUSPENDED. Do not run /maker continue; the user lifts it with /maker resume (or by deleting qa/.paused).")
 } elseif ($pending.Count -or $unclosed.Count -or $asleep -or ($sweepAge -lt 0) -or ($sweepAge -gt 120)) {

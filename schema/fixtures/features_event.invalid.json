@@ -1,0 +1,8 @@
+{
+  "id": "T-099",
+  "feature": "example-removed-feature",
+  "event": "removed",
+  "date": "2026-09-03",
+  "unit": "scripts/example.mjs",
+  "links": ["qa/manifests/T-099-example.md"]
+}

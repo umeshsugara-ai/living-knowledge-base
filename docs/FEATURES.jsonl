@@ -1,0 +1,5 @@
+{"id":"T-001","feature":"knowledge-base-schema","event":"shipped","date":"2026-09-03","unit":"schema/*.schema.json","reason":null,"links":["qa/manifests/T-001-knowledge-base-schema.md","qa/verdicts/T-001-knowledge-base-schema.md"]}
+{"id":"T-004","feature":"tree-index-generator","event":"shipped","date":"2026-09-03","unit":"tree_index/build_tree.py","reason":null,"links":["qa/manifests/T-004-tree-index-generator.md","qa/verdicts/T-004-tree-index-generator.md"]}
+{"id":"T-005","feature":"ask-router","event":"shipped","date":"2026-09-03","unit":"ask_router/evaluator.py","reason":null,"links":["qa/manifests/T-005-ask-router.md","qa/verdicts/T-005-ask-router.md"]}
+{"id":"T-016","feature":"monorepo-restructure","event":"shipped","date":"2026-09-03","unit":"package.json, pnpm-workspace.yaml, packages/*","reason":null,"links":["qa/manifests/T-016-monorepo-restructure.md","qa/verdicts/T-016-monorepo-restructure.md"]}
+{"id":"T-017","feature":"structure-lint","event":"shipped","date":"2026-09-03","unit":"scripts/lint-*.mjs","reason":null,"links":["qa/manifests/T-017-structure-lint.md","qa/verdicts/T-017-structure-lint.md"]}

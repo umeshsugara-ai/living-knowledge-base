@@ -2,6 +2,7 @@
 // Pure domain functions (no I/O) go in src/domain/<concept>.ts (D-003).
 export * from "./generated/claims.js";
 export * from "./generated/decisions.js";
+export * from "./generated/features_event.js";
 export * from "./generated/orgs.js";
 export * from "./generated/session_pages.js";
 export * from "./generated/sessions.js";
