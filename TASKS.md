@@ -51,7 +51,7 @@
 | T-009 | done | Developer API — `POST /ask` real, honest 501 stubs, rate limiting | checker PASS 8/8, verdict `cb04252`; post-verdict security fix `be86bf8` (shell:true removed) |
 | T-010 | open | Product shell (hosted multi-tenant app) — deferred, not near-term per Umesh | depends T-009 |
 | T-011 | open | Phase-B per-user browser profile bot + live monitor | depends T-024 |
-| T-012 | open | **Counsellor eval harness — SCOPED DOWN** (Umesh, 2026-09-03: "ek screen banega jahan counsellor basic details daal ke start kar payenge, dont take it too much"): ONE manual-entry screen (counsellor name/basic details form → starts a compete run against the KB via T-009's API) — no self-serve onboarding, no panel-management UI. Internal-tier scoring (grill Q12/F5) stays: `eval_runs.panel[]` + credibility tier, in-house counsellors as first panel, frozen+hashed question bank (D-007), LLM-judge MAE ≤ 0.5. | D-007; depends T-005b, T-009 |
+| T-012 | done | Compete screen (internal tier, manual entry) | checker PASS 6/6, verdict `71b5fd2` |
 | T-009b | open | Make `@lkb/ask`'s `ScoreFn` async; wire a real LLM-based scorer into apps/api's /ask (replaces the heuristic keyword-overlap scorer) | flagged by /checker during T-009; depends T-009 |
 | T-013 | open | Avatar/voice counsellor client | depends T-009 |
 | T-014 | open | Championship run (uses T-012's simple compete screen, not a platform) | depends T-012, T-013 |
@@ -63,5 +63,5 @@
 
 **Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009,
 T-004b — all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key).
-**Maker picks next:** T-012 (simple compete screen, unblocked by T-009) →
+**Maker picks next:**
 T-009b (real LLM scorer) → T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.
