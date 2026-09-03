@@ -191,4 +191,5 @@ heuristic (`score.ts`), not a real LLM judge, because `@lkb/ask`'s `ScoreFn` typ
 This is a pre-existing interface constraint from T-005, out of C1-C8's scope, not something this
 task silently papered over.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-009-developer-api.md (Cycle checked: 1, commit cb04252) — 8/8 criteria met; scoreFn scoping ruled legitimate (follow-up T-009b); shell:true command-injection fixed post-verdict (commit be86bf8), before push.
