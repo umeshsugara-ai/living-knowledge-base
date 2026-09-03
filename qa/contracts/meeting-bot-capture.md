@@ -25,10 +25,13 @@ testable while being honest that the network/audio parts are not live yet.
    'zoom' | 'webex' | 'unknown'` — pattern-matches real URL shapes for each (e.g.
    `meet.google.com`, `teams.microsoft.com`, `zoom.us/j/`, `webex.com`). Pure function, no I/O.
 2. **`packages/meeting-bot/src/strategy.ts`**: `selectJoinStrategy(platform): 'vexa' | 'browser' |
-   'system-audio'` — per the grill's blindspot resolution: `vexa` for `meet`/`teams` (Vexa's
-   documented native support — cite the actual Vexa docs/README section in a code comment, not
-   invented), `browser` for `zoom`/`webex`/anything with a browser join page, `system-audio` as the
-   ultimate fallback for `unknown`. Pure function.
+   'system-audio'` — per the grill's blindspot resolution and Vexa's actually-documented native
+   support (verified 2026-09-03 against github.com/Vexa-ai/vexa's README/repo description: Vexa
+   natively supports Google Meet, Microsoft Teams, and Zoom, with Jitsi "offline-proven, live
+   validation pending"; Webex is not in its supported-platform list): `vexa` for `meet`/`teams`/
+   `zoom`, `browser` for `webex`/anything without native Vexa support, `system-audio` as the
+   ultimate fallback for `unknown`. Cite the actual Vexa docs/README in a code comment, not
+   invented. Pure function.
 3. **Three `Joiner` implementations**, one interface (`packages/meeting-bot/src/joiner.ts`:
    `join(url, opts): Promise<{sessionHandle: string, mediaStream: MediaSource}>`,
    `stop(sessionHandle): Promise<void>`): `vexa-joiner.ts` (calls an injected Vexa API transport —
@@ -65,3 +68,10 @@ testable while being honest that the network/audio parts are not live yet.
   Calendar integration (T-025). This unit is the **orchestration skeleton + platform routing +
   pipeline wiring** — real join implementations are explicitly a follow-up, documented as such in
   code comments and the manifest, not silently pretended-complete.
+
+## Amendment log
+- 2026-09-03 · routine · C2 corrected: `zoom` routes to `vexa` (not `browser`), `webex` routes to
+  `browser` · maker's T-024 pre-check independently re-verified by /checker (WebFetch of
+  github.com/Vexa-ai/vexa) against the original contract's unverified guess — Vexa's README/repo
+  description confirms native support for Google Meet, Microsoft Teams, and Zoom (Jitsi
+  offline-proven pending validation); Webex does not appear in its supported-platform list.
