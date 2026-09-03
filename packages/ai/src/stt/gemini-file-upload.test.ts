@@ -128,3 +128,32 @@ test("transcribeUploadedAudio throws on a non-2xx status", async () => {
   const transport = fakeTransport({ POST: () => ({ status: 500, body: { error: "oops" } }) });
   await assert.rejects(() => transcribeUploadedAudio("files/abc", transport, API_KEY), /generateContent failed with status 500/);
 });
+
+test("transcribeUploadedAudio throws (never silently returns 0 turns) on an empty/blocked completion", async () => {
+  // Real bug caught live on a 62.7MB audio file: a 200 response with finishReason set and no
+  // usable text previously parsed to an empty turns array, which a naive caller then wrote over
+  // real existing data. This must throw with the diagnostic fields, not succeed with turns: [].
+  const transport = fakeTransport({
+    POST: () => ({
+      status: 200,
+      body: {
+        candidates: [{ content: { parts: [] }, finishReason: "MAX_TOKENS" }],
+        usageMetadata: { promptTokenCount: 151828, candidatesTokenCount: 1 },
+      },
+    }),
+  });
+  await assert.rejects(
+    () => transcribeUploadedAudio("files/big-file", transport, API_KEY),
+    /finishReason=MAX_TOKENS/,
+  );
+});
+
+test("transcribeUploadedAudio throws on a totally empty candidates array too", async () => {
+  const transport = fakeTransport({
+    POST: () => ({ status: 200, body: { promptFeedback: { blockReason: "SAFETY" } } }),
+  });
+  await assert.rejects(
+    () => transcribeUploadedAudio("files/blocked", transport, API_KEY),
+    /blockReason=SAFETY/,
+  );
+});

@@ -110,6 +110,16 @@ async function main() {
 
   const turnsPath = join(DATA_DIR, sessionId, "turns.json");
   const existingTurns = existsSync(turnsPath) ? JSON.parse(readFileSync(turnsPath, "utf8")) : [];
+
+  // Defense in depth (belt-and-braces alongside gemini-file-upload.ts's own empty-response
+  // guard): never overwrite existing turns with an empty result, regardless of why parsing came
+  // up empty. A real session already known to have content must never regress to zero turns.
+  if (turns.length === 0 && existingTurns.length > 0) {
+    throw new Error(
+      `transcribeUploadedAudio parsed 0 turns for "${sessionId}" but ${existingTurns.length} ` +
+      `existing turn(s) are on disk — refusing to overwrite. Investigate the raw response before retrying.`,
+    );
+  }
   const realTurns = turns.map((t, i) => ({
     _id: `${sessionId}-t${String(i + 1).padStart(3, "0")}`,
     tenantId: "toc",

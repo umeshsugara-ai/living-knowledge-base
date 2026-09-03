@@ -159,10 +159,25 @@ export async function transcribeUploadedAudio(fileUri: string, transport: Upload
   assertOk(res, "generateContent");
 
   const body = res.body as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
+    promptFeedback?: { blockReason?: string };
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
   } | undefined;
   const text = (body?.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
+
+  // A 200 response with no usable text is NOT a valid "silent recording" result — real audio
+  // never legitimately transcribes to nothing. Caught live on a 62.7MB file: the model returned
+  // finishReason (e.g. MAX_TOKENS/SAFETY/RECITATION) with an empty completion, and a naive caller
+  // silently wrote 0 turns over 107 real placeholder turns before this guard existed. Throw with
+  // the diagnostic fields so the caller knows WHY, rather than treating empty as success.
+  if (text.trim().length === 0) {
+    const finishReason = body?.candidates?.[0]?.finishReason;
+    const blockReason = body?.promptFeedback?.blockReason;
+    throw new Error(
+      `gemini file upload: generateContent returned no usable text (finishReason=${finishReason ?? "unknown"}, ` +
+      `blockReason=${blockReason ?? "none"}) — audio may be too long for a single call, or was blocked/truncated`,
+    );
+  }
 
   return {
     turns: parseDiarizedTranscript(text),
