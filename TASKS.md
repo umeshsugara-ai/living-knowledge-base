@@ -47,15 +47,18 @@
 |---|---|---|---|
 | T-007 | open | WhatsApp → claims ingestion review | depends T-020 |
 | T-008 | open | Vector index (`chunks`, Atlas Vector Search) + unstructured search | depends T-007 |
-| T-009 | open | Developer API + webhooks | depends T-005b |
-| T-010 | open | Product shell (hosted multi-tenant app) | depends T-009 |
+| T-009 | open | **Developer API + webhooks — PROMOTED** (Umesh, 2026-09-03: "developers ko API deni hogi for virtual counsellor, vo log hit karenge" — external client access is the near-term priority once KB build is stable) | depends T-005b |
+| T-010 | open | Product shell (hosted multi-tenant app) — deferred, not near-term per Umesh | depends T-009 |
 | T-011 | open | Phase-B per-user browser profile bot + live monitor | depends T-024 |
-| T-012 | open | Counsellor eval harness — **internal tier first, alongside T-005b** (grill Q12/F5): configurable panel (`eval_runs.panel[]` + credibility tier), in-house counsellors as first panel, frozen+hashed question bank (D-007), LLM-judge MAE ≤ 0.5 loop; public tier gated on independent panel | D-007; depends T-005b |
+| T-012 | open | **Counsellor eval harness — SCOPED DOWN** (Umesh, 2026-09-03: "ek screen banega jahan counsellor basic details daal ke start kar payenge, dont take it too much"): ONE manual-entry screen (counsellor name/basic details form → starts a compete run against the KB via T-009's API) — no self-serve onboarding, no panel-management UI. Internal-tier scoring (grill Q12/F5) stays: `eval_runs.panel[]` + credibility tier, in-house counsellors as first panel, frozen+hashed question bank (D-007), LLM-judge MAE ≤ 0.5. | D-007; depends T-005b, T-009 |
 | T-013 | open | Avatar/voice counsellor client | depends T-009 |
-| T-014 | open | Championship run | depends T-012, T-013 |
+| T-014 | open | Championship run (uses T-012's simple compete screen, not a platform) | depends T-012, T-013 |
+| T-028 | open | Counsellor user management/accounts — **explicitly deferred** (Umesh: "baad mein dekh lenge") | depends T-009 |
 | T-015 | open | Own-model training path | explicit approval before any data export |
 | T-026 | open | Recording purge policy: gated on verified claims + ±15 s evidence clips retained (D-008) | depends T-018 |
 | T-027 | open | **Watched Sources** (A13): bookmark reputed URLs/landing pages → periodic fetch → hash+diff → re-ingest changed sections → provenance `{url, fetchedAt, diffFrom}` → change notifications | depends T-023 |
 | T-017b | open | SNAPSHOT.md (generated, ≤200) + FEATURES.jsonl ledger + hook injection of recent removed/updated features + memory pointer (plan §6d) | depends T-017 |
 
-**Maker picks next, in order:** T-016 → T-017 → T-017b → T-018 → T-019 → T-020 → **T-024 (first demo)** → T-005b + T-012.
+**Maker picks next, in order:** T-016 → T-017 → T-017b → T-018 → T-019 → T-020 (all done) →
+T-005b → **T-024 (first demo)** → T-002/T-003 (real data) → **T-009 (Developer API — promoted)**
+→ T-012 (simple compete screen). T-010/T-028 stay deferred per Umesh's 2026-09-03 note.
