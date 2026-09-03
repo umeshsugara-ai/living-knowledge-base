@@ -1,0 +1,49 @@
+# Contract — structure-lint (T-017)
+
+> Ground truth for the CI-enforced structure budgets decided in D-003 (plan §6a/§6c.1). Drafted by
+> the maker from D-003 + ARCHITECTURE §5; /checker adopts or amends on first check (as with T-016).
+> Purpose: make the ERP anti-patterns *impossible to commit*, not merely discouraged.
+
+## Scope
+One root command `pnpm lint:structure` that runs every structural check below and exits non-zero on
+any violation, plus a GitHub Actions workflow that runs it (and the existing test/typecheck/gen:types
+--check/validate.py gates) on every push and PR. No application code changes.
+
+## Criteria (each machine-checkable)
+
+1. **`scripts/lint-loc.mjs`** — fails if any `.ts`/`.py`/`.mjs` under `packages/`, `apps/`,
+   `workers/`, `scripts/`, `schema/` exceeds **300 LOC** (400 for `*.test.ts` / `test_*.py`),
+   counting non-blank lines; ignores `node_modules`, `dist`, `generated/`. Prints the offending
+   file:count. Configurable via a small `structure.config.json` at root (budgets in one place).
+2. **`scripts/lint-dirsize.mjs`** — fails if any directory under the same roots has **> 30
+   files** (non-recursive count, ignoring `node_modules`/`dist`/`generated`).
+3. **`scripts/lint-root.mjs`** — fails if the repo root has **> 15 loose files** (directories
+   excluded, dotfiles included, `.gitignore`d files excluded), or if `ARCHITECTURE.md` > 150 lines,
+   or any root `*.md` > 200 lines, or `README.md` (when present) > 80 lines.
+4. **`scripts/lint-dupes.mjs`** — fails if two files under `packages/` export a symbol with the
+   same name (`export function|const|class|type|interface <Name>`), excluding `generated/` and
+   `index.ts` re-exports; and fails if two `schema/*.schema.json` share the same `$id`.
+5. **`scripts/lint-migrations.mjs`** — fails if any file matching `migrate-*.{mjs,js,ts,py}` exists
+   anywhere outside `migrations/` (the ERP dated-patch-script pattern).
+6. **Dependency rules** — `.dependency-cruiser.cjs` at root encoding ARCHITECTURE §5 exactly:
+   `apps → packages/{ask,ingest,index,ai,db,core}`; `ask|index|ingest → ai|db|core`; `ai|db → core`;
+   `core → nothing (no workspace imports)`; `meeting-bot → ingest|core`; `workers → nothing`.
+   `npx depcruise --validate packages apps workers` exits 0 on the current tree and **exits non-zero
+   on a deliberately planted violation** (the manifest must show one planted-then-reverted failure,
+   e.g. `packages/core` importing `@lkb/db`).
+7. **Single entry point:** root `package.json` script `lint:structure` runs 1–6 in sequence and
+   exits non-zero on the first failure; `pnpm lint:structure` exits 0 on the current tree.
+8. **Negative tests:** `scripts/lint.test.mjs` (`node --test`) creates temp fixtures that violate
+   each of 1–5 and asserts each linter fails on them and passes on a clean fixture — proving the
+   linters are not vacuous. Runs under `pnpm -r test` or a root `pnpm test:lint`.
+9. **CI workflow:** `.github/workflows/ci.yml` runs on `push` + `pull_request`: pnpm install
+   (frozen lockfile) → `pnpm -r typecheck` → `pnpm -r test` → `pnpm gen:types --check` →
+   `python schema/validate.py` → `pnpm lint:structure` → `pnpm test:lint`. The workflow file is
+   valid YAML (`node -e` or `python -c` parse check in the manifest). Actual GitHub execution is
+   not required for PASS (no remote yet); the manifest runs the same sequence locally.
+10. **Budgets live in one place:** `structure.config.json` holds every number above; scripts read
+    it; ARCHITECTURE §5 references the file rather than restating numbers that could drift.
+
+## Non-goals for T-017
+- No SNAPSHOT/FEATURES ledger (T-017b). No schema/migration changes (T-018). No ESLint/Prettier
+  style rules — structure only.
