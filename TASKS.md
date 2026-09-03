@@ -61,7 +61,7 @@
 | T-027 | open | **Watched Sources** (A13): bookmark reputed URLs/landing pages → periodic fetch → hash+diff → re-ingest changed sections → provenance `{url, fetchedAt, diffFrom}` → change notifications | depends T-023 |
 | T-017b | done | SNAPSHOT.md generator + FEATURES.jsonl ledger + anti-cyclic hook | checker PASS 9/9, verdict `45b1b88` (cycle 2, D-009 hook wiring) |
 
-**Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009 —
-all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key) — skip, don't idle.
-**Maker picks next:** T-004b (tree topic/speaker nodes, unblocked by T-002) → T-006 (gap rows) →
-T-012 (simple compete screen, unblocked by T-009) → T-009b (real LLM scorer). T-010/T-028 deferred.
+**Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009,
+T-004b — all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key).
+**Maker picks next:** T-006 (gap rows) → T-012 (simple compete screen, unblocked by T-009) →
+T-009b (real LLM scorer) → T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.
