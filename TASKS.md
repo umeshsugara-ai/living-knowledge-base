@@ -31,7 +31,7 @@
 | T-004b | done | Tree topic/org child nodes + incremental regen (real T-002 data) | checker PASS 5/5, verdict `15e4ecf`; found real cross-session "New Zealand" topic |
 | T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |
 | T-006 | done | Recording-gap tracking (never silently drop) | checker PASS 7/7, verdict `819262a` |
-| T-021 | open | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | depends T-002 |
+| T-021 | done | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | checker PASS, verdict `qa/verdicts/golden-set-recall.md`, commit `03fcf8d`; harness verified against a heuristic (non-LLM) retriever — recall@5=1.000 is NOT evidence against the real 0.85 target, which is blocked on ISS-015 (invalid GEMINI_API_KEY) and deferred to a real-`selectNodes` re-run |
 | T-022 | open | Evaluator calibration on 30 hand-scored pairs | depends T-021 |
 
 ## Phase A — Capture
