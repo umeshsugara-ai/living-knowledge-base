@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://sources",
+  "title": "sources",
+  "type": "object",
+  "required": ["_id", "tenantId", "kind", "hash", "consent", "createdAt"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "enum": ["recording", "document", "spreadsheet", "whatsapp-batch"] },
+    "path": { "type": "string" },
+    "hash": { "type": "string", "minLength": 8 },
+    "consent": {
+      "type": "object",
+      "required": ["given", "recordedBy"],
+      "properties": {
+        "given": { "type": "boolean" },
+        "recordedBy": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

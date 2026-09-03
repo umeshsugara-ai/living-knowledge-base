@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://speakers",
+  "title": "speakers",
+  "type": "object",
+  "required": ["_id", "tenantId", "personId", "aliases", "evidence"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "personId": { "type": "string", "minLength": 1, "description": "stable identity — never a bare display name (H4)" },
+    "aliases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "org": { "type": "string" },
+    "role": { "type": "string" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["turn_id", "session_id"],
+        "properties": {
+          "turn_id": { "type": "string" },
+          "session_id": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

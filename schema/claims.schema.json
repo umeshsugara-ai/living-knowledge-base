@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://claims",
+  "title": "claims",
+  "type": "object",
+  "required": ["_id", "tenantId", "text", "status", "evidence"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "text": { "type": "string", "minLength": 1 },
+    "topicRefs": { "type": "array", "items": { "type": "string" } },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "status": { "type": "string", "enum": ["verified", "needs-review", "conflicting"] },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["turn_id", "session_id"],
+        "properties": {
+          "turn_id": { "type": "string" },
+          "session_id": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

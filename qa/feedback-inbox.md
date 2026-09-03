@@ -1,0 +1,9 @@
+# Feedback inbox — verbatim user feedback, timestamped. Any session may append; checker folds in.
+
+## 2026-09-03 — Umesh (chat, mid-session, verbatim intent)
+- "AUR SABSE important iska schema essaa rakhna jo scalable ho and system design ko bhi phle plan krr le properly ... DRY principle use ho ... ERP me schema aur system design decide nahi hua tha, cloud code itne zyada tokens kharch hota hai just for holding the context, code repeated hai, human engineer control nahi le paata — aisa nahi hona chahiye." → design-first gate (plan §6a), monorepo + CI budgets (§6c.1).
+- "live meeting join karne ke liye meeting ka bot hoga ... meeting ka URL daalu, dedicated system ke paas apna chrome browser ho, mere via / user as a user join kare, apne aap calendar dekh ke directly join kare, meeting khud record kare ... hum paid member hain ... recording provide nahi karte to hum apne liye rakh rahe hain taaki manual review ho sake" → meeting bot + calendar + vault (A10/A11, T-024/T-025).
+- "URLs daalein to wahan se data properly aa jaye" → URL ingestion (T-023).
+- "market me free products hain to unko API ke through integrate karein" → market scan done (§6c.2).
+- "AI API-based hoga ya cloud code hamara Max subscription ke through — dono ka system day one se integrate karega" → provider seam (T-019).
+- DECISIONS (AskUserQuestion answers): consent = **silent full capture** with full diarization + who/when provenance so team can follow up with the expert; recordings purged after processing (purge design deferred). Stack = **TS pnpm monorepo, Python ML workers**. Bot = **self-host Vexa + Whisper, pluggable STT so a Gemini 3.5-transcribe key can be preferred**. Backend = **Gemini-first (purchased tokens, Google-side budget), Claude via the `claude` CLI OAuth email→OTP login flow, Anthropic API optional/droppable; no budget-guard work now — features first.**

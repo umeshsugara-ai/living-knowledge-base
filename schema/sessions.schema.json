@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://sessions",
+  "title": "sessions",
+  "type": "object",
+  "required": ["_id", "tenantId", "sourceId", "title", "date", "status"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "sourceId": { "type": "string" },
+    "title": { "type": "string", "minLength": 1 },
+    "date": { "type": "string", "format": "date" },
+    "org": { "type": "string" },
+    "participants": { "type": "array", "items": { "type": "string" } },
+    "status": {
+      "type": "object",
+      "required": ["transcribe", "index"],
+      "properties": {
+        "transcribe": { "type": "string", "enum": ["pending", "processing", "done", "failed"] },
+        "diarize": { "type": "string", "enum": ["pending", "processing", "done", "failed"] },
+        "summarize": { "type": "string", "enum": ["pending", "processing", "done", "failed"] },
+        "index": { "type": "string", "enum": ["pending", "processing", "done", "failed"] }
+      }
+    }
+  },
+  "additionalProperties": true
+}

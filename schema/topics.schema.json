@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://topics",
+  "title": "topics",
+  "type": "object",
+  "required": ["_id", "tenantId", "name"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "sessionRefs": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}
