@@ -46,3 +46,14 @@ to the tree index itself.
   ISS-015). No live Mongo write of the tree (still an in-memory structure, DB-backed tree storage
   is a later unit). No wiring into `apps/api`'s `/ask` route (that already has a working, simpler
   tree via T-009 — swapping in the v2 tree is a follow-up once this unit proves the extension).
+
+## Amendment log
+- 2026-09-03 · routine · adopted as maker-drafted (checker's first check on this contract; content
+  verified faithful to plan §5 Phase 1b / ARCHITECTURE §H1, no changes needed to adopt) · C3's
+  literal wording ("leaves everything else in `tree` byte-identical", tested via the
+  untouched-subtree `===`/deep-equal case) requires only untouched-subtree preservation, not
+  session year-migration cleanup or cross-year topic-evidence refresh — `regenerate.ts`'s two
+  disclosed scope limitations are honest out-of-scope edge cases, not C3 violations. Follow-up
+  queued: **T-004c — handle session year-migration cleanup and cross-year topic-evidence refresh
+  in `regenerate()`**, low urgency now (T-002's 23 sessions are all in year 2026, so neither edge
+  case is reachable yet), revisit when a second year of real sessions exists.
