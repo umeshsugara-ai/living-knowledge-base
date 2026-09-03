@@ -1,1 +1,1 @@
-2026-09-03T07:35:58Z FINDINGS: 2 (ISS-016 goal.json pointer drift, ISS-017 T-009b manifest close-out skipped + hook undercount); no bypass; inbox fully folded
+2026-09-03T08:07:49Z FINDINGS: 4 (ISS-018 manifest-close-out gap widened to 4 units + hook disagreement, ISS-019 qa/loop.md never scaffolded, ISS-020 issues.jsonl line-17 invalid JSON, ISS-016 re-confirmed still open); no bypass; inbox fully folded; goal-monitor 62% complete
