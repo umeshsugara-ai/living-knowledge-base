@@ -2,8 +2,16 @@
 **Contract:** qa/contracts/snapshot-features-ledger.md
 **Goal task:** T-017b
 **Date:** 2026-09-03
-**Fix cycle:** 1 of max 3
-**Issues addressed:** none
+**Fix cycle:** 2 of max 3
+**Issues addressed:** ISS-013
+
+## Fix cycle 2 — response to verdict (qa/verdicts/T-017b-snapshot-features-ledger.md, Cycle checked: 1)
+- **[C6a] ISS-013 "SessionEnd hook written but not registered in settings.json"** → D-009 written
+  (`docs/DECISIONS.md`, `Approved-by: Umesh`) authorizing exactly this settings.json change.
+  `.claude/hooks/features-snapshot-session-end.ps1` (already built cycle 1, unchanged) is now
+  registered as a second `SessionEnd` entry in `.claude/settings.json`, merged alongside the
+  existing `lab-session-end.ps1` entry (not overwritten). Hand-run: `echo '{}' | ... ->` exit 0.
+  `python -c "import json; json.load(open('.claude/settings.json'))"` → valid JSON.
 
 ## What changed
 - `schema/features_event.schema.json` (new) — single-event schema for one `docs/FEATURES.jsonl`

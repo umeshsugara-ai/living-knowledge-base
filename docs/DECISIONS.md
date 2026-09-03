@@ -97,3 +97,11 @@ them from scratch.
 **Changes-authorized:** ARCHITECTURE section 3 (H8 capture-mode hypothesis reworded to provided-first; H10 provider routing reworded to multi-provider chain); ARCHITECTURE section 6 (purge level question restated as gated-purge design task)
 **Approved-by:** Umesh
 **Links:** T-018, T-019, T-024, T-026; grill log Q4, Q5, Q6, Q12; brainstorms/2026-09-03-lkb-counsellor-assumptions.md
+
+## D-009 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** Register .claude/hooks/features-snapshot-session-end.ps1 as a second SessionEnd hook in .claude/settings.json, alongside the existing lab-session-end.ps1 entry. On graceful session end, if docs/FEATURES.jsonl changed during the session, it runs node scripts/snapshot.mjs to regenerate docs/SNAPSHOT.md so the next session's snapshot is never stale by more than one session. Always exits 0, fails open on error, same posture as lab-session-end.ps1.
+**Why:** T-017b (checker verdict qa/verdicts/T-017b-snapshot-features-ledger.md, cycle 1) FAILed criterion 6a because this specific hook was not covered by D-006's grant (which named only mc-sessionstart.ps1 and mc-precommit.ps1). The script itself was already written and hand-tested by the maker; only the settings.json registration was withheld pending this approval.
+**Result:** Approved by the Approver. The pnpm lint:structure staleness gate (criterion 6b, already PASSed) remains the enforcement backstop regardless of whether this hook fires.
+**Changes-authorized:** .claude/settings.json (add a second SessionEnd hooks entry for features-snapshot-session-end.ps1, merged alongside the existing lab-session-end.ps1 entry, never overwriting it)
+**Approved-by:** Umesh
+**Links:** T-017b, ISS-013; qa/contracts/snapshot-features-ledger.md criterion 6a

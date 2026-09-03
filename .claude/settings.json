@@ -1,5 +1,5 @@
 {
-  "_comment": "Lab Protocol project settings (scaffolded by /init-lab) + maker-checker enforcement wiring (D-006). Paths are $CLAUDE_PROJECT_DIR-relative. Merge, never overwrite.",
+  "_comment": "Lab Protocol project settings (scaffolded by /init-lab) + maker-checker enforcement wiring (D-006) + SNAPSHOT regen (D-009). Paths are $CLAUDE_PROJECT_DIR-relative. Merge, never overwrite.",
   "hooks": {
     "SessionStart": [
       {
@@ -28,6 +28,15 @@
           {
             "type": "command",
             "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\lab-session-end.ps1\\\" -InputJson $i\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\features-snapshot-session-end.ps1\\\" -InputJson $i\"",
             "timeout": 10
           }
         ]
