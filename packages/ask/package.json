@@ -8,6 +8,9 @@
     "test": "node --test --import tsx \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
-  "dependencies": { "@lkb/core": "workspace:*" },
+  "dependencies": {
+    "@lkb/core": "workspace:*",
+    "@lkb/ai": "workspace:*"
+  },
   "devDependencies": { "typescript": "5.9.3", "tsx": "4.23.13", "@types/node": "^24.0.0" }
 }
