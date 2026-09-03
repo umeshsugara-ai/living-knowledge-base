@@ -47,7 +47,7 @@
 |---|---|---|---|
 | T-007 | open | WhatsApp → claims ingestion review | depends T-020 |
 | T-008 | open | Vector index (`chunks`, Atlas Vector Search) + unstructured search | depends T-007 |
-| T-009 | open | **Developer API + webhooks — PROMOTED** (Umesh, 2026-09-03: "developers ko API deni hogi for virtual counsellor, vo log hit karenge" — external client access is the near-term priority once KB build is stable) | depends T-005b |
+| T-009 | done | Developer API — `POST /ask` real, honest 501 stubs, rate limiting | checker PASS 8/8, verdict `cb04252`; post-verdict security fix `be86bf8` (shell:true removed) |
 | T-010 | open | Product shell (hosted multi-tenant app) — deferred, not near-term per Umesh | depends T-009 |
 | T-011 | open | Phase-B per-user browser profile bot + live monitor | depends T-024 |
 | T-012 | open | **Counsellor eval harness — SCOPED DOWN** (Umesh, 2026-09-03: "ek screen banega jahan counsellor basic details daal ke start kar payenge, dont take it too much"): ONE manual-entry screen (counsellor name/basic details form → starts a compete run against the KB via T-009's API) — no self-serve onboarding, no panel-management UI. Internal-tier scoring (grill Q12/F5) stays: `eval_runs.panel[]` + credibility tier, in-house counsellors as first panel, frozen+hashed question bank (D-007), LLM-judge MAE ≤ 0.5. | D-007; depends T-005b, T-009 |
@@ -58,9 +58,9 @@
 | T-015 | open | Own-model training path | explicit approval before any data export |
 | T-026 | open | Recording purge policy: gated on verified claims + ±15 s evidence clips retained (D-008) | depends T-018 |
 | T-027 | open | **Watched Sources** (A13): bookmark reputed URLs/landing pages → periodic fetch → hash+diff → re-ingest changed sections → provenance `{url, fetchedAt, diffFrom}` → change notifications | depends T-023 |
-| T-017b | open | SNAPSHOT.md (generated, ≤200) + FEATURES.jsonl ledger + hook injection of recent removed/updated features + memory pointer (plan §6d) | depends T-017 |
+| T-017b | done | SNAPSHOT.md generator + FEATURES.jsonl ledger + anti-cyclic hook | checker PASS 9/9, verdict `45b1b88` (cycle 2, D-009 hook wiring) |
 
-**Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002 — all
-checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key).
-**Maker picks next:** T-009 (Developer API, promoted, unblocked since T-005b is done) →
-T-004b → T-006 → T-012 (simple compete screen). T-010/T-028 stay deferred per Umesh's note.
+**Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009 —
+all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key) — skip, don't idle.
+**Maker picks next:** T-004b (tree topic/speaker nodes, unblocked by T-002) → T-006 (gap rows) →
+T-012 (simple compete screen, unblocked by T-009) → T-009b (real LLM scorer). T-010/T-028 deferred.
