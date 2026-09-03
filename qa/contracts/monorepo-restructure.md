@@ -47,7 +47,7 @@ tree — nothing is copied, only moved (git history preserved via `git mv`).
 8. **ARCHITECTURE.md ≤ 150 lines** (`wc -l`), with §4's directory map replaced by the D-003 tree
    and §5 carrying the file/dir/dependency budgets — edited under the Changes-authorized grants of
    D-003 (§4, §5) and D-002/D-004/D-005 (§3 H8–H10, §6 Q2/Q4/Q5 closed, Q6 added).
-9. **Nothing else changes behaviour:** `python schema/validate.py` exits 0 (9/9); the ask/tree TS
+9. **Nothing else changes behaviour:** `python schema/validate.py` exits 0 (10/10 — 9 collections + tree_index since ISS-004); the ask/tree TS
    tests exit 0; no file under `packages/` exceeds 300 LOC (400 for `*.test.ts`) — checked by a
    one-line `find … | xargs wc -l` in the manifest (the real linter is T-017).
 
@@ -57,3 +57,5 @@ tree — nothing is copied, only moved (git history preserved via `git mv`).
 
 ## Amendment log
 - 2026-09-03 · routine · folded inbox 2026-09-03 design-first line (already covered by C5/C7/C8/C9) · sweep #1
+- 2026-09-03 · routine · checker ADOPTS this contract as checker-owned (ISS-006): content re-read against D-003 (packages list, TS-first port with tests, schema/ as source of truth, whatsapp_msg submodule) — faithful; START stands on the D-003 Approved plan §6c.1. Maker never writes qa/contracts/ again · T-016 cycle-1 check
+- 2026-09-03 · routine · C9 count 9/9 → 10/10 (tree_index schema added by ISS-004; already logged in knowledge-base-schema.md) · T-016 cycle-1 check
