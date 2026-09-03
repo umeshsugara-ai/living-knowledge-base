@@ -3,11 +3,16 @@
   "$id": "kb://sources",
   "title": "sources",
   "type": "object",
-  "required": ["_id", "tenantId", "kind", "hash", "consent", "createdAt"],
+  "required": ["_id", "tenantId", "kind", "hash", "consent", "createdAt", "captureMode"],
   "properties": {
     "_id": { "type": "string" },
     "tenantId": { "type": "string", "minLength": 1 },
     "kind": { "type": "string", "enum": ["recording", "document", "spreadsheet", "whatsapp-batch"] },
+    "captureMode": {
+      "type": "string",
+      "enum": ["provided", "public", "notes", "silent"],
+      "description": "D-008 provided-first capture ordering: organizer-provided > public > notes/live-transcript > silent (last resort)."
+    },
     "path": { "type": "string" },
     "hash": { "type": "string", "minLength": 8 },
     "consent": {

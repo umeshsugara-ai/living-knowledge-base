@@ -20,13 +20,13 @@ export interface SessionPages {
    */
   evidence: [
     {
-      turn_id: string;
-      session_id: string;
+      turnId: string;
+      sessionId: string;
       [k: string]: unknown;
     },
     ...{
-      turn_id: string;
-      session_id: string;
+      turnId: string;
+      sessionId: string;
       [k: string]: unknown;
     }[]
   ];

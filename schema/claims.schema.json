@@ -16,10 +16,10 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["turn_id", "session_id"],
+        "required": ["turnId", "sessionId"],
         "properties": {
-          "turn_id": { "type": "string" },
-          "session_id": { "type": "string" }
+          "turnId": { "type": "string" },
+          "sessionId": { "type": "string" }
         }
       }
     }

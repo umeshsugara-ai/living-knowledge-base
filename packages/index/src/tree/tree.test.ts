@@ -21,10 +21,10 @@ const SESSIONS: Sessions[] = [
 const SESSION_PAGES: SessionPages[] = [
   { _id: "pg1", tenantId: "toc", sessionId: "sess1",
     summary: "NZ visa blueprint: 8 universities, FTA pending.",
-    evidence: [{ turn_id: "t1", session_id: "sess1" }] },
+    evidence: [{ turnId: "t1", sessionId: "sess1" }] },
   { _id: "pg2", tenantId: "toc", sessionId: "sess2",
     summary: "Funding: FRR Forex markup ~1%, LRS cap $250k/yr.",
-    evidence: [{ turn_id: "t2", session_id: "sess2" }] },
+    evidence: [{ turnId: "t2", sessionId: "sess2" }] },
   // sess3 deliberately has NO session_page yet — tests the "" fallback
 ];
 

@@ -8,6 +8,10 @@ export interface Sources {
   _id: string;
   tenantId: string;
   kind: "recording" | "document" | "spreadsheet" | "whatsapp-batch";
+  /**
+   * D-008 provided-first capture ordering: organizer-provided > public > notes/live-transcript > silent (last resort).
+   */
+  captureMode: "provided" | "public" | "notes" | "silent";
   path?: string;
   hash: string;
   consent: {

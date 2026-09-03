@@ -22,7 +22,9 @@ a client of that API — with the long-range goal of beating top human counsello
 - `brainstorms/`
 - `contracts/`
 - `docs/`
+  - `docs/adr/`
   - `docs/archive/`
+- `migrations/`
 - `packages/` — Application logic, one exported symbol per concept
   - `packages/ai/`
   - `packages/ask/`
@@ -40,6 +42,7 @@ a client of that API — with the long-range goal of beating top human counsello
 - `reference/`
   - `reference/kb-deck-screens/`
 - `schema/` — JSON Schemas + fixtures + Python validator
+  - `schema/__pycache__/`
   - `schema/fixtures/`
 - `scripts/`
   - `scripts/lib/`
@@ -52,14 +55,22 @@ a client of that API — with the long-range goal of beating top human counsello
 
 | Collection | Required fields | Evidence/provenance field |
 |---|---|---|
+| api_keys | _id, tenantId, keyHash, createdAt | no |
+| chunks | _id, tenantId, sourceRef, turnRefs | no |
 | claims | _id, tenantId, text, status, evidence | yes |
+| consent_policies | _id, tenantId, mode | no |
 | decisions | _id, tenantId, text, status, evidence | yes |
 | features_event | id, feature, event, date, unit, links | no |
+| graph_edges | _id, tenantId, from, to, type | no |
+| jobs | _id, tenantId, kind, status, createdAt | no |
+| media | _id, tenantId, sourceRef, kind, retention | no |
 | orgs | _id, tenantId, name | no |
+| programs | _id, tenantId, name | no |
 | session_pages | _id, tenantId, sessionId, summary, evidence | yes |
 | sessions | _id, tenantId, sourceId, title, date, status | no |
-| sources | _id, tenantId, kind, hash, consent, createdAt | no |
+| sources | _id, tenantId, kind, hash, consent, createdAt, captureMode | no |
 | speakers | _id, tenantId, personId, aliases, evidence | yes |
+| tenants | _id, name | no |
 | topics | _id, tenantId, name | no |
 | tree_index | node_id, title, level, summary, children | yes |
 | turns | _id, tenantId, sessionId, speakerRef, tStart, tEnd, text | no |

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 schema/validate.py — loads every <collection>.schema.json in schema/, validates its
-fixtures/<collection>.valid.json (must pass) and fixtures/<collection>.invalid.json
-(must fail), and exits 0 only if every collection behaves as expected.
+fixtures/<collection>/valid.json (must pass) and fixtures/<collection>/invalid.json
+(must fail), and exits 0 only if every collection behaves as expected. (T-018: fixtures
+moved from a flat fixtures/<collection>.valid.json layout to one subdir per collection so
+schema/fixtures/ stays under the dirsize budget as collections grow — structure.config.json
+dirsize.maxFiles, scripts/lint-dirsize.mjs.)
 
 Usage: python schema/validate.py
 """
@@ -34,8 +37,8 @@ def main() -> int:
         Draft202012Validator.check_schema(schema)
         validator = Draft202012Validator(schema)
 
-        valid_fixture = FIXTURES / f"{collection}.valid.json"
-        invalid_fixture = FIXTURES / f"{collection}.invalid.json"
+        valid_fixture = FIXTURES / collection / "valid.json"
+        invalid_fixture = FIXTURES / collection / "invalid.json"
 
         if not valid_fixture.exists() or not invalid_fixture.exists():
             print(f"FAIL: {collection} — missing fixture(s)")

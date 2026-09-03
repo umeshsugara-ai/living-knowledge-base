@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://media",
+  "title": "media",
+  "description": "D-008: recordings/clips. turnRefs point at turns by id — never duplicate turn text (ADR-0001).",
+  "type": "object",
+  "required": ["_id", "tenantId", "sourceRef", "kind", "retention"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "sourceRef": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "enum": ["recording", "audio", "video", "evidence-clip"] },
+    "turnRefs": { "type": "array", "items": { "type": "string" } },
+    "path": { "type": "string" },
+    "tStart": { "type": "number", "minimum": 0 },
+    "tEnd": { "type": "number", "minimum": 0 },
+    "retention": {
+      "type": "object",
+      "required": ["purgeAfterVerified"],
+      "properties": {
+        "purgeAfterVerified": {
+          "type": "boolean",
+          "description": "D-008 gated purge: true only once every claim citing this media is verified; evidence-clip kind is retained permanently regardless."
+        },
+        "purgedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    }
+  },
+  "additionalProperties": true
+}

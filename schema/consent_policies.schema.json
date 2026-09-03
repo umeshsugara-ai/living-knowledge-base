@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://consent_policies",
+  "title": "consent_policies",
+  "description": "D-008 capture policy rows; default row id 'silent-full' is the last-resort mode, not the default path.",
+  "type": "object",
+  "required": ["_id", "tenantId", "mode"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "mode": { "type": "string", "enum": ["silent-full", "notice-required", "opt-in-only"] },
+    "note": { "type": "string" }
+  },
+  "additionalProperties": true
+}

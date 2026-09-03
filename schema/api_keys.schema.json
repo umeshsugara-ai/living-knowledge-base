@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://api_keys",
+  "title": "api_keys",
+  "type": "object",
+  "required": ["_id", "tenantId", "keyHash", "createdAt"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "keyHash": { "type": "string", "minLength": 8 },
+    "scopes": { "type": "array", "items": { "type": "string" } },
+    "revokedAt": { "type": ["string", "null"], "format": "date-time" },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

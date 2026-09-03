@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://graph_edges",
+  "title": "graph_edges",
+  "type": "object",
+  "required": ["_id", "tenantId", "from", "to", "type"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "from": { "type": "string", "minLength": 1 },
+    "to": { "type": "string", "minLength": 1 },
+    "type": { "type": "string", "minLength": 1 },
+    "weight": { "type": "number" }
+  },
+  "additionalProperties": true
+}
