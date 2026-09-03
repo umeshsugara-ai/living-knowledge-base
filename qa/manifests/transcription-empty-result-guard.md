@@ -1,6 +1,6 @@
 # Manifest — transcription-empty-result-guard (T-003 critical fix)
 
-Status: ready-for-check
+Status: checked-PASS (Cycle checked: 1, verdict `qa/verdicts/transcription-empty-result-guard.md`)
 Contract: `qa/contracts/transcription-empty-result-guard.md`
 
 ## The real incident (actual console output from the live batch run)
