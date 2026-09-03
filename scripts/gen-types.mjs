@@ -48,9 +48,25 @@ async function generate(collection) {
   return ts.replace(/\r\n/g, "\n");
 }
 
+/** Domain modules (T-026): every non-test `.ts` file directly under `src/domain/` gets a
+ * deterministic re-export line, sorted, so `index.ts` stays 100% generated even though its
+ * content now spans two sources (schema/ + domain/) — no hand-edit ever survives `--check`. */
+function domainModuleNames() {
+  const dir = join(ROOT, "packages", "core", "src", "domain");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))
+    .map((f) => f.replace(/\.ts$/, ""))
+    .sort();
+}
+
 function indexFile(names) {
-  const lines = names.map((n) => `export * from "./generated/${n}.js";`);
-  return `// @lkb/core — generated types re-exported (schema/ is the source of truth; see scripts/gen-types.mjs).\n// Pure domain functions (no I/O) go in src/domain/<concept>.ts (D-003).\n${lines.join("\n")}\n`;
+  const collectionLines = names.map((n) => `export * from "./generated/${n}.js";`);
+  const domainLines = domainModuleNames().map((n) => `export * from "./domain/${n}.js";`);
+  const body = domainLines.length > 0
+    ? `${collectionLines.join("\n")}\n\n${domainLines.join("\n")}\n`
+    : `${collectionLines.join("\n")}\n`;
+  return `// @lkb/core — generated types re-exported (schema/ is the source of truth; see scripts/gen-types.mjs).\n// Pure domain functions (no I/O) go in src/domain/<concept>.ts (D-003) — auto re-exported below.\n${body}`;
 }
 
 async function main() {
