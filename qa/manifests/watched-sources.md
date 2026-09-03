@@ -1,6 +1,8 @@
 # Manifest — watched-sources (T-027)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/watched-sources.md`
 Contract: `qa/contracts/watched-sources.md`
 
 ## What changed
