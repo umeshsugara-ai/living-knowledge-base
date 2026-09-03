@@ -44,3 +44,25 @@ blocked). DECISIONS entries cross-reference those IDs in **Links**.
   independent Lab Protocol repo (own `.git`/ARCHITECTURE.md/DECISIONS.md) — do not
   duplicate its governance here, reference it instead.
 - Full feature catalogue: `C:\Users\Lenovo\.claude\plans\thik-hai-and-you-nested-cat.md`.
+- Read-first snapshot (once T-017b lands): `docs/SNAPSHOT.md` — generated, never edit it; edit sources.
+
+## Maker-checker discipline (installed 2026-09-03, authorized by D-006)
+
+This project runs dev work through the maker-checker pair:
+
+- **Substantive dev work** (feature, module, schema/data-model change, multi-file edit) → route
+  through `/maker`. Announce in one line; user can say "normal" to opt out.
+- **Trivial work** (typo, single command, read-only) → normal mode, no ceremony.
+- Ground truth lives in `qa/contracts/` — **maker never edits it**; feedback goes verbatim into
+  `qa/feedback-inbox.md`; `/checker` folds it in.
+- Only `/checker` can PASS a unit. "Done" claims without a checker verdict are invalid.
+- Open issues: `qa/issues.jsonl` (canonical) — Google Sheet is a synced human view only.
+- **The maker↔checker handshake is files, never memory:** maker's request = manifest at
+  `Status: ready-for-check` (with `Fix cycle: N`); checker's reply = `qa/verdicts/<same-slug>.md`
+  (with `Cycle checked: N`); maker's close-out = manifest flip to `checked-PASS`.
+- **AUTO-CONTINUE (no human hand-crank):** on session start, if the hook line or `qa/` shows
+  pending state (unchecked manifest · PASS not closed out · open issues / TODO queue rows ·
+  stale `.last-tick`), run `/maker continue "D:\KnowledgeBase"` **before anything else**. The
+  maker self-continues via `ScheduleWakeup` and dispatches its own checker subagents and sweeps;
+  the only human actions are `/maker init` (once) and answering HUMAN_GATE decisions.
+- Manual overrides (never required): `/checker sweep` · `/loop /maker continue "D:\KnowledgeBase"`.

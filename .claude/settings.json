@@ -1,5 +1,5 @@
 {
-  "_comment": "Lab Protocol project settings, scaffolded by /init-lab. Paths are $CLAUDE_PROJECT_DIR-relative.",
+  "_comment": "Lab Protocol project settings (scaffolded by /init-lab) + maker-checker enforcement wiring (D-006). Paths are $CLAUDE_PROJECT_DIR-relative. Merge, never overwrite.",
   "hooks": {
     "SessionStart": [
       {
@@ -8,6 +8,15 @@
           {
             "type": "command",
             "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\lab-session-start.ps1\\\" -InputJson $i\"",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"& \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\mc-sessionstart.ps1\\\"\"",
             "timeout": 15
           }
         ]
@@ -31,6 +40,15 @@
           {
             "type": "command",
             "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\decisions-append-guard.ps1\\\" -InputJson $i\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\mc-precommit.ps1\\\" -InputJson $i\""
           }
         ]
       }

@@ -54,8 +54,7 @@
 | T-013 | open | Avatar/voice counsellor client | depends T-009 |
 | T-014 | open | Championship run | depends T-012, T-013 |
 | T-015 | open | Own-model training path | explicit approval before any data export |
-| T-026 | open | Recording purge-after-processing policy + migration | deferred by Umesh (D-002) |
-
+| T-026 | open | Recording purge policy: gated on verified claims + ±15 s evidence clips retained (D-008) | depends T-018 |
 | T-027 | open | **Watched Sources** (A13): bookmark reputed URLs/landing pages → periodic fetch → hash+diff → re-ingest changed sections → provenance `{url, fetchedAt, diffFrom}` → change notifications | depends T-023 |
 | T-017b | open | SNAPSHOT.md (generated, ≤200) + FEATURES.jsonl ledger + hook injection of recent removed/updated features + memory pointer (plan §6d) | depends T-017 |
 
