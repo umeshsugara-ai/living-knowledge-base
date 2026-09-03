@@ -1,0 +1,9 @@
+{
+  "generatedAt": "2026-09-03T07:53:43.695Z",
+  "k": 5,
+  "retriever": "heuristic",
+  "recallAtK": 1,
+  "total": 46,
+  "hits": 46,
+  "misses": []
+}

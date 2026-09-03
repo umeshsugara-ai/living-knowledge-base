@@ -23,6 +23,7 @@ a client of that API — with the long-range goal of beating top human counsello
 - `config/`
 - `contracts/`
 - `data/`
+  - `data/eval/`
   - `data/toc-migrated/`
 - `docs/`
   - `docs/adr/`
