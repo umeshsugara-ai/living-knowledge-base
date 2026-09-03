@@ -13,7 +13,7 @@ import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
 import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore } from "./store.js";
 import { realTransport } from "./ai-transport.js";
-import { heuristicScore } from "./score.js";
+import { createLlmScorer } from "./score.js";
 
 const ROUTING_CONFIG_PATH = fileURLToPath(new URL("../../../config/ai-routing.yaml", import.meta.url));
 /** `write` for the router's own per-attempt ledger entries — a tenant isn't known until a
@@ -37,7 +37,11 @@ export function buildProductionDeps(): ServerDeps {
       tree: createMongoTreeStore(),
       askDeps: {
         complete: (job) => routeComplete("ask", job, { chains, providers, write: jobWrite, tenantId: ROUTER_TENANT_ID }),
-        scoreFn: heuristicScore,
+        // T-009b: real LLM judge by default; createLlmScorer falls back to the keyword heuristic
+        // internally on a parse failure or AllProvidersFailedError — /ask never crashes on this.
+        scoreFn: createLlmScorer(
+          (job) => routeComplete("evaluator", job, { chains, providers, write: jobWrite, tenantId: ROUTER_TENANT_ID }),
+        ),
         treeSearchFn: treeSearch,
         write: jobWrite,
       },

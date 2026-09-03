@@ -16,8 +16,12 @@ const NODE_B: TreeIndexNode = { node_id: "toc/.../session:sess2", title: "B", le
 
 const fakeTreeSearchReturns = (nodes: TreeIndexNode[]): TreeSearchFn => () => nodes;
 
-const fakeScoreFn = (scoresByNodeId: Record<string, number>): ScoreFn =>
-  (_query, node) => scoresByNodeId[node.node_id]!;
+// Deliberately NOT typed `: ScoreFn` (T-009b) — a sync-only return type here is what makes
+// evaluate()/ask()'s sync overload apply, so every pre-existing call site below keeps its old
+// (non-Promise) return type and needs no `await`. `ScoreFn` itself still allows an async fn; see
+// the T-009b tests further down for that path.
+const fakeScoreFn = (scoresByNodeId: Record<string, number>) =>
+  (_query: string, node: TreeIndexNode): number => scoresByNodeId[node.node_id]!;
 
 test("correct verdict never calls web even if supplied", () => {
   const calls: string[] = [];
@@ -68,7 +72,7 @@ test("no web fallback provided sets insufficient_coverage", () => {
 });
 
 test("reason returned on every call including correct", () => {
-  const scoringWithReason: ScoreFn = () => [0.85, "chunk answers the query directly"];
+  const scoringWithReason = (): [number, string] => [0.85, "chunk answers the query directly"];
   const result = ask("q", {}, fakeTreeSearchReturns([NODE_A]), scoringWithReason);
   assert.equal(result.verdict, "correct");
   assert.ok(typeof result.reason === "string" && result.reason, "top-level reason required");
@@ -96,4 +100,41 @@ test("thresholds are tunable parameters", () => {
 
   assert.throws(() => evaluate("q", [NODE_A], scores, 0.2, 0.6), RangeError,
     "expected RangeError for lower > upper");
+});
+
+test("T-009b: sync score_fn keeps evaluate()/ask() synchronous (no Promise wrapping)", () => {
+  // Guards the backward-compat bar: a sync fake must NOT come back wrapped in a Promise, or every
+  // existing sync test above (reading `.verdict` with no `await`) would silently break.
+  const syncResult = evaluate("q", [NODE_A], () => 0.9);
+  assert.ok(!(syncResult instanceof Promise), "evaluate() must stay sync for a sync scoreFn");
+  assert.equal(syncResult.verdict, "correct");
+
+  const askSyncResult = ask("q", {}, fakeTreeSearchReturns([NODE_A]), () => 0.9);
+  assert.ok(!(askSyncResult instanceof Promise), "ask() must stay sync for a sync scoreFn");
+  assert.equal(askSyncResult.verdict, "correct");
+});
+
+test("T-009b: async score_fn makes evaluate()/ask() return a Promise, verdict unchanged", async () => {
+  const asyncScoreFn: ScoreFn = async (_query, node) =>
+    node.node_id === NODE_A.node_id ? [0.9, "llm: strong match"] : [0.1, "llm: weak match"];
+
+  const evalResultOrPromise = evaluate("q", [NODE_A, NODE_B], asyncScoreFn);
+  assert.ok(evalResultOrPromise instanceof Promise, "evaluate() must return a Promise for an async scoreFn");
+  const evalResult = await evalResultOrPromise;
+  assert.equal(evalResult.verdict, "correct");
+  assert.equal(evalResult.scored[0]!.reason, "llm: strong match");
+
+  const askResultOrPromise = ask("q", {}, fakeTreeSearchReturns([NODE_A, NODE_B]), asyncScoreFn);
+  assert.ok(askResultOrPromise instanceof Promise, "ask() must return a Promise for an async scoreFn");
+  const askResult = await askResultOrPromise;
+  assert.equal(askResult.verdict, "correct");
+  assert.equal(askResult.sources.internal.length, 1);
+});
+
+test("T-009b: async score_fn rejection propagates, does not silently resolve", async () => {
+  const failingScoreFn: ScoreFn = async () => { throw new Error("judge unavailable"); };
+  await assert.rejects(
+    async () => evaluate("q", [NODE_A], failingScoreFn),
+    /judge unavailable/,
+  );
 });

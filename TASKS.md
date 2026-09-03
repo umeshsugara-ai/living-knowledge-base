@@ -64,4 +64,5 @@
 **Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009,
 T-004b — all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key).
 **Maker picks next:**
-T-009b (real LLM scorer) → T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.
+T-009b (real LLM scorer) — contract written `qa/contracts/real-llm-scorer.md` — in progress.
+Then T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.

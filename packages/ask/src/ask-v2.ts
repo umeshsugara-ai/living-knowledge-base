@@ -74,7 +74,7 @@ export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps)
   // ask() re-scores `candidates` via `scoreFn` internally (T-005's evaluate()) — reused here, not
   // duplicated. Each candidate's node comes back on `scored[].node`, still the full node object
   // selectNodes/treeSearch resolved (with `summary`), so refine below needs no second lookup.
-  const askResult = ask(query, tree, () => candidates, scoreFn, webFallbackFn, upper, lower);
+  const askResult = await ask(query, tree, () => candidates, scoreFn, webFallbackFn, upper, lower);
 
   for (const s of askResult.scored) {
     await recordJob({ tenantId, kind: "ask.score", status: "done" }, write);
