@@ -158,4 +158,5 @@ workers/transcribe: package.json src/ | @lkb/transcribe   (Python worker — no 
 - Everything is staged (narrow pathspec), not committed; `.goal/goal.json` and `qa/.last-tick` modifications
   are not mine and were left unstaged.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-016-monorepo-restructure.md (Cycle checked: 1, commit 66f1372) — 9/9 criteria; ISS-006, ISS-008 fixed.
