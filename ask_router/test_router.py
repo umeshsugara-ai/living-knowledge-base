@@ -6,6 +6,7 @@ Run: python ask_router/test_router.py
 import sys
 
 from router import ask
+from evaluator import evaluate
 
 
 NODE_A = {"node_id": "toc/.../session:sess1", "title": "A", "level": "session",
@@ -99,11 +100,55 @@ def test_no_web_fallback_provided_sets_insufficient_coverage():
     assert result["sources"]["web"] == []
 
 
+def test_reason_returned_on_every_call_including_correct():
+    def scoring_with_reason(query, node):
+        return (0.85, "chunk answers the query directly")
+
+    result = ask(
+        query="q",
+        tree={},
+        tree_search_fn=fake_tree_search_returns([NODE_A]),
+        score_fn=scoring_with_reason,
+    )
+    assert result["verdict"] == "correct"
+    assert isinstance(result["reason"], str) and result["reason"], "top-level reason required"
+    assert result["scored"][0]["reason"] == "chunk answers the query directly"
+
+    # bare-float score_fn still yields a (possibly empty) per-candidate reason + a verdict reason
+    bare = evaluate("q", [NODE_A], lambda q, n: 0.1)
+    assert bare["verdict"] == "incorrect"
+    assert "reason" in bare["scored"][0] and bare["reason"]
+
+
+def test_thresholds_are_tunable_parameters():
+    scores = fake_score_fn({NODE_A["node_id"]: 0.5})
+    default = evaluate("q", [NODE_A], scores)
+    assert default["verdict"] == "ambiguous"
+
+    stricter = evaluate("q", [NODE_A], scores, upper=0.9, lower=0.6)
+    assert stricter["verdict"] == "incorrect", "0.5 < lower=0.6 must be incorrect"
+    assert stricter["good_docs"] == []
+
+    looser = evaluate("q", [NODE_A], scores, upper=0.4, lower=0.2)
+    assert looser["verdict"] == "correct", "0.5 >= upper=0.4 must be correct"
+
+    via_ask = ask("q", {}, fake_tree_search_returns([NODE_A]), scores, upper=0.4, lower=0.2)
+    assert via_ask["verdict"] == "correct", "ask() must pass thresholds through"
+
+    try:
+        evaluate("q", [NODE_A], scores, upper=0.2, lower=0.6)
+        raise AssertionError("expected ValueError for lower > upper")
+    except ValueError:
+        pass
+
+
 TESTS = [
     test_correct_verdict_never_calls_web_even_if_supplied,
     test_incorrect_verdict_uses_web_fallback_sources_kept_separate,
     test_ambiguous_verdict_merges_good_docs_and_web_but_keeps_them_separate,
     test_no_web_fallback_provided_sets_insufficient_coverage,
+    test_reason_returned_on_every_call_including_correct,
+    test_thresholds_are_tunable_parameters,
 ]
 
 
