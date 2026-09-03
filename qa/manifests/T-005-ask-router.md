@@ -48,4 +48,5 @@ import ask_router.router OK -> ask
 exit: 0
 ```
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-005-ask-router.md (Cycle checked: 2, commit 129f8f1) — 7/7 criteria met; ISS-001..003 verified.
