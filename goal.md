@@ -297,3 +297,15 @@ Doosra: Knowledge Bank — jo month-wise organized hai, jisme har month ke sessi
 Speaker check karna chahta hai ki jab wo knowledge base me kuch search kare, to system kya output deta hai — basically ye ek dry-run/validation hai ki search-based retrieval kaam kar raha hai ya nahi.
 
 Summary: Ye transcript basically un TOC documents (jo humne pehle banaye the — Overview doc + month-wise Knowledge Bank) ke upar ek AI engine layer design karne ka vision describe karta hai — jisme web search + internal knowledge base dono combine ho, internal KB priority ke saath, taaki koi bhi query search karne par relevant answer/output mil sake.
+
+
+
+
+
+
+Aur tere knowledge base mein toh yeh wale features bhi aeenghe, right? Ki live meeting join karenke leh meeting ka bot ho ga, toh aisa ho jayegi, jiasse let suppose meere pats eek meeting ka link hai, woh meeting ka mein url đalou, toh dedicated is system ke pats aapna chrome ka browser ho, Aur, jab woh system se, ke browser mein hi, mein user as a user join kariun, yaa, मतलब, मेरे, उससे access, le system, aur, mere via app pe join, kare le, mir ko, ye login, wogare bhi, na, aur, apne aaphi kalender, dhek ke, directly, kudhi join, kare le, aur, uske hesaap se, meeting wogare, kud record, kare le, aise record, kare le, ki, same njalay ko, pata bhi na, lakhe, kyunki, jaysse, siu nne, bula ki, like, isse, same njalay bula, bula bhi, maan saktay, But, ki, we are a paid member, to, hume, hum kuch galat nahi kar rahe hai, but, Kyunki, agar recording provide nix kertate hai, to, hum aapne leo, kanga le raha hai, taak ki, kal ke din, humara manual, woh recording, dhek sakta hai, aur, Is sab ke alaba, yeh bhi rahna chahiye ki like, aur, kya features am plan karenge raha hai, Ki, agar ham urls, agar e, ndaal rhen, toh, wahan se data properly ajae ga. Aur, aysi, aur, kya possibilities hai, woh, pahle souch lhe, aur, dhek lhe, market mein, kuch aysa products hai, agar free products hai, toh, unko api ke through integrate kiya jasa siktai kya, aur, ai, johoga, woh, api based hooga, ya cloud code, hum, apna max subscription ke through, woh, kar dhinge, So, dono ka system day one se, do integrate karega system mein, is tariqe se plan per.
+
+
+
+
+
