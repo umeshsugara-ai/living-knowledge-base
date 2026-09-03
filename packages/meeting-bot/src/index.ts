@@ -15,3 +15,8 @@ export * from "./joiners/system-audio-joiner.js";
 // implementation yet, see docs/adr/0005-calendar-auto-join.md).
 export * from "./calendar/calendar-client.js";
 export * from "./calendar/auto-join.js";
+
+// T-011 — Phase-B primitives: per-user profile directory resolution + live-monitor privacy
+// filter (no real Playwright wiring / UI yet).
+export * from "./profile/user-profile.js";
+export * from "./live-monitor.js";
