@@ -27,9 +27,22 @@ async function httpTransport(req: TransportRequest): Promise<TransportResponse> 
   return { status: res.status, body: tryParseJson(text), text };
 }
 
+/**
+ * Resolve the executable for spawn WITHOUT a shell. `req.args` can contain the caller's raw
+ * query text (e.g. the /ask request body), so `shell: true` on Windows would let shell
+ * metacharacters in that text (`&`, `|`, backticks, `$()`) be interpreted rather than passed
+ * as a literal argv entry -- a command-injection vector. npm-installed CLIs (like `claude`)
+ * ship as `<name>.cmd` shims on Windows; resolving to that explicit extension lets spawn find
+ * and run them via argv, with no shell involved at all.
+ */
+function resolveCliCommand(command: string): string {
+  if (process.platform !== "win32" || /\.(cmd|exe|bat)$/i.test(command)) return command;
+  return `${command}.cmd`;
+}
+
 function cliTransport(req: TransportRequest): Promise<TransportResponse> {
   return new Promise((resolve, reject) => {
-    const child = spawn(req.command!, req.args ?? [], { shell: process.platform === "win32" });
+    const child = spawn(resolveCliCommand(req.command!), req.args ?? [], { shell: false });
     let stdout = "";
     child.stdout.on("data", (chunk: Buffer) => (stdout += chunk.toString()));
     child.on("error", reject);
