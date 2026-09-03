@@ -73,3 +73,27 @@ them from scratch.
 **Result:** Routing matrix in plan section 6c.3 re-mapped: Gemini Flash for cheap/many stages, Gemini Pro for claims/answers, Claude Code for agentic/bulk/dev-loop; parity contract test runs Gemini vs Claude Code.
 **Changes-authorized:** ARCHITECTURE Â§3 (add H10 provider routing); ARCHITECTURE Â§6 (budget question closed)
 **Links:** T-019; plan file section 6c.0 and 6c.3
+
+## D-006 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** Install the maker-checker auto-continue enforcement wiring in this repo: project .claude/CLAUDE.md block (on session start, if qa/ shows pending state, run /maker continue before anything else; /checker sweep as manual override), session-start hook printing the AUTO-CONTINUE directive when pending state exists, and the PreToolUse commit guard, via /maker init (idempotent repair).
+**Why:** Sweep finding ISS-005: without it the loop advances only when a session explicitly invokes /maker continue; a session opening this repo with pending qa/ state would silently idle. Reversible (/maker pause writes qa/.paused; removing the settings entry disables the directive).
+**Result:** Approved by the Approver during the 2026-09-03 grill (Q7). Wiring to be installed by the next /maker init run.
+**Changes-authorized:** .claude/CLAUDE.md (maker-checker block); .claude/hooks/* (add mc session-start + commit guard); .claude/settings.json (register the two hooks) -- each is the minimal enforcement addition the maker skill's enforcement-wiring reference specifies.
+**Approved-by:** Umesh
+**Links:** ISS-005; grill log Q7 in the plan file; T-016 (wiring lands before the restructure unit starts)
+
+## D-007 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** The counsellor evaluation question bank draws from three sources: (a) questions asked in TOC/webinar Q&A segments, (b) anonymised questions from Pathlynks counselling sessions, (c) hard questions submitted by each competing counsellor. Pathlynks student data is APPROVED for this single use, conditional on the anonymisation rule below.
+**Why:** A realistic bank of real student confusion is the raw material for the head-to-head harness (grill Q1-Q3). Synthetic LLM-generated questions were rejected as the primary bank because they test what a model thinks students ask.
+**Result:** Anonymisation rule: strip names, schools, exact scores and dates (bucket to ranges); a human reviews the bank once before it is frozen; the frozen bank carries a content hash so results are comparable across runs. Bank owner for the one-time review: open flag. This entry is the explicit per-use approval the AIOS rules require before any Pathlynks / student-applicant data is touched.
+**Approved-by:** Umesh
+**Links:** T-012, T-021; grill log Q3
+
+## D-008 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** Capture policy is PROVIDED-FIRST and the AI backend is MULTI-PROVIDER. (1) Capture ordering per source: organizer-provided recording -> public recording -> attendee notes/live transcript -> silent capture ONLY when no alternative exists; silent capture remains a supported capability (default policy row silent-full) but is the last resort, never the default path for sources that already share recordings (e.g. TOC). Media purge is GATED: a recording may be deleted only when every claim citing it is marked verified, and a +/-15 s evidence clip per cited turn is retained permanently. (2) AI backend: five provider adapters from day one (gemini, anthropic API key and OAuth/Claude Code modes, openai, ollama, claude-code), each exposing listModels() so the UI/CLI renders a per-provider model dropdown; the provider chain per jobKind is a user-editable ordered list of any length >= 1. Gemini stays the default first provider.
+**Supersedes:** D-002, D-005 -- D-002 recorded silent full capture as the flat mode and purge-after-processing without a gate; the grill (Q4, Q12) established that the founder wants provided sources used first (no wasted effort/tokens where recordings are already given) and that ungated purge breaks the who-said-what promise the moment an expert disputes a quote, so provided-first ordering plus a verified-claims gate and retained evidence clips replace it. D-005 recorded that the Anthropic API was optional and might be dropped; the grill (Q5, Q6) established a hard no-single-AI-dependency rule with rotation across Gemini/OpenAI/Ollama/Anthropic and a per-provider model dropdown, so the drop clause is removed while Gemini-first as the default is kept.
+**Why:** Founder's explicit rules from the 2026-09-03 grill: silent capture is the final possible weapon, not the daily tool; no AI tool should run on one model; evidence must survive disputes.
+**Result:** Design consequences: sources.captureMode in {provided, public, notes, silent} required; media.kind incl. evidence-clip and media.retention added in schema v2 (T-018); packages/ai ships five adapters + listModels() + STT seam (T-019); paste-a-link capture CLI warns before silently joining a provided-recording community (T-024).
+**Changes-authorized:** ARCHITECTURE section 3 (H8 capture-mode hypothesis reworded to provided-first; H10 provider routing reworded to multi-provider chain); ARCHITECTURE section 6 (purge level question restated as gated-purge design task)
+**Approved-by:** Umesh
+**Links:** T-018, T-019, T-024, T-026; grill log Q4, Q5, Q6, Q12; brainstorms/2026-09-03-lkb-counsellor-assumptions.md
