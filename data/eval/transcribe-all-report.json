@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-09-03T18:24:48.013Z",
+  "results": [
+    {
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+      "ok": false,
+      "durationSec": 299.9
+    },
+    {
+      "sessionId": "2026-05-20-telling-your-brand-story-better",
+      "ok": true,
+      "durationSec": 576.7
+    },
+    {
+      "sessionId": "2026-05-22-uniaccess-xavier-university",
+      "ok": true,
+      "durationSec": 86.3
+    },
+    {
+      "sessionId": "2026-05-28-in-focus-1",
+      "ok": true,
+      "durationSec": 190.2
+    },
+    {
+      "sessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "ok": false,
+      "durationSec": 17.9
+    },
+    {
+      "sessionId": "2026-06-25-in-focus-2",
+      "ok": true,
+      "durationSec": 91.8
+    },
+    {
+      "sessionId": "2026-07-15-creative-futures",
+      "ok": false,
+      "durationSec": 617.5
+    },
+    {
+      "sessionId": "2026-07-28-metrics-and-mingling",
+      "ok": true,
+      "durationSec": 344.9
+    },
+    {
+      "sessionId": "2026-07-30-in-focus-3",
+      "ok": false,
+      "durationSec": 21.7
+    },
+    {
+      "sessionId": "2026-08-12-uniaccess-ashoka-university",
+      "ok": false,
+      "durationSec": 21.2
+    },
+    {
+      "sessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "ok": false,
+      "durationSec": 219.8
+    },
+    {
+      "sessionId": "2026-08-27-in-focus-4",
+      "ok": false,
+      "durationSec": 72.6
+    }
+  ]
+}
