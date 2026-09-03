@@ -1,6 +1,8 @@
 # Manifest — evaluator-calibration (T-022)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/evaluator-calibration.md`
 Contract: `qa/contracts/evaluator-calibration.md`
 
 ## Disclosed scope-down (read this first, same posture as T-021)

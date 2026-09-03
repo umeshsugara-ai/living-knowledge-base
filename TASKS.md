@@ -32,7 +32,7 @@
 | T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |
 | T-006 | done | Recording-gap tracking (never silently drop) | checker PASS 7/7, verdict `819262a` |
 | T-021 | done | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | checker PASS, verdict `qa/verdicts/golden-set-recall.md`, commit `03fcf8d`; harness verified against a heuristic (non-LLM) retriever — recall@5=1.000 is NOT evidence against the real 0.85 target, which is blocked on ISS-015 (invalid GEMINI_API_KEY) and deferred to a real-`selectNodes` re-run |
-| T-022 | open | Evaluator calibration on 30 hand-scored pairs | depends T-021 |
+| T-022 | done | Evaluator calibration on 30 hand-scored pairs | depends T-021 — checked PASS cycle 1, `qa/verdicts/evaluator-calibration.md`, commit `1d2ee71`. NOTE: uses a heuristic scorer + a derived (not hand-scored) reference set, blocked on ISS-015 for the real GEMINI-backed calibration — do not read `mae=0.170` as calibrating the production LLM judge. |
 
 ## Phase A — Capture
 
