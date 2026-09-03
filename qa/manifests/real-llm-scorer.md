@@ -1,6 +1,8 @@
 # Manifest — real-llm-scorer (T-009b)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/real-llm-scorer.md` — PASS, commit `089d2b6`
 Contract: `qa/contracts/real-llm-scorer.md`
 
 ## What changed
