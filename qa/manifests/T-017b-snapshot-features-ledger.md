@@ -285,4 +285,5 @@ Contract: `qa/contracts/snapshot-features-ledger.md` (T-017b). Built by: T-017b 
 (Neither file is git-tracked — both live under the user's Claude memory location, outside
 D:\KnowledgeBase.)
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-017b-snapshot-features-ledger.md (Cycle checked: 2, commit 45b1b88) — 9/9 criteria met; ISS-013 verified.
