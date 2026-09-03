@@ -8,13 +8,13 @@
 - "AI API-based hoga ya cloud code hamara Max subscription ke through — dono ka system day one se integrate karega" → provider seam (T-019).
 - DECISIONS (AskUserQuestion answers): consent = **silent full capture** with full diarization + who/when provenance so team can follow up with the expert; recordings purged after processing (purge design deferred). Stack = **TS pnpm monorepo, Python ML workers**. Bot = **self-host Vexa + Whisper, pluggable STT so a Gemini 3.5-transcribe key can be preferred**. Backend = **Gemini-first (purchased tokens, Google-side budget), Claude via the `claude` CLI OAuth email→OTP login flow, Anthropic API optional/droppable; no budget-guard work now — features first.**
 
-## 2026-09-03 (later) — Umesh, mid-session + /grill outcomes
+## 2026-09-03 (later) — Umesh, mid-session + /grill outcomes — folded 2026-09-03 (sweep, no commit needed: TOC/whatsapp_msg-as-sources already covered by qa/contracts/ingestion-source-seam.md naming a future `whatsapp` adapter + TASKS.md T-002/T-007; A13/Watched Sources already present as T-027 in TASKS.md)
 - "TOC wali directory, WhatsApp wali directory — ye sab as a feature aayenge right?" → yes: raw/TOC = recording/document adapters + T-002; sources/whatsapp_msg = A8/A9 + T-007.
 - "Google search bhi hoga… important websites bookmark kar paayen, update hone par track ho ke knowledge pool update ho jaye — reputed websites ka content gold hai; headers / landing pages bhi" → A13 Watched Sources, T-027 (depends T-023).
 - "Meeting link Zoom / Google Meet / koi aur platform — sab ke hisaab se bana paayega? system dynamic, use-case wise" → T-024 platform-adapter layer (Vexa for Meet/Teams; browser-profile join for Zoom/others; system-audio universal fallback). Flags: verify Vexa Zoom support; Zoom web-client bot join spike.
 - Grill decisions (see brainstorms/2026-09-03-lkb-counsellor-assumptions.md): "beat" = blind head-to-head panel-scored; configurable panel w/ credibility tier; Pathlynks questions approved anonymised (D-007); provided-first capture, silent = last resort, gated purge + evidence clips (D-008); five providers + listModels dropdown, user-editable chain (D-008); D-006 approved; first demo = paste-a-link capture on any platform; eval harness (internal tier) alongside first /ask; copilot for in-house counsellors first (C12/C2 before C14).
 
-## 2026-09-03 (later) — Umesh, scope correction on T-012/T-014 (compete screen) + priority
+## 2026-09-03 (later) — Umesh, scope correction on T-012/T-014 (compete screen) + priority — folded 2026-09-03 (sweep, no contract to amend: no T-012 contract exists yet, so TASKS.md's wording — commit b489089 — is the source of truth for now; correctly reflects the re-scope and T-009-before-T-010/T-028 priority)
 - "Ye sab tho manually hoga naa iske liye — ek screen bana denge jahan counsellor details milegi.
   Dont take it too much. Ek screen mein hogi 'compete wali' aur usme counsellor basic details
   daal ke start kar payenge." → the eval-harness/championship UI is scoped WAY down: ONE simple
