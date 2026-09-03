@@ -187,4 +187,5 @@ scripts/lint-root.mjs scripts/lint-dupes.mjs scripts/lint-migrations.mjs scripts
 .github/workflows/ci.yml package.json pnpm-lock.yaml ARCHITECTURE.md docs/goal.md (rename from goal.md)
 qa/manifests/T-017-structure-lint.md`. `.goal/` and `qa/.last-tick` deliberately left unstaged.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-017-structure-lint.md (Cycle checked: 1, commit 4ccfcfd) — 10/10 criteria met.
