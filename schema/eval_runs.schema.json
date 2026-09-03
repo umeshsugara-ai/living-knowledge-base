@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://eval_runs",
+  "title": "eval_runs",
+  "type": "object",
+  "required": ["_id", "tenantId", "question", "counsellor", "credibility", "createdAt"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "question": { "type": "string", "minLength": 1 },
+    "counsellor": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "org": { "type": "string" }
+      }
+    },
+    "aiAnswer": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "sources": { "description": "askV2's { internal, web } sources object, stored as-is." }
+      }
+    },
+    "counsellorAnswer": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" }
+      }
+    },
+    "score": {
+      "type": "object",
+      "properties": {
+        "ai": { "type": "number" },
+        "counsellor": { "type": "number" },
+        "notes": { "type": "string" }
+      }
+    },
+    "credibility": {
+      "type": "string",
+      "description": "D-007 tier rule — a one-person manual form can only ever produce 'internal'.",
+      "enum": ["internal", "independent-human", "calibrated-llm"]
+    },
+    "createdAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

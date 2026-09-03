@@ -4,10 +4,11 @@
  * them so every test file builds `ServerDeps` the same honest way.
  */
 import type { CompleteResult } from "@lkb/ai";
-import type { TreeIndexNode } from "@lkb/core";
+import type { EvalRuns, TreeIndexNode } from "@lkb/core";
 import type { AskV2Deps } from "@lkb/ask";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
+import type { EvalRunStore } from "./routes/compete.js";
 import type { ServerDeps } from "./server.js";
 
 export const FIXTURE_TREE: TreeIndexNode = {
@@ -59,10 +60,29 @@ export function fakeAskDeps(): Omit<AskV2Deps, "tenantId"> {
   };
 }
 
+/** An in-memory `EvalRunStore` — tests never touch Mongo. `_rows` is exposed for assertions. */
+export function fakeEvalRunStore(): EvalRunStore & { _rows: Map<string, EvalRuns> } {
+  const rows = new Map<string, EvalRuns>();
+  return {
+    _rows: rows,
+    async create(tenantId, doc) {
+      const row = { ...doc, tenantId } as EvalRuns;
+      rows.set(row._id, row);
+    },
+    async recordScore(tenantId, id, update) {
+      const row = rows.get(id);
+      if (!row || row.tenantId !== tenantId) return false;
+      rows.set(id, { ...row, counsellorAnswer: update.counsellorAnswer, score: update.score });
+      return true;
+    },
+  };
+}
+
 export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
   return {
     keyStore: fakeKeyStore({ "good-ask-key": { tenantId: "tenant-1", scopes: ["ask"] } }),
     ask: { tree: fakeTreeStore(), askDeps: fakeAskDeps() },
+    evalRuns: fakeEvalRunStore(),
     ...overrides,
   };
 }

@@ -9,11 +9,12 @@
  * wraps — no new cross-package pattern invented.
  */
 import { randomUUID } from "node:crypto";
-import { getDb } from "@lkb/db";
+import { getDb, createEvalRun, recordScore as recordEvalRunScore } from "@lkb/db";
 import type { ApiKeys, Jobs, TreeIndexNode } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
+import type { EvalRunStore } from "./routes/compete.js";
 import { sha256Hex } from "./hash.js";
 
 export function createMongoApiKeyStore(): ApiKeyStore {
@@ -32,6 +33,15 @@ export function createMongoTreeStore(): TreeStore {
     async load(tenantId: string): Promise<TreeIndexNode | null> {
       return getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: tenantId, level: "tenant" });
     },
+  };
+}
+
+/** Mongo-backed `EvalRunStore` (T-012 C3) — thin wrapper over `@lkb/db`'s `eval-runs.ts`
+ * accessor, same composition-root pattern as the two stores above. */
+export function createMongoEvalRunStore(): EvalRunStore {
+  return {
+    create: (tenantId, doc) => createEvalRun(tenantId, doc),
+    recordScore: (tenantId, id, update) => recordEvalRunScore(tenantId, id, update),
   };
 }
 

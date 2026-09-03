@@ -63,6 +63,7 @@ a client of that API — with the long-range goal of beating top human counsello
 | claims | _id, tenantId, text, status, evidence | yes |
 | consent_policies | _id, tenantId, mode | no |
 | decisions | _id, tenantId, text, status, evidence | yes |
+| eval_runs | _id, tenantId, question, counsellor, credibility, createdAt | no |
 | features_event | id, feature, event, date, unit, links | no |
 | gaps | _id, tenantId, kind, status | no |
 | graph_edges | _id, tenantId, from, to, type | no |

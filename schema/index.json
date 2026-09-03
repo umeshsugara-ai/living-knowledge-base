@@ -16,5 +16,6 @@
   "jobs": [{ "keys": { "tenantId": 1 } }, { "keys": { "tenantId": 1, "status": 1, "createdAt": 1 } }],
   "tenants": [{ "keys": { "_id": 1 } }],
   "api_keys": [{ "keys": { "tenantId": 1 } }, { "keys": { "keyHash": 1 }, "unique": true }],
-  "consent_policies": [{ "keys": { "tenantId": 1 } }]
+  "consent_policies": [{ "keys": { "tenantId": 1 } }],
+  "eval_runs": [{ "keys": { "tenantId": 1 } }, { "keys": { "tenantId": 1, "credibility": 1 } }]
 }

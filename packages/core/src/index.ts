@@ -5,6 +5,7 @@ export * from "./generated/chunks.js";
 export * from "./generated/claims.js";
 export * from "./generated/consent_policies.js";
 export * from "./generated/decisions.js";
+export * from "./generated/eval_runs.js";
 export * from "./generated/features_event.js";
 export * from "./generated/gaps.js";
 export * from "./generated/graph_edges.js";

@@ -9,12 +9,15 @@ import type { Server } from "node:http";
 import type { ApiKeyStore } from "./auth.js";
 import { requireAuth } from "./auth.js";
 import { createAskRouter, type AskRouteDeps } from "./routes/ask.js";
+import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
+import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createStubsRouter } from "./routes/stubs.js";
 import { createRateLimiter, type RateLimitOptions } from "./rate-limit.js";
 
 export interface ServerDeps {
   keyStore: ApiKeyStore;
   ask: AskRouteDeps;
+  evalRuns: EvalRunStore;
   rateLimit?: RateLimitOptions;
 }
 
@@ -24,6 +27,8 @@ export function createServer(deps: ServerDeps): Express {
   app.use(requireAuth(deps.keyStore));
   app.use(createRateLimiter(deps.rateLimit));
   app.use(createAskRouter(deps.ask));
+  app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
+  app.use(createCompetePageRouter());
   app.use(createStubsRouter());
   return app;
 }
