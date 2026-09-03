@@ -1,6 +1,6 @@
 # Manifest — browser-profile-privacy (T-011)
 
-Status: ready-for-check
+Status: checked-PASS (Cycle checked: 1, verdict `qa/verdicts/browser-profile-privacy.md`)
 Contract: `qa/contracts/browser-profile-privacy.md`
 
 ## Disclosed scope-down (read this first)

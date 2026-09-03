@@ -50,7 +50,7 @@
 | T-008 | open | Vector index (`chunks`, Atlas Vector Search) + unstructured search | depends T-007 |
 | T-009 | done | Developer API — `POST /ask` real, honest 501 stubs, rate limiting | checker PASS 8/8, verdict `cb04252`; post-verdict security fix `be86bf8` (shell:true removed) |
 | T-010 | open | Product shell (hosted multi-tenant app) — deferred, not near-term per Umesh | depends T-009 |
-| T-011 | open | Phase-B per-user browser profile bot + live monitor | depends T-024 |
+| T-011 | done | Phase-B per-user browser profile bot + live monitor | checker PASS 1/1, verdict `qa/verdicts/browser-profile-privacy.md`, commit `59dc2db`; real Playwright/UI wiring remains future work (see contract Non-goals) |
 | T-012 | done | Compete screen (internal tier, manual entry) | checker PASS 6/6, verdict `71b5fd2` |
 | T-009b | done | Make `@lkb/ask`'s `ScoreFn` async; wire a real LLM-based scorer into apps/api's /ask (replaces the heuristic keyword-overlap scorer) | checker PASS 6/6, verdict `089d2b6` |
 | T-013 | open | Avatar/voice counsellor client | depends T-009 |
