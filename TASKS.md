@@ -26,7 +26,7 @@
 
 | ID | Status | Task | Notes |
 |---|---|---|---|
-| T-002 | done | Migrate 23 TOC sessions into schema v2 | checker PASS 7/7, verdict `b59e0ff`; content ground-truthed against source transcripts |
+| T-002 | done | Migrate 23 TOC sessions into schema v2 | checker PASS 7/7, verdict `b59e0ff`; content ground-truthed against source transcripts. Follow-up: `session-pages-accessor` unit (missing `session_pages` Mongo accessor found during T-002 gap review) — checker PASS, verdict `qa/verdicts/session-pages-accessor.md`, commit `7e6185a`; `lkb.session_pages` backfilled to 23 real docs via one-off insert. |
 | T-003 | in_progress | Scale Gemini transcription 1→23 sessions | ISS-015 resolved (key now valid). Phase 1 done: pipeline built (`gemini-file-upload.ts` + `transcribe-toc-session.mjs`) + 1/23 real session (`2026-05-23-uniaccess-atlas-skilltech`) transcribed with real diarization, checker PASS cycle 1, verdict `qa/verdicts/gemini-audio-transcription.md`, commit `a7fb04e`. Scaling to remaining 21 sessions is deliberate follow-up, not yet started. |
 | T-004b | done | Tree topic/org child nodes + incremental regen (real T-002 data) | checker PASS 5/5, verdict `15e4ecf`; found real cross-session "New Zealand" topic |
 | T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |

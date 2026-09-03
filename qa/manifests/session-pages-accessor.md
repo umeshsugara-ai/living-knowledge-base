@@ -1,6 +1,8 @@
 # Manifest — session-pages-accessor (T-002 follow-up)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/session-pages-accessor.md`
 Contract: `qa/contracts/session-pages-accessor.md`
 
 ## Adjustment to criterion 3 (disclosed, not hidden)
