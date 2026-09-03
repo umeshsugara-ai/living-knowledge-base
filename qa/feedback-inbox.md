@@ -13,3 +13,15 @@
 - "Google search bhi hoga… important websites bookmark kar paayen, update hone par track ho ke knowledge pool update ho jaye — reputed websites ka content gold hai; headers / landing pages bhi" → A13 Watched Sources, T-027 (depends T-023).
 - "Meeting link Zoom / Google Meet / koi aur platform — sab ke hisaab se bana paayega? system dynamic, use-case wise" → T-024 platform-adapter layer (Vexa for Meet/Teams; browser-profile join for Zoom/others; system-audio universal fallback). Flags: verify Vexa Zoom support; Zoom web-client bot join spike.
 - Grill decisions (see brainstorms/2026-09-03-lkb-counsellor-assumptions.md): "beat" = blind head-to-head panel-scored; configurable panel w/ credibility tier; Pathlynks questions approved anonymised (D-007); provided-first capture, silent = last resort, gated purge + evidence clips (D-008); five providers + listModels dropdown, user-editable chain (D-008); D-006 approved; first demo = paste-a-link capture on any platform; eval harness (internal tier) alongside first /ask; copilot for in-house counsellors first (C12/C2 before C14).
+
+## 2026-09-03 (later) — Umesh, scope correction on T-012/T-014 (compete screen) + priority
+- "Ye sab tho manually hoga naa iske liye — ek screen bana denge jahan counsellor details milegi.
+  Dont take it too much. Ek screen mein hogi 'compete wali' aur usme counsellor basic details
+  daal ke start kar payenge." → the eval-harness/championship UI is scoped WAY down: ONE simple
+  manual-entry screen (counsellor name/basic details -> start a compete run), NOT a platform.
+  No self-serve counsellor onboarding, no fancy panel management UI right now.
+- "Main cheez ye dekh abhi ki knowledge base kaise banega, aur phir developers ko API deni hogi
+  for virtual counsellor and all — vo log API hit karenge. Baad mein counsellor ka user
+  management karenge, tho baad mein dekh lenge." → priority order restated: (1) knowledge base
+  build (current work) (2) Developer API so external devs/the counsellor client can hit it
+  (3) counsellor user-management/accounts — explicitly deferred, not now.
