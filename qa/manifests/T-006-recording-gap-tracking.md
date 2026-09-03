@@ -160,4 +160,5 @@ OK: docs/SNAPSHOT.md matches a fresh regeneration (108 lines, budget 200)
 Every file stayed within the 300 LOC budget (`capture.ts` 132, `gap-tracking.ts` 68, `gaps.ts`
 36, ADR 37 lines) — `lint:structure`'s `lint-loc` confirms no violation was introduced.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-006-recording-gap-tracking.md (Cycle checked: 1, commit 819262a) — 7/7 criteria met; ADR content independently verified against source HTML.
