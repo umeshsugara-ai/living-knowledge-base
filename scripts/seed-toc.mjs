@@ -61,6 +61,7 @@ async function seedLive(docs) {
   const { sessions } = await import("../packages/db/src/collections/sessions.js");
   const { turns } = await import("../packages/db/src/collections/turns.js");
   const { claims } = await import("../packages/db/src/collections/claims.js");
+  const { sessionPages } = await import("../packages/db/src/collections/session-pages.js");
 
   const url = process.env.MONGODB_URL || "mongodb://localhost:27017";
   const dbName = process.env.MONGODB_DB || "lkb";
@@ -74,10 +75,8 @@ async function seedLive(docs) {
     counts.sessions = docs.sessions.length;
     for (const doc of docs.turns) { await turns(tenantId).insertOne(withoutTenant(doc)); }
     counts.turns = docs.turns.length;
-    // session_pages has no packages/db/collections accessor yet (only sources/sessions/
-    // turns/claims exist per T-018 C6) — insert via the tenant-scoped raw handle claims()
-    // exposes would be wrong-collection; skip with a clear message rather than guess.
-    counts.session_pages = 0;
+    for (const doc of docs.session_pages) { await sessionPages(tenantId).insertOne(withoutTenant(doc)); }
+    counts.session_pages = docs.session_pages.length;
     for (const doc of docs.claims) { await claims(tenantId).insertOne(withoutTenant(doc)); }
     counts.claims = docs.claims.length;
     return counts;
