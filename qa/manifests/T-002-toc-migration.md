@@ -228,4 +228,5 @@ or `lint:structure`'s `snapshot.mjs --check` step fails on a clean checkout.)
   its own session per the 23-file scope, and labeled as a duplicate in its own summary rather
   than presented as independent content.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-002-toc-migration.md (Cycle checked: 1, commit b59e0ff) — 7/7 criteria met; content genuinely grounded, no fabrication found.
