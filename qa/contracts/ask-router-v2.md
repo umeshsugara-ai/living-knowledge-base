@@ -17,14 +17,26 @@ T-019's `jobs` ledger. No live LLM/HTTP calls required — every new step takes 
 
 ## Criteria (each machine-checkable)
 
-1. **`selectNodes(query, tree, complete): Promise<string[]>`** in `packages/ask/src/select-
-   nodes.ts` — builds a prompt from the tree's flattened `{node_id, title, summary}` list (reuse
-   `packages/index`'s tree-walk, do not re-flatten by hand), calls the injected `complete`
-   (T-019's `Provider['complete']` shape), parses a `{node_ids: string[]}` JSON response, and
-   feeds those ids to `packages/index`'s existing `treeSearch(tree, node_ids)` to get full nodes.
-   This is the missing link the AI-engineer lens flagged — `ask()`'s `tree_search_fn(tree, query)`
-   signature mismatch is resolved by `selectNodes` owning the query→node_ids step and `treeSearch`
-   staying id→nodes, unchanged.
+1. **`selectNodes(query, tree, complete, treeSearchFn): Promise<TreeIndexNode[]>`** in
+   `packages/ask/src/select-nodes.ts` — builds a prompt from the tree's flattened
+   `{node_id, title, summary}` list, calls the injected `complete` (T-019's `Provider['complete']`
+   shape), parses a `{node_ids: string[]}` JSON response, and resolves those ids to full nodes via
+   an **injected `treeSearchFn` parameter shaped exactly like `packages/index`'s
+   `treeSearch(tree, nodeIds)`** — not a direct `@lkb/index` import. `.dependency-cruiser.cjs`'s
+   `ask-index-ingest-only-ai-db-core` rule (ARCHITECTURE §5: `ask|index|ingest → ai|db|core`)
+   forbids `packages/ask` from importing `packages/index`; a direct import was confirmed to fail a
+   real `depcruise` run. DI matches the pattern `router.ts` already uses for
+   `TreeSearchFn`/`ScoreFn`/`WebFallbackFn` — a composition root in `apps/*` (which the rules do
+   allow to depend on both `ask` and `index`) supplies `@lkb/index`'s real `treeSearch` at wiring
+   time. This is the missing link the AI-engineer lens flagged — `ask()`'s `tree_search_fn(tree,
+   query)` signature mismatch is resolved by `selectNodes` owning the query→node_ids step and
+   `treeSearch` staying id→nodes, unchanged, reached via injection rather than a same-package
+   import. The tree-flatten step is a small local DFS in `select-nodes.ts` (not an import), since
+   `packages/index`'s equivalent walk is a private, unexported generator and `packages/ask` cannot
+   import `packages/index` regardless.
+   *(Amended 2026-09-03, routine — /checker, T-005b cycle 1: original wording implied a direct
+   `packages/index` import, which is structurally disallowed; DI is the intent-preserving
+   implementation under the enforced dependency graph. See amendment log.)*
 2. **`refine(docs, query, complete): Promise<string>`** in `packages/ask/src/refine.ts` —
    decompose (split each doc's text into sentence-level strips), filter (per-strip keep/drop via
    injected `complete`), recompose (join kept strips). Applied to BOTH `good_docs` (internal) and
@@ -56,3 +68,13 @@ T-019's `jobs` ledger. No live LLM/HTTP calls required — every new step takes 
 - No HTTP route (`POST /ask` itself is T-009). No real provider wiring (fakes only, as
   established by T-019). No vector-index query path (structured tree only — unstructured/vector
   is T-008).
+
+## Amendment log
+- 2026-09-03 · routine · C1 reworded from "feeds those ids to `packages/index`'s existing
+  `treeSearch(tree, node_ids)`" (implying a direct import) to describe an injected `treeSearchFn`
+  parameter shaped like `treeSearch` · why: the literal wording is structurally impossible —
+  `.dependency-cruiser.cjs`'s `ask-index-ingest-only-ai-db-core` rule (ARCHITECTURE §5) forbids
+  `packages/ask` importing `packages/index`; verified by reading the rule directly (`from:
+  packages/(ask|index|ingest)/`, `to: OTHER("ai|db|core")` excludes `index` from `ask`'s allowed
+  targets) — a real `packages/index` is still what production wiring uses, supplied by an `apps/*`
+  composition root, so the contract's actual intent (reuse, don't reimplement) is preserved.
