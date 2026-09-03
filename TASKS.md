@@ -57,7 +57,7 @@
 | T-014 | open | Championship run (uses T-012's simple compete screen, not a platform) | depends T-012, T-013 |
 | T-028 | open | Counsellor user management/accounts — **explicitly deferred** (Umesh: "baad mein dekh lenge") | depends T-009 |
 | T-015 | open | Own-model training path | explicit approval before any data export |
-| T-026 | open | Recording purge policy: gated on verified claims + ±15 s evidence clips retained (D-008) | depends T-018 |
+| T-026 | done | Recording purge policy: gated on verified claims + ±15 s evidence clips retained (D-008) | checker PASS 7/7, verdict `950a804` |
 | T-027 | open | **Watched Sources** (A13): bookmark reputed URLs/landing pages → periodic fetch → hash+diff → re-ingest changed sections → provenance `{url, fetchedAt, diffFrom}` → change notifications | depends T-023 |
 | T-017b | done | SNAPSHOT.md generator + FEATURES.jsonl ledger + anti-cyclic hook | checker PASS 9/9, verdict `45b1b88` (cycle 2, D-009 hook wiring) |
 
