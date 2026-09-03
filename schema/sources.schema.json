@@ -7,13 +7,14 @@
   "properties": {
     "_id": { "type": "string" },
     "tenantId": { "type": "string", "minLength": 1 },
-    "kind": { "type": "string", "enum": ["recording", "document", "spreadsheet", "whatsapp-batch"] },
+    "kind": { "type": "string", "enum": ["recording", "document", "spreadsheet", "whatsapp-batch", "url"] },
     "captureMode": {
       "type": "string",
       "enum": ["provided", "public", "notes", "silent"],
       "description": "D-008 provided-first capture ordering: organizer-provided > public > notes/live-transcript > silent (last resort)."
     },
     "path": { "type": "string" },
+    "url": { "type": "string", "description": "Origin URL for kind: 'url' sources (T-023)." },
     "hash": { "type": "string", "minLength": 8 },
     "consent": {
       "type": "object",

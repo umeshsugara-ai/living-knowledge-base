@@ -35,6 +35,15 @@ export function fakeTextReader(files: Record<string, string>) {
   };
 }
 
+/** In-memory URL fetcher: `url -> extracted text`, throws on an unknown url (T-023). */
+export function fakeUrlFetcher(pages: Record<string, string>) {
+  return async (url: string): Promise<string> => {
+    const text = pages[url];
+    if (text === undefined) throw new Error(`fakeUrlFetcher: no fixture for ${url}`);
+    return text;
+  };
+}
+
 /** Deterministic fake hasher — length-prefixed so different content never collides in tests. */
 export function fakeHasher(input: Uint8Array | string): string {
   const length = typeof input === "string" ? input.length : input.byteLength;

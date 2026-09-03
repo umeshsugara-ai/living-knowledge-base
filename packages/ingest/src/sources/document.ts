@@ -8,6 +8,10 @@
 import type { Source, SourceDoc, MediaDoc, ConsentContext, Turn } from "../source.js";
 
 const DOCUMENT_EXTENSIONS = [".pdf", ".docx", ".txt", ".md"];
+/** T-023: an http(s) string is a URL-shaped input, never a local document path, even when it
+ * happens to end in a document extension (e.g. "https://example.com/report.pdf") — that belongs
+ * to the `url` adapter, not this one. */
+const URL_RE = /^https?:\/\//i;
 
 /** Injected content hasher — hashes the extracted text (no `crypto` call baked in). */
 export type DocumentHasher = (text: string) => string | Promise<string>;
@@ -41,6 +45,7 @@ function extractPath(input: unknown): string | undefined {
 }
 
 function hasDocumentExtension(path: string): boolean {
+  if (URL_RE.test(path)) return false;
   const lower = path.toLowerCase();
   return DOCUMENT_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
