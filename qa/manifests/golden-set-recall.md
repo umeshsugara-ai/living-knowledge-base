@@ -1,6 +1,8 @@
 # Manifest — golden-set-recall (T-021)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/golden-set-recall.md` — PASS, commit `03fcf8d`
 Contract: `qa/contracts/golden-set-recall.md`
 
 ## Disclosed scope-down (read this first)

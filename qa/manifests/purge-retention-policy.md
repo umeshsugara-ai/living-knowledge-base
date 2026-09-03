@@ -1,6 +1,8 @@
 # Manifest — purge-retention-policy (T-026)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/purge-retention-policy.md` — PASS, commit `950a804`
 Contract: `qa/contracts/purge-retention-policy.md`
 
 ## What changed

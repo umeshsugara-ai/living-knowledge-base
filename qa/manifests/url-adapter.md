@@ -1,6 +1,8 @@
 # Manifest — url-adapter (T-023)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/url-adapter.md` — PASS, commit `bcc6f1e`
 Contract: `qa/contracts/url-adapter.md`
 
 ## What changed

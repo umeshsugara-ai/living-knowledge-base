@@ -1,6 +1,8 @@
 # Manifest — regenerate-year-migration (T-004c)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/regenerate-year-migration.md` — PASS, commit `8ae94f4`
 Contract: `qa/contracts/regenerate-year-migration.md`
 
 ## What changed
