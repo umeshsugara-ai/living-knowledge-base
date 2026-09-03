@@ -173,4 +173,5 @@ OK: docs/SNAPSHOT.md matches a fresh regeneration (105 lines, budget 200)
 - **C6** (no regression) — MET. All 5 verification commands above are clean; T-005's original
   `ask()`/`evaluate()` exports and `router.test.ts` are byte-for-byte untouched.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-005b-ask-router-v2.md (Cycle checked: 1, commit e5dafe3) — 6/6 criteria met; C1 amended (DI shape, not direct import).
