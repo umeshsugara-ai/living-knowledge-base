@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://gaps",
+  "title": "gaps",
+  "type": "object",
+  "required": ["_id", "tenantId", "kind", "status"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "kind": { "type": "string", "enum": ["recording-pending", "source-pending"] },
+    "description": { "type": "string" },
+    "requestedFrom": {
+      "type": "string",
+      "description": "Who the standing ask went to (docs/adr/0002-standing-ask-process.md) — e.g. an org/person ref, not free text."
+    },
+    "requestedAt": { "type": "string", "format": "date-time" },
+    "status": { "type": "string", "enum": ["open", "received", "expired"] },
+    "sla": {
+      "type": "object",
+      "description": "Standing-ask SLA per docs/adr/0002-standing-ask-process.md.",
+      "required": ["dueAt"],
+      "properties": {
+        "dueAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "sourceRef": {
+      "type": "string",
+      "description": "Optional link to the sources/_id this gap resolved into once received."
+    }
+  },
+  "additionalProperties": true
+}

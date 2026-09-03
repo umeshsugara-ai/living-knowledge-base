@@ -64,6 +64,7 @@ a client of that API — with the long-range goal of beating top human counsello
 | consent_policies | _id, tenantId, mode | no |
 | decisions | _id, tenantId, text, status, evidence | yes |
 | features_event | id, feature, event, date, unit, links | no |
+| gaps | _id, tenantId, kind, status | no |
 | graph_edges | _id, tenantId, from, to, type | no |
 | jobs | _id, tenantId, kind, status, createdAt | no |
 | media | _id, tenantId, sourceRef, kind, retention | no |

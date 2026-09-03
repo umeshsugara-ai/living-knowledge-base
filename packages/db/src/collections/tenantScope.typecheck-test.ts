@@ -6,6 +6,7 @@ import { claims } from "./claims.js";
 import { sessions } from "./sessions.js";
 import { sources } from "./sources.js";
 import { turns } from "./turns.js";
+import { gaps } from "./gaps.js";
 
 // @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
 sources();
@@ -15,6 +16,8 @@ sessions();
 turns();
 // @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
 claims();
+// @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
+gaps();
 
 // The valid form typechecks fine (proves the accessors work, not just that they reject).
 export const validCalls = () => {
@@ -22,4 +25,5 @@ export const validCalls = () => {
   sessions("toc");
   turns("toc");
   claims("toc");
+  gaps("toc");
 };

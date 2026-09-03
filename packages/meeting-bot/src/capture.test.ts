@@ -7,6 +7,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import type { Gaps } from "@lkb/core";
+import type { GapStore } from "@lkb/ingest";
+
 import { capture } from "./capture.js";
 import { baseConsent, fakeIngestSource, fakeJoiners, TENANT, FIXED_NOW } from "./testUtils.js";
 
@@ -84,4 +87,37 @@ test("capture() stops the joiner even when the ingest fetch throws", async () =>
     /boom/,
   );
   assert.deepEqual(joiners.vexa.calls.stopped, ["bad-handle"]);
+});
+
+// T-006 C4: capture.ts wires Joiner.join failures into gap-tracking's recordGap when a
+// gapStore is injected (existing suite above is unaffected since gapStore is optional).
+test("capture() records a gap when Joiner.join fails and a gapStore is injected", async () => {
+  const joiners = fakeJoiners();
+  joiners.vexa.join = async () => {
+    throw new Error("join boom");
+  };
+  const recorded: Gaps[] = [];
+  const gapStore: GapStore = {
+    async create(tenantId, doc) {
+      recorded.push({ ...doc, tenantId } as Gaps);
+    },
+  };
+
+  await assert.rejects(
+    () =>
+      capture(
+        "https://meet.google.com/abc-defg-hij",
+        { tenantId: TENANT, consent: baseConsent() },
+        { joiners, ingestSource: fakeIngestSource(), gapStore, now: () => FIXED_NOW },
+      ),
+    /join boom/,
+  );
+
+  assert.equal(recorded.length, 1);
+  assert.equal(recorded[0]!.tenantId, TENANT);
+  assert.equal(recorded[0]!.kind, "recording-pending");
+  assert.equal(recorded[0]!.status, "open");
+  assert.match(recorded[0]!.description ?? "", /join boom/);
+  // join never succeeded, so there is no handle to stop.
+  assert.deepEqual(joiners.vexa.calls.stopped, []);
 });

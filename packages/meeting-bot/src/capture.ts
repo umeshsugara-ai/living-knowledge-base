@@ -12,14 +12,19 @@
  * D-008 ordering: `assertProvidedFirst` runs BEFORE `Joiner.join` — a silent capture without
  * confirmation is warned about before any join is attempted, not after.
  *
+ * T-006 C4: when `assertProvidedFirst` warns, or `Joiner.join` fails, and a `gapStore` was
+ * injected (contract `qa/contracts/recording-gap-tracking.md`), `recordGap` (T-020's ingest
+ * package — pure composition, no new I/O) is called so the gap gets a durable home instead of a
+ * one-off console warning. `gapStore` is optional so existing callers/tests are unaffected.
+ *
  * TODO(T-024b): a real joiner's `mediaStream` will need to be persisted to a path the ingest
  * `recording` adapter's injected `reader` can read. For now `sessionHandle` doubles as that path
  * — every T-024 joiner is a stub that returns a fixture-resolvable handle, and the caller's
  * injected `reader` (fake in tests, real file reader in the CLI) is expected to resolve it.
  */
 import type { Sessions } from "@lkb/core";
-import type { ConsentContext, Source, SourceDoc, Turn } from "@lkb/ingest";
-import { assertProvidedFirst } from "@lkb/ingest";
+import type { ConsentContext, GapStore, Source, SourceDoc, Turn } from "@lkb/ingest";
+import { assertProvidedFirst, recordGap } from "@lkb/ingest";
 
 import { detectPlatform } from "./platform.js";
 import { selectJoinStrategy, type JoinStrategy } from "./strategy.js";
@@ -40,6 +45,8 @@ export interface CaptureDeps {
   ingestSource: Source;
   now?: () => string;
   sessionId?: (source: SourceDoc) => string;
+  /** Injected `gaps` store (T-006 C4) — omitted callers get no gap-recording, unchanged behavior. */
+  gapStore?: GapStore;
 }
 
 export interface CaptureResult {
@@ -54,7 +61,21 @@ export async function capture(url: string, opts: CaptureOpts, deps: CaptureDeps)
 
   // D-008 provided-first soft gate — runs BEFORE join.
   const providedFirstWarning = assertProvidedFirst(opts.consent);
-  if (providedFirstWarning) warnings.push(providedFirstWarning);
+  if (providedFirstWarning) {
+    warnings.push(providedFirstWarning);
+    if (deps.gapStore) {
+      await recordGap(
+        "provided-first-warning",
+        {
+          tenantId: opts.tenantId,
+          kind: "recording-pending",
+          description: providedFirstWarning,
+          now: deps.now,
+        },
+        deps.gapStore,
+      );
+    }
+  }
 
   const platform = detectPlatform(url);
   const strategy = selectJoinStrategy(platform);
@@ -63,10 +84,28 @@ export async function capture(url: string, opts: CaptureOpts, deps: CaptureDeps)
     throw new Error(`capture: no Joiner injected for strategy '${strategy}' (platform '${platform}')`);
   }
 
-  const { sessionHandle } = await joiner.join(url, {
-    tenantId: opts.tenantId,
-    consentNote: opts.consent.note,
-  });
+  let sessionHandle: string;
+  try {
+    ({ sessionHandle } = await joiner.join(url, {
+      tenantId: opts.tenantId,
+      consentNote: opts.consent.note,
+    }));
+  } catch (err) {
+    if (deps.gapStore) {
+      const message = err instanceof Error ? err.message : String(err);
+      await recordGap(
+        "join-failure",
+        {
+          tenantId: opts.tenantId,
+          kind: "recording-pending",
+          description: `Joiner '${joiner.name}' failed to join ${url}: ${message}`,
+          now: deps.now,
+        },
+        deps.gapStore,
+      );
+    }
+    throw err;
+  }
 
   try {
     const { source } = await deps.ingestSource.fetch(
