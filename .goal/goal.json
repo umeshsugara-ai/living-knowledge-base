@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-03T13:56:01",
+  "updated": "2026-09-03T16:46:01",
   "progress": {
     "total": 29,
-    "done": 20,
+    "done": 21,
     "in_progress": 0,
     "blocked": 0,
-    "pending": 9,
+    "pending": 8,
     "current": "T-003",
-    "percent": 69
+    "percent": 72
   },
   "tasks": [
     {
@@ -39,12 +39,12 @@
     {
       "id": "T-003",
       "title": "Scale Gemini diarize/timestamp/name/summarize pipeline from 1 to 23 sessions",
-      "status": "pending",
+      "status": "in_progress",
       "base_criticality": "MEDIUM",
       "deps": [
         "T-019"
       ],
-      "note": "real API spend, sequence deliberately",
+      "note": "ISS-015 resolved (key valid). Phase 1 (pipeline + 1/23 real session) checker-PASSed cycle 1, commit a7fb04e, verdict qa/verdicts/gemini-audio-transcription.md. Scaling to remaining 21 sessions is deliberate follow-up, not started — real API spend, sequence deliberately.",
       "criticality": "low"
     },
     {
@@ -351,8 +351,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 63.48,
-    "eta_days": 0.1
+    "velocity_per_day": 47.31,
+    "eta_days": 0.2
   },
-  "last_deterministic_tick": "2026-09-03T13:56:01"
+  "last_deterministic_tick": "2026-09-03T16:46:01"
 }

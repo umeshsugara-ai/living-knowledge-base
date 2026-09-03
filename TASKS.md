@@ -27,7 +27,7 @@
 | ID | Status | Task | Notes |
 |---|---|---|---|
 | T-002 | done | Migrate 23 TOC sessions into schema v2 | checker PASS 7/7, verdict `b59e0ff`; content ground-truthed against source transcripts |
-| T-003 | BLOCKED | Scale Gemini transcription 1→23 sessions | ISS-015: GEMINI_API_KEY in .env is invalid (Google API_KEY_INVALID) — needs a valid key from Umesh |
+| T-003 | in_progress | Scale Gemini transcription 1→23 sessions | ISS-015 resolved (key now valid). Phase 1 done: pipeline built (`gemini-file-upload.ts` + `transcribe-toc-session.mjs`) + 1/23 real session (`2026-05-23-uniaccess-atlas-skilltech`) transcribed with real diarization, checker PASS cycle 1, verdict `qa/verdicts/gemini-audio-transcription.md`, commit `a7fb04e`. Scaling to remaining 21 sessions is deliberate follow-up, not yet started. |
 | T-004b | done | Tree topic/org child nodes + incremental regen (real T-002 data) | checker PASS 5/5, verdict `15e4ecf`; found real cross-session "New Zealand" topic |
 | T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |
 | T-006 | done | Recording-gap tracking (never silently drop) | checker PASS 7/7, verdict `819262a` |
@@ -62,7 +62,8 @@
 | T-017b | done | SNAPSHOT.md generator + FEATURES.jsonl ledger + anti-cyclic hook | checker PASS 9/9, verdict `45b1b88` (cycle 2, D-009 hook wiring) |
 
 **Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009,
-T-004b, T-012, T-009b — all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid
-Gemini key).
+T-004b, T-012, T-009b — all checker-PASSed and pushed. **T-003 in_progress**: ISS-015 resolved
+(key valid), phase 1 (pipeline + 1/23 real session) checker-PASSed cycle 1 — scaling to remaining
+21 sessions is deliberate follow-up, not yet started.
 **Maker picks next:**
 T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.

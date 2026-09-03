@@ -1,7 +1,8 @@
 # Manifest — gemini-audio-transcription (T-003, phase 1: pipeline + proof-of-concept)
 
-Status: ready-for-check
+Status: checked-PASS
 Contract: `qa/contracts/gemini-audio-transcription.md`
+Cycle checked: 1 — verdict `qa/verdicts/gemini-audio-transcription.md`
 
 ## Scope reminder
 This unit builds the real Gemini File-API transcription pipeline and proves it on ONE real
