@@ -62,3 +62,9 @@ fakes, matching the pattern already used in `packages/ask` (injectable `score_fn
   throttling (explicitly dropped per D-005/D-008 — "no budget-guard work now"). No web-search
   provider for CRAG (folds into `ask-router` v2, a separate unit, T-005b) unless trivially reusing
   this same `Provider` shape — if so, note it in the manifest but don't block T-019 on it.
+
+## Amendment log
+- 2026-09-03 · routine · checker adopts this maker-drafted contract as-is (T-019 cycle-1 check) ·
+  verified faithful to D-005 (Gemini-first, Claude via OAuth not API keys, Anthropic Messages API
+  optional/flagged, jobs ledger with maxCost, no budget-guard work) and D-008 (multi-provider
+  chain, five adapters + listModels() + STT seam) and plan §6c.3 — no wording changes needed.
