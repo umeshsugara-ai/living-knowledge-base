@@ -64,3 +64,17 @@ is wired at `apps/api`'s actual startup but not required for the test suite to p
   (each is its own later unit once the underlying data access exists). No live server deployment.
   No real API key issuance UI (T-012's compete screen or a later admin surface generates test
   keys directly into the DB/fixtures for now).
+
+## Amendment log
+- 2026-09-03 · routine · Clarified C3's "real, not another stub" wiring requirement covers
+  `treeSearchFn` (real, from `packages/index`) and `complete` (real, T-019's provider router) —
+  it does not require `askV2`'s `scoreFn` to be a real LLM judge. `packages/ask/src/evaluator.ts`'s
+  `ScoreFn` type is `(query, node) => ScoreResult` (synchronous); a real LLM-based scorer is
+  necessarily async and cannot be plugged into that interface without changing it, which is outside
+  this unit's scope. `apps/api/src/score.ts`'s `heuristicScore` (deterministic keyword-overlap) is
+  accepted as the production `scoreFn` for T-009, clearly commented as a non-LLM stand-in. Why:
+  verified against C3's own text, which names only `treeSearchFn` and `complete` as needing real
+  wiring — the scorer was never named, so requiring it now would be inventing a new criterion after
+  the fact, not enforcing an existing one. Follow-up needed, tracked here rather than left implicit:
+  **T-009b — make `ScoreFn` async and wire a real LLM-based scorer once that interface change
+  lands.**
