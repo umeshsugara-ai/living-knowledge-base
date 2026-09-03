@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-03T08:31:05",
+  "updated": "2026-09-03T10:46:02",
   "progress": {
     "total": 29,
-    "done": 3,
+    "done": 9,
     "in_progress": 0,
     "blocked": 0,
-    "pending": 26,
-    "current": "T-002",
-    "percent": 10
+    "pending": 20,
+    "current": "T-005b",
+    "percent": 31
   },
   "tasks": [
     {
@@ -22,7 +22,7 @@
       "base_criticality": "LOW",
       "deps": [],
       "criticality": "low",
-      "reopen_reason": "sweep 2026-09-03T02:15Z: contract C8 (validate.py exit 0) no longer held — ISS-004",
+      "reopen_reason": "sweep 2026-09-03T02:15Z: contract C8 (validate.py exit 0) no longer held \u2014 ISS-004",
       "completed": "2026-09-03T08:31:05"
     },
     {
@@ -178,50 +178,55 @@
     {
       "id": "T-016",
       "title": "Repo restructure to TS pnpm monorepo; port tree_index/ask_router to TS; ARCHITECTURE <=150",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [],
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T08:47:40"
     },
     {
       "id": "T-017",
       "title": "Structure lint in CI: lint-loc, dependency-cruiser, lint-dupes, root-file cap, ARCHITECTURE cap",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "LOW",
       "deps": [
         "T-016"
       ],
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T09:00:36"
     },
     {
       "id": "T-018",
       "title": "Schema v2: camelCase evidence, new collections, index.json, generated TS types, migrate-mongo baseline, db accessors",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [
         "T-016"
       ],
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T10:16:26"
     },
     {
       "id": "T-019",
       "title": "AI provider seam: gemini (primary), claude-code (OAuth), anthropic (flag), stt seam, routing.yaml, parity test",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [
         "T-016"
       ],
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T10:26:27"
     },
     {
       "id": "T-020",
       "title": "Ingestion source seam + recording/document adapters",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "LOW",
       "deps": [
         "T-018"
       ],
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T10:35:21"
     },
     {
       "id": "T-005b",
@@ -308,12 +313,13 @@
     {
       "id": "T-017b",
       "title": "SNAPSHOT.md generated + FEATURES.jsonl ledger + hook injection (plan 6d)",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "LOW",
       "deps": [
         "T-017"
       ],
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T09:30:49"
     }
   ],
   "decisions": [],
@@ -321,7 +327,7 @@
     {
       "ts": "2026-09-03T07:01:48",
       "level": "warn",
-      "message": "STALLED — last agentic tick never; open work is not advancing",
+      "message": "STALLED \u2014 last agentic tick never; open work is not advancing",
       "task_id": null,
       "kind": "stalled",
       "acked": false
@@ -333,8 +339,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 50.21,
-    "eta_days": 0.5
+    "velocity_per_day": 59.35,
+    "eta_days": 0.3
   },
-  "last_deterministic_tick": "2026-09-03T08:31:01"
+  "last_deterministic_tick": "2026-09-03T10:46:02"
 }
