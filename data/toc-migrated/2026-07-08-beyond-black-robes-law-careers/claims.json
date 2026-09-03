@@ -1,0 +1,45 @@
+[
+  {
+    "_id": "2026-07-08-beyond-black-robes-law-careers-c01",
+    "tenantId": "toc",
+    "text": "A student who completes an undergraduate law degree abroad and wants to practice in India must complete a mandatory 2-year Bar Council of India bridge course.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-08-beyond-black-robes-law-careers-t095",
+        "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-08-beyond-black-robes-law-careers-c02",
+    "tenantId": "toc",
+    "text": "Shardul Amarchand Mangaldas adopted Harvey AI in late September 2025, and other law firms have adopted similar AI tools since.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-08-beyond-black-robes-law-careers-t115",
+        "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-08-beyond-black-robes-law-careers-c03",
+    "tenantId": "toc",
+    "text": "Claude for Legal (from Anthropic) is used by law firms alongside tools like Harvey and traditional research platforms (Manupatra, LexisNexis) for tasks such as case summaries.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-08-beyond-black-robes-law-careers-t115",
+        "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+      },
+      {
+        "turnId": "2026-07-08-beyond-black-robes-law-careers-t119",
+        "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+      }
+    ]
+  }
+]

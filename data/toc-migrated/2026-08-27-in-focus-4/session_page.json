@@ -1,0 +1,25 @@
+{
+  "_id": "2026-08-27-in-focus-4-page",
+  "tenantId": "toc",
+  "sessionId": "2026-08-27-in-focus-4",
+  "summary": "TOC's fourth In Focus session featured Priyamvada Agarwal (Education & You) and Paritosh K. (RECO Education). Agarwal described a diagnostic-first, personalized test-prep model built around a Student-Teacher Tracker and a 1,500+-card physical flashcard set she calls the 'mithai ka dabba.' Paritosh framed RECO's work through the 'academically adrift' problem: students get admitted to selective universities but are not prepared for the reading, writing, and course-selection autonomy those universities demand, which RECO addresses through 1-on-1 tutorial-style mentoring. The Q&A touched on using Google's NotebookLM productively for reading comprehension without replacing original student writing.",
+  "keyInsights": [
+    "Education & You starts every student with a diagnostic test before building a customized prep schedule.",
+    "Education & You's flashcard set ('mithai ka dabba') contains 1,500+ physical vocabulary cards.",
+    "RECO Education frames its work around the 'academically adrift' problem: students get admitted but aren't prepared for university-level reading/writing autonomy."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-08-27-in-focus-4-t020",
+      "sessionId": "2026-08-27-in-focus-4"
+    },
+    {
+      "turnId": "2026-08-27-in-focus-4-t014",
+      "sessionId": "2026-08-27-in-focus-4"
+    },
+    {
+      "turnId": "2026-08-27-in-focus-4-t102",
+      "sessionId": "2026-08-27-in-focus-4"
+    }
+  ]
+}

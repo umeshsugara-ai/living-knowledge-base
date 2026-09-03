@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-03-inside-the-uc-session-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/3rd-July-Inside-the-UC-Session.content.md",
+  "hash": "5c657bb1024e59d08056929d763a631e74a03e0381a07e1370865a5bd19e973f",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.509Z"
+}

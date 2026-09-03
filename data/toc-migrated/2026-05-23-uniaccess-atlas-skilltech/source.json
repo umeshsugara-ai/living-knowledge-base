@@ -1,0 +1,14 @@
+{
+  "_id": "2026-05-23-uniaccess-atlas-skilltech-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/23rd-May-UniAccess-ATLAS-Skilltech.content.md",
+  "hash": "baa99efd6c32b29e0f060cdc8c7811987cfa8684fc03b8a6a8dbcab145039b23",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.482Z"
+}

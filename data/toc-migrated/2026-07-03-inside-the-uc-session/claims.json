@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "2026-07-03-inside-the-uc-session-c01",
+    "tenantId": "toc",
+    "text": "The UC system has 10 campuses total, but only 9 offer undergraduate programs.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-03-inside-the-uc-session-t011",
+        "sessionId": "2026-07-03-inside-the-uc-session"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-03-inside-the-uc-session-c02",
+    "tenantId": "toc",
+    "text": "Over 300,000 students are enrolled across the UC system's various campuses.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-03-inside-the-uc-session-t011",
+        "sessionId": "2026-07-03-inside-the-uc-session"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-03-inside-the-uc-session-c03",
+    "tenantId": "toc",
+    "text": "UC is a test-blind, test-free system: SAT/ACT scores are not reviewed at all in admissions decisions.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-03-inside-the-uc-session-t019",
+        "sessionId": "2026-07-03-inside-the-uc-session"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-03-inside-the-uc-session-c04",
+    "tenantId": "toc",
+    "text": "UC Riverside's non-resident merit scholarship for international students can go up to $89,100 spread across 4 years.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-03-inside-the-uc-session-t016",
+        "sessionId": "2026-07-03-inside-the-uc-session"
+      }
+    ]
+  }
+]

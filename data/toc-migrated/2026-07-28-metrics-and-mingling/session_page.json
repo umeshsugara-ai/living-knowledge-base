@@ -1,0 +1,25 @@
+{
+  "_id": "2026-07-28-metrics-and-mingling-page",
+  "tenantId": "toc",
+  "sessionId": "2026-07-28-metrics-and-mingling",
+  "summary": "An open-hour TOC discussion on conference ROI and networking, led by Bhakti Shah, Amrita Ghulati, and Devesh Lathi with member contributions. The group noted that roughly 80% of the room identifies as introverted at networking events, and shared tactics including the 30-second/3-minute/30-minute pitch framework for respecting group time, and the 'Plate Space' rule of inviting solo attendees to join a table. The session closed with practical post-event advice: block calendar time for follow-ups immediately, since inboxes flood quickly after a conference.",
+  "keyInsights": [
+    "~80% of the room self-identified as introverts in conference/networking settings.",
+    "'Plate Space' rule: proactively invite solo attendees to join your table or group.",
+    "30-second / 3-minute / 30-minute pitch framework helps respect other people's time in group settings."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-07-28-metrics-and-mingling-t046",
+      "sessionId": "2026-07-28-metrics-and-mingling"
+    },
+    {
+      "turnId": "2026-07-28-metrics-and-mingling-t060",
+      "sessionId": "2026-07-28-metrics-and-mingling"
+    },
+    {
+      "turnId": "2026-07-28-metrics-and-mingling-t059",
+      "sessionId": "2026-07-28-metrics-and-mingling"
+    }
+  ]
+}

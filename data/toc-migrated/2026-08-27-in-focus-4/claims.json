@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-08-27-in-focus-4-c01",
+    "tenantId": "toc",
+    "text": "Education & You's physical flashcard box ('mithai ka dabba') contains more than 1,500 words.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-27-in-focus-4-t020",
+        "sessionId": "2026-08-27-in-focus-4"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-27-in-focus-4-c02",
+    "tenantId": "toc",
+    "text": "Education & You runs a diagnostic test for every student before building their study plan.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-27-in-focus-4-t014",
+        "sessionId": "2026-08-27-in-focus-4"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-27-in-focus-4-c03",
+    "tenantId": "toc",
+    "text": "Google's NotebookLM was cited in the Q&A as a productive tool for reading comprehension, used to summarize dense readings.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-27-in-focus-4-t102",
+        "sessionId": "2026-08-27-in-focus-4"
+      }
+    ]
+  }
+]

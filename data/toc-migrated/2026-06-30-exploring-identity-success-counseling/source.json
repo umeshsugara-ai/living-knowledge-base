@@ -1,0 +1,14 @@
+{
+  "_id": "2026-06-30-exploring-identity-success-counseling-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/30th-June-Exploring-Identity-Success-Counseling.content.md",
+  "hash": "76bf48e19ad2e560f682ab5a9b6a5a5d87b7da0d36ece93dc8dd73d4f50b85a0",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.506Z"
+}

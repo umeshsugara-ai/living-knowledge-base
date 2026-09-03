@@ -1,0 +1,45 @@
+[
+  {
+    "_id": "2026-07-22-uniaccess-cept-university-c01",
+    "tenantId": "toc",
+    "text": "CEPT University was established in 1962 by architect B.V. Doshi.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-22-uniaccess-cept-university-t004",
+        "sessionId": "2026-07-22-uniaccess-cept-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-22-uniaccess-cept-university-c02",
+    "tenantId": "toc",
+    "text": "70% of a CEPT student's academic credit comes from studio-based coursework.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-22-uniaccess-cept-university-t005",
+        "sessionId": "2026-07-22-uniaccess-cept-university"
+      },
+      {
+        "turnId": "2026-07-22-uniaccess-cept-university-t006",
+        "sessionId": "2026-07-22-uniaccess-cept-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-22-uniaccess-cept-university-c03",
+    "tenantId": "toc",
+    "text": "CEPT's B.Des program does not require applicants to submit a portfolio for admission.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-22-uniaccess-cept-university-t033",
+        "sessionId": "2026-07-22-uniaccess-cept-university"
+      }
+    ]
+  }
+]

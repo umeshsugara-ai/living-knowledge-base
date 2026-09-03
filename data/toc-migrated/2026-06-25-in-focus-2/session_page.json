@@ -1,0 +1,29 @@
+{
+  "_id": "2026-06-25-in-focus-2-page",
+  "tenantId": "toc",
+  "sessionId": "2026-06-25-in-focus-2",
+  "summary": "TOC's second In Focus session paired Devesh Lahoti (Futurowise) and Himansshu Jainn (The Student Scoop). Lahoti described Futurowise's 2-4 week, professor/industry-expert-led online courses (Data Science, Prompt Engineering, Agentic AI, Money & Investing, Entrepreneurship) that end in a published project and certificate. Jainn described The Student Scoop's 5-stage 'Academic Readiness Engine' (Diagnose, Map, Teach, Practice, Report) for IBDP/IGCSE/A-Level students, and noted that TSS mentors go through a mandatory 7-day pedagogical training program before teaching any class.",
+  "keyInsights": [
+    "Futurowise runs 2-4 week courses led by university professors/industry experts, ending in a published project + certificate.",
+    "The Student Scoop's 5-stage model: Diagnose -> Map -> Teach -> Practice -> Report.",
+    "TSS mentors undergo a mandatory 7-day pedagogical training program before teaching."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-06-25-in-focus-2-t007",
+      "sessionId": "2026-06-25-in-focus-2"
+    },
+    {
+      "turnId": "2026-06-25-in-focus-2-t008",
+      "sessionId": "2026-06-25-in-focus-2"
+    },
+    {
+      "turnId": "2026-06-25-in-focus-2-t011",
+      "sessionId": "2026-06-25-in-focus-2"
+    },
+    {
+      "turnId": "2026-06-25-in-focus-2-t063",
+      "sessionId": "2026-06-25-in-focus-2"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+[
+  {
+    "_id": "2026-06-25-in-focus-2-c01",
+    "tenantId": "toc",
+    "text": "Futurowise's courses run 2-4 weeks and are taught by professors or industry experts, ending with a published project and certificate.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-25-in-focus-2-t007",
+        "sessionId": "2026-06-25-in-focus-2"
+      },
+      {
+        "turnId": "2026-06-25-in-focus-2-t008",
+        "sessionId": "2026-06-25-in-focus-2"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-c02",
+    "tenantId": "toc",
+    "text": "Futurowise's Foundations of Data Science course teaches Tableau and Python basics as part of its data-science curriculum.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-25-in-focus-2-t011",
+        "sessionId": "2026-06-25-in-focus-2"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-c03",
+    "tenantId": "toc",
+    "text": "The Student Scoop's mentors undergo a mandatory 7-day teacher-training program before they are allowed to take any class.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-25-in-focus-2-t063",
+        "sessionId": "2026-06-25-in-focus-2"
+      }
+    ]
+  }
+]

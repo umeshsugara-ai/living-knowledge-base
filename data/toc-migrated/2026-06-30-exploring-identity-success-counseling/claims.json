@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "2026-06-30-exploring-identity-success-counseling-c01",
+    "tenantId": "toc",
+    "text": "The Career Construction Inventory's 4Cs are Control, Concern, Curiosity, and Confidence.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-30-exploring-identity-success-counseling-t085",
+        "sessionId": "2026-06-30-exploring-identity-success-counseling"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-30-exploring-identity-success-counseling-c02",
+    "tenantId": "toc",
+    "text": "Andrew Hallam's success framework is described as a four-legged table including financial stability among its legs.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-30-exploring-identity-success-counseling-t073",
+        "sessionId": "2026-06-30-exploring-identity-success-counseling"
+      }
+    ]
+  }
+]

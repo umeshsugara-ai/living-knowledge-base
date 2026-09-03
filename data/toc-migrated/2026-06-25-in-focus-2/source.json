@@ -1,0 +1,14 @@
+{
+  "_id": "2026-06-25-in-focus-2-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/25th-June-Infocus.content.md",
+  "hash": "8bcf25db44f6f8b24eeda54e91d3839a65177bbd4003c80b95930c33c4009fa0",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.489Z"
+}

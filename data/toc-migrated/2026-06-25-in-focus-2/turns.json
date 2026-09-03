@@ -1,0 +1,1001 @@
+[
+  {
+    "_id": "2026-06-25-in-focus-2-t001",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 0,
+    "tEnd": 38,
+    "text": "Amrita Ghulati: ...for joining the second edition of In Focus. We started last month, and I think it was a very well-received initiative, and we're encouraged to continue. In fact, we have presenters lined up until November. So, very excited to bring all the great work that's happening within the community, by the community, to the community, for the community. And today we have with us Devesh and Himansshu from two different organizations, both committed to student success in different ways."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t002",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 38,
+    "tEnd": 65,
+    "text": "Amrita Ghulati: We're going to have Devesh start and talk to us about Futurowise, which is essentially a platform and a sort of—I shouldn't say the word platform—which is essentially an organization that's enabling students to explore emerging fields, develop practical skills, and build portfolios through project-based learning experiences. So, really seeing the applied side of education and concepts that they see and read about in class."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t003",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 65,
+    "tEnd": 97,
+    "text": "Amrita Ghulati: And after him, we'll have Himansshu Jainn from The Student Scoop, that runs an organization helping students navigate the demands of international curricula through personalized academic mentoring and structured learning support. And we got both of them together because one is consolidating on what's happening in the classroom, and there's another organization that's trying to build a little further away on strong academic skills, and essentially complimenting each other's work."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t004",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 97,
+    "tEnd": 120,
+    "text": "Amrita Ghulati: So, thank you for joining, and we will have Devesh share a little bit about the work in the first 15 minutes, followed perhaps by Q&A—we'll take a call then—or else we'll move straight away to The Student Scoop with Himansshu, and then do Q&A together, seeing how we all sort of go through the process, right? So, over to you, Devesh."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t005",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 120,
+    "tEnd": 176,
+    "text": "Devesh Lahoti: Fantastic. Thank you so much, Amrita. First of all, thank you for envisioning In Focus. Thank you, Bijoya, Bhakti, for this opportunity, and thank you to all of you for being here today, showing up. I'm excited, thrilled to share about Futurowise with you. I have known many of you for the last many, many years, and you know my work with the NextGenius Scholarship Program for the last decade. And while working with the scholarship program, and while reviewing hundreds and hundreds of applications, I realized that there were two things which stood out when we separated the scholarship winners with those who did not win a scholarship. And that was their curiosity and independent thinking."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t006",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 176,
+    "tEnd": 202,
+    "text": "Devesh Lahoti: And when I dug deeper upon it, when I thought more about it, I realized that there—you know, after looking at the whole ecosystem—I realized that there was a need of a program like Futurowise, which brought forward both their curiosity and independent thinking. And last year, in 2025, Futurowise was launched."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t007",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 202,
+    "tEnd": 241,
+    "text": "Devesh Lahoti: What Futurowise is—it's a program which—Futurowise is, you know, I would like to say platform—the platform which prepares students for—high school students for the future skills through short, intensive online courses on skills which are important for the next decade. Every program that we run is led by industry experts and professors, and students leave with a real skill and a published project and a certificate—all of that within a 2- to 4-week program."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t008",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 241,
+    "tEnd": 282,
+    "text": "Devesh Lahoti: So, to encapsulate, what we do is we run short online courses—and when I say short, these are 2- to 4-week-long courses—which are taught by professors from the university or industry experts. And the kind of students that we find ourselves working with are typically curious, academically inclined, and want to learn a future skill. And that's what we do. When a student finishes their program, when a student completes their program with us, they end up with a future skill."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t009",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 282,
+    "tEnd": 315,
+    "text": "Devesh Lahoti: And we are seeing the world around us. Everything, the pace of change is tremendous. AI is changing the way we work. Geopolitics are, you know, disrupting everything around us. Robotics and automation is changing the way jobs are done. And through Futurowise, we are now helping students develop those skills which are going to be important in the next decade."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t010",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 315,
+    "tEnd": 365,
+    "text": "Devesh Lahoti: Every student develops a new skill. They create a project, and this is where, you know, this is where the independent thing bit comes in. When you work with us, you work by yourself. We teach you the skills through online sessions, and we help you create a project which is then published on our platform. And again, this is something—publishing your work is something which really adds value to your profiles when you are applying to colleges. And finally, you earn a certificate. So every student who works with Futurowise, they develop a future skill, they create a project, they publish their work on our platform, and they earn a certificate."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t011",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 365,
+    "tEnd": 599,
+    "text": "Devesh Lahoti: I'll show you some of the programs which are coming up over the next 3 to 4 months. And each and every one of these programs are designed with a vision of ensuring that this is a skill that will help them in the next decade. And I have like a small list here, but there are more programs that we are working on: 1. Foundations of Money and Investing: which is what teaches the students about how money works, how finances work, and how to build—how to invest your money. And eventually, every student ends with a virtual portfolio of their own. 2. Foundations of Data Science: and this is one of my favorites. The cohort is running right now, and the next cohort starts in August—end of August. And in Foundations of Data Science, students are learning Tableau, which is a data visualization tool. They are learning a little bit of Python, and they're learning how data science works, how to gather the data, how to analyze the data, how to visualize the data, and finally how to make a whole story out of that data. And students are working on their own projects. Interesting projects—I was just in conversation with some students—they are working on how literacy rates across different states changed over the last decade and does gender have a role to play in that. Very interesting topic. 3. Prompt Engineering: is starting 4th of July, and I have shared the flyer with some of you over WhatsApp. Prompt engineering is a 2-week program where you learn how AI works, you learn how to develop beautiful prompts which will give you the right kind of results. It'll tell you about the ethical aspects of AI, and eventually you will close with your own project in prompt engineering which will help you design your own study plan or something like that. 4. Foundations of Agentic AI: It's happening over the Independence Day weekend, 15th and 16th of August, where students will work with us to develop their own AI agents. It's exciting, and I think if you have your students, you can give them projects like \"Why don't you build this AI agent for me?\" And by the end of this program, they will bring that project to you, which might help you in your own work—a real AI agent. 5. Foundations of Entrepreneurship: is about creating your own business plan, which happens in October—October 2, 3, 4—where students will be with us over a weekend, and they will learn the basics, the foundations of entrepreneurship. They will learn the tools which entrepreneurs use, and eventually they will build their own business plan. 6. Brand Strategy and Digital Marketing: is a program where you learn about how brands work. And in a few weeks, I'll host a session for all of you, like a masterclass on digital marketing and brand strategy. Just look out for that invite. We'll talk about how you can build your own brand, and you can also start digital marketing by yourself."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t012",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 599,
+    "tEnd": 707,
+    "text": "Devesh Lahoti: Those are some of the programs which are coming up. A very simple structure of how it all works: - Step 1: You go to our website—it's futurowise.com (f-u-t-u-r-o-w-i-s-e.com)—you select a program and you register. - Step 2: Once you do that, you see that you are invited to all of these online sessions that we host on Zoom. So students join these online workshops, online sessions. And all programs are done in small groups. You know, typically the group size is about 15 students—15, not more than 20 ever. So something of this kind of a group. All students are required to keep their cameras on, which ensures engagement—each and every one of them. All students are required to join on time, or you don't get your attendance, and all students are required to submit their assignments. So that all ensures that they are learning that skill, which is critical. They attend these online sessions, which are taught by experts, industry experts—CEO, CXO-level people—or professors with decades of experience. - Step 3: Then they work on their assignments, they work on their projects, they submit it to us. Not I, but the professors give them feedback on their submissions. They talk about how the project—you know, they give feedback things like why something is unrealistic, why what they have assumed might not work, things like that. It's a genuine feedback that they give to the students. The students then work on that feedback and rework and resubmit their work to publish on our platform."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t013",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 707,
+    "tEnd": 773,
+    "text": "Devesh Lahoti: What does publishing look like? It looks like this: - Advika Agarwal spoke about Titan and Titan's growth trajectory. - Arnav spoke about the future of money, and he participated in a program called Blockchain and Cryptocurrency, and he worked on this project. - Arnav Khaitan spoke about Asian Paints, the story of Asian Paints. - Harsheel spoke about Jio Financial Services. - Atriyu from Bangalore created a project on BioCafe. He was one of our recent participants on Carbon Credit Trading program where he designed a BioCafe with interesting ways to reduce the carbon footprint of that cafe. And the professor gave him some fantastic feedback. He himself shared some reading materials with the student through which he could learn and then rewrite, rework his project. All of these are on our website right now, and you can check them out."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t014",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 773,
+    "tEnd": 820,
+    "text": "Devesh Lahoti: A few testimonials from some of our students: - Vipanshi from BD Somani said that Carbon Credit Trading helped her understand how it works in the real world and not just in theory. It pushed her to think critically about designing climate solutions that are practical, fair, and scalable. - Aarya from Abu Dhabi said how she really liked the program and how it created a safe space for her to speak without pressure. These are small groups, remember. The mentors were encouraging and hearing everyone's perspective, which helped her grow not just as a speaker, but as a thinker."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t015",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 820,
+    "tEnd": 838,
+    "text": "Devesh Lahoti: So these are just a few testimonials, but there are many, many more that you would see on our website. Who are these leaders? Who are these professors who are delivering the sessions or masterclasses for us? - Prof. Dennis Hanno (Professor, Fordham University) - Prof. Sriram Mohan (CS Dept. Director, Rose-Hulman) - Prof. Robert Harmon (Ohio Wesleyan University) - Dr. Abhijit Mitra (Techno India University) - Johnson Odakkal (ex-Indian Navy) - Mehek Kapoor (Founder, Project Sophos) - Satish Shukla (Co-founder, Addverb Technologies) - Siddhant Gupta (Co-founder, Planetos) - Swaroop Reddy (IIT Hyderabad)"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t016",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 838,
+    "tEnd": 889,
+    "text": "Devesh Lahoti: A couple of them are also TOC members: Johnson and Mehek Kapoor are both members of our very beautiful community. Siddhant Gupta, who is the co-founder of Planetos, was a part of our Carbon Credit Trading program. Satish Shukla, co-founder of Addverb Technologies, one of the largest robotics and automation companies in India, spoke on robotics, automation, and how robots are changing the world. Mehek Kapoor and Johnson both presented in our public speaking bootcamp. Prof. Sriram Mohan is going to talk about how computer science is changing with AI. Prof. Robert Harmon spoke on astrophysics. So just some of these examples of people and professors who are with us."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t017",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 889,
+    "tEnd": 940,
+    "text": "Devesh Lahoti: A little bit about how TOC has had an impact on Futurowise. Futurowise's very first enrollment came through TOC. And I would just like to call out Charushila, Prerna Bansal, Abha Chaturvedi—those were the very first early adopters of Futurowise, and I would just like to thank them for trusting us in our early days. 32 counselors from TOC have active students in our programs. 26 of them have sent more than one student. Two TOC members liked us enough and they became instructors with us, as I just showed them to you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t018",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 940,
+    "tEnd": 974,
+    "text": "Devesh Lahoti: So that's all about it. I still have one and a half minutes left! So with that, thank you so much once again. So excited to be with all of you and look forward to taking this conversation ahead. One more quick note: we just launched our program on Neeraj Harlalka's Edubearins portal. Neeraj, thank you for that opportunity of having us on your platform. That happened today itself. Yeah. So thank you, thank you. Happy to take questions, or yeah..."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t019",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 974,
+    "tEnd": 989,
+    "text": "Amrita Ghulati: Awesome. Yeah, and with that great news, I think we should dive right into questions if there are any from the attendees for Devesh, for any of the programs that he's shared. I see Abha has her hand up. Abha, go ahead."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t020",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 989,
+    "tEnd": 990,
+    "text": "Devesh Lahoti: Hi, Abha. Yes."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t021",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 990,
+    "tEnd": 1011,
+    "text": "Abha Chaturvedi: Hi, Devesh. Hi, Amrita. Sorry. I had a question for you, Devesh. A couple of my students have already enrolled with you, and a couple of them are in the pipeline. I had a few questions regarding the publishing of the project. After that it's published on Futurowise, could you give them some links to some other places that they could try and get their project published?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t022",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1011,
+    "tEnd": 1030,
+    "text": "Devesh Lahoti: Absolutely, absolutely. And I think that is something we are working on. I have a whole database of portals, about 15–20 of them, along with the email ID of the editors or of those people. They might charge extra, but yes, we'll certainly..."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t023",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1030,
+    "tEnd": 1061,
+    "text": "Abha Chaturvedi: Yeah, I just wanted a very small list, maybe just three or four that you deem fit for that particular project, because it doesn't need to be generic in nature. Supposing somebody's done on blockchain and cryptocurrency, maybe you could just point out three, that in case if you're interested in taking it forward, getting more eyeballs, this is where you could go. But otherwise, my students have found it super helpful, and a small masterclass in the same things would also be good because it's apt enough to captivate the attention, and then it may conceptualize into a bigger project."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t024",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1061,
+    "tEnd": 1066,
+    "text": "Devesh Lahoti: Absolutely. I hear you, and I look forward to working on that."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t025",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1066,
+    "tEnd": 1073,
+    "text": "Abha Chaturvedi: But your projects have been fantastic, and the students have been very happy with the masterclass as well. So maybe in the same related subjects would be nice."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t026",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1073,
+    "tEnd": 1081,
+    "text": "Devesh Lahoti: Thank you so much. Thank you, Abha. I see the time is up, so I'll be happy to take the questions on the chat. Amrita, back to you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t027",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1081,
+    "tEnd": 1099,
+    "text": "Amrita Ghulati: Sure. Thank you. Thank you for being kind with time as well, and you know... [laughter]. And questions can continue in the Q&A, but I'm sure at the end also we'll have about 5–10 minutes for more questions together, more deliberation. Thank you, Abha, for the question and the compliment."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t028",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1099,
+    "tEnd": 1122,
+    "text": "Amrita Ghulati: I am going to pass it over to Himansshu, who's going to talk about his initiative and how he's helping students of international curriculum with better academic support and personalized support so that they can do better academically and reach their potential. Thank you, Himansshu, for joining us. Over to you to share about The Student Scoop."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t029",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1122,
+    "tEnd": 1134,
+    "text": "Himansshu Jainn: Thank you so much, Amrita. Thanks, Bhakti. Thanks, Bijoya, for this opportunity. I think as a whole, it's going to be a great learning for me as well at this moment. One second, ma'am."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t030",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1134,
+    "tEnd": 1139,
+    "text": "Himansshu Jainn: [silence/screen sharing setup]"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t031",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1139,
+    "tEnd": 1151,
+    "text": "Himansshu Jainn: Right. So in the meantime, I just have Tanay from my team who's just going to be sharing the screen. So once again, good evening to everyone, and thank you for joining in and sparing some time with us. I am Himansshu Jainn, I'm the founder of The Student Scoop."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t032",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1151,
+    "tEnd": 1184,
+    "text": "Himansshu Jainn: Today I'm going to be spending some time not here to just present what The Student Scoop is just like any other academic support center, but I'm going to be talking about a very specific gap that primarily affects counselors, school leaders, university partners, parents, and students. So the gap that I'm going to be addressing today is the academic execution. So our focus is very, very simple: How do we primarily help international curriculum students become academically stronger, more confident, and better prepared for global university pathways?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t033",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1184,
+    "tEnd": 1215,
+    "text": "Himansshu Jainn: So let's focus on the core gap. As counselors, I'm sure we all have been doing a powerful job of giving students some direction. You guys have been helping with university strategy, course selection, application narratives, essays, and profile positioning. Schools have been doing the job of delivering the curriculum, classroom learning, grade progression. But between the counseling direction and the school curriculum, there has often been a gap, and that gap has been academic execution. And that is where The Student Scoop primarily operates."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t034",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1215,
+    "tEnd": 1234,
+    "text": "Himansshu Jainn: So we work with students on diagnostic, concept mastery, exam practice, internal assessment, extended essay support, parent reporting, as well as academic evidence. So our belief is very, very simple: that counseling outcomes will become stronger only when the academic execution is visible, measurable, as well as aligned."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t035",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1234,
+    "tEnd": 1254,
+    "text": "Himansshu Jainn: So what we see that as counselors or any other TOC members have already experienced—I'm sure many of you must have seen this pattern—that a student generally looks very ambitious on paper: they want to do medicine, they want to do engineering, economics, CS, or selective global universities, but the academic risk is often hidden until it's quite late."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t036",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1254,
+    "tEnd": 1280,
+    "text": "Himansshu Jainn: Sometimes the risk is the subject selection: a student ends up choosing Higher Levels or Standard Levels or A-Level subjects without having enough evidence of the readiness for that subject. Sometimes it's also the parent anxiety: parents want clarity, but receive reassurance instead of measurable progress. And sometimes the profile story is very strong, but the marks, the IA, the EE, or the STEM evidence does not support that story."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t037",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1280,
+    "tEnd": 1324,
+    "text": "Himansshu Jainn: So the practical question to you all is this: which student really needs academic intervention before counseling outcomes are compromised? The students end up losing momentum primarily when there is an academic risk that does not suddenly appear in Grade 12; it has actually built gradually: - In Grade 8, Grade 9, students move from recall-based learning to analysis, evaluation, and evidence-based responses. - In Grade 10, we see that IGCSE and Cambridge students face board pressure, exam techniques, subject-readiness decisions. - And likewise in Grade 11 and 12 with the IBDP, students' predicted grades, IAs, EEs, mocks, finals, application, and a lot of other habit and systems which are not in line with what they want."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t038",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1324,
+    "tEnd": 1337,
+    "text": "Himansshu Jainn: And The Student Scoop primarily works with students if they are involved much, much before the panic stage. That is where the diagnostics, academic roadmaps, structured intervention can actually make a serious difference."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t039",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1337,
+    "tEnd": 1355,
+    "text": "Himansshu Jainn: So just a quick brief about what The Student Scoop has been built as: we are primarily built as an academic execution partner for international curriculum students. Ma'am, can we just go to the previous slide? One more slide ahead, please. Yeah, thank you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t040",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1355,
+    "tEnd": 1382,
+    "text": "Himansshu Jainn: So The Student Scoop has primarily been a premium academic execution partner for international curriculum students: - 9+ years of academic execution experience. - Mentored about 1,000+ students across programs. - 3 of our Mumbai centers as well as with online academic support. - Our curriculum focus includes IBDP, IGCSE, MYP, Cambridge, as well as A-Levels. - Our subject support includes Physics, Chemistry, Biology, Mathematics, and Economics."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t041",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1382,
+    "tEnd": 1400,
+    "text": "Himansshu Jainn: But what makes us different is not just the subject teaching; it's the academic system behind the teaching. We start right at the diagnostic stage, do our topic tracking, categorize the homework, have a structured feedback loop in process, continuing with parent reporting as well as admissions alignment."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t042",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1400,
+    "tEnd": 1424,
+    "text": "Himansshu Jainn: To our credibility, we have worked with various international schools in Mumbai, in India, as well as across a few countries as well. So we do have a good understanding of various international school ecosystems. So a student from an IB school or a Cambridge or an international ecosystem may need very, very different academic handling, and our strength lies in handling those set of students."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t043",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1424,
+    "tEnd": 1468,
+    "text": "Himansshu Jainn: So we follow a very, very simple academic readiness engine—that is, the operating system behind which and how we support students. We follow a 5-stage roadmap: 1. Diagnose: Topic-wise diagnostic, concept gaps, and exam skill gaps. 2. Map: Roadmap by subject, board, school timeline, as well as the admissions goal. 3. Teach: Concept mastery with curriculum-specific pedagogy. 4. Practice: Homework tiers, exam-style questions, timed assessments. 5. Report: Parent clarity, counselor summary, and next-action plan."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t044",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1468,
+    "tEnd": 1477,
+    "text": "Himansshu Jainn: So referral does not primarily just disappear into a class schedule coming from any counselor; it is actually entering into a monitored academic system."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t045",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1477,
+    "tEnd": 1503,
+    "text": "Himansshu Jainn: So let me give you a few examples of what kind of student journey can we primarily support and what's the outcome you can expect: - A Grade 10 student moving into an IBDP program may need a subject-readiness diagnostic as well as bridge support. Outcome: Better subject clarity and smoother transition. - A Grade 11 IBDP student maybe struggling with a predicted grade might need concept repair, exam strategy, and parent tracking systems in place. Outcome: Improved academic confidence and structured grade recovery. - A STEM-focused student applying abroad may need project mentoring and academic profile building. Outcome: Stronger evidence for applications and interviews."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t046",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1503,
+    "tEnd": 1513,
+    "text": "Himansshu Jainn: And our success is primarily not just measured by marks; it is measured by clarity, confidence, academic discipline, parent visibility, and better decision-making."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t047",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1513,
+    "tEnd": 1556,
+    "text": "Himansshu Jainn: Some of our programs that can primarily be of good importance to each one of you in the room today: - If you spot any student having weak subject confidence: IB, IGCSE, MYP, Cambridge subject support. - If a student is transitioning from Grade 9 or Grade 10 into an IBDP or A-Levels course: Grade 9–10 to IBDP / A-Level bridge. - If predicted grades have been a concern: Crash course + mock review + grade recovery plan. - If profile depth is weak, especially for STEM-focused students: STEM research projects and real-world learning. - If parents are found to be anxious: Diagnostics, roadmap, and reporting."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t048",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1556,
+    "tEnd": 1683,
+    "text": "Himansshu Jainn: So some of the case studies: - Use Case 1 (Grade 10 to IBDP): Let's say we have a Grade 10 student moving to the IBDP and wants to do engineering or medicine, economics or CS. The aspiration is very, very strong, but the subject choice may be driven just by ambition rather than readiness of the evidence that we have. The student may want to do Physics at the Higher Level, Chemistry at the Higher Levels, Math at the Higher Levels, but no one has properly diagnosed whether the student is ready for the academic jump. What we do is we run a 6- to 8-week bridge plan. We assess science and math readiness, identify skill gaps, and give a very, very clear picture to the parent as well as student about the child's readiness in those subjects. - Use Case 2 (IBDP / A-Level Predicted-grade recovery): Applications often depend on grades, and that's where exactly students end up struggling in the first one and a half year in their DP or the A-Level programs. The student marks might be inconsistent in tests, maybe facing some challenges in terms of writing the answers as per the mark schemes, unsure on how to prioritize and what to prioritize before their mock or predicted grades. In our approach, we follow a 6-week academic recovery sprint, which includes diagnostics, topic prioritization, timed practice, feedback, and mock review. Honestly, we do not promise any grade miracles—that's not going to be possible—but what we build is a measurable academic control with the student and the parent, so that all of the stakeholders know what is improving and what still needs to be worked on. - Use Case 3 (STEM profile evidence): This is again not a very major segment of ours, but yes, we do some part of in-house support towards STEM in terms of product and prototyping, in terms of research papers and other areas of STEM. We've been working with some TOC members already who have been instrumental in shaping the research part of the execution as well as documentation. For counselors, if you see this is a very strong story, that in case if you want a student to excel not just academically but with a STEM profile evidence as well, we can primarily work in harmony together to create that."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t049",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1683,
+    "tEnd": 1700,
+    "text": "Himansshu Jainn: So let's have a quick diagnostic poll with all of you. Let's say that you have a Grade 10 student and he wants to do engineering. Math is strong in classwork, but weak in timed problem-solving. Physics concepts are also very good understood verbally, but it lacks exam answering structure. What do you think should be diagnosed first? - A: Concept clarity - B: Exam confidence - C: Parent uncertainty - D: Profile-subject mismatch"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t050",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1700,
+    "tEnd": 1714,
+    "text": "Himansshu Jainn: I request all of you to just put your answers as A, B, C, or D in the chat box. That will primarily give us a fair interaction with one another as well. Let's take about a 30-second pause at the moment."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t051",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1714,
+    "tEnd": 1724,
+    "text": "Himansshu Jainn: [silence/waiting for responses]"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t052",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1724,
+    "tEnd": 1756,
+    "text": "Himansshu Jainn: All right. Yes, thanks to a few of you who have managed to send in your answers. So my view primarily obviously supports with the idea that the student may need both concept-to-exam transition, as well as the timed problem-solving diagnosis. So the issue is not necessarily intelligence; the issue is primarily whether the learning is converting into exam performance. This is exactly why diagnostics generally matter before families start taking high-pressure academic decisions as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t053",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1756,
+    "tEnd": 1805,
+    "text": "Himansshu Jainn: Now what could success primarily look out for TOC members, or for counselors to be more precise: - For counselors: Clear academic risk picture, stronger subject-fit evidence, better predicted-grade visibility, more credible application narrative, less parent confusion. - For school leaders: Structured support for underperformers, stronger parent communication, improved student preparedness, external academic reinforcement respecting school systems. - For university partners: Stronger subject commitment, academic depth before enrollment, profile evidence aligned to intended course, reduced first-year attrition risk."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t054",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1805,
+    "tEnd": 1846,
+    "text": "Himansshu Jainn: And this is how we define satisfaction at TSS: - Student Confidence (The internal signal): Concept clarity, homework completion, test performance, and willingness to attempt harder questions. - Parent Clarity (The visibility loop): Transparent roadmap, progress summaries, next steps, and realistic expectations. - Counselor Trust (The handoff): Concise academic summary that helps subject choice, profile strategy, and application planning. - University Readiness (The outward proof): Evidence of academic intent, subject depth, and preparedness for the next stage. - Tracked in practice: Baseline score, topic tracker, homework quality, mock review, confidence note, parent feedback."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t055",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1846,
+    "tEnd": 1894,
+    "text": "Himansshu Jainn: So I would like to propose a partnership model for the 2026–27 intake: 1. Identify: Student has academic or subject-readiness uncertainty risk. 2. Diagnose: TSS conducts academic-fit conversation and baseline mapping. 3. Roadmap: Family receives intervention plan and expected milestones. 4. Report: Progress summary to parent, counselor, and school for clarity."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t056",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1894,
+    "tEnd": 1910,
+    "text": "Himansshu Jainn: The best-fit referrals primarily are the IBDP, IGCSE, MYP, or A-Level students who need subject clarity, diagnostic support, grade readiness, the internal assessment or extended essay help, to a very small extent STEM profile evidence as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t057",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1910,
+    "tEnd": 1934,
+    "text": "Himansshu Jainn: So yes, that's the primary focus on. Since I have about one minute remaining, I would just like to take the last slide where TSS primarily becomes the academic execution partner behind strong student outcomes. If there are any students who you feel are capable, ambitious, but academically under-structured, those are the students we would like to support."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t058",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1934,
+    "tEnd": 1964,
+    "text": "Himansshu Jainn: Thank you once again to each and every one to listen to my presentation patiently. In case if you like to have any student undergo a process of an academic diagnostic plan, I recommend all of you to please scan the QR code or maybe take a picture of this slide. My contact details are on the slide as well. Feel free to reach out; I'll be more than happy to answer any questions at this stage as well, and looking forward to connecting with you post this meeting as well. So thanks, Amrita, once again. Over to you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t059",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1964,
+    "tEnd": 1994,
+    "text": "Amrita Ghulati: Awesome. Thank you. I love how we've all kept in time! And thank you for bringing something very fresh to the TOC community, which we've, you know, we've not had academic support and academic tutoring, you know, for international curriculum in our sort of community so far. I'd be happy if some of you have questions for Himansshu, and then we can open it for questions to Devesh and to Himansshu."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t060",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 1994,
+    "tEnd": 2009,
+    "text": "Himansshu Jainn: Right. So, Amrita, I see there was a question from Jyoti about languages. Jyoti apparently mentioned, \"Can you share a few student references and their improvement journey? Credentials of your mentors?\" Yes, definitely. I can do that over an email with you; I can share that."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t061",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2009,
+    "tEnd": 2056,
+    "text": "Himansshu Jainn: I think I missed out on going through the slide with some of the students. So we have a lot of student references within Bombay: we've been working with students across Oberoi International School, with Dhirubhai Ambani, Jamnabai being our year-on-year set of students. Outside Bombay, we've worked with Indus International School Hyderabad, Bangalore—both the schools; TISB Bangalore is some of the students where we currently have onboarded. Across UAE, at multiple schools we've had students. But yes, I'll be more than happy to share a few student references with you and their improvement journey plans as well, as to how we really mentored. From Pathways we've never had a student, but yes, we did have from Shri Ram. The cohort was though with a set of only two students, but yes, we did have them as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t062",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2056,
+    "tEnd": 2063,
+    "text": "Amrita Ghulati: Great. I think, Himansshu, there's again a question by Jyoti on whether you help with languages and design as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t063",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2063,
+    "tEnd": 2106,
+    "text": "Himansshu Jainn: No. So currently, ma'am, honestly we've been supporting only with Sciences and Mathematics and Economics. So with Sciences, all three Sciences are taken care of: Physics, Chemistry, Bio. My team is currently completely in-house, in-house trained. In terms of credentials of the mentors, any faculty who has spent about a year and more with us, we primarily get their Category 1, 2, and 3 workshops in progression, which are IB-certified. So yes, training internally is provided. Most of our mentors have to undergo a very rigorous 7-day teachers training program, before which we do not let them take up any classes. So I personally take those 7-day training programs, and post which only we allocate any mentor to any student."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t064",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2106,
+    "tEnd": 2133,
+    "text": "Jyoti Puneet Jolly: But within seven days, Himansshu, can you train them for how the IB evaluate actually? And if there is so much of assistance in, you know, extended essays and IAs, are we actually achieving the learning objectives which IB aims at? You know, we are feeding the mind, we are giving them—we are hand-holding every single step of it. What happens to the inner learning journey of the student?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t065",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2133,
+    "tEnd": 2166,
+    "text": "Himansshu Jainn: Right, right. So see, frankly speaking, I'll come to each question one at a time. So yes, agree to the fact that seven days may not sound relevant to have a complete teacher training program. But the teachers who are hired primarily do not have challenges with the academic content. How it has to be delivered into a classroom set of where the student-teacher ratio is 6:1, how personalization has to be created, how to identify the gaps, what are our benchmark of mapping the student journey is what the training is provided to them. That's one thing."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t066",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2166,
+    "tEnd": 2227,
+    "text": "Himansshu Jainn: Second, with IAs and extended essays, our hand-holding is only towards a facilitating process. We do not write the IAs, we do not write the extended essays. So if at all a child wants to understand \"How do I finalize a research question which is not going to be rejected by a school teacher?\", we help them towards brainstorming and identifying a research question. Now what's the structure of writing the extended essay, what's the structure of writing an IA is what we do. We do provide them only one feedback after that too they receive from the school. The entire journey has been mapped in a way that the school teacher and the student has to be majorly involved. My job is primarily to just give them some suggestions on giving a checklist: that these are the basics you need, these are the minimum you need in case if you're aiming for a 20 and above in your IA, so you need to meet up all these checklists. So we provide only the blueprint of that and a bit of mentorship, but we do not engage in writing it completely."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t067",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2227,
+    "tEnd": 2241,
+    "text": "Jyoti Puneet Jolly: Okay. My next question is, you know, over a period of 6 months or 8 months with you, how much on an average is the point improvements in Math AA HL or Physics or Chemistry?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t068",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2241,
+    "tEnd": 2254,
+    "text": "Himansshu Jainn: Right. So see, frankly speaking, this might sound a little bit of exaggeration at the moment about us, but our results generally right from the beginning, we have managed to keep it either towards 6 or a 7."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t069",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2254,
+    "tEnd": 2256,
+    "text": "Jyoti Puneet Jolly: For every single subject you're teaching?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t070",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2256,
+    "tEnd": 2295,
+    "text": "Himansshu Jainn: For every single subject. So the idea for me, because you know, the entire journey is not about two years; it's about one and a half year until early applications, Early Decision applications have to go in. So for us, the first one and a half year is extremely crucial. We are always 1 to 1.5 or 2 chapters at times ahead than what school's doing. So we utilize the summer vacations, we utilize the holidays very effectively. The environment is structured in such a way that the commitment is given to two sessions in a week, but we end up giving more than that because the center primarily has sufficient space where students come and do personal learning as well into the center."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t071",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2295,
+    "tEnd": 2297,
+    "text": "Jyoti Puneet Jolly: But that's for the offline courses, right?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t072",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2297,
+    "tEnd": 2298,
+    "text": "Himansshu Jainn: Offline, yes."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t073",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2298,
+    "tEnd": 2300,
+    "text": "Jyoti Puneet Jolly: For online also the strategy is same?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t074",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2300,
+    "tEnd": 2311,
+    "text": "Himansshu Jainn: To a large extent, it's the same in terms of additional remedial classes that are provided. But in online, we generally don't go with a group cohort; we focus only with a 1-on-1 cohort, so the outcomes are relatively better."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t075",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2311,
+    "tEnd": 2318,
+    "text": "Jyoti Puneet Jolly: And the students can choose that \"I want to pursue for one subject\" or they have to go for all the subjects you have?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t076",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2318,
+    "tEnd": 2323,
+    "text": "Himansshu Jainn: No, no. You can choose the package. You want to take up just one subject, that's absolutely fine."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t077",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2323,
+    "tEnd": 2326,
+    "text": "Jyoti Puneet Jolly: Fine. Thank you. It answers most of my queries. Thank you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t078",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2326,
+    "tEnd": 2329,
+    "text": "Himansshu Jainn: Thank you so much, Jyoti. Thanks a lot."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t079",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2329,
+    "tEnd": 2334,
+    "text": "Amrita Ghulati: Awesome. I see Anagha, your hand is up. If you'd like to unmute and ask?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t080",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2334,
+    "tEnd": 2360,
+    "text": "Anagha: Yes. So, hi. Himansshu, what I just heard about the interaction between you and Jyoti, so something comes to my mind that, so your primary focus, what I understand, is on delivering the content of the syllabus, right? And you said you make a blueprint and the student is supposed to follow that."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t081",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2360,
+    "tEnd": 2366,
+    "text": "Himansshu Jainn: That's only for the IAs and extended essays, not for the subject, yes."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t082",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2366,
+    "tEnd": 2405,
+    "text": "Anagha: Okay. But if your—see, IAs is the most important thing, and a lot of students generally face—you know, they understand the content that has been taught at school or they know what has to be done, because most schools, IB school teachers do provide a blueprint. But then it is about executing that is where they struggle. So is there any support for that? And second thing is that if your teachers are not IB-trained, then are they able to manage that execution of that IA part?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t083",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2405,
+    "tEnd": 2435,
+    "text": "Himansshu Jainn: Right. So I'll answer both the questions, ma'am, and thanks for actually bringing that up. That could be one of the common questions we can have. So coming to the aspect about the teacher training: so as I mentioned that I personally have worked with IB schools for quite some years, and once I started The Student Scoop, I know the benchmark that's needed within an IB teacher. And that's where my teacher training program is very, very rigorous for the seven days. Obviously, on-the-go training is already into existence."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t084",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2435,
+    "tEnd": 2459,
+    "text": "Himansshu Jainn: As I mentioned, I never hire a teacher who does not have at all international exposure. So we do hire someone who has taught at least one of the international curriculums. Anyone who spends more than a year with our institution, we send them for category training workshops, which are hosted by IB at the IB schools, which is very, very intensive for a 3-day training program. So that gives them some learning and some credibility as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t085",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2459,
+    "tEnd": 2510,
+    "text": "Himansshu Jainn: Coming to the blueprint aspect of the IA: for our students who are already enrolled, we keep running mock IA sessions with them on the go. So it's not that they find it very, very challenging. And our cohort has generally been who has been associated with us not for just one year; they've generally been for more than 2 to 3 years, starting right from the MYP level. So their training across the structure of writing an IA has already been on the go. For anyone who comes in new, we do mock IA sessions with them. We do tell them at multiple stages as to how an IA has to be structured. So there is a lot of intrinsic learning that comes in while the process is basically being delivered. So it is taken care of. Fortunately, our sevens have been one of the factors where students have managed to get a decent 6 or 7 in their IAs as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t086",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2510,
+    "tEnd": 2512,
+    "text": "Anagha: Thank you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t087",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2512,
+    "tEnd": 2513,
+    "text": "Himansshu Jainn: Thank you, ma'am."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t088",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2513,
+    "tEnd": 2520,
+    "text": "Amrita Ghulati: Smriti, we end with your question. Go ahead."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t089",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2520,
+    "tEnd": 2557,
+    "text": "Smriti Singh: Yeah, so I have one question for Himansshu and then one for Devesh, but I'll first ask Himansshu. So Himansshu, when the child enrolls with you, is there first of all any class that a child can do as a sample class or maybe a trial session? That's the first part of the question. And the second part of the question is that do you share the profile of the teacher who's going to teach the child before the child enrolls? Just both these questions, yes."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t090",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2557,
+    "tEnd": 2594,
+    "text": "Himansshu Jainn: Right. So actually I should have mentioned that thing. So my personal practice has always been from the beginning that I never take a child without offering a demo class. Because for me, it's not about the child enrolling with my institution; it's about me supporting the journey for the next one and a half year to two years. So for me, it's very important—and not just for me, all my teachers are trained in that particular manner—that we have to give a demo class to identify the gap and to interact with the child. So that is, yes, offered. For faculty profile, it is shared only upon request. In case anyone would like to know, we generally do that. So there's no problem with us sharing that profile."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t091",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2594,
+    "tEnd": 2615,
+    "text": "Smriti Singh: So that means it is not practiced like—so at times what happens is that, you know, demo class is given by some other teacher, and when the actual practices start—I'm so sorry to bring this up—and then when the child enrolls, there's someone else who's taking the classes. So that's not the practice that you guys are doing, right?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t092",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2615,
+    "tEnd": 2664,
+    "text": "Himansshu Jainn: Right. So I'll tell you: our practice is, ma'am, slightly different. I would put that narrative slightly different way. Now knowing the rigor of the IB curriculum and knowing the rigor of and flexibility we as faculties need to have for the IB students, none of my batches are conducted just by one faculty. All our students get exposure with a minimum of two faculties, for a very simple reason: when academic examination timelines come in, everyone needs time for practice and remedials and mock exams and so on. So we don't want any unfamiliar face walking one fine day into the classroom and students not being comfortable with that. So right from the beginning, we have a balance of giving an exposure to at least two faculties to all our students across the subjects."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t093",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2664,
+    "tEnd": 2685,
+    "text": "Amrita Ghulati: Awesome. Thank you. Smriti, I'm just going to come back to you for your question with Devesh, because I do see there's some more questions for Himansshu in the chat. Himansshu, there's a question by Poonam on transition from ICSE or CBSE to IBDP and what is the biggest challenge that you see? I know Jyoti's also..."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t094",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2685,
+    "tEnd": 2689,
+    "text": "Poonam Shah: Sorry, that's CBSE. It's autocorrected [laughter]."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t095",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2689,
+    "tEnd": 2693,
+    "text": "Amrita Ghulati: Ah, I was wondering! I was like, \"Case board? Do I know, do I not know this?\" Okay [laughter]."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t096",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2693,
+    "tEnd": 2700,
+    "text": "Poonam Shah: So ICSE had become ICE, and I had to go back and change it to ICSE, and somehow CBSE became case. I'm really sorry for that."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t097",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2700,
+    "tEnd": 2729,
+    "text": "Amrita Ghulati: No problem. So basically from national curriculum to international curriculum, when they're transitioning, what's the biggest challenge in your experience and how do you support? So I think a little bit more about the bridge program that you mentioned perhaps? And of course there's also a question regarding the costs. I don't know whether we'll have the time for that because I know Smriti also wants to have a Q&A with Devesh. So perhaps you could answer that in chat, but I think about the bridge it'll benefit everyone as well."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t098",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2729,
+    "tEnd": 2759,
+    "text": "Himansshu Jainn: Right. So definitely ICSE to CBSE, the transition is not significantly challenging in terms of the academic content; the challenge comes in as how to approach the curriculum, the way the assessments are going to be designed. So our 6- to 8-week bridge program primarily gives them the exposure to how the—for example, an IBDP Physics program is going to be structured, how has IB really planned in a way that if you're coming from a different curriculum, what is the adaptation needed for it?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t099",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2759,
+    "tEnd": 2802,
+    "text": "Himansshu Jainn: So our bridge program is primarily supporting students. The challenge that just comes in for them is in terms of their writing skills, because they are very used to writing long answers, whereas in IB, keywords is the major focus, command terms are a major focus. So we try giving them that set of practice and what needs to be written, how to do a time management to complete the paper. MCQ is one of the challenges which ICSE/CBSE students face in terms of time management, so we do a lot of mock test papers with them during the bridge course as well to give them the experience and exposure of what would the assessment area look like. So frankly speaking, keeping it short, assessment is one of the major areas that they face challenges with, and we try to bridge that gap during their bridge programs specifically."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t100",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2802,
+    "tEnd": 2803,
+    "text": "Poonam Shah: Okay, thank you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t101",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2803,
+    "tEnd": 2804,
+    "text": "Himansshu Jainn: Thank you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t102",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2804,
+    "tEnd": 2812,
+    "text": "Amrita Ghulati: Awesome. Thank you. Smriti, back to you for your question to Devesh, and Himansshu, if you could answer the question about the costs to Jyoti in the chat."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t103",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2812,
+    "tEnd": 2832,
+    "text": "Smriti Singh: Very simple question, Devesh. So there might be chances that a child doesn't have an idea. So while these sessions are going on, will the masterclasses also help the child to develop it, or is it like the child should have it and then it goes further?"
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t104",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2832,
+    "tEnd": 2855,
+    "text": "Devesh Lahoti: The masterclasses help develop the idea. So now when I'm doing the Data Science program, after the second or third session, I gave them a list of 10 ideas. Half the students selected ideas from those; half of them came up with their own very unique ideas. So both of these are possible. Yeah."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t105",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2855,
+    "tEnd": 2857,
+    "text": "Smriti Singh: Perfect. Thank you."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t106",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2857,
+    "tEnd": 2859,
+    "text": "Devesh Lahoti: Thank you, Smriti."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t107",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2859,
+    "tEnd": 2887,
+    "text": "Amrita Ghulati: Thank you. Thank you, everyone. I think we've got to know a little bit more about both organizations and the wonderful work that they're doing. I'd encourage all of you to connect with Devesh and Himansshu with their email. If you could drop your emails and number in chat, and take the conversation forward to learn more, better understand, connect students, or share contact information with families."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t108",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2887,
+    "tEnd": 2934,
+    "text": "Amrita Ghulati: Thank you all for being here, and we look forward to many more sessions of In Focus every month. Typically, it is the last Thursday of every month, 45 minutes. We already have organizations and service providers lined up until November, and we'll reopen the form in September for months of November to March next year. So stay tuned, and recording will be shared by Bijoya soon on the group. And we look forward to supporting each other through all the work that we're trying to do, compliment and hold hands to make students' lives easier, happier, and more fulfilling in their academic journeys. Thank you, everyone. Have a good evening. Bye-bye."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t109",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2934,
+    "tEnd": 2936,
+    "text": "Himansshu Jainn: Thank you, everyone. Bye-bye."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t110",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2936,
+    "tEnd": 2938,
+    "text": "Devesh Lahoti: Thank you, everyone. Bye. Have a good day. Bye."
+  },
+  {
+    "_id": "2026-06-25-in-focus-2-t111",
+    "tenantId": "toc",
+    "sessionId": "2026-06-25-in-focus-2",
+    "speakerRef": "unknown",
+    "tStart": 2938,
+    "tEnd": 2983,
+    "text": "[silence/end of recording]"
+  }
+]

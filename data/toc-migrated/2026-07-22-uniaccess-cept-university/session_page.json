@@ -1,0 +1,29 @@
+{
+  "_id": "2026-07-22-uniaccess-cept-university-page",
+  "tenantId": "toc",
+  "sessionId": "2026-07-22-uniaccess-cept-university",
+  "summary": "Nilesh Gotecha (Admissions & Outreach) presented CEPT University, founded in 1962 by Pritzker laureate B.V. Doshi, to TOC counselors. He explained that 70% of CEPT's academic credit comes from studio-based work, that the flagship B.Des program (100 seats) is admitted purely on UCEED score with no portfolio requirement and is open to students from any academic stream, and that B.Arch (120 seats) is a 50% board-exam / 50% NATA-score split. The session closed with a live Q&A on the B.Des open-category seat count and other admissions specifics.",
+  "keyInsights": [
+    "CEPT was founded in 1962 by Pritzker Prize-winning architect B.V. Doshi.",
+    "70% of CEPT's academic credit is studio-based, not lecture-based.",
+    "B.Des (100 seats) requires no portfolio and is admitted purely on UCEED score, open to any academic stream."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-07-22-uniaccess-cept-university-t004",
+      "sessionId": "2026-07-22-uniaccess-cept-university"
+    },
+    {
+      "turnId": "2026-07-22-uniaccess-cept-university-t005",
+      "sessionId": "2026-07-22-uniaccess-cept-university"
+    },
+    {
+      "turnId": "2026-07-22-uniaccess-cept-university-t006",
+      "sessionId": "2026-07-22-uniaccess-cept-university"
+    },
+    {
+      "turnId": "2026-07-22-uniaccess-cept-university-t033",
+      "sessionId": "2026-07-22-uniaccess-cept-university"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_id": "2026-05-28-in-focus-1-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/28th-May-In-Focus.content.md",
+  "hash": "0e6be0c106ecc966a4dd37c353658ed9f362e280572ca657b6161967226ec3ed",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.497Z"
+}

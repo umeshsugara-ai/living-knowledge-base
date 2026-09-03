@@ -1,0 +1,14 @@
+{
+  "_id": "2026-05-23-uniaccess-atlas-skilltech",
+  "tenantId": "toc",
+  "sourceId": "2026-05-23-uniaccess-atlas-skilltech-src",
+  "title": "UniAccess Live: ATLAS SkillTech University",
+  "date": "2026-05-23",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

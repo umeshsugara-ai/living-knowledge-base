@@ -1,0 +1,42 @@
+{
+  "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-page",
+  "tenantId": "toc",
+  "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+  "summary": "TOC hosted three destination specialists to walk counselors through student-visa mechanics for New Zealand, France, and Italy. Kshitij Garg (Estero Education) covered New Zealand's fully online e-visa process, its 76% 2025 approval rate against a 27,000-by-2030 target, and the rule that only nationalized-bank secured loans (never NBFC or unsecured loans) satisfy Immigration New Zealand's proof-of-funds test. Shagun Handa (Campus France) explained the Classes Internationales pathway (capped at EUR 5,500) and the two-year APS post-study permit for Master's graduates. Ruby Thomas (Uni-Italia) detailed Italy's strict three-tier document legalization chain, where a Sub-Divisional Magistrate (SDM) stamp is explicitly rejected in favor of the university-to-state-HRD-to-MEA apostille sequence.",
+  "keyInsights": [
+    "New Zealand: 76% of 2025 visa applications approved, government target is 27,000 Indian students by 2030.",
+    "New Zealand funds test accepts only 4 sponsor types: secured loans from 14 nationalized banks, 3-month bank statements, 6-month-old fixed deposits, or Provident Fund withdrawals — NBFC and unsecured loans are outright rejected.",
+    "France: Classes Internationales 1-year foundation-year tuition is capped at EUR 5,500; Master's graduates get a 2-year APS stay-back permit.",
+    "Italy: 700+ English-taught degree courses; document legalization must go university -> state HRD -> MEA apostille, and an SDM stamp is explicitly not accepted."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t011",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    },
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t022",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    },
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t044",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    },
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t064",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    },
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t025",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    },
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t072",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    },
+    {
+      "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t083",
+      "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+    }
+  ]
+}

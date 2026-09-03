@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-08-12-uniaccess-ashoka-university-c01",
+    "tenantId": "toc",
+    "text": "About 260+ companies come to campus for Ashoka University's placement process.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-12-uniaccess-ashoka-university-t106",
+        "sessionId": "2026-08-12-uniaccess-ashoka-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-12-uniaccess-ashoka-university-c02",
+    "tenantId": "toc",
+    "text": "Roughly 43-44% of Ashoka's current class is on scholarship/financial aid, with an institutional goal of reaching 50%.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-12-uniaccess-ashoka-university-t084",
+        "sessionId": "2026-08-12-uniaccess-ashoka-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-12-uniaccess-ashoka-university-c03",
+    "tenantId": "toc",
+    "text": "Ashoka admissions include either the Ashoka Aptitude Assessment or an alternative math-focused assessment as part of the application.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-12-uniaccess-ashoka-university-t058",
+        "sessionId": "2026-08-12-uniaccess-ashoka-university"
+      }
+    ]
+  }
+]

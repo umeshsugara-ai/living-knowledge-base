@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-28-metrics-and-mingling-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/28th-July-Metrics-and-Mingling.content.md",
+  "hash": "ad3d2be468b936ab8b0102c397d2ecf0e263bede44e895c5ae2e9023caeedc33",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.495Z"
+}

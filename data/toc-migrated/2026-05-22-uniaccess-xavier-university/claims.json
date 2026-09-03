@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-05-22-uniaccess-xavier-university-c01",
+    "tenantId": "toc",
+    "text": "Xavier University has an 11:1 student-to-faculty ratio and an average class size of about 23 students.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-22-uniaccess-xavier-university-t020",
+        "sessionId": "2026-05-22-uniaccess-xavier-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-22-uniaccess-xavier-university-c02",
+    "tenantId": "toc",
+    "text": "Xavier was awarded a $2.8 million grant from the NIH, one of only six institutions selected in that inaugural cohort.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-22-uniaccess-xavier-university-t038",
+        "sessionId": "2026-05-22-uniaccess-xavier-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-22-uniaccess-xavier-university-c03",
+    "tenantId": "toc",
+    "text": "Xavier's international merit scholarships range from $23,000 to $36,000 annually, and effective annual tuition after aid can be as low as $11,500.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-22-uniaccess-xavier-university-t050",
+        "sessionId": "2026-05-22-uniaccess-xavier-university"
+      }
+    ]
+  }
+]

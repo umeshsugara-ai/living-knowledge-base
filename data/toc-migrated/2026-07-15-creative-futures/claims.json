@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-07-15-creative-futures-c01",
+    "tenantId": "toc",
+    "text": "According to SCAD's presentation, roughly 85% of career success comes from soft skills and 15% from technical skills.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-15-creative-futures-t015",
+        "sessionId": "2026-07-15-creative-futures"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-15-creative-futures-c02",
+    "tenantId": "toc",
+    "text": "63% of SCAD's degree programs are STEM-designated, which qualifies international graduates for 3 years of OPT.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-15-creative-futures-t019",
+        "sessionId": "2026-07-15-creative-futures"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-15-creative-futures-c03",
+    "tenantId": "toc",
+    "text": "SCADpro is SCAD's in-house collaborative innovation studio that pairs students with real companies on live projects.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-15-creative-futures-t026",
+        "sessionId": "2026-07-15-creative-futures"
+      }
+    ]
+  }
+]

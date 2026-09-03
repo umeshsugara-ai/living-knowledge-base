@@ -1,0 +1,21 @@
+{
+  "_id": "2026-06-30-exploring-identity-success-counseling-page",
+  "tenantId": "toc",
+  "sessionId": "2026-06-30-exploring-identity-success-counseling",
+  "summary": "Luke Devlin (Amiata Co., former UCLA application reader) spoke with Bhakti about redefining counselor and student success beyond elite-admissions outcomes. He introduced Mark Savickas's Career Construction Inventory 4Cs (Control, Concern, Curiosity, Confidence) and Andrew Hallam's 'four-legged table' framing of success as financial stability, physical/emotional health, purpose, and relationships, alongside Amiata's own structured Fit Factors Card Sort tool for best-fit conversations.",
+  "keyInsights": [
+    "Career Construction Inventory 4Cs: Control, Concern, Curiosity, Confidence.",
+    "Andrew Hallam's 'four-legged table' frames success as financial stability + physical/emotional health + purpose + relationships.",
+    "Amiata's Fit Factors Card Sort is offered as a structured alternative to ranking-driven best-fit conversations."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-06-30-exploring-identity-success-counseling-t085",
+      "sessionId": "2026-06-30-exploring-identity-success-counseling"
+    },
+    {
+      "turnId": "2026-06-30-exploring-identity-success-counseling-t073",
+      "sessionId": "2026-06-30-exploring-identity-success-counseling"
+    }
+  ]
+}

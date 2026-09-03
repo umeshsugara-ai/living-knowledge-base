@@ -1,0 +1,21 @@
+{
+  "_id": "2026-08-03-uk-beyond-offer-letters-reupload-page",
+  "tenantId": "toc",
+  "sessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+  "summary": "This file is a re-upload of the same 3rd-August UK panel (Bhavya Goyal moderating Jasmine Bahl/QMUL, Wai Wah Tsang/Warwick, Jasminder Khanna/Graysham Global, Nick Skevington/Exeter) but with a shorter captured transcript (49 paragraph turns versus 154 in the primary file) -- likely a partial or differently-clipped recording of the same live session, per the note already carried in KNOWLEDGE-BANK.md ('also appears duplicated under filename UK-Beyond-Offer-Letters -- same session, likely re-uploaded'). Content overlaps the primary 03rd-August session on the 131,000-to-1.3-million growth figure and Wai Wah Tsang's 'gym membership' analogy for what an offer letter actually buys a student.",
+  "keyInsights": [
+    "Same underlying session as 2026-08-03-uk-beyond-offer-letters, but this file's captured transcript is shorter (49 turns vs 154).",
+    "Repeats the 131,000 (2005) to 1.3 million (2025) outbound-student growth figure.",
+    "Repeats Wai Wah Tsang's 'gym membership' analogy for what accepting an offer actually guarantees a student."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-08-03-uk-beyond-offer-letters-reupload-t002",
+      "sessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
+    },
+    {
+      "turnId": "2026-08-03-uk-beyond-offer-letters-reupload-t004",
+      "sessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_id": "2026-08-03-uk-beyond-offer-letters",
+  "tenantId": "toc",
+  "sourceId": "2026-08-03-uk-beyond-offer-letters-src",
+  "title": "UK: Beyond Offer Letters",
+  "date": "2026-08-03",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

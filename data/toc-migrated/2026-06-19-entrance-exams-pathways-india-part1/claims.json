@@ -1,0 +1,58 @@
+[
+  {
+    "_id": "2026-06-19-entrance-exams-pathways-india-part1-c01",
+    "tenantId": "toc",
+    "text": "Around 40,000 government engineering seats (NITs/IITs combined) exist against roughly 12 lakh JEE candidates -- the competition is effectively among the 40,000 seats, not the full applicant pool.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-19-entrance-exams-pathways-india-part1-t017",
+        "sessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+      },
+      {
+        "turnId": "2026-06-19-entrance-exams-pathways-india-part1-t018",
+        "sessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-19-entrance-exams-pathways-india-part1-c02",
+    "tenantId": "toc",
+    "text": "Government MBBS seats are around 58,000-60,000 for 2026, producing a roughly 1:40 seat-to-qualified-candidate ratio.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-19-entrance-exams-pathways-india-part1-t051",
+        "sessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-19-entrance-exams-pathways-india-part1-c03",
+    "tenantId": "toc",
+    "text": "NEET's tie-breaking mandate ranks candidates first by Biology marks, then Chemistry, then Physics.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-19-entrance-exams-pathways-india-part1-t060",
+        "sessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-19-entrance-exams-pathways-india-part1-c04",
+    "tenantId": "toc",
+    "text": "A 30-mark difference in NEET score can cause an All India Rank swing of about 14,500 places, pushing a candidate from a government-seat range into needing a private or AYUSH option.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-19-entrance-exams-pathways-india-part1-t059",
+        "sessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+      }
+    ]
+  }
+]

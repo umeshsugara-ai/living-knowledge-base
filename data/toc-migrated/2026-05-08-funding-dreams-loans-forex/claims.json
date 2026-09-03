@@ -1,0 +1,71 @@
+[
+  {
+    "_id": "2026-05-08-funding-dreams-loans-forex-c01",
+    "tenantId": "toc",
+    "text": "FRR Forex's currency-conversion markup is about 1%, versus roughly 2-2.5% charged by banks and platforms like Flywire.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-08-funding-dreams-loans-forex-t037",
+        "sessionId": "2026-05-08-funding-dreams-loans-forex"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-08-funding-dreams-loans-forex-c02",
+    "tenantId": "toc",
+    "text": "Under FEMA rules, only the mother, father, sibling, and spouse of a student are permitted to remit money abroad for that student's education.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-08-funding-dreams-loans-forex-t029",
+        "sessionId": "2026-05-08-funding-dreams-loans-forex"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-08-funding-dreams-loans-forex-c03",
+    "tenantId": "toc",
+    "text": "Section 80E allows the interest paid on an education loan to be claimed as a tax benefit.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-08-funding-dreams-loans-forex-t074",
+        "sessionId": "2026-05-08-funding-dreams-loans-forex"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-08-funding-dreams-loans-forex-c04",
+    "tenantId": "toc",
+    "text": "HDFC Credila offers unsecured education loans up to INR 1.5 crore with a maximum tenure of 20 years.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-08-funding-dreams-loans-forex-t080",
+        "sessionId": "2026-05-08-funding-dreams-loans-forex"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-08-funding-dreams-loans-forex-c05",
+    "tenantId": "toc",
+    "text": "Families and counselors are often confused by the LRS, TCS, and FEMA rules governing overseas remittances for education.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-08-funding-dreams-loans-forex-t018",
+        "sessionId": "2026-05-08-funding-dreams-loans-forex"
+      },
+      {
+        "turnId": "2026-05-08-funding-dreams-loans-forex-t030",
+        "sessionId": "2026-05-08-funding-dreams-loans-forex"
+      }
+    ]
+  }
+]

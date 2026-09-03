@@ -1,0 +1,25 @@
+{
+  "_id": "2026-06-03-dual-enrollment-pathway-page",
+  "tenantId": "toc",
+  "sessionId": "2026-06-03-dual-enrollment-pathway",
+  "summary": "A panel of dual-enrollment specialists (Dr. Justin Osborn/ACCP, Steven Fu/Ohio State, Michelle Prince-Spetz/Syracuse, Vicki Shillington/counselor), moderated by Niharika Sondhi, explained how US high schoolers can earn transferable college credit while still in high school. The panel noted that roughly 80% of US high school students now have some form of dual-enrollment access, that universities typically cap transferable credit around 30 credits (about a year), and that students who earn credits while still enrolled in high school matriculate as freshmen, not transfer students, at their destination university.",
+  "keyInsights": [
+    "~80% of US high school students now have access to some form of dual enrollment.",
+    "Universities typically cap transferable dual-enrollment credit at around 30 credits (roughly one academic year).",
+    "Students who earn dual-enrollment credit while still in high school matriculate as freshmen, not as transfer students."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-06-03-dual-enrollment-pathway-t015",
+      "sessionId": "2026-06-03-dual-enrollment-pathway"
+    },
+    {
+      "turnId": "2026-06-03-dual-enrollment-pathway-t092",
+      "sessionId": "2026-06-03-dual-enrollment-pathway"
+    },
+    {
+      "turnId": "2026-06-03-dual-enrollment-pathway-t087",
+      "sessionId": "2026-06-03-dual-enrollment-pathway"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+[
+  {
+    "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-c01",
+    "tenantId": "toc",
+    "text": "76% of Indian students who applied for a New Zealand student visa in 2025 (Jan-Dec) were approved, and Immigration New Zealand's target is 27,000 Indian students by 2030.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t011",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      }
+    ]
+  },
+  {
+    "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-c02",
+    "tenantId": "toc",
+    "text": "New Zealand Master's tuition ranges from INR 18 lakhs to INR 50 lakhs depending on the university.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t022",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      }
+    ]
+  },
+  {
+    "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-c03",
+    "tenantId": "toc",
+    "text": "New Zealand's Classes Internationales-equivalent French pathway program (the 1-year foundation year) is capped at EUR 5,500 in tuition.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t044",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      }
+    ]
+  },
+  {
+    "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-c04",
+    "tenantId": "toc",
+    "text": "Italy offers more than 700 degree courses taught entirely in English.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t064",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      }
+    ]
+  },
+  {
+    "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-c05",
+    "tenantId": "toc",
+    "text": "Bachelor's and Master's graduates in New Zealand are guaranteed a three-year open Post-Study Work Visa.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t025",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      }
+    ]
+  },
+  {
+    "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-c06",
+    "tenantId": "toc",
+    "text": "An SDM (Sub-Divisional Magistrate) officer's stamp is not accepted for Italian document attestation/apostille; only designated state officers can complete that step.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t072",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      },
+      {
+        "turnId": "2026-04-21-visa-blueprint-part2-italy-france-nz-t083",
+        "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      }
+    ]
+  }
+]

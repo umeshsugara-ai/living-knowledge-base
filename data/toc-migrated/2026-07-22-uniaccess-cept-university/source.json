@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-22-uniaccess-cept-university-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/22nd-July-UniAccess-CEPT-University.content.md",
+  "hash": "7a81431581dffdbfd58a3af56ae09064f67149fbe00367650faefaeed7a12631",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.478Z"
+}

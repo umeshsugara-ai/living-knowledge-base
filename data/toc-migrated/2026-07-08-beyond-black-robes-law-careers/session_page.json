@@ -1,0 +1,25 @@
+{
+  "_id": "2026-07-08-beyond-black-robes-law-careers-page",
+  "tenantId": "toc",
+  "sessionId": "2026-07-08-beyond-black-robes-law-careers",
+  "summary": "Deepu Krishna (BITS Law School) and Harsh Vardhan Tiwari (O.P. Jindal Global University) discussed evolving legal-career paths beyond litigation, moderated by Anchal Shroff. They advised that students planning to practice law in India should do their UG law degree in India, since practicing there after a foreign law degree requires a mandatory 2-year Bar Council of India bridge course. They also discussed AI's growing role in the profession, noting that firms including Shardul Amarchand Mangaldas have adopted tools like Harvey AI, and that Claude for Legal (from Anthropic) is used similarly for case summaries and first drafts, while strategic judgment and advocacy remain squarely human tasks.",
+  "keyInsights": [
+    "Practicing law in India after a foreign UG law degree requires a mandatory 2-year Bar Council of India bridge course.",
+    "Shardul Amarchand Mangaldas adopted Harvey AI for legal work; Claude for Legal (Anthropic) is also used by firms for case summaries/first drafts.",
+    "Human judgment, advocacy, and client trust remain irreplaceable even as AI automates junior legal tasks."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-07-08-beyond-black-robes-law-careers-t095",
+      "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+    },
+    {
+      "turnId": "2026-07-08-beyond-black-robes-law-careers-t115",
+      "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+    },
+    {
+      "turnId": "2026-07-08-beyond-black-robes-law-careers-t119",
+      "sessionId": "2026-07-08-beyond-black-robes-law-careers"
+    }
+  ]
+}

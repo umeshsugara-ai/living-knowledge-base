@@ -1,0 +1,14 @@
+{
+  "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+  "tenantId": "toc",
+  "sourceId": "2026-04-21-visa-blueprint-part2-italy-france-nz-src",
+  "title": "Visa Blueprint Part 2: Italy, France, New Zealand",
+  "date": "2026-04-21",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

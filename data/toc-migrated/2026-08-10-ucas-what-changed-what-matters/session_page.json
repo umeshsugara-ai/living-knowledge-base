@@ -1,0 +1,25 @@
+{
+  "_id": "2026-08-10-ucas-what-changed-what-matters-page",
+  "tenantId": "toc",
+  "sessionId": "2026-08-10-ucas-what-changed-what-matters",
+  "summary": "Sapna Goyal (Mayo College), Mishi Sardana (Southampton), and Iqra Khan (Durham) walked counselors through the two structural changes to the UK's UCAS application for the new cycle: the personal statement moved from a single 4,000-character box to three structured prompts (each requiring at least 350 characters), and the Letter of Reference (LOR) was split into three sections -- School Context, Extenuating Circumstances, and Academic Suitability. Panelists repeatedly warned that admissions officers will not click external links (GitHub, LinkedIn, portfolios) included in a personal statement, and walked through live case reviews and audience polling on what belongs in each LOR section.",
+  "keyInsights": [
+    "UCAS personal statement: 3 structured prompts, minimum 350 characters each, total cap remains 4,000 characters.",
+    "UCAS LOR is now split into 3 sections: School Context, Extenuating Circumstances, and Academic Suitability.",
+    "Hard rule repeated by multiple panelists: admissions officers do not click external links (GitHub, LinkedIn, portfolio, YouTube)."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-08-10-ucas-what-changed-what-matters-t005",
+      "sessionId": "2026-08-10-ucas-what-changed-what-matters"
+    },
+    {
+      "turnId": "2026-08-10-ucas-what-changed-what-matters-t136",
+      "sessionId": "2026-08-10-ucas-what-changed-what-matters"
+    },
+    {
+      "turnId": "2026-08-10-ucas-what-changed-what-matters-t069",
+      "sessionId": "2026-08-10-ucas-what-changed-what-matters"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-30-in-focus-3-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/30th-July-In-Focus.content.md",
+  "hash": "be55bd39ed2fe820701889805386a0b935f518c396b015da9d881623ee5240d9",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.503Z"
+}

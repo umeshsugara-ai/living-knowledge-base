@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-06-03-dual-enrollment-pathway-c01",
+    "tenantId": "toc",
+    "text": "Roughly 80% of US high school students now have access to some form of dual-enrollment program.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-03-dual-enrollment-pathway-t015",
+        "sessionId": "2026-06-03-dual-enrollment-pathway"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-03-dual-enrollment-pathway-c02",
+    "tenantId": "toc",
+    "text": "Universities typically treat around 30 transferable credits as equivalent to about one academic year.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-03-dual-enrollment-pathway-t092",
+        "sessionId": "2026-06-03-dual-enrollment-pathway"
+      }
+    ]
+  },
+  {
+    "_id": "2026-06-03-dual-enrollment-pathway-c03",
+    "tenantId": "toc",
+    "text": "A student's classification as freshman versus transfer depends on whether their college credits were earned while still enrolled in high school.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-06-03-dual-enrollment-pathway-t087",
+        "sessionId": "2026-06-03-dual-enrollment-pathway"
+      }
+    ]
+  }
+]

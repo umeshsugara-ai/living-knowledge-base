@@ -1,0 +1,14 @@
+{
+  "_id": "2026-06-30-exploring-identity-success-counseling",
+  "tenantId": "toc",
+  "sourceId": "2026-06-30-exploring-identity-success-counseling-src",
+  "title": "Exploring Identity and Success in Counseling",
+  "date": "2026-06-30",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

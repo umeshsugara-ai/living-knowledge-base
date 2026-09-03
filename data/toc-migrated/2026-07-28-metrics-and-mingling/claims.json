@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-07-28-metrics-and-mingling-c01",
+    "tenantId": "toc",
+    "text": "About 80% of the room identified as introverted when discussing networking at conferences.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-28-metrics-and-mingling-t046",
+        "sessionId": "2026-07-28-metrics-and-mingling"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-28-metrics-and-mingling-c02",
+    "tenantId": "toc",
+    "text": "The 'Plate Space' rule encourages inviting solo attendees standing alone to join an existing table or group.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-28-metrics-and-mingling-t060",
+        "sessionId": "2026-07-28-metrics-and-mingling"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-28-metrics-and-mingling-c03",
+    "tenantId": "toc",
+    "text": "Participants recommended having a ready 30-second pitch prepared for brief conference encounters.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-28-metrics-and-mingling-t059",
+        "sessionId": "2026-07-28-metrics-and-mingling"
+      }
+    ]
+  }
+]

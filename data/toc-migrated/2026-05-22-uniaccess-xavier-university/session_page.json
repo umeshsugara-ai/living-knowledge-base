@@ -1,0 +1,25 @@
+{
+  "_id": "2026-05-22-uniaccess-xavier-university-page",
+  "tenantId": "toc",
+  "sessionId": "2026-05-22-uniaccess-xavier-university",
+  "summary": "Sandeep Bhalla (Regional Manager) introduced Xavier University (Cincinnati) to TOC counselors, emphasizing its Jesuit cura personalis values, an 11:1 student-faculty ratio with average class sizes of 23, and a $2.8 million NIH grant that placed Xavier among only six institutions in that inaugural cohort. On affordability, Bhalla stated that 100% of admitted international families receive a scholarship offer, with merit awards ranging $23,000-$36,000 per year, and that effective annual tuition after aid can fall as low as $11,500.",
+  "keyInsights": [
+    "11:1 student-to-faculty ratio, average class size ~23 students.",
+    "$2.8 million NIH research grant -- Xavier was one of only six institutions in that inaugural cohort.",
+    "Merit scholarships range $23,000-$36,000/year; effective tuition after aid can be as low as $11,500."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-05-22-uniaccess-xavier-university-t020",
+      "sessionId": "2026-05-22-uniaccess-xavier-university"
+    },
+    {
+      "turnId": "2026-05-22-uniaccess-xavier-university-t038",
+      "sessionId": "2026-05-22-uniaccess-xavier-university"
+    },
+    {
+      "turnId": "2026-05-22-uniaccess-xavier-university-t050",
+      "sessionId": "2026-05-22-uniaccess-xavier-university"
+    }
+  ]
+}

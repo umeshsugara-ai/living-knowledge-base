@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-08-10-ucas-what-changed-what-matters-c01",
+    "tenantId": "toc",
+    "text": "The UCAS personal statement moved from a single 4,000-character free-text box to a structured format.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-10-ucas-what-changed-what-matters-t005",
+        "sessionId": "2026-08-10-ucas-what-changed-what-matters"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-10-ucas-what-changed-what-matters-c02",
+    "tenantId": "toc",
+    "text": "Each of the three UCAS personal statement prompts must contain at least 350 characters.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-10-ucas-what-changed-what-matters-t136",
+        "sessionId": "2026-08-10-ucas-what-changed-what-matters"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-10-ucas-what-changed-what-matters-c03",
+    "tenantId": "toc",
+    "text": "Panelists advised against including external links in UCAS submissions because admissions officers will not click them.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-10-ucas-what-changed-what-matters-t069",
+        "sessionId": "2026-08-10-ucas-what-changed-what-matters"
+      }
+    ]
+  }
+]

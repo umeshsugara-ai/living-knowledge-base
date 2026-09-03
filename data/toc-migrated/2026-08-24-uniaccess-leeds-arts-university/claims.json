@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-08-24-uniaccess-leeds-arts-university-c01",
+    "tenantId": "toc",
+    "text": "Leeds Arts University requires a minimum of 55% for Foundation and most Postgraduate courses, and 65% for Undergraduate courses.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-24-uniaccess-leeds-arts-university-t040",
+        "sessionId": "2026-08-24-uniaccess-leeds-arts-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-24-uniaccess-leeds-arts-university-c02",
+    "tenantId": "toc",
+    "text": "Leeds Arts University offers a minimum scholarship of GBP 2,000 to eligible students.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-24-uniaccess-leeds-arts-university-t040",
+        "sessionId": "2026-08-24-uniaccess-leeds-arts-university"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-24-uniaccess-leeds-arts-university-c03",
+    "tenantId": "toc",
+    "text": "The foundation-student campus, Vernon Street, dates back to 1903 when the school moved there as the Leeds Government School.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-24-uniaccess-leeds-arts-university-t036",
+        "sessionId": "2026-08-24-uniaccess-leeds-arts-university"
+      }
+    ]
+  }
+]

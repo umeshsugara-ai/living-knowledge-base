@@ -1,0 +1,29 @@
+{
+  "_id": "2026-05-23-uniaccess-atlas-skilltech-page",
+  "tenantId": "toc",
+  "sessionId": "2026-05-23-uniaccess-atlas-skilltech",
+  "summary": "Farheen presented ATLAS SkillTech University's BKC-Mumbai campus to TOC counselors, describing its four schools -- ISDI (design, in collaboration with Parsons), ISME (management, part of the Babson group of roughly 30 schools worldwide), uGDX (technology), and a Bar Council-approved School of Law -- along with student achievements at competitions run by NASA and Google, and on-campus housing via upGrad Living.",
+  "keyInsights": [
+    "ISDI (design school) runs in collaboration with Parsons School of Design.",
+    "ISME (management school) is part of the Babson group, roughly 30 schools worldwide.",
+    "Students have won accolades at NASA- and Google-run competitions."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-05-23-uniaccess-atlas-skilltech-t005",
+      "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+    },
+    {
+      "turnId": "2026-05-23-uniaccess-atlas-skilltech-t006",
+      "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+    },
+    {
+      "turnId": "2026-05-23-uniaccess-atlas-skilltech-t007",
+      "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+    },
+    {
+      "turnId": "2026-05-23-uniaccess-atlas-skilltech-t008",
+      "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+    }
+  ]
+}

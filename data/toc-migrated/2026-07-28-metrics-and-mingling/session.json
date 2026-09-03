@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-28-metrics-and-mingling",
+  "tenantId": "toc",
+  "sourceId": "2026-07-28-metrics-and-mingling-src",
+  "title": "Metrics & Mingling: Conference ROI & Networking",
+  "date": "2026-07-28",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

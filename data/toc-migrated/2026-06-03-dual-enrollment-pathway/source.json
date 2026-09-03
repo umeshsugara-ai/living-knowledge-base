@@ -1,0 +1,14 @@
+{
+  "_id": "2026-06-03-dual-enrollment-pathway-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/3rd-June-Dual-Enrollment-Pathway.content.md",
+  "hash": "4f5bb52af775b0c7232ba09d99cb2983922aea095ec8dcef78a183fc2353419d",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.513Z"
+}

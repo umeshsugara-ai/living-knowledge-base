@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "2026-08-03-uk-beyond-offer-letters-reupload-c01",
+    "tenantId": "toc",
+    "text": "Indian students studying abroad grew from about 131,000 in 2005 to over a million within roughly two decades, per the Ministry of External Affairs figures cited in this recording.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-03-uk-beyond-offer-letters-reupload-t002",
+        "sessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-03-uk-beyond-offer-letters-reupload-c02",
+    "tenantId": "toc",
+    "text": "Wai Wah Tsang uses a gym-membership analogy: accepting a university offer is like joining a gym -- the outcome still depends on how the student uses what is available.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-03-uk-beyond-offer-letters-reupload-t004",
+        "sessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
+      }
+    ]
+  }
+]

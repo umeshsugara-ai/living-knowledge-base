@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-03-inside-the-uc-session",
+  "tenantId": "toc",
+  "sourceId": "2026-07-03-inside-the-uc-session-src",
+  "title": "Inside the UC (University of California) System",
+  "date": "2026-07-03",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

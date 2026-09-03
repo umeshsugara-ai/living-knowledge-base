@@ -1,0 +1,14 @@
+{
+  "_id": "2026-05-22-uniaccess-xavier-university-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/22nd-May-UniAccess-Xavier-University.content.md",
+  "hash": "3ca1a663fafc2a5d1c4c0fa2d7aea2d5e47733ff24dccb0c2902e37bffaf166b",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.480Z"
+}

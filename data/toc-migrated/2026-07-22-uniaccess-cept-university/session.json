@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-22-uniaccess-cept-university",
+  "tenantId": "toc",
+  "sourceId": "2026-07-22-uniaccess-cept-university-src",
+  "title": "UniAccess Live: CEPT University",
+  "date": "2026-07-22",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

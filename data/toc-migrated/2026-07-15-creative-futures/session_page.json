@@ -1,0 +1,26 @@
+{
+  "_id": "2026-07-15-creative-futures-page",
+  "tenantId": "toc",
+  "sessionId": "2026-07-15-creative-futures",
+  "summary": "Emilie Li (SCAD) and Sumit Saurabh (Design Circle International) covered creative-career pathways for TOC counselors. Li cited SCAD's own research that 85% of career success comes from soft skills versus 15% from technical execution, noted that 63% of SCAD's degree programs are STEM-designated (unlocking 3 years of OPT), and described SCADpro, SCAD's in-house studio that pairs student teams with Fortune 500 companies. Saurabh then contrasted portfolio expectations across geographies: the USA rewards polished final execution, the UK/Europe rewards visible process and sketchbooks, and Indian government design colleges (NIFT/NID/UCEED) are driven almost entirely by entrance-exam scores rather than portfolios.",
+  "keyInsights": [
+    "SCAD's own stat: 85% of career success comes from soft skills, 15% from technical skill.",
+    "63% of SCAD degree programs are STEM-designated, giving international grads 3 years of OPT.",
+    "SCADpro pairs student teams with Fortune 500 companies (Google, BMW, NASA, Coca-Cola) on real projects.",
+    "Portfolio expectations diverge sharply by geography: USA (polished execution) vs UK/Europe (process/sketchbooks) vs Indian govt colleges (pure entrance-exam driven)."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-07-15-creative-futures-t015",
+      "sessionId": "2026-07-15-creative-futures"
+    },
+    {
+      "turnId": "2026-07-15-creative-futures-t019",
+      "sessionId": "2026-07-15-creative-futures"
+    },
+    {
+      "turnId": "2026-07-15-creative-futures-t026",
+      "sessionId": "2026-07-15-creative-futures"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+[
+  {
+    "_id": "2026-05-23-uniaccess-atlas-skilltech-c01",
+    "tenantId": "toc",
+    "text": "ISDI, ATLAS SkillTech's design school, operates in a long-standing collaboration with Parsons School of Design.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-23-uniaccess-atlas-skilltech-t005",
+        "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+      },
+      {
+        "turnId": "2026-05-23-uniaccess-atlas-skilltech-t006",
+        "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-23-uniaccess-atlas-skilltech-c02",
+    "tenantId": "toc",
+    "text": "ISME, ATLAS SkillTech's management school, is part of the Babson group of roughly 30 schools worldwide.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-23-uniaccess-atlas-skilltech-t007",
+        "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-23-uniaccess-atlas-skilltech-c03",
+    "tenantId": "toc",
+    "text": "ATLAS SkillTech students have achieved recognition at NASA and Google competitions.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-23-uniaccess-atlas-skilltech-t008",
+        "sessionId": "2026-05-23-uniaccess-atlas-skilltech"
+      }
+    ]
+  }
+]

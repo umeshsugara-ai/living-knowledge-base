@@ -1,0 +1,14 @@
+{
+  "_id": "2026-08-12-uniaccess-ashoka-university",
+  "tenantId": "toc",
+  "sourceId": "2026-08-12-uniaccess-ashoka-university-src",
+  "title": "UniAccess Live: Meet Ashoka University",
+  "date": "2026-08-12",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

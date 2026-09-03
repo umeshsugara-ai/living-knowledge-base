@@ -1,0 +1,14 @@
+{
+  "_id": "2026-05-22-uniaccess-xavier-university",
+  "tenantId": "toc",
+  "sourceId": "2026-05-22-uniaccess-xavier-university-src",
+  "title": "UniAccess Live: Xavier University",
+  "date": "2026-05-22",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "_id": "2026-08-03-uk-beyond-offer-letters-page",
+  "tenantId": "toc",
+  "sessionId": "2026-08-03-uk-beyond-offer-letters",
+  "summary": "A UK-focused panel (Jasmine Bual/QMUL, Wai Wah Tsang/Warwick, Jasminder Khanna/Graysham Global, Nick Skeavington/Exeter, moderated by Bhavya Goyal) traced how outbound Indian student numbers grew roughly tenfold -- from 131,000 in 2005 to over 1.3 million by 2025 -- while UK university capacity stayed comparatively fixed, forcing far more selective screening. The panel covered UKVI's tightened Basic Compliance Assessment, universities' adoption of the Enroly CAS Shield platform for pre-CAS financial and credibility checks, and NBFCs (Credila, Avanse) now capping lending by university. Wai Wah Tsang's recurring 'gym membership' analogy -- that an offer is only the entry ticket, not the outcome -- framed the panel's advice to counselors to prioritize institutional fit and career-support usage over rankings alone.",
+  "keyInsights": [
+    "Outbound Indian students grew from 131,000 (2005) to over 1.3 million (2025) without proportional growth in UK university capacity.",
+    "Universities are adopting the Enroly CAS Shield platform for pre-CAS financial and credibility checks as compliance tightens.",
+    "NBFCs (Credila, Avanse) are now placing university-specific lending caps in response to increased scrutiny.",
+    "An offer letter is framed as only the midpoint, not the outcome -- ROI of study abroad shows up 10-15 years post-graduation, not at first salary."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-08-03-uk-beyond-offer-letters-t013",
+      "sessionId": "2026-08-03-uk-beyond-offer-letters"
+    },
+    {
+      "turnId": "2026-08-03-uk-beyond-offer-letters-t015",
+      "sessionId": "2026-08-03-uk-beyond-offer-letters"
+    },
+    {
+      "turnId": "2026-08-03-uk-beyond-offer-letters-t061",
+      "sessionId": "2026-08-03-uk-beyond-offer-letters"
+    }
+  ]
+}

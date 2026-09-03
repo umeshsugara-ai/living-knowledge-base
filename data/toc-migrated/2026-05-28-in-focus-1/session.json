@@ -1,0 +1,14 @@
+{
+  "_id": "2026-05-28-in-focus-1",
+  "tenantId": "toc",
+  "sourceId": "2026-05-28-in-focus-1-src",
+  "title": "In Focus #1 (inaugural)",
+  "date": "2026-05-28",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

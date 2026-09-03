@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "2026-05-20-telling-your-brand-story-better-c01",
+    "tenantId": "toc",
+    "text": "Mitul Shah's framework starts with 'E' for Examine -- examining the world around the brand before crafting a story.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-20-telling-your-brand-story-better-t049",
+        "sessionId": "2026-05-20-telling-your-brand-story-better"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-20-telling-your-brand-story-better-c02",
+    "tenantId": "toc",
+    "text": "The framework identifies emotional doors (e.g. Joy) that a piece of communication can open to connect with an audience.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-20-telling-your-brand-story-better-t030",
+        "sessionId": "2026-05-20-telling-your-brand-story-better"
+      }
+    ]
+  }
+]

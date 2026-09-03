@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-30-in-focus-3",
+  "tenantId": "toc",
+  "sourceId": "2026-07-30-in-focus-3-src",
+  "title": "In Focus #3",
+  "date": "2026-07-30",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

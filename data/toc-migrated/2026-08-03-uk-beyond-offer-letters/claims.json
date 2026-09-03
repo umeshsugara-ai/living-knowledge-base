@@ -1,0 +1,32 @@
+[
+  {
+    "_id": "2026-08-03-uk-beyond-offer-letters-c01",
+    "tenantId": "toc",
+    "text": "Indian students studying abroad grew from about 131,000 in 2005 to over 1.3 million two decades later.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-03-uk-beyond-offer-letters-t013",
+        "sessionId": "2026-08-03-uk-beyond-offer-letters"
+      },
+      {
+        "turnId": "2026-08-03-uk-beyond-offer-letters-t015",
+        "sessionId": "2026-08-03-uk-beyond-offer-letters"
+      }
+    ]
+  },
+  {
+    "_id": "2026-08-03-uk-beyond-offer-letters-c02",
+    "tenantId": "toc",
+    "text": "Universities such as Exeter have onboarded the Enroly CAS Shield platform to run pre-CAS financial and credibility checks.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-08-03-uk-beyond-offer-letters-t061",
+        "sessionId": "2026-08-03-uk-beyond-offer-letters"
+      }
+    ]
+  }
+]

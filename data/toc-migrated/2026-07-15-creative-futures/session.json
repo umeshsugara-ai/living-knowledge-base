@@ -1,0 +1,14 @@
+{
+  "_id": "2026-07-15-creative-futures",
+  "tenantId": "toc",
+  "sourceId": "2026-07-15-creative-futures-src",
+  "title": "Creative Futures",
+  "date": "2026-07-15",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

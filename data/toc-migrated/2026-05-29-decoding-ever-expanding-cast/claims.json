@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-05-29-decoding-ever-expanding-cast-c01",
+    "tenantId": "toc",
+    "text": "The facilitators mapped out roughly 24 distinct professional roles active across a student's educational journey.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-29-decoding-ever-expanding-cast-t012",
+        "sessionId": "2026-05-29-decoding-ever-expanding-cast"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-29-decoding-ever-expanding-cast-c02",
+    "tenantId": "toc",
+    "text": "75% of workshop participants identified university enrollment-yield goals versus family cost reality as the ecosystem's sharpest tension.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-29-decoding-ever-expanding-cast-t161",
+        "sessionId": "2026-05-29-decoding-ever-expanding-cast"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-29-decoding-ever-expanding-cast-c03",
+    "tenantId": "toc",
+    "text": "One proposed rule of engagement is to respect professional hand-offs and stay in your own lane of expertise.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-29-decoding-ever-expanding-cast-t190",
+        "sessionId": "2026-05-29-decoding-ever-expanding-cast"
+      }
+    ]
+  }
+]

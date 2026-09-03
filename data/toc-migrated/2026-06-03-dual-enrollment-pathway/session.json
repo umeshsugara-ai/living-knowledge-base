@@ -1,0 +1,14 @@
+{
+  "_id": "2026-06-03-dual-enrollment-pathway",
+  "tenantId": "toc",
+  "sourceId": "2026-06-03-dual-enrollment-pathway-src",
+  "title": "Dual Enrollment as a Pathway",
+  "date": "2026-06-03",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

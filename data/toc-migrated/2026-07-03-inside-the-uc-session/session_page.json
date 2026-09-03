@@ -1,0 +1,25 @@
+{
+  "_id": "2026-07-03-inside-the-uc-session-page",
+  "tenantId": "toc",
+  "sessionId": "2026-07-03-inside-the-uc-session",
+  "summary": "Recruitment advisors from UC Riverside (Aastha Chhikara), UC Santa Cruz (Beauti Deb), and UC Merced (Vaishnavi Kotiyal) walked counselors through the UC system's structure and application mechanics: 10 campuses total, only 9 offering undergraduate programs, over 300,000 students system-wide, a test-blind/test-free policy where SAT/ACT scores are never reviewed, a $95 per-campus application fee, and non-resident merit scholarships reaching up to $89,100 over 4 years at UC Riverside.",
+  "keyInsights": [
+    "UC system: 10 campuses total, only 9 offer undergraduate programs; over 300,000 students system-wide.",
+    "UC is test-blind/test-free: ACT/SAT scores are not reviewed for admission or scholarships.",
+    "Application fee is $95 USD per campus for international/non-resident applicants; UC Riverside's non-resident merit scholarship reaches up to $89,100 over 4 years."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-07-03-inside-the-uc-session-t011",
+      "sessionId": "2026-07-03-inside-the-uc-session"
+    },
+    {
+      "turnId": "2026-07-03-inside-the-uc-session-t019",
+      "sessionId": "2026-07-03-inside-the-uc-session"
+    },
+    {
+      "turnId": "2026-07-03-inside-the-uc-session-t016",
+      "sessionId": "2026-07-03-inside-the-uc-session"
+    }
+  ]
+}

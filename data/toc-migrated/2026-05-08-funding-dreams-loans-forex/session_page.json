@@ -1,0 +1,38 @@
+{
+  "_id": "2026-05-08-funding-dreams-loans-forex-page",
+  "tenantId": "toc",
+  "sessionId": "2026-05-08-funding-dreams-loans-forex",
+  "summary": "A TOC panel on education financing paired forex specialists (Dev Mehta and Payal Chawla of FRR Forex) with an education-loan lender (Shweta Jain of HDFC Credila), moderated by Nikhil Jain of ForeignAdmits. The forex side explained that banks and portals like Flywire mark up currency conversion 2-2.5% versus FRR's roughly 1%, and that FEMA rules restrict who can remit money for a student's education to parents, siblings, and spouse. Credila covered unsecured loan ceilings (up to INR 1.5 crore abroad), 20-year repayment tenures, and the Section 80E tax deduction on loan interest. Both speakers stressed planning financing in two parallel tracks -- sourcing funds and moving funds -- starting at the university-shortlisting stage, not after an offer arrives.",
+  "keyInsights": [
+    "RBI-authorized Category II forex dealers like FRR Forex charge ~1% markup versus 2-2.5% at banks/Flywire -- a real cost saving on large remittances.",
+    "FEMA rules: only mother, father, sibling, or spouse can remit funds abroad for a student's education (not grandparents, aunts, or uncles).",
+    "HDFC Credila offers unsecured loans up to INR 1.5 crore for study abroad with tenures up to 20 years and no foreclosure penalty.",
+    "Section 80E allows 100% of education-loan interest to be tax-deducted."
+  ],
+  "evidence": [
+    {
+      "turnId": "2026-05-08-funding-dreams-loans-forex-t037",
+      "sessionId": "2026-05-08-funding-dreams-loans-forex"
+    },
+    {
+      "turnId": "2026-05-08-funding-dreams-loans-forex-t029",
+      "sessionId": "2026-05-08-funding-dreams-loans-forex"
+    },
+    {
+      "turnId": "2026-05-08-funding-dreams-loans-forex-t074",
+      "sessionId": "2026-05-08-funding-dreams-loans-forex"
+    },
+    {
+      "turnId": "2026-05-08-funding-dreams-loans-forex-t080",
+      "sessionId": "2026-05-08-funding-dreams-loans-forex"
+    },
+    {
+      "turnId": "2026-05-08-funding-dreams-loans-forex-t018",
+      "sessionId": "2026-05-08-funding-dreams-loans-forex"
+    },
+    {
+      "turnId": "2026-05-08-funding-dreams-loans-forex-t030",
+      "sessionId": "2026-05-08-funding-dreams-loans-forex"
+    }
+  ]
+}

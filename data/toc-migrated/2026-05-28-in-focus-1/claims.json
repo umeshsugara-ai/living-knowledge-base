@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-05-28-in-focus-1-c01",
+    "tenantId": "toc",
+    "text": "Innovique states it can provide a project-matching solution to a counselor within 48 hours.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-28-in-focus-1-t035",
+        "sessionId": "2026-05-28-in-focus-1"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-28-in-focus-1-c02",
+    "tenantId": "toc",
+    "text": "Innovique secures a copyright certificate from the Government of India for student passion-project inventions.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-28-in-focus-1-t041",
+        "sessionId": "2026-05-28-in-focus-1"
+      }
+    ]
+  },
+  {
+    "_id": "2026-05-28-in-focus-1-c03",
+    "tenantId": "toc",
+    "text": "Artiste 360 students produce 12-15 final portfolio works as part of its flagship program.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-05-28-in-focus-1-t056",
+        "sessionId": "2026-05-28-in-focus-1"
+      }
+    ]
+  }
+]

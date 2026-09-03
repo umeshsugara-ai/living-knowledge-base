@@ -1,0 +1,14 @@
+{
+  "_id": "2026-08-03-uk-beyond-offer-letters-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/03rd-August-UK-Beyond-Offer-Letters.content.md",
+  "hash": "e8b93bbb1aaa5af7d6f454f786445e5559c7abb653eea050eedc59305f82e4d3",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.448Z"
+}

@@ -1,0 +1,14 @@
+{
+  "_id": "2026-08-24-uniaccess-leeds-arts-university-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/24th-August-UniAccess-Live-Meet-Leeds-Art-University.content.md",
+  "hash": "68cd77b8c7e2b2b01234121532d94e026832ed2910773e6b102e3cf742274b39",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.486Z"
+}

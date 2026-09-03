@@ -1,0 +1,14 @@
+{
+  "_id": "2026-08-10-ucas-what-changed-what-matters",
+  "tenantId": "toc",
+  "sourceId": "2026-08-10-ucas-what-changed-what-matters-src",
+  "title": "What Changed, What Matters – Inside the New UCAS Application",
+  "date": "2026-08-10",
+  "org": "The Outreach Collective (TOC)",
+  "status": {
+    "transcribe": "done",
+    "diarize": "pending",
+    "summarize": "done",
+    "index": "pending"
+  }
+}

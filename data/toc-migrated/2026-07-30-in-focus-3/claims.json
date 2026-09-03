@@ -1,0 +1,41 @@
+[
+  {
+    "_id": "2026-07-30-in-focus-3-c01",
+    "tenantId": "toc",
+    "text": "StarterSky's entrepreneurship accelerator costs INR 75,000 plus tax in a group format or INR 90,000 plus tax individually.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-30-in-focus-3-t030",
+        "sessionId": "2026-07-30-in-focus-3"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-30-in-focus-3-c02",
+    "tenantId": "toc",
+    "text": "Estero Education cites a roughly 92% average New Zealand student-visa approval rate over the last 15 years.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-30-in-focus-3-t063",
+        "sessionId": "2026-07-30-in-focus-3"
+      }
+    ]
+  },
+  {
+    "_id": "2026-07-30-in-focus-3-c03",
+    "tenantId": "toc",
+    "text": "A New Zealand bachelor's degree graduate is guaranteed a three-year post-study work visa with no conditions attached.",
+    "topicRefs": [],
+    "status": "needs-review",
+    "evidence": [
+      {
+        "turnId": "2026-07-30-in-focus-3-t094",
+        "sessionId": "2026-07-30-in-focus-3"
+      }
+    ]
+  }
+]

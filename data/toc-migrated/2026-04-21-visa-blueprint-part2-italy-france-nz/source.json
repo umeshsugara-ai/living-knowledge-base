@@ -1,0 +1,14 @@
+{
+  "_id": "2026-04-21-visa-blueprint-part2-italy-france-nz-src",
+  "tenantId": "toc",
+  "kind": "document",
+  "captureMode": "provided",
+  "path": "raw/TOC/TOC-Materials/Transcripts/21st-April-Visa-Blueprint-Part2-Italy-France-NZ.content.md",
+  "hash": "564a642203fe4bcee0cc984a93dab8fc7bdf1c140621c9c33aa4f12d0e913cd5",
+  "consent": {
+    "given": true,
+    "recordedBy": "The Outreach Collective (TOC)",
+    "note": "transcript provided by TOC, not captured by Vidysea"
+  },
+  "createdAt": "2026-09-03T06:13:39.475Z"
+}
