@@ -52,7 +52,7 @@
 | T-010 | open | Product shell (hosted multi-tenant app) — deferred, not near-term per Umesh | depends T-009 |
 | T-011 | open | Phase-B per-user browser profile bot + live monitor | depends T-024 |
 | T-012 | done | Compete screen (internal tier, manual entry) | checker PASS 6/6, verdict `71b5fd2` |
-| T-009b | open | Make `@lkb/ask`'s `ScoreFn` async; wire a real LLM-based scorer into apps/api's /ask (replaces the heuristic keyword-overlap scorer) | flagged by /checker during T-009; depends T-009 |
+| T-009b | done | Make `@lkb/ask`'s `ScoreFn` async; wire a real LLM-based scorer into apps/api's /ask (replaces the heuristic keyword-overlap scorer) | checker PASS 6/6, verdict `089d2b6` |
 | T-013 | open | Avatar/voice counsellor client | depends T-009 |
 | T-014 | open | Championship run (uses T-012's simple compete screen, not a platform) | depends T-012, T-013 |
 | T-028 | open | Counsellor user management/accounts — **explicitly deferred** (Umesh: "baad mein dekh lenge") | depends T-009 |
@@ -62,7 +62,7 @@
 | T-017b | done | SNAPSHOT.md generator + FEATURES.jsonl ledger + anti-cyclic hook | checker PASS 9/9, verdict `45b1b88` (cycle 2, D-009 hook wiring) |
 
 **Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002, T-009,
-T-004b — all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key).
+T-004b, T-012, T-009b — all checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid
+Gemini key).
 **Maker picks next:**
-T-009b (real LLM scorer) — contract written `qa/contracts/real-llm-scorer.md` — in progress.
-Then T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.
+T-004c (regenerate edge cases, low urgency). T-010/T-028 deferred.
