@@ -1,6 +1,8 @@
 # Manifest — calendar-auto-join (T-025)
 
-Status: ready-for-check
+Status: checked-PASS
+Cycle checked: 1
+Verdict: `qa/verdicts/calendar-auto-join.md`
 Contract: `qa/contracts/calendar-auto-join.md`
 
 ## Disclosed scope-down (read this first)
