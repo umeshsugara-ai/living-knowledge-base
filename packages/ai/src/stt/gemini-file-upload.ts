@@ -91,28 +91,43 @@ export async function pollFileState(name: string, transport: UploadTransport,
   throw new Error(`gemini file upload: unexpected file state "${String(state)}"`);
 }
 
-// Speaker capture is non-greedy up to a colon followed by whitespace ("<speaker>: text"), not
-// just any colon — a speakerRef like "spk:1" contains its own colon with no following space, so
-// a naive "first colon" split would wrongly cut it at "spk".
-const TIMESTAMP_LINE_RE = /^\[(\d{1,3}):(\d{2})\]\s*(.+?):\s+(.+)$/;
-
 function parseTimestamp(minutes: string, seconds: string): number {
   return Number(minutes) * 60 + Number(seconds);
 }
 
+// Global, NOT anchored to line-start — real bug found live (2026-09-04): the model does not
+// reliably put every `[MM:SS] Speaker:` marker on its own line; sometimes dozens of turns arrive
+// back-to-back within one continuous block of text with no newline between them. A per-line
+// regex silently swallowed everything after the first line-boundary-aligned marker into a single
+// giant "turn" — the content wasn't lost (verified against a real response spanning a full
+// ~60-minute session merged into 2 turns), just mis-split. Matching globally and slicing text
+// between consecutive marker positions (not line boundaries) finds every real turn regardless of
+// whether the model inserted a newline before it. Speaker capture is non-greedy up to a colon
+// followed by whitespace ("<speaker>: text"), not just any colon — a speakerRef like "spk:1"
+// contains its own colon with no following space, so a naive "first colon" split would wrongly
+// cut it at "spk".
+const TIMESTAMP_MARKER_RE = /\[(\d{1,3}):(\d{2})\]\s*(.+?):\s+/g;
+
 /**
- * Parses `[MM:SS] SpeakerName: text` lines (one turn per line) into `Turn[]`. `tEnd` for each
- * turn is the NEXT turn's `tStart`; the LAST turn's `tEnd` is its own `tStart + 30` seconds — a
- * documented fallback since the transcript's timestamps alone don't carry a true end time.
- * Non-matching lines (blank lines, stray prose) are skipped, never thrown on.
+ * Parses `[MM:SS] SpeakerName: text` markers into `Turn[]` — matches anywhere in the text, not
+ * just at line starts (see TIMESTAMP_MARKER_RE comment). `tEnd` for each turn is the NEXT turn's
+ * `tStart`; the LAST turn's `tEnd` is its own `tStart + 30` seconds — a documented fallback since
+ * the transcript's timestamps alone don't carry a true end time. Text before the first marker
+ * (headers, preamble) is dropped; text between two markers belongs entirely to the FIRST one's
+ * turn (it is that speaker's continued content, not a separate unparseable line to discard).
  */
 export function parseDiarizedTranscript(text: string): Turn[] {
+  const matches = [...text.matchAll(TIMESTAMP_MARKER_RE)];
   const parsed: { speakerRef: string; tStart: number; text: string }[] = [];
-  for (const line of text.split("\n")) {
-    const match = TIMESTAMP_LINE_RE.exec(line.trim());
-    if (!match) continue;
-    const [, mm, ss, speaker, turnText] = match;
-    parsed.push({ speakerRef: speaker!.trim(), tStart: parseTimestamp(mm!, ss!), text: turnText!.trim() });
+
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i]!;
+    const [, mm, ss, speaker] = match;
+    const contentStart = match.index + match[0].length;
+    const contentEnd = i + 1 < matches.length ? matches[i + 1]!.index : text.length;
+    const turnText = text.slice(contentStart, contentEnd).trim();
+    if (!turnText) continue;
+    parsed.push({ speakerRef: speaker!.trim(), tStart: parseTimestamp(mm!, ss!), text: turnText });
   }
 
   const LAST_TURN_FALLBACK_SECONDS = 30;
@@ -154,6 +169,12 @@ export async function transcribeUploadedAudio(fileUri: string, transport: Upload
           ],
         },
       ],
+      // Real bug found live (2026-09-04): without this, Gemini 2.5+/3.x's extended-thinking mode
+      // can consume the entire output budget on hidden reasoning tokens, returning
+      // `finishReason: "STOP"` with a near-empty transcript (`text: "\n"` plus an opaque
+      // `thoughtSignature` blob) — a "successful" completion with no usable content. Disabling
+      // thinking frees the whole budget for the actual transcript.
+      generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
     },
   });
   assertOk(res, "generateContent");

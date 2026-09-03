@@ -94,12 +94,30 @@ test("parseDiarizedTranscript parses [MM:SS] Speaker: text lines, computes tEnd 
   assert.equal(turns[2]!.tEnd, 115 + 30, "last turn's tEnd falls back to tStart + 30s");
 });
 
-test("parseDiarizedTranscript skips non-matching lines without throwing", () => {
-  const text = "## Some header\n\n[00:10] Bob: hello\nrandom prose with no timestamp\n[00:20] Ann: hi";
+test("parseDiarizedTranscript drops preamble before the first marker; text between two markers belongs to the first speaker", () => {
+  const text = "## Some header\n\n[00:10] Bob: hello\nstill Bob talking, no newline needed\n[00:20] Ann: hi";
   const turns = parseDiarizedTranscript(text);
   assert.equal(turns.length, 2);
   assert.equal(turns[0]!.speakerRef, "Bob");
+  assert.equal(turns[0]!.text, "hello\nstill Bob talking, no newline needed",
+    "continuation text between two markers is real spoken content, not a line to discard");
   assert.equal(turns[1]!.speakerRef, "Ann");
+});
+
+test("parseDiarizedTranscript real bug repro: many turns arriving with NO newline between markers are still split correctly", () => {
+  // Real failure found live 2026-09-04: the model sometimes emits dozens of turns back-to-back
+  // in one continuous block with no line breaks. A per-line regex merged all of this into a
+  // single giant "turn" on a real 62.7MB session (full content still present in the raw text,
+  // just mis-split into 2 turns instead of ~150). This reproduces that shape at small scale.
+  const text = "[00:00] Nikhil: Perfect perfect.[00:02] spk:1: Welcome everyone.[01:55] Priyamvada: Thank you so much.";
+  const turns = parseDiarizedTranscript(text);
+  assert.equal(turns.length, 3, "must split into 3 turns even with zero separators between markers");
+  assert.equal(turns[0]!.speakerRef, "Nikhil");
+  assert.equal(turns[0]!.text, "Perfect perfect.");
+  assert.equal(turns[1]!.speakerRef, "spk:1");
+  assert.equal(turns[1]!.text, "Welcome everyone.");
+  assert.equal(turns[2]!.speakerRef, "Priyamvada");
+  assert.equal(turns[2]!.text, "Thank you so much.");
 });
 
 test("parseDiarizedTranscript on empty text returns an empty array", () => {
@@ -122,6 +140,28 @@ test("transcribeUploadedAudio calls generateContent with fileData and parses the
   assert.equal(result.turns[0]!.speakerRef, "Bob");
   assert.equal(result.usage.inputTokens, 1234);
   assert.equal(result.usage.outputTokens, 56);
+});
+
+test("transcribeUploadedAudio disables the model's extended-thinking budget in the request", async () => {
+  // Real bug found live: without thinkingConfig.thinkingBudget=0, Gemini can spend the whole
+  // output budget on hidden reasoning tokens and return finishReason:"STOP" with an empty
+  // transcript. This proves the fix is genuinely present in the request, not just that the
+  // function still returns turns for a well-formed response.
+  let capturedBody: Record<string, unknown> | undefined;
+  const transport: UploadTransport = async (req) => {
+    capturedBody = req.body as Record<string, unknown>;
+    return {
+      status: 200,
+      headers: {},
+      body: { candidates: [{ content: { parts: [{ text: "[00:00] Bob: hi" }] } }] },
+    };
+  };
+
+  await transcribeUploadedAudio("files/abc", transport, API_KEY);
+
+  const generationConfig = capturedBody?.generationConfig as
+    { thinkingConfig?: { thinkingBudget?: number } } | undefined;
+  assert.equal(generationConfig?.thinkingConfig?.thinkingBudget, 0);
 });
 
 test("transcribeUploadedAudio throws on a non-2xx status", async () => {
