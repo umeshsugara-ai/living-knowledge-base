@@ -71,3 +71,16 @@ SNAPSHOT.md first."
 ## Non-goals for T-017b
 - No UI. No automatic feature-event emission from `/maker` itself (that wiring is a follow-up once
   this ledger format is proven — recorded as an open flag, not built here).
+
+## Amendment log
+- 2026-09-03 · routine · checker ADOPTS this contract as checker-owned (maker-drafted, as
+  T-016/T-017): content re-read against plan §6d (Umesh's feature-log ask — date-wise
+  features, reasoning for update/remove, read-first snapshot to save tokens) and the
+  `directory_map.md` anti-pattern reference — faithful; START stands on the plan §6d approval.
+  Maker never writes qa/contracts/ again · T-017b cycle-1 check.
+- 2026-09-03 · routine · Criterion 6 clarified as two independently-judged sub-parts for PASS
+  purposes: 6(a) SessionEnd auto-regen hook wired into `.claude/settings.json`, 6(b)
+  `pnpm lint:structure` staleness fallback. The contract's "no separate /landplane dependency
+  required" clause scopes only to 6(b)'s independence from `/landplane`; it does not waive 6(a).
+  Both sub-parts remain required for criterion 6 to read as fully met — 6(a) unmet is a genuine
+  (partial) FAIL on C6, not absorbed by 6(b) · T-017b cycle-1 check.
