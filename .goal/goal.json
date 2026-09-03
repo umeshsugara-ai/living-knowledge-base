@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-03T12:37:42",
+  "updated": "2026-09-03T12:48:44",
   "progress": {
     "total": 29,
-    "done": 14,
+    "done": 15,
     "in_progress": 0,
     "blocked": 0,
-    "pending": 15,
-    "current": "T-012",
-    "percent": 48
+    "pending": 14,
+    "current": "T-009b",
+    "percent": 52
   },
   "tasks": [
     {
@@ -137,13 +137,14 @@
     {
       "id": "T-012",
       "title": "Counsellor eval harness + human golden set",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "HIGH",
       "deps": [
         "T-005b"
       ],
       "note": "internal tier first (D-007); public tier needs independent panel",
-      "criticality": "low"
+      "criticality": "low",
+      "completed": "2026-09-03T12:48:44"
     },
     {
       "id": "T-013",
@@ -344,8 +345,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 57.01,
+    "velocity_per_day": 59.58,
     "eta_days": 0.3
   },
-  "last_deterministic_tick": "2026-09-03T12:36:01"
+  "last_deterministic_tick": "2026-09-03T12:46:01"
 }
