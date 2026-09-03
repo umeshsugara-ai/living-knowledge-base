@@ -37,4 +37,5 @@ PASS: 10 collection schema(s) validated correctly.
 exit: 0
 ```
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/ISS-004-tree-index-fixtures.md (Cycle checked: 1, commit 1ddadda) — 3/3 criteria; T-001 restored.
