@@ -1,0 +1,33 @@
+{
+  "$comment": "Single home for every structure budget (D-003, T-017). scripts/lint-*.mjs and ARCHITECTURE §5 read/refer to this file; never restate these numbers elsewhere.",
+  "roots": ["packages", "apps", "workers", "scripts", "schema"],
+  "ignoreDirs": ["node_modules", "dist", "generated"],
+  "loc": {
+    "extensions": [".ts", ".py", ".mjs"],
+    "max": 300,
+    "testMax": 400,
+    "testPatterns": ["\\.test\\.ts$", "^test_.*\\.py$"]
+  },
+  "dirsize": { "maxFiles": 30 },
+  "root": {
+    "maxLooseFiles": 15,
+    "architectureFile": "ARCHITECTURE.md",
+    "architectureMaxLines": 150,
+    "mdMaxLines": 200,
+    "readmeFile": "README.md",
+    "readmeMaxLines": 80
+  },
+  "dupes": {
+    "root": "packages",
+    "extensions": [".ts"],
+    "excludeFiles": ["index.ts"],
+    "exportPattern": "^export\\s+(?:async\\s+)?(?:function\\*?|const|let|class|type|interface|enum)\\s+([A-Za-z_$][\\w$]*)",
+    "schemaDir": "schema",
+    "schemaSuffix": ".schema.json"
+  },
+  "migrations": {
+    "dir": "migrations",
+    "pattern": "^migrate-.*\\.(mjs|js|ts|py)$",
+    "extraIgnoreDirs": [".git", "sources"]
+  }
+}

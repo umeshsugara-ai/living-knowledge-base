@@ -60,11 +60,12 @@ contracts/verify_contracts.py. This section only lists them:
 
 ```
 D:\KnowledgeBase\
-  ARCHITECTURE.md (≤150 lines)   docs/DECISIONS.md   docs/adr/NNNN-*.md (≤60 lines each)
+  ARCHITECTURE.md   docs/DECISIONS.md   docs/goal.md (vision transcript)   docs/adr/NNNN-*.md (≤60 lines each)
   package.json · pnpm-workspace.yaml · tsconfig.base.json · pnpm-lock.yaml · .gitmodules
+  structure.config.json (ALL budgets) · .dependency-cruiser.cjs (§5 dependency rules)
   schema/       one <collection>.schema.json each · fixtures/ · validate.py — SOURCE OF TRUTH
   migrations/   migrate-mongo, one change each — the ONLY place shape/index changes (T-018)
-  scripts/      gen-types.mjs (schema → packages/core/src/generated) · append_decision.ps1
+  scripts/      gen-types.mjs (schema → packages/core/src/generated) · append_decision.ps1 · lint-*.mjs + lib/walk.mjs (T-017)
   packages/
     core/         src/generated/<collection>.ts (GENERATED, never edited) · src/domain/ pure fns, NO I/O
     db/           src/collections/<coll>.ts — coll(tenantId).find(); tenant-less query = type error
@@ -83,7 +84,7 @@ D:\KnowledgeBase\
 
 | Path | Owns | Must NOT contain |
 |---|---|---|
-| `goal.md` | Vision transcript (CEO call) — immutable reference | Anything else |
+| `docs/goal.md` | Vision transcript (CEO call) — immutable reference (moved from root by T-017: root `.md` line cap) | Anything else |
 | `Living-Knowledge-Base-Architecture.html` | Piloted TOC-slice architecture, consistent with this file | — |
 | `schema/` | JSON Schemas + fixtures + Python validator | Hand-written TS types (they are generated) |
 | `packages/*` | Application logic, one exported symbol per concept | Data, media, probes, `.py` app logic |
@@ -102,14 +103,15 @@ D:\KnowledgeBase\
 - **Dependency rules (downward only):** `apps → packages/{ask,ingest,index,ai,db,core}`;
   `ask/index/ingest → ai, db, core`; `ai, db → core`; `core → nothing`; `meeting-bot → ingest
   (source interface), core`; `workers` import nothing (queue contract only).
-- **Budgets (D-003, CI-enforced from T-017):** 300 LOC per `.ts`/`.py` (tests 400) · 30 files per
-  dir · root ≤ 15 loose files · one exported symbol per concept · zero `migrate-*.mjs` outside
-  `migrations/` · `ARCHITECTURE.md` ≤ 150 lines · any root `.md` ≤ 200 · onboarding = README (≤80)
-  + this file only · build artefacts, probes, media never in repo root.
+- **Budgets (D-003, CI-enforced by T-017):** every number (LOC per file, files per dir, root loose
+  files, root `.md` / `ARCHITECTURE.md` / README line caps, migration-script location) lives ONLY in
+  root `structure.config.json`; `scripts/lint-*.mjs` read it, `pnpm lint:structure` enforces it, and
+  `.dependency-cruiser.cjs` enforces the dependency rules above. Also: one exported symbol per concept
+  · onboarding = README + this file only · build artefacts, probes, media never in repo root.
 - **Provenance + purge gate (D-008):** a recording may be purged only when every claim citing it
   is verified; a ±15 s evidence clip per cited turn is retained permanently.
 - **Structure holds iff:** `pnpm install` · `pnpm -r typecheck && pnpm -r test` · `pnpm gen:types
-  --check` · `python schema/validate.py` · `ls | wc -l ≤ 15` · `wc -l ARCHITECTURE.md ≤ 150`.
+  --check` · `python schema/validate.py` · `pnpm lint:structure` · `pnpm test:lint` (= `.github/workflows/ci.yml`).
 
 ## 6. OPEN QUESTIONS (deliberately undecided — the agent must NOT resolve these
 unilaterally; they resolve only through /checkpoint verdicts)
