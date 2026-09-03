@@ -1,0 +1,182 @@
+[
+  {
+    "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq01-relevant",
+    "query": "New Zealand: 76% of 2025 visa applications approved, government target is 27,000 Indian students by 2030.",
+    "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq01-irrelevant",
+    "query": "New Zealand: 76% of 2025 visa applications approved, government target is 27,000 Indian students by 2030.",
+    "sessionId": "2026-06-03-dual-enrollment-pathway",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq02-relevant",
+    "query": "New Zealand funds test accepts only 4 sponsor types: secured loans from 14 nationalized banks, 3-month bank statements, 6-month-old fixed deposits, or Provident Fund withdrawals — NBFC and unsecured loans are outright rejected.",
+    "sessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq02-irrelevant",
+    "query": "New Zealand funds test accepts only 4 sponsor types: secured loans from 14 nationalized banks, 3-month bank statements, 6-month-old fixed deposits, or Provident Fund withdrawals — NBFC and unsecured loans are outright rejected.",
+    "sessionId": "2026-06-03-dual-enrollment-pathway",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq01-relevant",
+    "query": "RBI-authorized Category II forex dealers like FRR Forex charge ~1% markup versus 2-2.5% at banks/Flywire -- a real cost saving on large remittances.",
+    "sessionId": "2026-05-08-funding-dreams-loans-forex",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq01-irrelevant",
+    "query": "RBI-authorized Category II forex dealers like FRR Forex charge ~1% markup versus 2-2.5% at banks/Flywire -- a real cost saving on large remittances.",
+    "sessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq02-relevant",
+    "query": "FEMA rules: only mother, father, sibling, or spouse can remit funds abroad for a student's education (not grandparents, aunts, or uncles).",
+    "sessionId": "2026-05-08-funding-dreams-loans-forex",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq02-irrelevant",
+    "query": "FEMA rules: only mother, father, sibling, or spouse can remit funds abroad for a student's education (not grandparents, aunts, or uncles).",
+    "sessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-20-telling-your-brand-story-better-gq01-relevant",
+    "query": "E.D.U.C.A.T.E. framework: Examine, Decode, Unearth, Connect, Articulate, Trigger, Express.",
+    "sessionId": "2026-05-20-telling-your-brand-story-better",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-20-telling-your-brand-story-better-gq01-irrelevant",
+    "query": "E.D.U.C.A.T.E. framework: Examine, Decode, Unearth, Connect, Articulate, Trigger, Express.",
+    "sessionId": "2026-06-25-in-focus-2",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-20-telling-your-brand-story-better-gq02-relevant",
+    "query": "7 emotional doors a story can open: Joy, Surprise, Fear/Anxiety, Pride, Belonging, Nostalgia, Hope.",
+    "sessionId": "2026-05-20-telling-your-brand-story-better",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-20-telling-your-brand-story-better-gq02-irrelevant",
+    "query": "7 emotional doors a story can open: Joy, Surprise, Fear/Anxiety, Pride, Belonging, Nostalgia, Hope.",
+    "sessionId": "2026-06-25-in-focus-2",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-22-uniaccess-xavier-university-gq01-relevant",
+    "query": "11:1 student-to-faculty ratio, average class size ~23 students.",
+    "sessionId": "2026-05-22-uniaccess-xavier-university",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-22-uniaccess-xavier-university-gq01-irrelevant",
+    "query": "11:1 student-to-faculty ratio, average class size ~23 students.",
+    "sessionId": "2026-06-30-exploring-identity-success-counseling",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-22-uniaccess-xavier-university-gq02-relevant",
+    "query": "$2.8 million NIH research grant -- Xavier was one of only six institutions in that inaugural cohort.",
+    "sessionId": "2026-05-22-uniaccess-xavier-university",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-22-uniaccess-xavier-university-gq02-irrelevant",
+    "query": "$2.8 million NIH research grant -- Xavier was one of only six institutions in that inaugural cohort.",
+    "sessionId": "2026-06-30-exploring-identity-success-counseling",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq01-relevant",
+    "query": "ISDI (design school) runs in collaboration with Parsons School of Design.",
+    "sessionId": "2026-05-23-uniaccess-atlas-skilltech",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq01-irrelevant",
+    "query": "ISDI (design school) runs in collaboration with Parsons School of Design.",
+    "sessionId": "2026-07-03-inside-the-uc-session",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq02-relevant",
+    "query": "ISME (management school) is part of the Babson group, roughly 30 schools worldwide.",
+    "sessionId": "2026-05-23-uniaccess-atlas-skilltech",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq02-irrelevant",
+    "query": "ISME (management school) is part of the Babson group, roughly 30 schools worldwide.",
+    "sessionId": "2026-07-03-inside-the-uc-session",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-28-in-focus-1-gq01-relevant",
+    "query": "Innovique claims a 48-hour turnaround to match a student with an MSME-hosted project.",
+    "sessionId": "2026-05-28-in-focus-1",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-28-in-focus-1-gq01-irrelevant",
+    "query": "Innovique claims a 48-hour turnaround to match a student with an MSME-hosted project.",
+    "sessionId": "2026-07-08-beyond-black-robes-law-careers",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-28-in-focus-1-gq02-relevant",
+    "query": "Innovique secures government-registered copyright certificates for student inventions/projects.",
+    "sessionId": "2026-05-28-in-focus-1",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-28-in-focus-1-gq02-irrelevant",
+    "query": "Innovique secures government-registered copyright certificates for student inventions/projects.",
+    "sessionId": "2026-07-08-beyond-black-robes-law-careers",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-29-decoding-ever-expanding-cast-gq01-relevant",
+    "query": "Facilitators mapped roughly 24 distinct professional roles across the education-services ecosystem.",
+    "sessionId": "2026-05-29-decoding-ever-expanding-cast",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-29-decoding-ever-expanding-cast-gq01-irrelevant",
+    "query": "Facilitators mapped roughly 24 distinct professional roles across the education-services ecosystem.",
+    "sessionId": "2026-07-15-creative-futures",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-05-29-decoding-ever-expanding-cast-gq02-relevant",
+    "query": "75% of participants identified university-outreach-yield-goals vs. family-cost-reality as the sharpest tension in the sector.",
+    "sessionId": "2026-05-29-decoding-ever-expanding-cast",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-05-29-decoding-ever-expanding-cast-gq02-irrelevant",
+    "query": "75% of participants identified university-outreach-yield-goals vs. family-cost-reality as the sharpest tension in the sector.",
+    "sessionId": "2026-07-15-creative-futures",
+    "referenceScore": 0
+  },
+  {
+    "id": "2026-06-03-dual-enrollment-pathway-gq01-relevant",
+    "query": "~80% of US high school students now have access to some form of dual enrollment.",
+    "sessionId": "2026-06-03-dual-enrollment-pathway",
+    "referenceScore": 1
+  },
+  {
+    "id": "2026-06-03-dual-enrollment-pathway-gq01-irrelevant",
+    "query": "~80% of US high school students now have access to some form of dual enrollment.",
+    "sessionId": "2026-07-22-uniaccess-cept-university",
+    "referenceScore": 0
+  }
+]

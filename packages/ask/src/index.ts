@@ -14,3 +14,8 @@ export { answer } from "./answer.js";
 export type { AnswerResult } from "./answer.js";
 export { askV2 } from "./ask-v2.js";
 export type { AskV2Deps, AskV2Result, AuditEntry } from "./ask-v2.js";
+
+// T-022 — evaluator calibration harness (MAE against an injected ScoreFn, no I/O).
+export { computeMAE } from "./eval/calibration.js";
+export type { CalibrationPair, CalibrationDetail, CalibrationResult } from "./eval/calibration.js";
+export { heuristicScorer } from "./eval/heuristic-scorer.js";
