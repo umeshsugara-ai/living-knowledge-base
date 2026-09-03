@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TOC Ecosystem & Value Flow — Where Vidysea Fits</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --paper: #ffffff;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #d1d5db;
+    --frame: #c7c9cf;
+    --node: #ffffff;
+    --node-stroke: #4b5563;
+    --diamond: #2563eb;
+    --diamond-fill: #ffffff;
+    --start-end-stroke: #2563eb;
+    --edge: #2563eb;
+    --edge-cond: #db2777;
+    --edge-finalize: #16a34a;
+    --edge-feedback: #f59e0b;
+    --edge-parallel: #0891b2;
+    --code: #be123c;
+    --univ: #1d4ed8;
+    --prog: #7c3aed;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  header.top { margin-bottom: 22px; }
+  header.top h1 { margin: 0 0 4px; font-size: 24px; letter-spacing: -0.01em; }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+
+  .card { background: var(--paper); border: 1px solid var(--frame); border-radius: 14px; padding: 18px; margin-bottom: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .card h2 { margin: 0 0 4px; font-size: 16px; }
+  .card .csub { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+
+  .frame { border: 2px solid var(--frame); border-radius: 18px; padding: 14px; background: var(--paper); }
+  .frame-title { text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 6px; color: var(--ink); }
+
+  svg .nlabel { fill: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 500; }
+  svg .nlabel-sm { fill: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; }
+  svg .elabel { fill: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-style: italic; }
+  svg .clabel { fill: var(--code); font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 10px; }
+  svg .grouplabel { fill: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  svg .grouplabel.univ { fill: var(--univ); }
+  svg .grouplabel.prog { fill: var(--prog); }
+
+  svg .node { fill: var(--node); stroke: var(--node-stroke); stroke-width: 1.4; rx: 10; }
+  svg .node.bucket { stroke: #0891b2; }
+  svg .node.classify { stroke: var(--univ); }
+  svg .node.cascade { stroke: #db2777; }
+  svg .node.guard { stroke: var(--edge-feedback); stroke-width: 2; }
+  svg .node.success { stroke: #16a34a; }
+  svg .diamond { fill: var(--diamond-fill); stroke: var(--diamond); stroke-width: 1.6; }
+  svg .startend { fill: #ffffff; stroke: var(--start-end-stroke); stroke-width: 1.6; }
+
+  svg .group-univ { fill: rgba(29,78,216,0.04); stroke: var(--univ); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+  svg .group-prog { fill: rgba(124,58,237,0.04); stroke: var(--prog); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+  svg .group-cascade { fill: rgba(219,39,119,0.04); stroke: #db2777; stroke-width: 1.2; stroke-dasharray: 4 3; rx: 10; }
+  svg .group-vidysea { fill: rgba(22,163,74,0.045); stroke: #16a34a; stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+
+  svg .edge { fill: none; stroke: var(--edge); stroke-width: 1.6; marker-end: url(#arr-blue); }
+  svg .edge-cond { fill: none; stroke: var(--edge-cond); stroke-width: 1.6; marker-end: url(#arr-pink); }
+  svg .edge-finalize { fill: none; stroke: var(--edge-finalize); stroke-width: 1.8; marker-end: url(#arr-green); }
+  svg .edge-feedback { fill: none; stroke: var(--edge-feedback); stroke-width: 1.6; stroke-dasharray: 4 3; marker-end: url(#arr-amber); }
+  svg .edge-parallel { fill: none; stroke: var(--edge-parallel); stroke-width: 1.6; stroke-dasharray: 5 3; marker-end: url(#arr-cyan); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 12px; border-top: 1px dashed var(--line); margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 28px; height: 2px; border-radius: 2px; }
+  .legend .swatch.dashed { border-top: 2px dashed; border-radius: 0; height: 0; }
+  .legend code { background: #fdf2f8; color: var(--code); padding: 1px 5px; border-radius: 3px; border: 1px solid #fce7f3; font-size: 11px; }
+
+  .notes { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.6; }
+  .notes b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>The Outreach Collective — Ecosystem, Value Flow, and Where Vidysea Fits</h1>
+  <div class="sub">TOC is a membership community, not a product. This diagram traces how the 357-member cohort is built, retained, and grown — and lays out the actual decision in front of Vidysea: apply to be featured, or build a competing community from scratch.</div>
+</header>
+
+<section class="card">
+  <h2>① TOC's community engine, end to end</h2>
+  <div class="csub">Member segments feed the programming engine; programming drives the join/renew loop; peer referral (not paid marketing) compounds the whole thing. Vidysea sits at the bottom as a currently-passive participant in this loop.</div>
+  <div class="frame">
+    <div class="frame-title">TOC Ecosystem — Membership → Programming → Retention → Vidysea's Decision</div>
+    <svg viewBox="0 0 1320 1260" width="100%" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arr-blue"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#2563eb"/></marker>
+        <marker id="arr-pink"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#db2777"/></marker>
+        <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#16a34a"/></marker>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#f59e0b"/></marker>
+        <marker id="arr-cyan"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#0891b2"/></marker>
+      </defs>
+
+      <!-- Start -->
+      <ellipse class="startend" cx="80" cy="50" rx="42" ry="22"/>
+      <text class="nlabel" x="80" y="46" text-anchor="middle">TOC</text>
+      <text class="nlabel-sm" x="80" y="59" text-anchor="middle">founded 2022</text>
+      <path class="edge" d="M104,66 C200,90 400,95 660,95"/>
+
+      <!-- MEMBER BASE group -->
+      <rect class="group-univ" x="10" y="95" width="1300" height="150"/>
+      <text class="grouplabel univ" x="30" y="116">Member Base — 357 members · 332 organisations · 13 countries (2026-27 cohort)</text>
+
+      <rect class="node" x="30" y="135" width="230" height="52"/>
+      <text class="nlabel" x="145" y="157" text-anchor="middle">IECs</text>
+      <text class="nlabel-sm" x="145" y="173" text-anchor="middle">132 members (37% — largest bench)</text>
+
+      <rect class="node" x="288" y="135" width="230" height="52"/>
+      <text class="nlabel" x="403" y="157" text-anchor="middle">School Counsellors</text>
+      <text class="nlabel-sm" x="403" y="173" text-anchor="middle">39 members · 95% women</text>
+
+      <rect class="node" x="546" y="135" width="230" height="52"/>
+      <text class="nlabel" x="661" y="157" text-anchor="middle">Univ Admissions &amp; Outreach</text>
+      <text class="nlabel-sm" x="661" y="173" text-anchor="middle">39 members · 29% intl HQ</text>
+
+      <rect class="node" x="804" y="135" width="230" height="52"/>
+      <text class="nlabel" x="919" y="157" text-anchor="middle">Service Providers</text>
+      <text class="nlabel-sm" x="919" y="173" text-anchor="middle">34 members · 50/50 self:org paid</text>
+
+      <rect class="node" x="1062" y="135" width="230" height="52"/>
+      <text class="nlabel" x="1177" y="157" text-anchor="middle">Experiential Providers</text>
+      <text class="nlabel-sm" x="1177" y="173" text-anchor="middle">34 members · category-forming</text>
+
+      <!-- segments -> TOC core -->
+      <path class="edge" d="M145,187 C145,260 500,270 640,308"/>
+      <path class="edge" d="M403,187 C403,240 550,260 640,305"/>
+      <path class="edge" d="M661,187 C661,230 661,260 660,308"/>
+      <path class="edge" d="M919,187 C919,240 770,260 680,305"/>
+      <path class="edge" d="M1177,187 C1177,260 820,270 680,308"/>
+
+      <!-- TOC CORE -->
+      <rect class="node" x="460" y="310" width="400" height="54" style="stroke:#1d4ed8; stroke-width:2;"/>
+      <text class="nlabel" x="660" y="332" text-anchor="middle" style="font-weight:700;">TOC Core Community Engine</text>
+      <text class="nlabel-sm" x="660" y="350" text-anchor="middle">56+ curated experiences / 11 months · 84% virtual · 90% membership-included</text>
+
+      <!-- fan-out to 4 formats (parallel) -->
+      <path class="edge-parallel" d="M560,364 C450,390 250,395 170,408"/>
+      <path class="edge-parallel" d="M620,364 C600,385 550,395 497,408"/>
+      <path class="edge-parallel" d="M700,364 C720,385 780,395 823,408"/>
+      <path class="edge-parallel" d="M760,364 C900,390 1100,395 1150,408"/>
+
+      <rect class="node bucket" x="30" y="410" width="280" height="58"/>
+      <text class="nlabel" x="170" y="432" text-anchor="middle">In Focus</text>
+      <text class="nlabel-sm" x="170" y="448" text-anchor="middle">Monthly showcase — 2 cos./mo, last Thu,</text>
+      <text class="nlabel-sm" x="170" y="461" text-anchor="middle">live demo + Q&amp;A + facilitated follow-up</text>
+
+      <rect class="node bucket" x="357" y="410" width="280" height="58"/>
+      <text class="nlabel" x="497" y="432" text-anchor="middle">UniAccess Live</text>
+      <text class="nlabel-sm" x="497" y="448" text-anchor="middle">University fairs — Intl + India editions,</text>
+      <text class="nlabel-sm" x="497" y="461" text-anchor="middle">direct institutional access</text>
+
+      <rect class="node bucket" x="683" y="410" width="280" height="58"/>
+      <text class="nlabel" x="823" y="432" text-anchor="middle">Topical Webinars</text>
+      <text class="nlabel-sm" x="823" y="448" text-anchor="middle">Visa · admissions · entrance exams ·</text>
+      <text class="nlabel-sm" x="823" y="461" text-anchor="middle">career pathways · AI/business skills for IECs</text>
+
+      <rect class="node bucket" x="1010" y="410" width="280" height="58"/>
+      <text class="nlabel" x="1150" y="428" text-anchor="middle">Premium In-Person</text>
+      <text class="nlabel-sm" x="1150" y="444" text-anchor="middle">Soiree · Conclave · Residency · Sakura ·</text>
+      <text class="nlabel-sm" x="1150" y="457" text-anchor="middle">Fourth Weave — 6 events/yr, priced separately</text>
+
+      <!-- formats converge -> Member Experience -->
+      <path class="edge" d="M170,468 C300,500 500,505 620,514"/>
+      <path class="edge" d="M497,468 C550,490 600,505 630,512"/>
+      <path class="edge" d="M823,468 C780,490 720,505 690,512"/>
+      <path class="edge" d="M1150,468 C1000,500 800,505 700,514"/>
+
+      <rect class="node" x="460" y="516" width="400" height="48"/>
+      <text class="nlabel" x="660" y="536" text-anchor="middle">Member Experience</text>
+      <text class="nlabel-sm" x="660" y="552" text-anchor="middle">23 recordings (Apr–Aug '26) confirm real content, not vendor filler</text>
+
+      <!-- diamond: new or renewing -->
+      <path class="edge" d="M660,564 C660,580 660,588 660,596"/>
+      <polygon class="diamond" points="660,596 710,626 660,656 610,626"/>
+      <text class="nlabel-sm" x="660" y="622" text-anchor="middle">new or</text>
+      <text class="nlabel-sm" x="660" y="634" text-anchor="middle">renewing?</text>
+
+      <path class="edge-cond" d="M610,626 C400,626 300,626 260,650"/>
+      <text class="elabel" x="380" y="618">new member</text>
+      <path class="edge-cond" d="M710,626 C900,626 980,626 1020,650"/>
+      <text class="elabel" x="880" y="618">renewing member</text>
+
+      <rect class="node" x="100" y="652" width="320" height="52"/>
+      <text class="nlabel" x="260" y="674" text-anchor="middle">Networking</text>
+      <text class="nlabel-sm" x="260" y="690" text-anchor="middle">48% — dominant reason to JOIN</text>
+
+      <rect class="node" x="900" y="652" width="320" height="52"/>
+      <text class="nlabel" x="1060" y="674" text-anchor="middle">Learning &amp; Professional Development</text>
+      <text class="nlabel-sm" x="1060" y="690" text-anchor="middle">47% — dominant reason to STAY/RENEW</text>
+
+      <!-- converge -> referral engine -->
+      <path class="edge" d="M260,704 C300,730 500,738 620,748"/>
+      <path class="edge" d="M1060,704 C1000,730 800,738 700,748"/>
+
+      <rect class="node" x="460" y="750" width="400" height="50"/>
+      <text class="nlabel" x="660" y="770" text-anchor="middle">Referral Engine</text>
+      <text class="nlabel-sm" x="660" y="786" text-anchor="middle">70% of new members arrive via a TOC member or colleague — not paid marketing</text>
+
+      <line class="edge-finalize" x1="660" y1="800" x2="660" y2="820"/>
+
+      <rect class="node success" x="460" y="822" width="400" height="52"/>
+      <text class="nlabel" x="660" y="844" text-anchor="middle" style="font-weight:700;">74% Renewal · 3.6× Faster Acquisition</text>
+      <text class="nlabel-sm" x="660" y="860" text-anchor="middle">155 new members/mo this cycle vs 43/mo in Year One</text>
+
+      <!-- feedback loop: growth compounds back into member base -->
+      <path class="edge-feedback" d="M460,848 C200,848 -10,600 -10,300 C-10,150 10,140 30,150"/>
+      <text class="elabel" x="-6" y="500" transform="rotate(-90 -6,500)">compounding growth loop (peer referral)</text>
+
+      <!-- VIDYSEA GROUP -->
+      <rect class="group-vidysea" x="10" y="900" width="1300" height="300"/>
+      <text class="grouplabel" x="30" y="922" style="fill:#16a34a;">Vidysea's Position — the actual decision here</text>
+
+      <rect class="node" x="30" y="940" width="380" height="58"/>
+      <text class="nlabel" x="220" y="962" text-anchor="middle">Vidysea / Pathlynks — TODAY</text>
+      <text class="nlabel-sm" x="220" y="978" text-anchor="middle">Passive member — attends In Focus, not yet featured</text>
+
+      <line class="edge" x1="410" y1="969" x2="508" y2="969"/>
+
+      <polygon class="diamond" points="560,939 610,969 560,999 510,969"/>
+      <text class="nlabel-sm" x="560" y="965" text-anchor="middle">apply for</text>
+      <text class="nlabel-sm" x="560" y="977" text-anchor="middle">In Focus slot?</text>
+
+      <path class="edge-finalize" d="M610,969 C630,969 640,969 658,955"/>
+      <text class="elabel" x="612" y="945">yes</text>
+
+      <rect class="node success" x="660" y="925" width="380" height="60"/>
+      <text class="nlabel" x="850" y="947" text-anchor="middle" style="font-weight:700;">Featured on In Focus</text>
+      <text class="nlabel-sm" x="850" y="963" text-anchor="middle">45-min live demo → 357 senior counsellors,</text>
+      <text class="nlabel-sm" x="850" y="976" text-anchor="middle">IECs &amp; admissions teams, in one room</text>
+
+      <path class="edge-cond" d="M560,999 C560,1015 500,1018 410,1020"/>
+      <text class="elabel" x="480" y="1012">no</text>
+
+      <rect class="node" x="30" y="1022" width="380" height="50"/>
+      <text class="nlabel" x="220" y="1042" text-anchor="middle">Stay passive</text>
+      <text class="nlabel-sm" x="220" y="1058" text-anchor="middle">No direct reach gain into the member base</text>
+
+      <path class="edge-feedback" d="M220,998 C220,1005 660,1010 720,1022"/>
+      <text class="elabel" x="420" y="1006">alternative considered</text>
+
+      <rect class="node guard" x="660" y="1022" width="380" height="64"/>
+      <text class="nlabel" x="850" y="1042" text-anchor="middle" style="font-weight:700;">Build our own community instead?</text>
+      <text class="nlabel-sm" x="850" y="1058" text-anchor="middle">NOT recommended — TOC's moat is 4 years of</text>
+      <text class="nlabel-sm" x="850" y="1071" text-anchor="middle">referral-led trust (70%), not a copyable tech stack</text>
+
+      <ellipse class="startend" cx="1160" cy="1150" rx="60" ry="30"/>
+      <text class="nlabel" x="1160" y="1146" text-anchor="middle">Recommendation</text>
+      <text class="nlabel-sm" x="1160" y="1160" text-anchor="middle">Apply — don't build</text>
+
+      <path class="edge-finalize" d="M850,985 C1000,1030 1120,1080 1150,1122"/>
+      <path class="edge-feedback" d="M850,1086 C950,1110 1080,1130 1120,1140"/>
+      <text class="elabel" x="960" y="1128">ruled out</text>
+
+    </svg>
+
+    <div class="legend">
+      <div class="item"><span class="swatch" style="background:#2563eb"></span>Default flow — member/program relationship</div>
+      <div class="item"><span class="swatch dashed" style="border-color:#0891b2"></span>Parallel fan-out — programming formats run concurrently</div>
+      <div class="item"><span class="swatch" style="background:#db2777"></span>Conditional branch — join vs renew, apply vs stay passive</div>
+      <div class="item"><span class="swatch" style="background:#16a34a"></span>Finalize / recommended outcome</div>
+      <div class="item"><span class="swatch dashed" style="border-color:#f59e0b"></span>Feedback loop — compounding growth / ruled-out alternative</div>
+    </div>
+    <div class="notes">
+      <b>Note:</b> All figures sourced from TOC's own "Anatomy of a Professional Community" cohort report (2026-27) and "What Membership Looks Like" programming doc, cross-checked against 23 transcribed TOC session recordings (April–August 2026). Vidysea's current status (passive member) is inferred from Karunn's In Focus invitation as an attendee, not a featured presenter — confirm directly with TOC (Bijoya/Bhakti) before acting on the recommendation.
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

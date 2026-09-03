@@ -1,0 +1,366 @@
+## Summary
+This panel discussion, organized by The Outreach Collective (TOC), brings together UK university recruitment representatives and education consultants to discuss shifting dynamics in UK higher education admissions and compliance. The panel explores how tightening Home Office and UKVI compliance monitoring impacts university screening (such as CAS issuance, financial checks, and credibility interviews), evolving global job market demands, and how high school counselors should guide students toward institutional fit and long-term employability rather than relying solely on rankings or offer letters.
+
+---
+
+## Speakers / Panelists
+* **Bhavya Goyal** – Moderator / School Counselor at DPS Indirapuram, Delhi
+* **Jasmine Bual** – Head of International Student Recruitment, Queen Mary University of London (QMUL)
+* **Wai Wah Tsang** – Regional Manager (Student Recruitment for South Asia, Middle East, and North Africa), University of Warwick
+* **Jasminder Khanna** – Co-founder and CEO, Graysham Global
+* **Nick Skeavington** – Head of International Student Recruitment, University of Exeter
+* **Bhakti** – Representative/Host, The Outreach Collective (TOC)
+
+---
+
+## Organizations & Programs Mentioned
+* **The Outreach Collective (TOC)**
+* **Queen Mary University of London (QMUL)**
+* **University of Warwick**
+* **University of Exeter**
+* **Graysham Global**
+* **DPS Indirapuram (Delhi)**
+* **UK Home Office / UK Visas and Immigration (UKVI)**
+* **Basic Compliance Assessment (BCA)**
+* **Russell Group Universities**
+* **Enroly CAS Shield Platform**
+* **Ministry of External Affairs (India)**
+* **Non-Banking Financial Companies (NBFCs)** (e.g., Credila, Avanse)
+* **Immigration Salary List** (formerly Shortage Occupation List)
+
+---
+
+## Key Topics & Takeaways
+
+### Shifts in the International Student Landscape (2005 vs. Present)
+* In 2005, ~131,000 Indian students studied abroad, with ~76,000 going to the US and smaller proportions to Canada, the UK, and Australia; demand exceeded supply, putting students in the "driving seat" with widespread incentives (post-study work options, MOI waivers, flexible payments).
+* By 2025, Indian outbound students surpassed 1.3 million, but university capacity across major destinations remained relatively fixed. Consequently, UK universities have shifted to being far more selective and quality-focused.
+
+### Employability & Institutional Fit
+* Employability is no longer guaranteed solely by obtaining a degree from a top-ranked institution; employers look for well-rounded graduates with practical skills, internships, placements, and interdisciplinary problem-solving ability.
+* Wai Wah Tsang used a "gym membership" analogy: enrolling at a university is just stepping into the gym—tangible returns depend on utilizing career support, extracurricular activities, student societies, and networking opportunities.
+* Nick Skeavington emphasized looking beyond immediate post-graduation salaries at age 21–26; the true ROI of studying abroad surfaces 10–15 years later through global adaptability, cross-cultural fluency, and leadership.
+
+### Compliance, CAS Issuance, and UKVI Regulations
+* The Home Office and UKVI have tightened Basic Compliance Assessments (BCA) for universities, strictly tracking visa refusal rates, enrollment dropouts, and course completion metrics.
+* Universities (e.g., Exeter, Queen Mary) are conducting enhanced pre-CAS compliance checks using platforms like Enroly CAS Shield, requiring strict verification of financial documents (28-day holding periods, formal loan sanctions), academic progression, and spot credibility interviews.
+* Jasminder Khanna noted that Indian NBFCs (e.g., Credila, Avanse) are now placing university-specific lending caps to manage their own risk profiles in light of increased scrutiny.
+* By 2027, public "traffic light" systems and published compliance ratings may become visible for UK sponsoring institutions.
+
+### Advice for High School Counselors
+* **Focus on Fit over Volume:** Counselors should discourage students from indiscriminately collecting multiple offers just for the sake of marketing or vanity; focus on finding the best academic, financial, and environmental fit.
+* **Realistic Expectations:** Parents should be guided away from thinking purely as short-term transactional investors and encouraged to view study abroad as long-term character and skill development.
+* **Specialized & In-Demand Degrees:** Move beyond generic business management degrees toward programs aligned with the UK Immigration Salary List, AI integration, critical thinking, and technical specialization.
+* **Student Accountability & Preparation:** Students must be able to independently articulate why they chose a specific course and location during credibility/visa interviews rather than relying entirely on parents or agents to manage their applications.
+
+---
+
+## Full Transcript
+
+[00:00] **Bhavya Goyal:** ...panelists joining us today. First, we have Miss Jasmine Bual, Head of International Student Recruitment at Queen Mary University of London. Having completed her undergraduate studies in the UK, Jasmine combines the perspective of a former international student with extensive experience in university recruitment, admissions, and student engagement. She has supported students from around the world in making informed higher education choices and brings valuable insights into the evolving expectations of UK universities.
+
+[00:31] **Bhavya Goyal:** Joining her is Mr. Wai Wah Tsang, Regional Manager, Student Recruitment for South Asia and Middle East, North Africa at the University of Warwick. With nearly two decades of experience in university admissions and international student recruitment, he has built an impressive career at Warwick, progressing through a range of leadership roles since joining the university in 2007.
+
+[00:55] **Bhavya Goyal:** His extensive experience across admissions, recruitment strategy, and international market development provides a comprehensive understanding of the student journey from application to enrollment.
+
+[01:07] **Bhavya Goyal:** Our third panelist, Mr. Jasminder Khanna, Co-founder and CEO of Graysham Global. With over 15 years of experience in the higher education sector, Jasminder has established himself as a leading expert in strategic partnerships and international university representation. Through his work with universities across South Asia and other emerging markets, he has helped universities strengthen their global presence while supporting students in making informed decisions. His deep understanding of the South Asian education landscape offers an invaluable in-country perspective for today's conversation.
+
+[01:45] **Bhavya Goyal:** And finally, we have—do we have Mr. Nick already? Head of International Student Recruitment at University of Exeter. Nick leads Exeter's recruitment across key international markets and manages recruitment teams based both in the UK and overseas. Over the past 15 years in international education, he has worked extensively with schools, education partners, and agents to develop innovative recruitment strategies. His expertise in international recruitment and institutional strategy brings a valuable global perspective on today's discussion.
+
+[02:18] **Bhavya Goyal:** To all our panelists, thank you for taking the time to be with us today. And to everyone joining us online, thank you for being here. We hope you find today's discussion insightful.
+
+[02:28] **Bhavya Goyal:** So today's discussion to me personally is very relevant because what was considered good advice two years ago may no longer be sufficient today. Over the past year, UK Home Office has strengthened compliance monitoring of universities with greater attention to visa refusal rates, enrollment outcomes, and course completion. These measures are directed at institutions, but they ultimately shape the advice we give our students every day.
+
+[02:54] **Bhavya Goyal:** I'd like to begin by understanding what has genuinely changed, and I'd like to start with Jasminder. So Jasminder, you work across both universities and counselors in South Asia, which gives you a view of the whole system. From that vantage point, what has actually changed under the strengthened compliance environment? And just as importantly, what misconceptions are circulating among counselors and families that we should correct today?
+
+[03:23] **Jasminder Khanna:** Well, thank you for putting me on the spotlight right away. But thank you for the kind introduction as well, Bhavya. Lovely to be here, lovely to interact with a very, very experienced community.
+
+[03:35] **Jasminder Khanna:** I think we need to take a few steps back. I'll come to your second question later. I'll start with the first question first: what has changed. Whilst, you know, we all keep an eye on LinkedIn and we all keep an eye on news to understand what's happening in terms of the nitty-gritties, policy changes every day. But, you know, largely, holistically, what has changed? I think we all need to take a few steps back and go in the history of the study abroad industry, especially from the South Asia perspective.
+
+[04:01] **Jasminder Khanna:** And if I take you back to the year 2005, which was an era when I went to the UK to do my undergrad degree—it's nearly 20 years ago. It was a very different era where the numbers were less. We had four options when it came to destinations—largely four options. Not saying the other markets weren't open, but you know, we were always programmed to only think of the English-speaking world when it came to study abroad.
+
+[04:26] **Jasminder Khanna:** And you know, there was a clear distinction between students going to the US and UK. People who could take the SATs and the GMATs of the world always preferred the US. The ones who couldn't, settled for the UK as a market. So to me, it was never a question because I had most of my family, most of my cousins, my brother Jasmeet studying in the UK already. So I was quite determined to go to the UK.
+
+[04:48] **Jasminder Khanna:** But you know, if we look at the numbers, that will perhaps tell us the larger story here. So if I go back to the year 2005—not that I counted myself, but the Ministry of External Affairs in India tells us that 131,000 Indian students left India to study abroad in that year. Now, if we look at the breakdown of that 131,000 students, nearly 76,000 of those students were absorbed by the US because they have a large appetite given the large number of universities within the ecosystem. Of course, followed by Canada, which was the second largest destination for Indian students, followed by the UK. And then, of course, Australia was catching up with the other countries.
+
+[05:30] **Jasminder Khanna:** Now, since 76,000 of those students are taken by US alone, what is left behind is about 55,000–56,000 students. And there are three destinations fighting for these 56,000 students. So it was always the students in the driving seat. Students could demand, and that's why we saw the likes of post-study work visas, MOIs, English language waivers, because every destination was trying to attract more and more students. The demand was high; the supply was low 20 years ago.
+
+[05:58] **Jasminder Khanna:** Now, fast forward 20 years. Let's come to 2025 because I don't have the stats for 2026, so I'll talk about 2025. So last year, the same ministry in India which keeps an eye on students going abroad, they told us that that number from 131,000 has gone up to 1.3 million in 20 years' time.
+
+[06:15] **Jasminder Khanna:** Whilst that number grew 10 times, what did not change is the number of universities in the English-speaking world. More or less, we haven't had a lot of additions. If you look at Australia, it's the same universities we had 20 years ago. Even in the UK, it's the same Russell Group, traditional, modern universities that we had 20 years ago. Except, yeah, there are a few private players which have come up in the last few years, but the number of universities has not significantly changed.
+
+[06:38] **Jasminder Khanna:** Now, the number of students has gone up by 10 times. They're still chasing the same destinations. But now, I think the tables have turned. The situation has slightly changed where the universities and the destinations are in the driving seat. They can kind of control the quality of students that they want because there's 1.3 million students waiting to arrive. But then, I don't think the four countries put together have the capacity to accept or absorb 1.3 million students from South Asia, which has again given opportunity to other emerging destinations to kind of leverage the opportunity in the market.
+
+[07:12] **Jasminder Khanna:** So this is where the equation has changed from a time when the students were in the driving seat—they got everything from MOIs to English language waivers to, you know, installment and everything else, which made those destinations very friendly to them. Whereas now, the universities, yes, are being more picky. They're being more selective in the kind of students they want from India because, yes, the demand is still the same, the supply—there's an oversupply of students right now.
+
+[07:40] **Jasminder Khanna:** So I think the universities are in a position where they can pick and choose the students that they want to come to the UK today. And that's why you see the change in regulations to create a better control over the quality of students that we want.
+
+[07:52] **Jasminder Khanna:** The misconception that we have—I talk to a lot of people in the market, and often what I've been hearing is the UK government doesn't want Indian students to come. No, I think that's the biggest myth. That's a misconception. They still want Indian students to come, but the difference is they want better Indian students to come.
+
+[08:11] **Jasminder Khanna:** And there is another perspective to this. It's not just a numbers game. You know, numbers is just one part of it. But the other part of it is the employability. It's how the industries have evolved and how jobs have evolved. We all know what has happened since COVID. With evolving technologies, a lot of the blue-collar jobs, a lot of the low-level jobs—Level 3, 4, 5—are automated with the help of whether it's AI, whether it's machine learning, whether it's robotics. A lot of the jobs are automated.
+
+[08:39] **Jasminder Khanna:** So we don't have enough blue-collar jobs being created in the country. See, there were always two types of Indian students going to the UK: one who were more aspirational—they came with deeper pockets, they went to the right universities, and they knew what they're chasing. They're chasing white-collar jobs; they're chasing executive careers. Whereas there was always an audience which settled for mediocre universities and who were very happy with blue-collar careers as well.
+
+[09:07] **Jasminder Khanna:** But we don't have enough blue-collar jobs being produced in the English—in the developed regions of the world. And that's because of the evolving technologies. Now, when we don't have enough blue-collar jobs being produced, that means we can't really employ so many people coming through that route, coming through the backdoors. And that is why you see a clampdown on the students trying to come to the UK through the backdoor, which has always been the case. And this is something that the UK government is trying to control now.
+
+[09:33] **Jasminder Khanna:** So that's where we see the shift. It's from a number perspective and from an employability perspective as well. But the doors will always be open to people who are aspirational, people who can contribute to diversity, people who can contribute to research, contribute to economy, contribute to employment creation, entrepreneurship in the country. I think the UK government has been one of the most receptive, one of the most welcoming governments that I have ever seen. So that's, I think, a misconception that they don't want students. I think they want students, but they want the right students.
+
+[10:06] **Bhavya Goyal:** Well, I absolutely agree. I think this is very important for all of us to understand that they want students, but good quality students.
+
+[10:14] **Bhavya Goyal:** But I think since we were talking about jobs particularly, why I wanted to ask you... You know, parents are almost asking us the same questions. Personally as a counselor, I'm also hearing this: "Will my child get a job?" So with your regional view of the UK graduate market, how should counselors have an honest conversation about employability without creating unrealistic expectations? And what does that mean for helping students choose the right-fit university, not just the highest-ranked institution?
+
+[10:45] **Wai Wah Tsang:** Thank you so much for the question. I'll break that question down so it's more kind of digestible. And I think the first thing, you know, about that age-old question that I receive from, you know, parents and from students about, you know, "Will I get a job?" or "Will my parent get a job?" And I think whilst it's a really completely understandable question about the return of investment, I think that we have to be honest. And the most honest answer is no university can guarantee that a student is guaranteed employment.
+
+[11:20] **Wai Wah Tsang:** But I think what we can say, especially from a Warwick perspective, is that universities can provide opportunities. They can provide support networks and relevant experiences to significantly improve a student's, you know, chances and prospects and engagement. And when we look at things like around, you know, careers and employability, I think we need to move, you know, beyond, you know, the idea that the degree alone is actually going to be the guarantee to get a job.
+
+[11:57] **Wai Wah Tsang:** And when we're looking at the job market, you know, employers are actually not just looking for degrees that are linear, you know. They are looking for a bit more interdisciplinary. They are looking for, you know, outside thinkers of the normal discipline. And I think having that combination... Of course, you know, students are going to need to continue to do well in terms of their academic achievements, but we're seeing lots more degrees, you know, having practical elements, a lot more placements, and a lot more internship opportunities where students can continue to, you know, develop their skills.
+
+[12:37] **Wai Wah Tsang:** And you know, it's the platform that we're trying to give and that support so it allows students to enhance their kind of ability and to articulate their strengths. And I think that when we're looking at students, those who utilize, you know, those opportunities—those who are actively engaged with internships, placements, extracurricular activities whilst they're at university, but also, you know, relying on the strengths that they've had from school and bringing it forward, you know, demonstrating their leadership opportunities and utilizing that support—they're the ones who are actually seen to be, you know, the most successful moving forward.
+
+[13:28] **Wai Wah Tsang:** And I think that, you know, universities like, you know, like mine, like the University of Warwick, you know, one of our strengths is the combination of having that academic excellence and having a strong employer reputation, but also having extensive industry engagement. And I think that, you know, our engagement over the last 40 years that we've had with employers and building those relationships across many sectors, I think that students can benefit or increase their chances of trying to get a successful, you know, career.
+
+[14:05] **Wai Wah Tsang:** And you know, we try to do that through building good stories, building successful stories where we can. And that could be across, you know, our extensive global alumni network where we've currently just surpassed 320,000 students and over 8,500 Indian alumni who's walked through those doors.
+
+[14:30] **Wai Wah Tsang:** So I think it's really important that we continue to build the profile of the students and increase their chances of employability, but also whilst they're studying.
+
+[14:41] **Wai Wah Tsang:** So you asked, I think you asked the question around kind of, you know, the right fit—what university is the right fit. And I think that, you know, we always encourage counselors to engage with the students and families and to think about, yes, it's about the right fit, not always about which university is the highest ranked.
+
+[15:03] **Wai Wah Tsang:** And I think that giving the student, you know, the right opportunities to not just survive, but also to thrive, that's where I think students are going to get the most out of their academic education. They need to be academically challenged, they need to have that support system—whether it's through education or through the careers, whether it's through their personal tutor or through their professors, for example. But they also need to stay motivated as well and also to make the most of the opportunities that are given to them.
+
+[15:36] **Wai Wah Tsang:** And I think that, you know, students need to ask themselves: "Yes, this university might be the highest ranked, but it's not a campus university, or it's a city-based university." And those things, you know, they need to ask themselves which environment is going to suit me the best.
+
+[15:55] **Wai Wah Tsang:** And there's also other things as well, you know, looking at the interdisciplinary learning, looking at the broad range of societies that are available. And I think it's really, really important to focus on that because what does societies have anything to do with employability? Well, employers are looking for, you know, your soft skills and your communication skills, your networking skills and things like that. And these are easy wins. These are easy ways to learn a skill, learn an experience by doing something, but not being very, shall I say, you know, focused on it because you're making, you know, friends. Those are transferable skills.
+
+[16:39] **Wai Wah Tsang:** And if you're getting jobs within societies, you know, you might be a treasurer, you might be the vice president or president, that's something that—those skills and that networking—that they can transfer into the working world. So it's about building your profile as you go along.
+
+[16:55] **Wai Wah Tsang:** And so there's one thing that I normally say to anyone is that if students get an offer and they have been accepted, I always use this gym analogy: that if you go—if you've been accepted and enroll at a university, you have to ask yourself, "Okay, I need to get these opportunities now." So if you go to the gym, you can basically go there and just be a member, and you can just do the bare minimum, and you can come out three or four years and you can say, "Okay, I was a member of that gym."
+
+[17:31] **Wai Wah Tsang:** But in order to stress yourself, in order to progress, you need to utilize the equipment that's available there. And if you don't put in the work, you're not going to get the returns and you're not going to achieve the goals that you're particularly looking for. So that's my analogy. Hopefully it's relatable to some people.
+
+[17:51] **Wai Wah Tsang:** I think that when students looking again at the rankings, I think it's really important for counselors and students to look at the rankings, but not just for the current year, and not even the last two or three years. In my opinion, I think that it's important to look at consistency. And when we're looking at consistency, well, what comes with consistency? It comes with long-standing values. It comes with academic excellence, whether it's teaching excellence or research excellence, or both, or a strong reputation.
+
+[18:26] **Wai Wah Tsang:** And I think that if you can combine all of that, then what employers are looking for in their candidates and all the opportunities that you get, hopefully that's something that will make them stand out when that process comes.
+
+[18:41] **Wai Wah Tsang:** So yeah, I think the reality of today's graduate market is that, you know, employers are looking for talented students, looking for well-rounded students from a whole host or a range of institutions. And I think what makes them stand out, what makes them different is how they use their university experience.
+
+[19:03] **Wai Wah Tsang:** So to summarize, it's not about, you know, "Will my child or will I get a job at the end of it?" But I think it's, you know, what does the university offer for me or offer my child? What type of environment, what type of opportunities, and what support is there, you know, to develop the graduate in a competitive market? And I think that finding the right university is really critical in this space. So hopefully that answers the question in some form.
+
+[19:37] **Bhavya Goyal:** It absolutely does, Wai. I think it's absolutely important for the counselors to not just help the students select the right institutions based on, you know, their chances of getting accepted, but there's so many factors that they need to think about and guide them properly. And that is why the decision of which universities are the right fit for a student is not just a very small conversation. It takes a lot of time, and we need to put in that effort and put in that research. And we try to spend that time with our students to help them find their right fit, which is why it has to be as personalized as it can get and also guide our students so that they can make that choice, and we are not making that choice for them, right?
+
+[20:23] **Bhavya Goyal:** Since we are talking about offer letters and how to get the right fit, Jasmine, I would like to ask you... You know, every year I see my students and parents, they have treated like we've received the offer letter and that's it. You know, we're celebrating and that's the finish line. Is that still true? Can you just help us walk through the distance between receiving an offer letter, securing a CAS, and then being granted a visa? And where do you think students most often come unstuck along the way?
+
+[20:55] **Jasmine Bual:** Yes, of course. I'm still reeling from Wai's gym analogy. It's making me feel a bit guilty. I'm definitely one of those people that is a member and puts little else in.
+
+[21:06] **Jasmine Bual:** But I agree with everything that's been said thus far. You know, we're in a changing time and it's not enough to just get a degree. And in the same way, it's not enough just to get those offers. I think traditionally, yeah, offer letters have been the end goal. And I think that's true from institutions. When I started recruiting about 10 years ago, all of our goals as a recruitment team were always get the students to the offer line, and after that they just miraculously turn up.
+
+[21:32] **Jasmine Bual:** Unfortunately, these days that kind of conversion period is more challenging for us, and we put more emphasis on that too. So I think it's changing for both the university side and the student side. I think the offer letter is just a halfway point, and actually a lot of the complexities that our offer holders come up with are at that second stage of the process. The application bit doesn't seem to phase them as much anymore.
+
+[21:56] **Jasmine Bual:** I think the big difference is that firstly, students are holding multiple offers across different country destinations. That's very different. Students that I used to interact with at the beginning of my career would know, "Right, I'm going to the UK," or "I'm going to Canada," or "I'm going to Australia," and then they would make those decisions on their applications after. That doesn't happen now. You know, we meet students that are holding offers for multiple different countries, which adds to that complexity. They're hedging their bets more. And I think that's good in some ways because, you know, great to have lots of opportunities, but it does make that conversion bit more challenging for them.
+
+[22:34] **Jasmine Bual:** I think once they've made that challenging decision and they've made that firm insurance choice, they still have a long way to go. I don't think it's great that each country and each university has its own processes. You know, it's not a one-fits-all, so students really need to think about the process that comes after. You know, there's three Russell Groups here, but we'll all have different kind of CAS timelines. We'll have different considerations in terms of English language, academic criteria. Some of us will have deposits, some won't, so that may sway things. Different accommodation timelines. So I think that complicates things as well, and it's something for students and counselors to think about.
+
+[23:14] **Jasmine Bual:** In terms of, you know, once they've made that decision, they need to meet the conditions of their offer. So that sometimes can be a challenge. And as I said, you could have five different offers from five different Russell Groups, and I bet you the requirements will be very different academically and English in terms of what we would accept.
+
+[23:33] **Jasmine Bual:** There's also a lot around now kind of navigating that CAS and finance journey, and that really is part of the journey that I think some students underestimate in terms of delays and challenges that are often out of their hands. So some students are really organized: they'll have their documents ready, they'll have the finances ready, but then they'll get to the visa appointment and then there'll be inevitable delays which they can't prevent, but it's something that we should always kind of consider and reassure them with.
+
+[24:01] **Jasmine Bual:** And I think that's where students become most unstuck, where things take longer. You know, their friends might be getting quicker decisions, quicker turnaround times than others. And often that is the bit of the process that becomes most worrying for them, where they can't control what's happening at the Home Office or what's happening within an institution.
+
+[24:22] **Jasmine Bual:** And I think that's where we as universities are there to help you. You know, we do this all the time. We're here to provide guidance not only for students, but also for their parents, counselors, etc. So I think today's journey—to kind of keep it, I know we're tight for time, I could talk about this all day—but I think today's journey is less about getting into universities and it's more about getting all the way through to the right university. And I think that's where the mindset needs to change for students and counselors and for universities as well.
+
+[24:53] **Bhavya Goyal:** Right. Thank you, Jasmine. I absolutely agree. I think for me personally, while we do like to celebrate a student's offer letter, etc., but I think it's essential that the students are working in a timely manner towards their admissions process entirely towards the visa. And given that each university has different requirements and a different process, I think it's essential to keep the college timeline, application timeline for visa, etc., and the documentation specially in place.
+
+[25:24] **Bhavya Goyal:** So yes, we try to guide our students to start as early as they finish their board examinations towards this process as well.
+
+[25:31] **Bhavya Goyal:** I would move on to Nick now. Nick, universities are now being judged on not just how many students they're recruiting, but visa outcomes and completion. Has that changed how Exeter is assessing an applicant before issuing a CAS? And how much weightage is being given to financial preparedness, academic progression, or genuine intent? And what do you think counselors may not realize right now, but it does matter?
+
+[26:06] **Nick Skeavington:** Yeah, absolutely. Happy to speak to this, and thank you for having me and for all the TOC members that have joined. It's great to see such a audience.
+
+[26:14] **Nick Skeavington:** I think the adjustment that's taking place here is really about bringing to the surface an expectation around compliance that was always there. So the UK Home Office and the UKVI and other regulatory bodies that assess UK higher education were always looking at these different metrics and requirements, but they are becoming more strict and they are also certainly becoming more pressing in terms of the amount of information they're wanting a university to have considered when working with a student.
+
+[26:42] **Nick Skeavington:** At Exeter, that has led to some adjustments in how we approach things. So we have onboarded the Enroly CAS Shield platform, so we're using CAS Shield now to work through our CASes and our visa process. And we have some additional checks and assessments that are happening in the admissions process and in the enrollment process.
+
+[27:01] **Nick Skeavington:** I think up to the stage of making an offer for a student, things are broadly the same, and we are continuing to recruit in all of the destinations and all of the parts of the world that we always have, so we haven't withdrawn our efforts. In fact, quite the opposite: we've redoubled them in lots of places that are successful and active territories and markets for us.
+
+[27:21] **Nick Skeavington:** I think what we have done is ask students to confirm much more explicitly their financial position, their funding situation, any scholarships they've received, and to provide the kind of documentation that will later likely be asked for at the UKVI check. And in a small number of cases, we've also conducted spot interviews to check those students are genuine and are working through the process.
+
+[27:45] **Nick Skeavington:** All of that prepares them really well for the UKVI kind of formal visa process and visa interview, and we're wanting to make sure that they are as well prepared as they can be.
+
+[27:56] **Nick Skeavington:** In terms of process that I would advise for counselors, I think in the same way that when you're starting out with a student and you're getting them to think, "Well, what are my university choices going to be? What classes, what modules can I take at University A or University B? How do those differ? Why are they exciting to me?" Once a student has selected that firm, their first choice, and they're proceeding with the visa process, they should go back to that kind of research again and really focus in on being able to explain to a visa officer what it is that is exciting for you about studying English literature at the University of Exeter. Why explicitly have you selected Exeter? Where is it in the country? How are you going to find your studies? Where are you going to live? How are you expected to take part in campus life? So that you can give a really genuine and well-rounded response when that visa officer is asking you about your intentions and your plans, and then to build on that in terms of your career opportunities in the future.
+
+[28:48] **Nick Skeavington:** Sadly, I see a selection of students who genuinely wish to study overseas and wish to study in the UK, but who, when really pressed, are not able to answer those questions comprehensively, and they therefore find themselves in a really difficult visa conversation.
+
+[29:05] **Nick Skeavington:** We obviously have lots of web guidance and lots of information that students can access, as my colleagues here will and as colleagues at other universities will, but it is on counselors and on students and their families to really take the time to prepare for that in the same way you would take the time to prepare for, say, an admissions interview earlier on in the process where those exist.
+
+[29:25] **Bhavya Goyal:** Right. So Nick, just a follow-up question. Do we see in the future—and in fact, it's open for Jasmine and Wai as well—universities actually asking for financial documentation from the students before issuing a CAS, or that's not going to happen, and we don't see that happening anytime soon, right?
+
+[29:43] **Nick Skeavington:** Yeah, I think I see that happening at some institutions already. I see institutions asking for proof of finances or asking for a student to declare that they have the finances. Whether they are asking for a bank statement or whether they're asking for a proof of a loan will vary a little by institution.
+
+[30:00] **Nick Skeavington:** But I think I want to be more certain as I go into September 2026 than I was in September 2025 that the students joining me at Exeter are legitimate, well-placed, well-supported, able to afford their studies. And some of that just means that the bar has moved higher in terms of what evidence I'm looking for. And that's because I'm going to have to report much more explicitly on any visa refusals or any CAS rejections. So yeah, I think that's coming.
+
+[30:27] **Nick Skeavington:** For legitimate students, that should be fine. You know, they should have those documents in good order and they should have that proof of loan or proof of private funds, private savings in good order. I think what they should be careful of is making sure that they meet the time requirements. So if that needs to have been in a bank account for 28 days, if that needs to explicitly state the course and the university they're going to, those sorts of things need to be much clearer.
+
+[30:52] **Nick Skeavington:** And where a student says, "Oh, it's nearly 28 days, it's 25 and a half," that's going to be a problem because a visa officer is going to say, "Well, hang on, no, this is the rule." And there's maybe a cultural difference there, which is that in the UK we would just say that is the requirement. You know, it's not going to be something you can get around or have someone kind of waive through.
+
+[31:13] **Bhavya Goyal:** Right. Jasmine, I want to ask you, are universities going to start asking for a bigger deposit from the students anytime soon? Do you feel like the students might be expected to pay an entire year's tuition to just make sure that they have that kind of funding? Do you see that happening anywhere already, or would that happen anytime soon, do you think?
+
+[31:36] **Jasmine Bual:** Yeah, as Nick said, I think this has been kind of common practice in a lot of institutions for a while, particularly across post-92 modern institutions where they're recruiting from higher-risk markets. We can see that a lot of them will put particular domiciles under higher deposits, and I think that that is a way that a lot of Russell Groups will start to move within the next year or so.
+
+[32:00] **Jasmine Bual:** Mainly because of those tightening Basic Compliance Assessment metrics. So the BCA has really made us stop and think about the kind of students we're recruiting, the outcomes, as we said earlier. It used to be just about getting into the institution; now it's about exiting that institution successfully.
+
+[32:18] **Jasmine Bual:** So yeah, I definitely think we'll start to see that the more we go forward. I don't know if you'll see any Russell Groups asking for a whole year. I think that's unlikely anytime soon, but never say never. And I think we're just at the mercy really of the UKVI and the decisions that are being made. So really, as institutions, all we can do is act on the guidance and the compliance measures that are put out. But yes, I could see that happening in the near future.
+
+[32:48] **Bhavya Goyal:** Right. And just a small question, Jasminder. I saw you smiling there, so I feel like you'll be able to have a lot of more experience in terms of the struggles of Indian students and parents when it comes to finances and financing their education. How do you see that playing in the Indian market particularly? Because as counselors, I feel we don't get so much access—school counselors do not get so much access to seeing how the parents are financing their education, and you see how the market's going and how many providers are there, the ones which are obviously providing it the right way. So how do you see that these particular rules affecting the finances for the students who are getting themselves help from the market?
+
+[33:33] **Jasminder Khanna:** See, India has always been a price-sensitive market. India has always been a market which has largely relied on external funding to support their study abroad dreams. As we all know, over 70%–80% of the market relies on external funding. Not necessarily all the funding comes from the formal sources; a lot of funding comes from the informal sources as well. There is enough published data about this on the internet.
+
+[34:00] **Jasminder Khanna:** We see more and more NBFCs now wanting to support students. But what I'm also hearing in the market more recently is a lot of those NBFCs, especially the popular ones such as Credila, Avanse—the go-to places for Indian students—have also now they're also starting to set their limits on how much, how many students they want to support going into one single university, for example. I don't want to name any universities here, but I think they're trying to minimize or they're trying to restrict their exposure to a single university should something happen to the university tomorrow in this whole new current climate of scrutiny.
+
+[34:40] **Jasminder Khanna:** So the banks are being very, very cautious in terms of how many students they want to support from a university. So you know, that's one thing that counselors may want to keep in mind, that you may want to approach the banks early rather than leaving it too late in the cycle where the bank may have reached that threshold, you know, even if they may want to support you.
+
+[35:00] **Jasminder Khanna:** But you know, funding is of course available. UK universities have always been very, very generous with scholarships, whether they're bursaries or whether they're merit-based scholarships, automatic scholarships, including the Russell Group universities. And we have three, of course, you know, they can of course contribute here.
+
+[35:17] **Jasminder Khanna:** But I think studying in the UK has never been a toll on the pocket because public universities are more affordable than compared to a lot of other places in the world. If you compare courses like hospitality, etc., UK universities have been leading, you know, that subject area for the longest time and still, you know, those courses are very, very affordable. And why I chose hospitality/culinary is because those are courses which require very heavy infrastructure. You need a lot of bakeries, restaurants, kitchens to teach those courses. Whereas those same courses, if you go to some other parts of the world such as France, Switzerland, etc., they'll be 2x, 3x, you know, 4x the price sometimes.
+
+[35:51] **Jasminder Khanna:** So I think UK education has always been far more affordable. Of course, the fee scale quite significantly ranges from the modern universities to the traditional and the Russell Groups, of course. But I think there are ways and means for students to support themselves.
+
+[36:08] **Jasminder Khanna:** And Bhavya, if I could also come into your previous question about this whole scrutiny and BCA, I'd just like to tell the audience, while I can see a lot of experienced people in the room, for the ones who've, you know, recently entered this industry, this is not the first time we're seeing this level of scrutiny from the UKVI or the regulatory bodies. There was an era before as well, especially around 2009–2010, where the sector underwent a similar scrutiny. For people who've been here long enough would know where we had the Highly Trusted, A-rated, B-rated sponsors where institutions were categorized into different categories.
+
+[36:44] **Jasminder Khanna:** That was a time when we had a massive influx of private colleges suddenly flourish out of absolutely nowhere. I remember we had about 800–900 private colleges in the country at some point and just loosely issuing offer letters and CASes to students. And the UKVI had to step in, the government had to step in and, you know, just cleanse the whole system.
+
+[37:04] **Jasminder Khanna:** So I think every now and then, maybe once in a decade, half a decade, the government steps in. We make sure that we recalibrate the system. We give that reality check to the sponsors, the institutions to go back to the drawing board and reassess their strategies to see, you know, where you want to recruit students from, how you want to recruit students, about your English test, about your in-country offices, about the agents that you're working with.
+
+[37:31] **Jasminder Khanna:** And I think that is what defines UK higher education to you, because it's so highly regulated, you can always expect such good quality coming out of it.
+
+[37:41] **Bhavya Goyal:** Right. Right, thank you, Jasminder. I think absolutely, I agree. I think this happens once in a decade, like again and again. But yes, I think it's also a good reminder for all of us who are working with our students so that we can keep informing ourselves and keep guiding the students in a certain way.
+
+[38:00] **Bhavya Goyal:** I would like to now open the question to all of you. I think Wai had touched on this, but you know, given the changes and the way the compliance monitoring has been happening on the university, what is the one thing counselors need to change this cycle? If there's just one thing that you'd all suggest, so that it's not just about receiving an offer, but the students can move smoothly through visa approval, enrollment, as well as their first year? What is that one recommendation from all of you?
+
+[38:32] **Jasminder Khanna:** If I could go first without upsetting any of my colleagues on the panel right now. But you know, there has been some talk about, as we call them in the UK, the Mickey Mouse degrees, which I would not deny, they had very good graduate outcomes at some point in the past. But you know, those are degrees which are now perhaps not producing the same graduate employment, the same opportunities that they once did maybe 5 or 10 years ago.
+
+[39:06] **Jasminder Khanna:** And Rishi Sunak, you know, when he held the office of the Prime Minister for that brief period, he spoke about the Mickey Mouse degrees which are perhaps not helping international students. We have a statement from the reform today where they said they might not fund students who are opting for courses such as business management, international business management, which I think these courses have a very high demand, I understand, because they're low-hanging fruits, easier to get onto.
+
+[39:36] **Jasminder Khanna:** But I think if there was one advice that I wanted to give all the people in the room right now is maybe we look at courses beyond just the general business management, international management courses. Look at more specialized degrees which may have greater demand in the UK skill-wise.
+
+[39:53] **Jasminder Khanna:** There is something called as an Immigration Salary List. You may want to take some time out, look at areas where there is shortage of professions. We used to call it the Shortage Occupation List, which has now been renamed to Immigration Salary List. So of course, you know, you can always map the student's interest with the Immigration Salary List to see how is that profession or how is that sector performing in the labor market. And that gives you an indication of the demand in that sector as well.
+
+[40:22] **Jasminder Khanna:** So I think keeping employability in mind, the selection of right courses, maybe it's time for us to go away from those very generic degrees. If you look at what China has done now, they made the headlines very recently where there were a flurry of articles across media houses which said China has got rid of 12,000 degrees in the last three years. Not only they've got rid of 12,000 degrees, but they've also replaced those 12,000 degrees with 10,000 new degrees which they think align better with the future of the world.
+
+[40:55] **Jasminder Khanna:** I know the UK universities may not go down that route because what China has really done, they've gone away from graphic designing and a lot of those degrees which they feel might not be as employable in the future. You know, UK is always known for its inclusivity and diversion and, you know, I don't think we can go down the route that China has taken, but I think it's very important that we as universities and also the stakeholders in the market, whether they're agents, IECs, school counselors, it's very important that we start thinking in a more specialized way and set the right expectations in students when it comes to employability and labor market because it behaves very differently in different countries.
+
+[41:37] **Bhavya Goyal:** Right. Wai, do you want to go next?
+
+[41:42] **Wai Wah Tsang:** Yeah, I think that when it comes to—it's difficult to say kind of one thing, to be honest with you, and I'm struggling to say one thing. But I think it's the preparedness of students. And I think the one thing is kind of setting those realistic expectations amongst the parents, the supporters, and also the students.
+
+[42:08] **Wai Wah Tsang:** Getting into—getting the offer, you know, is a tremendous achievement, whichever Russell Group that you get an offer from. But I think, yeah, not stopping there, not lowering the standards. And I think that's if counselors can help with maintaining or exceeding those standards and those expectations, you know, making sure that students do their particular homework, understanding the academic rigor, you know, the financial commitments, understanding the university's accommodation and kind of the lifestyle adjustments and cultural adaptation. I think that's something that's really, really important.
+
+[42:47] **Wai Wah Tsang:** And if I can add another thing that counselors should try and change is to make sure that the students are accountable for their own actions. I think that's really, really important. You know, it's so easy to blame the university or blame something else for someone's failures. And what I would say is I would flip that on its head and basically say, you know, you're a product—everyone in this room and as part of this committee—and I didn't say it's nice to meet you all, by the way—but we are a product of our failures, and that's not necessarily a bad thing.
+
+[43:21] **Wai Wah Tsang:** If we can basically build upon and fix those particular mistakes in order to become better in whatever discipline it is, that's the real measure of success. And that's what I would encourage counselors to do from my perspective.
+
+[43:37] **Bhavya Goyal:** Right. Nick, do you want to add?
+
+[43:41] **Nick Skeavington:** Yeah, sure. I think for me, the big thing is that some of the biggest benefits that I see students getting from an international degree experience, whether that's as an undergraduate or as a master's student, but particularly as an undergraduate student, is not the job that they get when they're 26 and they're returning home and it's their first or second job after they've completed their degree, whether that job's in the UK or whether it's back in India or elsewhere in the world.
+
+[44:05] **Nick Skeavington:** The benefits come 5 or 10 or 15 years after that, when they are more able and adept at working in a global environment, when they're better able to communicate across different stakeholder groups, when they're able to connect with someone about their own experience of studying abroad or their own experience of living outside of their home country, when they are maybe able to better sell something or better explain something because they've got those diverse perspectives.
+
+[44:30] **Nick Skeavington:** And all I would caution when you're working as counselors and when you're talking to students and families is to not lose sight of that overall ambition to be a well-rounded and ambitious and successful individual professionally and personally, even where perhaps the data around job market or the data around "What will I earn at age 26 years old?" might not match up with those expectations.
+
+[44:54] **Nick Skeavington:** It's a longer-term gain for most students. And the biggest successes we see in our alumni community mainly come when a student is 15 or 20 years after they've graduated from us. And we just hope that they kind of keep this in mind and are able to draw that thread and tell that story backwards when they're at that stage.
+
+[45:15] **Bhavya Goyal:** Right. Jasmine?
+
+[45:19] **Jasmine Bual:** Yeah, I totally agree with everything that's been said really. Being prepared is so important, and getting students to advocate for themselves, as Wai said, is so important. Don't do all the legwork for them. They need to be able to have these conversations and be proactive.
+
+[45:34] **Jasmine Bual:** And also support your students in being enthusiastic. I'm actually all for Mickey Mouse degrees. I think the world would be so boring if we all studied the same things. We wouldn't have art and music and culture and all the things that don't have the highest employment rates, but you know, without it the world would be a very boring place. So I am very pro-Mickey Mouse for want of a better term.
+
+[45:57] **Jasmine Bual:** So let them follow, you know, their hopes and aspirations. Rankings aren't everything. You know, you can get a good degree, have a great experience, and the rest will figure itself out.
+
+[46:08] **Jasmine Bual:** And as counselors, my best advice or kind of advice I'd love for you to take is to stop letting students apply everywhere just because they're going to get lots of offers and get in. More offers doesn't actually equate to more opportunities. I think it actually makes students more confused, a little bit more overwhelmed when they have so many offers in hand. So less is more.
+
+[46:32] **Jasmine Bual:** And yeah, keep letting them and advocating for them to follow what they genuinely want to do. Don't just do computer science or medicine or law because it looks good. Do what you're going to be enthusiastic about for three or four years. It's important.
+
+[46:48] **Bhavya Goyal:** Right, thank you. So before I move forward towards concluding the session, I would request everyone who's joined here to please post in their questions so that if you have any, we can take them towards the end of the session. We have a great panel here, and I love the conversation. I can keep going, but unfortunately, we have only about 10 minutes to go.
+
+[47:10] **Bhavya Goyal:** Before we end, I think before we conclude this session, I would like my panelists to just give me one practical takeaway, a quick rapid fire with each one of you. So I'll start with Nick. Nick, one thing you think students should start doing at least six months before applying to UK, to Exeter maybe?
+
+[47:35] **Nick Skeavington:** Yeah, for the UK, I would say picture what you want your life to be like as a student. Think about whether you want to be traveling on transport a lot every day. Think about the size of the location you want to be in. Think about the types of student groups you want to join, the type of academic experience you want to have, how diverse a friendship group you hope to make. Picture all of those things, decide which are most important, and then use those to assess which universities you apply to.
+
+[48:03] **Bhavya Goyal:** Fantastic. So Wai, I'd like to ask you, what is one misconception about UK admissions you'd like to correct that you keep hearing about?
+
+[48:15] **Wai Wah Tsang:** Yeah, I think that, you know, not all the admissions processes for each UK institution are the same. We operate very differently, and that includes their timelines or, you know, if someone had been given an offer and potentially may have missed the conditions of their offer. You know, one university's flexibility is going to be different from another.
+
+[48:41] **Wai Wah Tsang:** The courses as well: some courses have very rigid and some others will be very, very flexible. So we have to basically treat each and every university in the UK differently in terms of their processes.
+
+[48:55] **Bhavya Goyal:** Right. Thanks, Wai. Jasmine, I think I somehow love your messages for the counselors, so one mistake we counselors should stop making immediately?
+
+[49:11] **Bhavya Goyal:** Sorry, I think Jasmine's disconnected, she'll join back. So Jasminder, my last question was for you. If every counselor remembered only one thing after today, what should it be? I'm listening.
+
+[49:28] **Jasminder Khanna:** I think just set the right expectations to somebody who's planning to study abroad, because that whole landscape has significantly evolved.
+
+[49:37] **Bhavya Goyal:** Sorry, can you be a little louder? I think...
+
+[49:39] **Jasminder Khanna:** Is it better now?
+
+[49:40] **Bhavya Goyal:** Yes.
+
+[49:41] **Jasminder Khanna:** Yeah. Now, I was saying just set the right expectations in the mind of the students, in the minds of the parents because, you know, parents have turned from parents to investors. They start talking like investors. So I think we need to go back to being parents and understand that it's a long journey.
+
+[49:57] **Jasminder Khanna:** And I agree with what Wai said. It's a beautiful analogy, so heads up, Wai, I'm going to use that in my student engagement sessions. Just by going to the university, if that was the only parameter to success, everybody would have been successful. So the employers are asking for more than just the degree today; they're asking for skills.
+
+[50:15] **Jasminder Khanna:** If people in attendance today want to know what skills, I keep an eye on a lot of surveys that come from the industry, that come from top employers in the world. And if I have to amalgamate all the surveys and pick the top three skills that employers are looking for today, they are adaptability—because I think that is something that the pandemic taught us the hard way. They expect the people to be more adaptable, to work in different conditions.
+
+[50:45] **Jasminder Khanna:** The other thing that the employers are now expecting their employees to be is be more critical thinkers, be able to challenge the processes, be able to challenge the systems, change those systems.
+
+[50:58] **Jasminder Khanna:** And last but not the least, you know, there's enough being spoken about it, we as millennials may or may not want to agree with it, we can always debate about it all night, but the employers are clearly sending the message out: they want you to be as familiar as you can be with the emerging AI technologies. They're not expecting you to build AI, but they're expecting you to be able to use AI, save a lot of your time, save a lot of your resources, do things much quicker. If you go to the employer and say, "I need 6 hours to build a PPT," the employer may not have 6 hours to give you today because there are enough platforms which can do that job in 20 minutes.
+
+[51:34] **Jasminder Khanna:** So build that in the minds of the students that they've got to use the time in the classroom and outside the classroom to build the right skills. And if they approach the market with the right skills, they can be assured of a good outcome, a very, very bright future.
+
+[51:53] **Jasminder Khanna:** So while the universities are trying their best to integrate these skills within the curriculum, it's still a long journey. The courses are not revalidated every year. So students must take help of external resources and leverage opportunities, every opportunity, to try and make them more employable.
+
+[52:11] **Bhavya Goyal:** Right. Thank you, Jasminder. Jasmine, we have you back. So last question for you: what is that one mistake the counselors need to stop doing immediately, particularly while guiding students?
+
+[52:26] **Jasmine Bual:** Sorry, I'm really sorry I left. My dog was barking at the front door, it was very loud, but she's back now.
+
+[52:32] **Jasmine Bual:** So I think, yeah, it really is about, I think, what I mentioned earlier: not just going for the highest-ranking universities, not getting multiple offers to put it on a website. It looks great, but really it's better to focus on the best fit, the enthusiasm of the student. Less is more, so having less offers in hand, but them being the right fit.
+
+[52:55] **Jasmine Bual:** I know that's hard because I know that as counselors you get a lot of parental pressure, and as schools are competitive in India especially, you want to show that you're having the best possible outcomes and offers, but really making sure that ultimate one destination is the best one for your student is paramount.
+
+[53:14] **Jasmine Bual:** And we're here to support you. It's not all on you. As universities, we should be doing a good job of making sure that you're well supported and your students have the information they need. So please do rely on us. This is literally why we're here and why we're employed by the university, so please do reach out to us all as well.
+
+[53:31] **Bhavya Goyal:** Right. Thank you, Jasmine. I think we have a couple of questions, so I'd like to open this for everybody. As a UK alumna, Bhakti asks: "I applied when the offer letter was the milestone. Now the scrutiny..."
+
+[53:46] **Audience Member (Bhakti):** I'm sorry, I'm going to stop you there and save your time because I feel like when I put in the question, I felt it was relevant, but now I feel like it's redundant. I think, yeah, it makes no sense. I think we should go to Ritu's question. It's more relevant, please. Yeah.
+
+[54:00] **Bhavya Goyal:** "So UK universities are now being subjected to compliance assessments as per the new rules, as we discussed. How would the counselors know these assessment outcomes to know whether the universities are complying and will be able to attain the license to sponsor? Is there a mechanism where we are getting updated about these things?"
+
+[54:20] **Jasminder Khanna:** Maybe not at the minute, but we're told that there will be something in public domain by the summers of 2027 where at least the universities will be able to see the traffic light system. The universities will be put in the traffic light system, so counselors and agents will be able to see how universities are performing in terms of the visa refusal rate or enrollment rates, or even course completion rates with international students. So maybe by next year, you know, there will be more data, there'll be something for people to see. But again, can't say whether it'll be 2027 or maybe later, but we're told it'll be 2027.
+
+[55:03] **Bhakti:** Thank you.
+
+[55:04] **Bhavya Goyal:** Jasminder, just like you were specifically mentioning, like it has been in the past, universities sometimes get segregated for different countries under certain tiers based on the way they are performing, etc. You think something like that could happen?
+
+[55:19] **Jasminder Khanna:** Sorry, is that...
+
+[55:21] **Bhavya Goyal:** For you, Jasminder, yes.
+
+[55:22] **Jasminder Khanna:** Sorry, could you repeat your question?
+
+[55:24] **Bhavya Goyal:** So just like you were mentioning that there are tiers that are being offered to universities that has happened in the past for different countries such as Australia, even for Canada, and UK also in the past. So do you think something like that could happen again for the counselors and agents to look at?
+
+[55:37] **Jasminder Khanna:** It's already happening. It's work in progress. It's just that the UKVI has not published the data. We're told that will be published next year. There's no reason for anybody to sort of panic. We've been there before, we've seen all of this before, we've sailed through, you know, we've all survived.
+
+[55:53] **Jasminder Khanna:** So what we really don't want the counselors to do is panic about this whole situation. It's just a regulation process, and UK universities are known for keeping the highest compliance standards, so we'll sail through it.
+
+[56:10] **Bhavya Goyal:** Right. Right. So I think we are now moving to the end of our session. So I'd like to thank our panelists for such an honest and practical conversations. I think if there's one message I take away and everyone I hope takes away is that studying in UK is not just about securing an offer letter; it's about us preparing our students for long-term success.
+
+[56:36] **Bhavya Goyal:** I think as counselors, it is our responsibility that we extend ourselves beyond admission, we guide our students towards informed, ethical, and sustainable choices, weighing institutional fit, financial preparedness, genuine academic intent, and future employability, keeping in mind that our students are prepared to maximize their experiences there.
+
+[57:00] **Bhavya Goyal:** So thank you again to our panelists, to TOC, and to all of you for your thoughtful participation. And I hope that today's discussion strengthens the guidance that we offer to our students and families.
+
+[57:12] **Jasminder Khanna:** Thank you, Bhavya. Thank you, Bhakti.
+
+[57:14] **Jasmine Bual:** Thank you.
+
+[57:15] **Bhakti:** Thank you, Bhavya. Thank you, Jasmine, Wai, Nick, and Jasminder. Just before you go, we'd be very happy if you want to share any resources, any reports, any of the panelists, if you think something is relevant and you come across it in the near future. We'd love to share those with the community. And if any of you could not get your questions answered or couldn't think of any right away, feel free to write to us and we will try to get some responses for you.
+
+[57:41] **Bhakti:** This is not a one-time conversation; this is something that we have to keep doing. And we look forward to inviting all these universities for many more conversations with the community. Thank you, Bhavya. You did not introduce yourself in the beginning, I think. Bhavya is the counselor for DPS Indirapuram in Delhi. So if any of you are around or you want to get in touch with her, feel free to do that. She leads counseling at a wonderful school in Delhi. Thank you all, and have a great day ahead. Thank you.

@@ -1,0 +1,354 @@
+<title>TOC Partnership Brief</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#f2f4f4; --paper:#ffffff; --ink:#151f26; --muted:#59707c; --faint:#8fa2ab;
+    --line:#e1e7e9; --accent:#0d6e5c; --accent-soft:#e4f1ed; --accent-ink:#0a5347;
+    --warn:#a8452f; --warn-soft:#f7e9e5;
+    --gold:#a3791f; --gold-soft:#f6efdd;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1517; --paper:#161f22; --ink:#eef3f2; --muted:#9fb3ac; --faint:#63767a;
+      --line:#263336; --accent:#3fcaa8; --accent-soft:#173029; --accent-ink:#7fe4c9;
+      --warn:#e08066; --warn-soft:#2e1d17;
+      --gold:#d8b25b; --gold-soft:#2a2416;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1517; --paper:#161f22; --ink:#eef3f2; --muted:#9fb3ac; --faint:#63767a;
+    --line:#263336; --accent:#3fcaa8; --accent-soft:#173029; --accent-ink:#7fe4c9;
+    --warn:#e08066; --warn-soft:#2e1d17;
+    --gold:#d8b25b; --gold-soft:#2a2416;
+  }
+
+  *{box-sizing:border-box;}
+  body{background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans",system-ui,sans-serif; margin:0; line-height:1.6;}
+  .page{max-width:920px; margin:0 auto; padding:56px 28px 100px;}
+
+  .eyebrow{font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); font-weight:600; margin-bottom:14px;}
+  h1{font-family:"Fraunces",Georgia,serif; font-weight:600; font-size:clamp(30px,4.4vw,46px); line-height:1.08; margin:0 0 14px; text-wrap:balance; letter-spacing:-.01em;}
+  .dek{font-size:17px; color:var(--muted); max-width:64ch; margin:0 0 30px;}
+  .byline{display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--faint); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:12px 0; margin-bottom:44px; font-family:"IBM Plex Mono",monospace;}
+  .byline b{color:var(--muted); font-weight:600;}
+
+  h2{font-family:"Fraunces",Georgia,serif; font-weight:600; font-size:25px; margin:56px 0 6px; letter-spacing:-.005em; text-wrap:balance;}
+  h2 .num{color:var(--faint); font-family:"IBM Plex Mono",monospace; font-weight:500; font-size:15px; margin-right:10px;}
+  h3{font-family:"IBM Plex Sans",sans-serif; font-weight:600; font-size:15px; margin:26px 0 10px; color:var(--ink);}
+  p{font-size:15.5px; max-width:70ch; margin:0 0 16px;}
+  strong{font-weight:600;}
+  a{color:var(--accent-ink);}
+
+  .recbox{background:var(--accent-soft); border-left:4px solid var(--accent); border-radius:4px; padding:22px 26px; margin:18px 0 8px;}
+  .recbox .label{font-family:"IBM Plex Mono",monospace; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent-ink); font-weight:600; margin-bottom:8px;}
+  .recbox p{margin:0; font-size:16px; color:var(--ink);}
+
+  .statgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:22px 0 8px;}
+  .statgrid .cell{background:var(--paper); padding:18px 16px;}
+  .statgrid .n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-size:26px; font-weight:600; color:var(--ink); line-height:1;}
+  .statgrid .l{font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.35;}
+
+  table{width:100%; border-collapse:collapse; margin:18px 0 8px; font-size:14px;}
+  th{text-align:left; font-family:"IBM Plex Mono",monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; padding:8px 12px; border-bottom:2px solid var(--line);}
+  td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .twrap{overflow-x:auto; border:1px solid var(--line); border-radius:8px;}
+  .twrap table{margin:0;}
+  .twrap th:first-child, .twrap td:first-child{padding-left:16px;}
+
+  .optioncard{border:1px solid var(--line); border-radius:8px; padding:18px 20px; margin:14px 0; background:var(--paper);}
+  .optioncard.rec{border-color:var(--accent); background:var(--accent-soft);}
+  .optioncard.no{border-color:var(--warn); background:var(--warn-soft);}
+  .optioncard .tag{font-family:"IBM Plex Mono",monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; font-weight:600; margin-bottom:6px;}
+  .optioncard.rec .tag{color:var(--accent-ink);}
+  .optioncard.no .tag{color:var(--warn);}
+  .optioncard h4{margin:0 0 6px; font-size:15.5px; font-family:"IBM Plex Sans",sans-serif; font-weight:600;}
+  .optioncard p{margin:0; font-size:14px; color:var(--muted); max-width:none;}
+
+  ul{padding-left:20px; margin:0 0 16px;}
+  li{font-size:15px; margin-bottom:6px; max-width:66ch;}
+
+  .diagram-shell{border:1px solid var(--line); border-radius:10px; padding:20px; margin:20px 0; background:var(--paper); overflow-x:auto;}
+  .diagram-shell .dtitle{font-family:"IBM Plex Mono",monospace; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:14px; text-align:center;}
+
+  .footnote{font-size:12.5px; color:var(--faint); border-top:1px solid var(--line); margin-top:56px; padding-top:16px;}
+
+  @media (max-width:600px){
+    .page{padding:36px 18px 80px;}
+    .byline{flex-direction:column; gap:6px;}
+  }
+</style>
+
+<div class="page">
+
+  <div class="eyebrow">CEO Brief — Partnership &amp; Distribution Strategy</div>
+  <h1>The Outreach Collective: What It Is, and Should We Build This Ourselves?</h1>
+  <p class="dek">TOC is the membership community Karunn was invited into as an "In Focus" attendee. This brief unpacks what that community actually is, what its 357 members get for their money, and whether Vidysea should try to replicate it — grounded in TOC's own cohort data and 23 transcribed session recordings from April–August 2026.</p>
+  <div class="byline">
+    <span><b>Prepared for</b> CEO discussion</span>
+    <span><b>Source</b> TOC cohort report 2026-27 · programming calendar · 23 transcribed sessions</span>
+    <span><b>Status</b> Vidysea is currently a passive member</span>
+  </div>
+
+  <div class="recbox">
+    <div class="label">Recommendation</div>
+    <p>Don't build a competing community. Apply to be <strong>featured</strong> on TOC's monthly "In Focus" showcase — the same slot RECO Education and Education&nbsp;&amp;&nbsp;You used in August 2026 to present directly to 357 senior counsellors, IECs, and university admissions teams.</p>
+  </div>
+
+  <h2><span class="num">01</span>What TOC actually is</h2>
+  <p>TOC is <strong>not a product or technology company</strong> — it's a paid membership community for India's education-services sector: school counsellors, Independent Education Counsellors (IECs), university admissions teams, and ed-service founders. Its asset is four years of accumulated trust between senior decision-makers who show up to the same room every month. That isn't a feature we can code around.</p>
+
+  <div class="statgrid">
+    <div class="cell"><div class="n">357</div><div class="l">members, across 332 organisations</div></div>
+    <div class="cell"><div class="n">74%</div><div class="l">year-on-year renewal rate</div></div>
+    <div class="cell"><div class="n">70%</div><div class="l">new members arrive via peer referral</div></div>
+    <div class="cell"><div class="n">3.6×</div><div class="l">faster member acquisition than Year One</div></div>
+    <div class="cell"><div class="n">13</div><div class="l">countries represented via member orgs</div></div>
+    <div class="cell"><div class="n">74%</div><div class="l">of members hold senior leadership titles</div></div>
+  </div>
+
+  <p>75% of new members joined TOC as their <em>only</em> professional association — not stacking memberships, choosing one. Among members who do hold other affiliations, 82% renewed TOC anyway, the highest renewal rate of any group in the cohort. Whichever end of the experience curve you look from, the same community wins.</p>
+
+  <h2><span class="num">02</span>Why this matters to Vidysea specifically</h2>
+  <p>Pathlynks' go-to-market depends on reaching three personas. TOC has assembled exactly those personas, at senior/decision-making level, in one room:</p>
+
+  <div class="twrap">
+    <table>
+      <tr><th>TOC segment</th><th>Count</th><th>Relevance to Vidysea</th></tr>
+      <tr><td>Independent Education Counsellors</td><td>132 (37%)</td><td>Direct Pathlynks referral / reseller channel</td></tr>
+      <tr><td>School Guidance Counsellors</td><td>39</td><td>Direct Pathlynks buyer persona</td></tr>
+      <tr><td>University Admissions &amp; Outreach</td><td>39</td><td>Partner / data-source persona</td></tr>
+      <tr><td>Service Providers (edtech, platforms)</td><td>34</td><td>Vidysea's own peer category</td></tr>
+      <tr><td>Experiential Programs Providers</td><td>34</td><td>Adjacent — potential referral partners</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="num">03</span>What membership actually delivers</h2>
+  <p>56+ "experiences" across 11 months, 84% virtual and included with membership; a handful priced separately as premium in-person events.</p>
+
+  <div class="twrap">
+    <table>
+      <tr><th>Format</th><th>What it is</th><th>Cadence</th></tr>
+      <tr><td><strong>In Focus</strong></td><td>Monthly 45-min showcase — 2 curated service-provider companies present + live demo + Q&amp;A. TOC runs pre-event promotion, a prep call, recordings, and facilitated follow-up connections.</td><td>Last Thursday, monthly</td></tr>
+      <tr><td><strong>UniAccess Live</strong></td><td>Back-to-back virtual "fairs" — universities present directly to members (Intl + India editions).</td><td>~2×/year</td></tr>
+      <tr><td><strong>Topical webinars</strong></td><td>Visa compliance, UCAS/admissions changes, entrance exams, career-pathway deep dives, AI/business skills for IECs.</td><td>2–4×/month</td></tr>
+      <tr><td><strong>Premium in-person</strong> (paid)</td><td>The Residency (AI summer school), Sakura Immersion (6-day Japan trip), The Soiree (networking gala), The Conclave (72-hr founder fellowship, 10 seats), Fourth Weave (flagship conference).</td><td>6 events/year</td></tr>
+    </table>
+  </div>
+
+  <p>The 23 sessions we pulled and transcribed confirm this in practice — real panels with named university reps (Ashoka, Xavier Cincinnati, ATLAS SkillTech, CEPT, Durham, Southampton, Warwick, Exeter, QMUL), real practitioners, not vendor-pitch filler.</p>
+
+  <h2><span class="num">04</span>The ecosystem, visually</h2>
+  <div class="diagram-shell">
+    <div class="dtitle">TOC Ecosystem — Membership → Programming → Retention → Vidysea's Decision</div>
+    <svg viewBox="0 0 1320 1260" width="100%" preserveAspectRatio="xMidYMid meet" style="min-width:900px;">
+      <defs>
+        <marker id="arr-blue"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#2563eb"/></marker>
+        <marker id="arr-pink"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#db2777"/></marker>
+        <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#16a34a"/></marker>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#f59e0b"/></marker>
+        <marker id="arr-cyan"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#0891b2"/></marker>
+      </defs>
+      <g font-family="ui-sans-serif,system-ui,sans-serif">
+      <ellipse cx="80" cy="50" rx="42" ry="22" fill="#fff" stroke="#2563eb" stroke-width="1.6"/>
+      <text x="80" y="46" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">TOC</text>
+      <text x="80" y="59" text-anchor="middle" font-size="10" fill="#1f2937">founded 2022</text>
+      <path d="M104,66 C200,90 400,95 660,95" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+
+      <rect x="10" y="95" width="1300" height="150" fill="rgba(29,78,216,0.04)" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="6 4" rx="14"/>
+      <text x="30" y="116" font-size="11" text-transform="uppercase" letter-spacing="0.08em" font-weight="700" fill="#1d4ed8">MEMBER BASE — 357 MEMBERS · 332 ORGANISATIONS · 13 COUNTRIES (2026-27 COHORT)</text>
+
+      <rect x="30" y="135" width="230" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="145" y="157" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">IECs</text>
+      <text x="145" y="173" text-anchor="middle" font-size="10" fill="#1f2937">132 members (37% — largest bench)</text>
+
+      <rect x="288" y="135" width="230" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="403" y="157" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">School Counsellors</text>
+      <text x="403" y="173" text-anchor="middle" font-size="10" fill="#1f2937">39 members · 95% women</text>
+
+      <rect x="546" y="135" width="230" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="661" y="157" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Univ Admissions &amp; Outreach</text>
+      <text x="661" y="173" text-anchor="middle" font-size="10" fill="#1f2937">39 members · 29% intl HQ</text>
+
+      <rect x="804" y="135" width="230" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="919" y="157" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Service Providers</text>
+      <text x="919" y="173" text-anchor="middle" font-size="10" fill="#1f2937">34 members · 50/50 self:org paid</text>
+
+      <rect x="1062" y="135" width="230" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="1177" y="157" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Experiential Providers</text>
+      <text x="1177" y="173" text-anchor="middle" font-size="10" fill="#1f2937">34 members · category-forming</text>
+
+      <path d="M145,187 C145,260 500,270 640,308" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M403,187 C403,240 550,260 640,305" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M661,187 C661,230 661,260 660,308" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M919,187 C919,240 770,260 680,305" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M1177,187 C1177,260 820,270 680,308" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+
+      <rect x="460" y="310" width="400" height="54" rx="10" fill="#fff" stroke="#1d4ed8" stroke-width="2"/>
+      <text x="660" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2937">TOC Core Community Engine</text>
+      <text x="660" y="350" text-anchor="middle" font-size="10" fill="#1f2937">56+ curated experiences / 11 months · 84% virtual · 90% membership-included</text>
+
+      <path d="M560,364 C450,390 250,395 170,408" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arr-cyan)"/>
+      <path d="M620,364 C600,385 550,395 497,408" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arr-cyan)"/>
+      <path d="M700,364 C720,385 780,395 823,408" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arr-cyan)"/>
+      <path d="M760,364 C900,390 1100,395 1150,408" fill="none" stroke="#0891b2" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arr-cyan)"/>
+
+      <rect x="30" y="410" width="280" height="58" rx="10" fill="#fff" stroke="#0891b2" stroke-width="1.4"/>
+      <text x="170" y="432" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">In Focus</text>
+      <text x="170" y="448" text-anchor="middle" font-size="10" fill="#1f2937">Monthly showcase — 2 cos./mo, last Thu,</text>
+      <text x="170" y="461" text-anchor="middle" font-size="10" fill="#1f2937">live demo + Q&amp;A + facilitated follow-up</text>
+
+      <rect x="357" y="410" width="280" height="58" rx="10" fill="#fff" stroke="#0891b2" stroke-width="1.4"/>
+      <text x="497" y="432" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">UniAccess Live</text>
+      <text x="497" y="448" text-anchor="middle" font-size="10" fill="#1f2937">University fairs — Intl + India editions,</text>
+      <text x="497" y="461" text-anchor="middle" font-size="10" fill="#1f2937">direct institutional access</text>
+
+      <rect x="683" y="410" width="280" height="58" rx="10" fill="#fff" stroke="#0891b2" stroke-width="1.4"/>
+      <text x="823" y="432" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Topical Webinars</text>
+      <text x="823" y="448" text-anchor="middle" font-size="10" fill="#1f2937">Visa · admissions · entrance exams ·</text>
+      <text x="823" y="461" text-anchor="middle" font-size="10" fill="#1f2937">career pathways · AI/business skills for IECs</text>
+
+      <rect x="1010" y="410" width="280" height="58" rx="10" fill="#fff" stroke="#0891b2" stroke-width="1.4"/>
+      <text x="1150" y="428" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Premium In-Person</text>
+      <text x="1150" y="444" text-anchor="middle" font-size="10" fill="#1f2937">Soiree · Conclave · Residency · Sakura ·</text>
+      <text x="1150" y="457" text-anchor="middle" font-size="10" fill="#1f2937">Fourth Weave — 6 events/yr, priced separately</text>
+
+      <path d="M170,468 C300,500 500,505 620,514" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M497,468 C550,490 600,505 630,512" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M823,468 C780,490 720,505 690,512" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M1150,468 C1000,500 800,505 700,514" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+
+      <rect x="460" y="516" width="400" height="48" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="660" y="536" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Member Experience</text>
+      <text x="660" y="552" text-anchor="middle" font-size="10" fill="#1f2937">23 recordings (Apr–Aug '26) confirm real content, not vendor filler</text>
+
+      <path d="M660,564 C660,580 660,588 660,596" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <polygon points="660,596 710,626 660,656 610,626" fill="#fff" stroke="#2563eb" stroke-width="1.6"/>
+      <text x="660" y="622" text-anchor="middle" font-size="10" fill="#1f2937">new or</text>
+      <text x="660" y="634" text-anchor="middle" font-size="10" fill="#1f2937">renewing?</text>
+
+      <path d="M610,626 C400,626 300,626 260,650" fill="none" stroke="#db2777" stroke-width="1.6" marker-end="url(#arr-pink)"/>
+      <text x="380" y="618" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937">new member</text>
+      <path d="M710,626 C900,626 980,626 1020,650" fill="none" stroke="#db2777" stroke-width="1.6" marker-end="url(#arr-pink)"/>
+      <text x="880" y="618" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937">renewing member</text>
+
+      <rect x="100" y="652" width="320" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="260" y="674" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Networking</text>
+      <text x="260" y="690" text-anchor="middle" font-size="10" fill="#1f2937">48% — dominant reason to JOIN</text>
+
+      <rect x="900" y="652" width="320" height="52" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="1060" y="674" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Learning &amp; Professional Development</text>
+      <text x="1060" y="690" text-anchor="middle" font-size="10" fill="#1f2937">47% — dominant reason to STAY/RENEW</text>
+
+      <path d="M260,704 C300,730 500,738 620,748" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+      <path d="M1060,704 C1000,730 800,738 700,748" fill="none" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+
+      <rect x="460" y="750" width="400" height="50" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="660" y="770" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Referral Engine</text>
+      <text x="660" y="786" text-anchor="middle" font-size="10" fill="#1f2937">70% of new members arrive via a TOC member or colleague</text>
+
+      <line x1="660" y1="800" x2="660" y2="820" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arr-green)"/>
+
+      <rect x="460" y="822" width="400" height="52" rx="10" fill="#fff" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="660" y="844" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2937">74% Renewal · 3.6× Faster Acquisition</text>
+      <text x="660" y="860" text-anchor="middle" font-size="10" fill="#1f2937">155 new members/mo this cycle vs 43/mo in Year One</text>
+
+      <path d="M460,848 C200,848 -10,600 -10,300 C-10,150 10,140 30,150" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arr-amber)"/>
+      <text x="-30" y="500" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937" transform="rotate(-90 -30,500)">compounding growth loop</text>
+
+      <rect x="10" y="900" width="1300" height="300" fill="rgba(22,163,74,0.045)" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="6 4" rx="14"/>
+      <text x="30" y="922" font-size="11" text-transform="uppercase" letter-spacing="0.08em" font-weight="700" fill="#16a34a">VIDYSEA'S POSITION — THE ACTUAL DECISION HERE</text>
+
+      <rect x="30" y="940" width="380" height="58" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="220" y="962" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Vidysea / Pathlynks — TODAY</text>
+      <text x="220" y="978" text-anchor="middle" font-size="10" fill="#1f2937">Passive member — attends In Focus, not yet featured</text>
+
+      <line x1="410" y1="969" x2="508" y2="969" stroke="#2563eb" stroke-width="1.6" marker-end="url(#arr-blue)"/>
+
+      <polygon points="560,939 610,969 560,999 510,969" fill="#fff" stroke="#2563eb" stroke-width="1.6"/>
+      <text x="560" y="965" text-anchor="middle" font-size="10" fill="#1f2937">apply for</text>
+      <text x="560" y="977" text-anchor="middle" font-size="10" fill="#1f2937">In Focus slot?</text>
+
+      <path d="M610,969 C630,969 640,969 658,955" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arr-green)"/>
+      <text x="612" y="945" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937">yes</text>
+
+      <rect x="660" y="925" width="380" height="60" rx="10" fill="#fff" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="850" y="947" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2937">Featured on In Focus</text>
+      <text x="850" y="963" text-anchor="middle" font-size="10" fill="#1f2937">45-min live demo → 357 senior counsellors,</text>
+      <text x="850" y="976" text-anchor="middle" font-size="10" fill="#1f2937">IECs &amp; admissions teams, in one room</text>
+
+      <path d="M560,999 C560,1015 500,1018 410,1020" fill="none" stroke="#db2777" stroke-width="1.6" marker-end="url(#arr-pink)"/>
+      <text x="480" y="1012" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937">no</text>
+
+      <rect x="30" y="1022" width="380" height="50" rx="10" fill="#fff" stroke="#4b5563" stroke-width="1.4"/>
+      <text x="220" y="1042" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Stay passive</text>
+      <text x="220" y="1058" text-anchor="middle" font-size="10" fill="#1f2937">No direct reach gain into the member base</text>
+
+      <path d="M220,998 C220,1005 660,1010 720,1022" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arr-amber)"/>
+      <text x="420" y="1006" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937">alternative considered</text>
+
+      <rect x="660" y="1022" width="380" height="64" rx="10" fill="#fff" stroke="#f59e0b" stroke-width="2"/>
+      <text x="850" y="1042" text-anchor="middle" font-size="12" font-weight="700" fill="#1f2937">Build our own community instead?</text>
+      <text x="850" y="1058" text-anchor="middle" font-size="10" fill="#1f2937">NOT recommended — TOC's moat is 4 years of</text>
+      <text x="850" y="1071" text-anchor="middle" font-size="10" fill="#1f2937">referral-led trust (70%), not a copyable tech stack</text>
+
+      <ellipse cx="1160" cy="1150" rx="60" ry="30" fill="#fff" stroke="#2563eb" stroke-width="1.6"/>
+      <text x="1160" y="1146" text-anchor="middle" font-size="12" font-weight="500" fill="#1f2937">Recommendation</text>
+      <text x="1160" y="1160" text-anchor="middle" font-size="10" fill="#1f2937">Apply — don't build</text>
+
+      <path d="M850,985 C1000,1030 1120,1080 1150,1122" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arr-green)"/>
+      <path d="M850,1086 C950,1110 1080,1130 1120,1140" fill="none" stroke="#f59e0b" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arr-amber)"/>
+      <text x="960" y="1128" text-anchor="middle" font-size="11" font-style="italic" fill="#1f2937">ruled out</text>
+      </g>
+    </svg>
+  </div>
+
+  <h2><span class="num">05</span>The actual decision in front of us</h2>
+  <p>This is <strong>not</strong> "build vs. buy a software feature." It's <strong>"build vs. join a distribution channel."</strong> Three real options:</p>
+
+  <div class="optioncard">
+    <div class="tag">Option A</div>
+    <h4>Stay a passive member (status quo)</h4>
+    <p>Cost: whatever the membership fee is (not disclosed in materials reviewed — get this from Karunn). Benefit: attendance access to counsellors/IECs, but no active promotion of Pathlynks to that room.</p>
+  </div>
+
+  <div class="optioncard rec">
+    <div class="tag">Option B — Recommended</div>
+    <h4>Apply to be featured on "In Focus"</h4>
+    <p>The exact mechanism RECO Education and Education&nbsp;&amp;&nbsp;You used in August — TOC picked them through a review process and gave them a 45-min slot in front of 357 senior counsellors/IECs/admissions teams, plus pre/post promotion. Applications reportedly open annually. Cheapest, fastest way to reach exactly the audience Pathlynks needs, using infrastructure TOC already built.</p>
+  </div>
+
+  <div class="optioncard no">
+    <div class="tag">Option C — Not recommended</div>
+    <h4>Build a Vidysea-run community from scratch</h4>
+    <p>What it would take, per TOC's own trajectory: four years, a majority-referral acquisition motion (paid marketing alone won't replicate 70% peer-referral trust), and enough independent value that members pay <em>themselves</em> rather than expecting it free from a vendor. A vendor-run "community" built to sell Pathlynks reads as a webinar funnel, not a peer association — TOC members explicitly renew for learning, not vendor access. Hard to fake from inside a company with a product to sell.</p>
+  </div>
+
+  <h2><span class="num">06</span>Risks and mitigations</h2>
+  <div class="twrap">
+    <table>
+      <tr><th>Risk</th><th>Mitigation</th></tr>
+      <tr><td>Membership fee/ROI unclear — not in the materials reviewed</td><td>Get exact membership cost + In Focus application terms from Karunn/Bijoya before the CEO conversation</td></tr>
+      <tr><td>"In Focus" slots are curated/competitive, not guaranteed</td><td>Confirm the application window and prepare Pathlynks' pitch angle before applying</td></tr>
+      <tr><td>TOC's community could plateau or a rival community overtake it</td><td>Low risk short-term — 3.6× acquisition acceleration and 74% renewal say it's still growing</td></tr>
+      <tr><td>Members skew India-specific — doesn't help non-India expansion</td><td>Correct scope check: fine for Pathlynks' current market, not a global GTM solution</td></tr>
+    </table>
+  </div>
+
+  <h2><span class="num">07</span>Next 7 days</h2>
+  <ul>
+    <li>Ask Karunn/Bijoya for TOC's actual membership fee and the next "In Focus" application window — this data gap blocks a clean ROI read.</li>
+    <li>Decide internally what Pathlynks would actually demo in a 45-minute In Focus slot — needs a real answer, not a generic pitch.</li>
+    <li>Bring this brief + the CEO's read on Option B to a go/no-go before the next TOC deadline passes.</li>
+  </ul>
+
+  <div class="recbox">
+    <div class="label">Decision needed</div>
+    <p>Apply for an "In Focus" feature slot for Pathlynks — yes/no — and who owns the application: Karunn, marketing, or founder-led?</p>
+  </div>
+
+  <div class="footnote">
+    Sourced from TOC's "Anatomy of a Professional Community" cohort report (2026-27), the "What Membership Looks Like" programming document, and 23 transcribed TOC session recordings (April–August 2026), cross-checked against the live TOC programming calendar. Vidysea's current status (passive member) is inferred from Karunn's In Focus invitation as an attendee, not a featured presenter — confirm directly with TOC before acting on this recommendation.
+  </div>
+
+</div>

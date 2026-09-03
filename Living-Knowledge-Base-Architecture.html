@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TOC Living Knowledge Base — Architecture</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --paper: #ffffff;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #d1d5db;
+    --frame: #c7c9cf;
+    --node: #ffffff;
+    --node-stroke: #4b5563;
+    --diamond: #2563eb;
+    --diamond-fill: #ffffff;
+    --start-end-stroke: #2563eb;
+    --edge: #2563eb;
+    --edge-cond: #db2777;
+    --edge-finalize: #16a34a;
+    --edge-feedback: #f59e0b;
+    --edge-parallel: #0891b2;
+    --code: #be123c;
+    --ingest: #0d9488;
+    --index: #7c3aed;
+    --query: #1d4ed8;
+    --maint: #b45309;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  header.top { margin-bottom: 22px; }
+  header.top h1 { margin: 0 0 4px; font-size: 24px; letter-spacing: -0.01em; }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+
+  .card { background: var(--paper); border: 1px solid var(--frame); border-radius: 14px; padding: 18px; margin-bottom: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .card h2 { margin: 0 0 4px; font-size: 16px; }
+  .card .csub { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+
+  .frame { border: 2px solid var(--frame); border-radius: 18px; padding: 14px; background: var(--paper); }
+  .frame-title { text-align: center; font-weight: 600; font-size: 16px; margin-bottom: 6px; color: var(--ink); }
+
+  svg .nlabel { fill: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 500; }
+  svg .nlabel-sm { fill: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; }
+  svg .elabel { fill: var(--ink); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-style: italic; }
+  svg .clabel { fill: var(--code); font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 10px; }
+  svg .grouplabel { fill: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  svg .grouplabel.ingest { fill: var(--ingest); }
+  svg .grouplabel.index { fill: var(--index); }
+  svg .grouplabel.query { fill: var(--query); }
+  svg .grouplabel.maint { fill: var(--maint); }
+
+  svg .node { fill: var(--node); stroke: var(--node-stroke); stroke-width: 1.4; rx: 10; }
+  svg .node.success { stroke: #16a34a; stroke-width: 1.8; }
+  svg .node.future { fill: #f9fafb; stroke: #9ca3af; stroke-width: 1.3; stroke-dasharray: 5 4; }
+  svg .diamond { fill: var(--diamond-fill); stroke: var(--diamond); stroke-width: 1.6; }
+  svg .startend { fill: #ffffff; stroke: var(--start-end-stroke); stroke-width: 1.6; }
+
+  svg .group-ingest { fill: rgba(13,148,136,0.04); stroke: var(--ingest); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+  svg .group-index { fill: rgba(124,58,237,0.04); stroke: var(--index); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+  svg .group-query { fill: rgba(29,78,216,0.04); stroke: var(--query); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+  svg .group-maint { fill: rgba(180,83,9,0.04); stroke: var(--maint); stroke-width: 1.5; stroke-dasharray: 6 4; rx: 14; }
+
+  svg .edge { fill: none; stroke: var(--edge); stroke-width: 1.6; marker-end: url(#arr-blue); }
+  svg .edge-cond { fill: none; stroke: var(--edge-cond); stroke-width: 1.6; marker-end: url(#arr-pink); }
+  svg .edge-finalize { fill: none; stroke: var(--edge-finalize); stroke-width: 1.8; marker-end: url(#arr-green); }
+  svg .edge-feedback { fill: none; stroke: var(--edge-feedback); stroke-width: 1.6; stroke-dasharray: 4 3; marker-end: url(#arr-amber); }
+  svg .edge-parallel { fill: none; stroke: var(--edge-parallel); stroke-width: 1.6; stroke-dasharray: 5 3; marker-end: url(#arr-cyan); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; padding-top: 12px; border-top: 1px dashed var(--line); margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 28px; height: 2px; border-radius: 2px; }
+  .legend .swatch.dashed { border-top: 2px dashed; border-radius: 0; height: 0; }
+  .legend code { background: #fdf2f8; color: var(--code); padding: 1px 5px; border-radius: 3px; border: 1px solid #fce7f3; font-size: 11px; }
+
+  .notes { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.6; }
+  .notes b { color: var(--ink); }
+
+  .tabbar { display: flex; gap: 8px; margin-bottom: 18px; }
+  .tabbtn { font: inherit; font-size: 13px; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 1px solid var(--frame); background: var(--paper); color: var(--muted); cursor: pointer; }
+  .tabbtn.active { color: var(--query); border-color: var(--query); background: #eef2ff; }
+  .tabpanel[hidden] { display: none; }
+
+  .textflow { white-space: pre-wrap; font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: 12.5px; line-height: 1.65; color: var(--ink); background: #fbfbfc; border: 1px solid var(--line); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 0; }
+  .copybtn { font: inherit; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 8px; border: 1px solid var(--frame); background: var(--paper); color: var(--ink); cursor: pointer; margin-bottom: 12px; }
+  .copybtn:hover { border-color: var(--query); color: var(--query); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <h1>TOC Living Knowledge Base — Architecture</h1>
+  <div class="sub">Hybrid design: vectorless tree-index (mirrors our own <code>/brain</code> — operating-brain/wiki/INDEX.md) for the structured session archive, traditional vector RAG reserved for future unstructured content, and a CRAG-style query router that trusts internal knowledge first and only falls back to the web when internal coverage is insufficient — exactly the flow described in <code>vision.md</code>.</div>
+</header>
+
+<div class="tabbar">
+  <button class="tabbtn active" id="btn-diagram" onclick="showTab('diagram')">Diagram</button>
+  <button class="tabbtn" id="btn-text" onclick="showTab('text')">Text Flow (for AI tools)</button>
+</div>
+
+<div id="tab-diagram" class="tabpanel">
+<section class="card">
+  <h2>① End-to-end architecture — ingest → index → query (CRAG) → maintain</h2>
+  <div class="csub">Solid nodes = already working today. Dashed grey nodes = future / not built this round (WhatsApp connector, live meeting-bot). Everything else is new design this round, built from existing Vidysea patterns (<code>/transcribe</code>, <code>brain-page-writer</code>, PageIndex multi-source merge).</div>
+  <div class="frame">
+    <div class="frame-title">TOC Living Knowledge Base</div>
+    <svg viewBox="0 0 1320 1360" width="100%" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arr-blue"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#2563eb"/></marker>
+        <marker id="arr-pink"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#db2777"/></marker>
+        <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#16a34a"/></marker>
+        <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#f59e0b"/></marker>
+        <marker id="arr-cyan"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#0891b2"/></marker>
+      </defs>
+
+      <!-- ============= LAYER 1: INGESTION ============= -->
+      <rect class="group-ingest" x="15" y="60" width="1290" height="500"/>
+      <text class="grouplabel ingest" x="32" y="82">① Ingestion — per source type</text>
+
+      <!-- Row A: recording path -->
+      <ellipse class="startend" cx="70" cy="130" rx="42" ry="22"/>
+      <text class="nlabel" x="70" y="126" text-anchor="middle">Session</text>
+      <text class="nlabel" x="70" y="140" text-anchor="middle">happens</text>
+
+      <polygon class="diamond" points="165,130 222,95 279,130 222,165"/>
+      <text class="nlabel-sm" x="222" y="126" text-anchor="middle">Recording</text>
+      <text class="nlabel-sm" x="222" y="138" text-anchor="middle">available?</text>
+
+      <rect class="node" x="340" y="100" width="230" height="60"/>
+      <text class="nlabel" x="455" y="115" text-anchor="middle">Transcription pipeline — piloted</text>
+      <text class="nlabel-sm" x="455" y="129" text-anchor="middle">gemini-3.5-transcribe (diarize) + chunked</text>
+      <text class="nlabel-sm" x="455" y="142" text-anchor="middle">word-timestamps → gemini-3.7-flash naming pass</text>
+      <text class="nlabel-sm" x="455" y="155" text-anchor="middle">/transcribe (local Whisper) kept as fallback</text>
+
+      <rect class="node" x="600" y="103" width="260" height="54"/>
+      <text class="nlabel" x="730" y="122" text-anchor="middle">Transcript — speaker-wise, timestamped</text>
+      <text class="nlabel-sm" x="730" y="136" text-anchor="middle">diarized: who-said-what + when, per speaker turn</text>
+      <text class="nlabel-sm" x="730" y="149" text-anchor="middle">upgraded — existing transcripts lacked this</text>
+
+      <rect class="node" x="600" y="167" width="260" height="46"/>
+      <text class="nlabel" x="730" y="184" text-anchor="middle">Session summary — gemini-3.7-flash</text>
+      <text class="nlabel-sm" x="730" y="198" text-anchor="middle">escalate to gemini-3.1-pro-preview if weak/short</text>
+
+      <line class="edge" x1="730" y1="157" x2="730" y2="167"/>
+      <text class="elabel" x="742" y="164">summarize</text>
+
+      <line class="edge" x1="112" y1="130" x2="163" y2="130"/>
+      <line class="edge-cond" x1="279" y1="130" x2="340" y2="130"/>
+      <text class="elabel" x="288" y="120">yes</text>
+      <line class="edge" x1="570" y1="130" x2="600" y2="130"/>
+
+      <!-- Row B: no-recording gap path (process-first) -->
+      <rect class="node" x="165" y="230" width="290" height="50"/>
+      <text class="nlabel" x="310" y="250" text-anchor="middle">Standing ask: request recording</text>
+      <text class="nlabel-sm" x="310" y="264" text-anchor="middle">from Bhakti / TOC — new (process, not code)</text>
+
+      <polygon class="diamond" points="480,255 542,220 604,255 542,290"/>
+      <text class="nlabel-sm" x="542" y="251" text-anchor="middle">Received</text>
+      <text class="nlabel-sm" x="542" y="263" text-anchor="middle">in time?</text>
+
+      <rect class="node" x="665" y="232" width="290" height="46"/>
+      <text class="nlabel" x="810" y="250" text-anchor="middle">Logged: "recording pending"</text>
+      <text class="nlabel-sm" x="810" y="264" text-anchor="middle">gap entry in Knowledge Bank — new</text>
+
+      <path class="edge-cond" d="M222,165 V200 H310 V230"/>
+      <text class="elabel" x="228" y="196">no</text>
+      <line class="edge" x1="455" y1="255" x2="480" y2="255"/>
+      <path class="edge-feedback" d="M542,220 C542,175 500,152 570,130"/>
+      <text class="elabel" x="470" y="180">yes → joins</text>
+      <text class="elabel" x="470" y="192">transcribe path</text>
+      <line class="edge-cond" x1="604" y1="255" x2="665" y2="255"/>
+      <text class="elabel" x="612" y="248">no</text>
+
+      <!-- Row C: docs / collaterals -->
+      <rect class="node" x="165" y="330" width="240" height="44"/>
+      <text class="nlabel" x="285" y="348" text-anchor="middle">Docs / PDFs / Excel collaterals</text>
+      <text class="nlabel-sm" x="285" y="362" text-anchor="middle">existing</text>
+
+      <rect class="node" x="435" y="330" width="210" height="44"/>
+      <text class="nlabel" x="540" y="348" text-anchor="middle">csv / xlsx conversion</text>
+      <text class="nlabel-sm" x="540" y="362" text-anchor="middle">existing</text>
+
+      <rect class="node" x="675" y="330" width="200" height="44"/>
+      <text class="nlabel" x="775" y="348" text-anchor="middle">Structured tables</text>
+      <text class="nlabel-sm" x="775" y="362" text-anchor="middle">existing — _csv/*.csv</text>
+
+      <line class="edge" x1="405" y1="352" x2="435" y2="352"/>
+      <line class="edge" x1="645" y1="352" x2="675" y2="352"/>
+
+      <!-- Row D: future / optional sources -->
+      <text class="grouplabel ingest" x="165" y="415">Future / not built this round</text>
+      <rect class="node future" x="165" y="425" width="280" height="46"/>
+      <text class="nlabel" x="305" y="444" text-anchor="middle">WhatsApp — MongoDB</text>
+      <text class="nlabel-sm" x="305" y="458" text-anchor="middle">filtered by TOC group jid · D:\whatsapp_msg</text>
+
+      <rect class="node future" x="480" y="425" width="320" height="46"/>
+      <text class="nlabel" x="640" y="444" text-anchor="middle">Live meeting-bot</text>
+      <text class="nlabel-sm" x="640" y="458" text-anchor="middle">auto-joins Zoom/Meet/Teams — alt. to process-first ask</text>
+
+      <path class="edge-feedback" d="M480,290 C420,340 420,400 445,425"/>
+      <text class="elabel" x="415" y="380">(future alt.)</text>
+
+      <!-- ============= LAYER 2: INDEXING (vectorless tree, /brain-style) ============= -->
+      <rect class="group-index" x="15" y="580" width="1290" height="200"/>
+      <text class="grouplabel index" x="32" y="602">② Structuring / indexing — vectorless tree, mirrors operating-brain INDEX.md</text>
+
+      <rect class="node" x="60" y="618" width="270" height="52"/>
+      <text class="nlabel" x="195" y="638" text-anchor="middle">Synthesize per-session page</text>
+      <text class="nlabel-sm" x="195" y="650" text-anchor="middle">from summary + speaker-wise transcript</text>
+      <text class="nlabel-sm" x="195" y="662" text-anchor="middle">mirrors brain deep-page shape — new</text>
+
+      <rect class="node" x="390" y="618" width="270" height="52"/>
+      <text class="nlabel" x="525" y="640" text-anchor="middle">Append KNOWLEDGE-BANK.md</text>
+      <text class="nlabel-sm" x="525" y="654" text-anchor="middle">month-wise — existing pattern, now automated</text>
+
+      <rect class="node" x="720" y="610" width="330" height="66"/>
+      <text class="nlabel" x="885" y="632" text-anchor="middle">Build / regenerate TOC-INDEX.md</text>
+      <text class="nlabel-sm" x="885" y="646" text-anchor="middle">LLM tree: by month → session → topic/speaker/org</text>
+      <text class="nlabel-sm" x="885" y="660" text-anchor="middle">vectorless, no embeddings — new</text>
+
+      <rect class="node future" x="720" y="694" width="330" height="56"/>
+      <text class="nlabel" x="885" y="716" text-anchor="middle">Vector-RAG index (future)</text>
+      <text class="nlabel-sm" x="885" y="730" text-anchor="middle">chunk → embed → Chroma/FAISS, for raw</text>
+      <text class="nlabel-sm" x="885" y="742" text-anchor="middle">unstructured WhatsApp text once captured</text>
+
+      <path class="edge-finalize" d="M730,213 C730,420 195,420 195,616"/>
+      <text class="nlabel-sm" x="870" y="122">full diarized transcript stays</text>
+      <text class="nlabel-sm" x="870" y="134">linked as source (like today's</text>
+      <text class="nlabel-sm" x="870" y="146">Transcripts/*.content.md)</text>
+      <path class="edge-finalize" d="M810,278 C810,420 235,420 235,616"/>
+      <path class="edge-finalize" d="M775,374 C775,480 525,480 525,616"/>
+      <line class="edge" x1="330" y1="644" x2="390" y2="644"/>
+      <line class="edge" x1="660" y1="644" x2="720" y2="644"/>
+      <path class="edge-parallel" d="M305,471 C305,560 750,560 750,692"/>
+      <text class="elabel" x="500" y="558">(future)</text>
+
+      <!-- ============= LAYER 3: QUERY (CRAG-style router) ============= -->
+      <rect class="group-query" x="15" y="800" width="1290" height="270"/>
+      <text class="grouplabel query" x="32" y="822">③ Query — CRAG-style router: internal knowledge base first, web second (per vision.md)</text>
+
+      <ellipse class="startend" cx="90" cy="870" rx="42" ry="22"/>
+      <text class="nlabel" x="90" y="874" text-anchor="middle">Query</text>
+
+      <rect class="node" x="190" y="843" width="300" height="54"/>
+      <text class="nlabel" x="340" y="864" text-anchor="middle">Tree-search over TOC-INDEX.md</text>
+      <text class="nlabel-sm" x="340" y="878" text-anchor="middle">LLM reasons over tree, picks 1-3 session pages</text>
+      <text class="nlabel-sm" x="340" y="890" text-anchor="middle">— automates what /brain does manually today</text>
+
+      <rect class="node" x="540" y="843" width="250" height="54"/>
+      <text class="nlabel" x="665" y="864" text-anchor="middle">Retrieval evaluator</text>
+      <text class="nlabel-sm" x="665" y="878" text-anchor="middle">scores relevance of retrieved pages</text>
+      <text class="nlabel-sm" x="665" y="890" text-anchor="middle">to the query (CRAG pattern)</text>
+
+      <polygon class="diamond" points="845,870 902,832 959,870 902,908"/>
+      <text class="nlabel-sm" x="902" y="866" text-anchor="middle">verdict?</text>
+
+      <rect class="node success" x="1000" y="800" width="290" height="54"/>
+      <text class="nlabel" x="1145" y="821" text-anchor="middle">Answer — internal pages only</text>
+      <text class="nlabel-sm" x="1145" y="835" text-anchor="middle">cited by session date + speaker</text>
+
+      <rect class="node" x="1000" y="900" width="290" height="54"/>
+      <text class="nlabel" x="1145" y="921" text-anchor="middle">Web search fallback</text>
+      <text class="nlabel-sm" x="1145" y="935" text-anchor="middle">merged with any partial internal context</text>
+
+      <rect class="node success" x="700" y="1000" width="330" height="54"/>
+      <text class="nlabel" x="865" y="1021" text-anchor="middle">Answer — internal + web</text>
+      <text class="nlabel-sm" x="865" y="1035" text-anchor="middle">web sources cited separately from internal</text>
+
+      <line class="edge" x1="132" y1="870" x2="190" y2="870"/>
+      <line class="edge" x1="490" y1="870" x2="540" y2="870"/>
+      <line class="edge" x1="790" y1="870" x2="845" y2="870"/>
+      <path class="edge-finalize" d="M902,832 C960,820 980,822 1000,822"/>
+      <text class="elabel" x="945" y="808">correct</text>
+      <path class="edge-cond" d="M902,908 C960,922 980,922 1000,922"/>
+      <text class="elabel" x="940" y="944">incorrect / ambiguous</text>
+      <path class="edge-finalize" d="M1145,954 C1145,985 865,985 865,998"/>
+
+      <path class="edge-finalize" d="M1050,676 C1200,720 1150,780 902,832"/>
+      <text class="elabel" x="1155" y="740">tree contents feed evaluator context</text>
+
+      <!-- ============= LAYER 4: MAINTENANCE LOOP ============= -->
+      <rect class="group-maint" x="15" y="1090" width="1290" height="180"/>
+      <text class="grouplabel maint" x="32" y="1112">④ Maintenance loop — what keeps it "living"</text>
+
+      <rect class="node" x="60" y="1140" width="230" height="46"/>
+      <text class="nlabel" x="175" y="1158" text-anchor="middle">New content lands</text>
+      <text class="nlabel-sm" x="175" y="1172" text-anchor="middle">recording, gap entry, or collateral</text>
+
+      <rect class="node" x="330" y="1140" width="330" height="46"/>
+      <text class="nlabel" x="495" y="1158" text-anchor="middle">Re-run ① → ②</text>
+      <text class="nlabel-sm" x="495" y="1172" text-anchor="middle">transcribe → synthesize → regenerate TOC-INDEX.md</text>
+
+      <rect class="node" x="700" y="1140" width="260" height="46"/>
+      <text class="nlabel" x="830" y="1158" text-anchor="middle">Append KNOWLEDGE-BANK.md row</text>
+      <text class="nlabel-sm" x="830" y="1172" text-anchor="middle">existing pattern, automated</text>
+
+      <rect class="node success" x="1000" y="1130" width="270" height="66"/>
+      <text class="nlabel" x="1135" y="1152" text-anchor="middle">By-month Google Sheet updated</text>
+      <text class="nlabel-sm" x="1135" y="1166" text-anchor="middle">new linked row — existing sheet</text>
+      <text class="clabel" x="1135" y="1180" text-anchor="middle">10IJsqW...d0vXJr6Q</text>
+
+      <line class="edge" x1="290" y1="1163" x2="330" y2="1163"/>
+      <line class="edge" x1="660" y1="1163" x2="700" y2="1163"/>
+      <line class="edge-finalize" x1="960" y1="1163" x2="1000" y2="1163"/>
+
+      <path class="edge-feedback" d="M1135,1130 C1135,1040 70,1050 70,152"/>
+      <text class="elabel" x="1050" y="1060">the living loop —</text>
+      <text class="elabel" x="1050" y="1073">repeats every new session</text>
+
+    </svg>
+
+    <div class="legend">
+      <div class="item"><span class="swatch" style="background:#2563eb"></span>Default sequential flow</div>
+      <div class="item"><span class="swatch" style="background:#db2777"></span>Conditional branch (routing decision)</div>
+      <div class="item"><span class="swatch" style="background:#16a34a"></span>Finalize / commit / success terminal</div>
+      <div class="item"><span class="swatch dashed" style="border-color:#f59e0b"></span>Feedback / loop back / deferred alt. path</div>
+      <div class="item"><span class="swatch dashed" style="border-color:#0891b2"></span>Parallel / alternate index branch</div>
+      <div class="item"><span style="border:1.4px solid #4b5563;width:14px;height:14px;display:inline-block;border-radius:3px;"></span> solid node — <b>already working today</b></div>
+      <div class="item"><span style="border:1.3px dashed #9ca3af;width:14px;height:14px;display:inline-block;border-radius:3px;background:#f9fafb;"></span> dashed grey — <b>future / not built this round</b></div>
+      <div class="item"><span style="border:1.8px solid #16a34a;width:14px;height:14px;display:inline-block;border-radius:3px;"></span> green outline — terminal / delivered</div>
+    </div>
+  </div>
+  <p class="notes">
+    <b>Key reading order:</b><br>
+    <b>① Ingestion</b> — a recording usually exists and goes through transcription via the <b>Gemini API</b> (cloud, audio-native) — chosen over relying solely on the local faster-whisper/CUDA pipeline, which has already hit a real dependency failure once (missing <code>cublas64_12.dll</code> during the original 23-session run). The existing local <code>/transcribe</code> skill is kept as a fallback, not removed. Piloted transcription pipeline (validated end-to-end on the 27th-August session): <code>gemini-3.5-transcribe</code> diarizes the FULL session in one call (no missed turns — proven not to truncate) → the same model re-runs with word-level timestamps on 8-10 min audio chunks (chunking needed only for timestamps, not diarization) → <code>gemini-3.7-flash</code> merges the two, maps generic speaker labels to real names only where a name is actually stated (escalating to <code>gemini-3.1-pro-preview</code> if that pass looks incomplete), and stays silent rather than guessing where a name was never said. This produces a <b>speaker-wise, timestamped transcript</b> (who said what, and when, per speaker turn — the 23 existing transcripts don't have this) plus a separate <b>session summary</b> generated from it; both feed the per-session page in ②. When no recording exists at all, the process-first fix kicks in: standing ask to Bhakti/TOC; if it never arrives, the session is logged as a <i>"recording pending"</i> gap entry rather than silently dropped. Docs/collaterals follow the existing csv/xlsx conversion path. WhatsApp and a live meeting-bot are shown as future sources only — not built this round.
+    <b>② Indexing</b> mirrors our own <code>/brain</code>: transcripts and gap entries get synthesized into per-session pages, folded into <code>KNOWLEDGE-BANK.md</code>, and rolled up into a regenerated <code>TOC-INDEX.md</code> tree router — vectorless, no embeddings, same shape as <code>operating-brain/wiki/INDEX.md</code>. A separate vector-RAG branch is reserved for raw unstructured WhatsApp text once that source exists.
+    <b>③ Query</b> is the CRAG-style router vision.md asked for: a question walks the tree (the automated version of what <code>/brain</code> does by hand today), an evaluator scores what came back, and only when internal coverage is <code>incorrect</code>/<code>ambiguous</code> does the system reach out to the web — internal knowledge stays authoritative, web is the fallback, and every answer is cited.
+    <b>④ Maintenance loop</b> is what makes it "living" — every new session re-enters at ① and ②, and the existing by-month Google Sheet (already shared) gets its new row automatically instead of by hand.
+  </p>
+</section>
+</div>
+
+<div id="tab-text" class="tabpanel" hidden>
+<section class="card">
+  <h2>Text flow — for handing off to other AI tools</h2>
+  <div class="csub">Same architecture as the diagram, in plain numbered-step text. Meant to be copied straight into another AI tool's prompt for UI generation or planning.</div>
+  <button class="copybtn" id="copybtn" onclick="copyFlow()">Copy to clipboard</button>
+  <pre class="textflow" id="flowtext">TOC LIVING KNOWLEDGE BASE — STEP-BY-STEP FLOW (plain text export)
+Hybrid architecture: vectorless tree-index (mirrors our own "/brain" — operating-brain/wiki/INDEX.md)
+for the structured session archive, plus a CRAG-style query router that trusts internal
+knowledge first and falls back to the web only when internal coverage is insufficient.
+
+STATUS KEY: [EXISTING] = already working today · [NEW] = new in this design, piloted on 1
+session so far · [FUTURE] = explicitly not built this round
+
+================================================================
+LAYER 1 — INGESTION (per source type)
+================================================================
+1. A TOC session happens.
+2. DECISION: Is a recording available?
+
+   2a. YES -> Transcription pipeline [NEW, primary — validated end-to-end on the
+       27th-August-In-Focus session]:
+       - gemini-3.5-transcribe, diarization=True, ONE call over the full session
+         audio -> speaker-separated turns (spk:0, spk:1, ...), verbatim ASR text.
+         Proven not to truncate for a ~50 min session (finish_reason=STOP).
+       - gemini-3.5-transcribe again, word_timestamp=True, run on 8-10 min AUDIO
+         CHUNKS of the same file (word-level timestamps are too token-heavy for a
+         full session in one call — chunking is needed only for this step, not
+         for diarization).
+       - Align: match each turn's first few words against the chunked word-timestamp
+         list to assign every turn a real [MM:SS] start time.
+       - gemini-3.7-flash: ONE pass over the full turn list. ONLY job — replace a
+         generic speaker label (spk:N) with the real name wherever that name is
+         actually stated in the dialogue (self-intro, host intro, etc.); leave the
+         label generic if no name was ever said (do not guess). Escalate to
+         gemini-3.1-pro-preview if this pass looks incomplete (output shorter than
+         ~70% of the input).
+       - [EXISTING, fallback] local /transcribe skill (faster-whisper, CUDA) is kept
+         as a fallback path — used only if Gemini is unavailable. It already hit a
+         real failure once (missing cublas64_12.dll dependency).
+       - The full diarized transcript stays linked as source, same convention as
+         today's Transcripts/*.content.md.
+       - gemini-3.7-flash: ONE more call on the finished transcript -> SESSION
+         SUMMARY (250-400 words, cites concrete numbers/programs/pricing actually
+         present in the transcript, does not invent facts).
+
+   2b. NO -> Process-first gap handling [NEW, process not code]:
+       - Standing ask: request the recording from Bhakti / TOC.
+       - DECISION: received within N days?
+           - YES -> joins the transcription pipeline above (2a).
+           - NO  -> logged as a "recording pending" gap entry in the Knowledge Bank
+             (not silently dropped).
+
+3. Docs / PDFs / Excel collaterals -> existing csv/xlsx conversion -> structured
+   tables. [EXISTING]
+
+4. [FUTURE, not built this round] WhatsApp messages — D:\whatsapp_msg's MongoDB,
+   filtered by TOC's group jid. That archiver isn't pointed at TOC's group yet and
+   has its own documented scaling concern (TASKS.md T-014).
+
+5. [FUTURE, not built this round] Live meeting-bot — auto-joins Zoom/Meet/Teams to
+   record automatically. Shown as an alternative to the process-first ask (2b), not
+   built now — heavier lift (multi-platform browser automation, consent/TOS).
+
+================================================================
+LAYER 2 — STRUCTURING / INDEXING (vectorless tree, mirrors /brain's INDEX.md)
+================================================================
+6. Diarized transcript + session summary -> synthesize into a per-session page
+   (mirrors an operating-brain deep-page shape). [NEW]
+7. Append that page's summary into KNOWLEDGE-BANK.md, month-wise. [EXISTING pattern,
+   now automated]
+8. Build / regenerate TOC-INDEX.md — an LLM-authored hierarchical tree:
+   by month -> by session -> by topic / speaker / featured-org.
+   Vectorless: no embeddings, no vector DB — same shape as our own
+   operating-brain/wiki/INDEX.md. [NEW]
+9. [FUTURE, not built this round] Separate branch: unstructured WhatsApp text (once
+   captured) -> traditional vector-RAG index (chunk -> embed -> Chroma/FAISS). Kept
+   separate from the tree index because vectorless RAG degrades on content with no
+   logical section boundaries.
+
+================================================================
+LAYER 3 — QUERY (CRAG-style router — the "living" behavior)
+================================================================
+10. A user asks a query.
+11. Tree-search over TOC-INDEX.md — an LLM reasons over the tree and picks the 1-3
+    most relevant session pages. (This automates what /brain does manually today.)
+12. Retrieval evaluator scores the relevance of what was found.
+13. DECISION: verdict?
+    - correct -> answer generated from internal pages only, cited by session date +
+      speaker. [terminal / delivered]
+    - incorrect / ambiguous -> web search fallback, merged with any partial internal
+      context -> answer generated from internal + web, with web sources cited
+      separately from internal ones. [terminal / delivered]
+
+    This is the internal-knowledge-first, web-second behavior vision.md asked for —
+    the tree index plays the role CRAG's vector DB plays, and only insufficient /
+    ambiguous internal coverage reaches outward.
+
+================================================================
+LAYER 4 — MAINTENANCE LOOP (what keeps it "living")
+================================================================
+14. New content lands — a recording, a "recording pending" gap entry, or a collateral.
+15. Re-run Layers 1 -> 2: transcribe (or use gap entry) -> synthesize per-session page
+    -> regenerate TOC-INDEX.md.
+16. Append the new row to KNOWLEDGE-BANK.md.
+17. The existing by-month Google Sheet (id 10IJsqWukIOkVaFDzkpWNnvJZ4olOdncDdC-d0vXJr6Q)
+    gets a new linked row automatically — no manual update. [EXISTING sheet, automated]
+18. Loop back to step 1 — this repeats for every new TOC session.
+
+================================================================
+PILOT RESULT (27th-August-In-Focus session, ~50 min audio)
+================================================================
+- Diarization call: 1 call, 47 speaker turns, no truncation (finish_reason=STOP).
+- Word-timestamp pass: 6 chunks of 10 min, 8,621 words total, no truncation per chunk.
+- Naming pass (gemini-3.7-flash): correctly named 6 of 7 distinct speakers from
+  context; left 1 turn as a generic label rather than guess, because that speaker's
+  name was genuinely never stated in that turn — the honest/conservative behavior
+  this pipeline was chosen for.
+- Summary output surfaced concrete details a single-call approach (gemini-3.6-flash
+  reading the audio directly) had missed: exact program cadence, mentor background,
+  enrolment-window status.
+- Cost shape: ~9 API calls total per session (1 diarize + 6 chunks + 1 naming + 1
+  summary). Audio-input token cost is duration-bound, not call-count-bound, so
+  chunking for timestamps does not multiply the dominant cost.
+
+================================================================
+COMPONENT STATUS SUMMARY
+================================================================
+EXISTING (already working today):
+  - local /transcribe skill (faster-whisper, CUDA) — kept as fallback
+  - csv/xlsx conversion for docs/collaterals
+  - KNOWLEDGE-BANK.md (month-wise synthesis)
+  - by-month Google Sheet (10IJsqWukIOkVaFDzkpWNnvJZ4olOdncDdC-d0vXJr6Q)
+
+NEW (this design, piloted end-to-end on 1 session so far — not yet scaled to all 23):
+  - Gemini transcription pipeline: gemini-3.5-transcribe (diarize, full session) +
+    gemini-3.5-transcribe (word-timestamps, chunked) + gemini-3.7-flash (naming +
+    merge, escalate to gemini-3.1-pro-preview if incomplete) + gemini-3.7-flash
+    (summary)
+  - speaker-wise, timestamped (diarized) transcript output
+  - process-first recording-gap handling ("recording pending" log entries)
+  - TOC-INDEX.md tree router (vectorless, /brain-style)
+  - CRAG-style query router (tree-search -> evaluator -> internal-first/web-fallback)
+
+FUTURE (explicitly not built this round):
+  - WhatsApp connector (D:\whatsapp_msg MongoDB -> filtered by TOC group jid)
+  - live meeting-bot (auto-join Zoom/Meet/Teams)
+  - vector-RAG index for raw unstructured WhatsApp text</pre>
+</section>
+</div>
+
+</div>
+<script>
+function showTab(name) {
+  document.getElementById('tab-diagram').hidden = name !== 'diagram';
+  document.getElementById('tab-text').hidden = name !== 'text';
+  document.getElementById('btn-diagram').classList.toggle('active', name === 'diagram');
+  document.getElementById('btn-text').classList.toggle('active', name === 'text');
+}
+function copyFlow() {
+  var el = document.getElementById('flowtext');
+  var btn = document.getElementById('copybtn');
+  var text = el.innerText;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'Copied ✓';
+      setTimeout(function () { btn.textContent = 'Copy to clipboard'; }, 1500);
+    }).catch(function () {
+      btn.textContent = 'Select the text below and copy manually';
+    });
+  } else {
+    btn.textContent = 'Select the text below and copy manually';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# node
+**/node_modules/
+
+# playwright artifacts
+**/.playwright-mcp/
+
+# large media
+TOC/TOC-Materials/Audio/
+TOC/TOC-Materials/Recordings/
+whatsapp_msg/media/
+whatsapp_msg/sessions/
+
+# reference screenshots (large, regenerable)
+reference/kb-deck-screens/*.jpg
+reference/kb-deck-screens/*.png
+
+# logs
+*.log
+whatsapp_msg/

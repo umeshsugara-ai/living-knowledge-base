@@ -1,0 +1,17 @@
+==== d:/TOC/TOC-Materials/Learning-Resources/Events-List.xlsx
+--sheet: APACME A1:Z233
+--sheet: Global A1:I9
+--sheet: Guidelines C1:G243
+==== d:/TOC/TOC-Materials/Learning-Resources/Pre-College-Programs.xlsx
+--sheet: START HERE — Contents A1:G37
+--sheet: 🏛️ Indian Universities A1:Z1000
+--sheet: 🏢 Orgs & Companies A1:AA45
+--sheet: 🌍 International A1:M13
+==== d:/TOC/TOC-Materials/Calendar-Programming-Details/TOC-Annual-Calendar-2026-27.xlsx
+--sheet: Annual Calendar A1:Y1020
+==== d:/TOC/TOC-Materials/Calendar-Programming-Details/Speaker-Details-April-July-2026.xlsx
+--sheet: Annual Calendar A1:V1019
+==== d:/TOC/TOC-Materials/Recordings/July/July-Events-List.xlsx
+--sheet: APACME B1:I1005
+--sheet: Global A2:I9
+--sheet: Guidelines C1:G996

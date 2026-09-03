@@ -1,0 +1,269 @@
+## Summary
+This webinar is the third session in The Outreach Collective's (TOC) "In Focus" monthly series, spotlighting educational organizations and test preparation services. The session features presentations from Priyamvada Agarwal, Founder & Director of Education & You, who discusses personalized standardized test preparation methodologies, and Paritosh K., Founder of RECO Education, who explains tutorial-style reading, writing, and critical thinking courses designed to prepare high schoolers for college success. The session concludes with an interactive Q&A discussing academic readiness, college admission gaps, preparation timelines, and the role of AI in learning.
+
+## Speakers / Panelists
+* **Bhakti Shah** – Host / Opening remarks, The Outreach Collective (TOC)
+* **Devesh** – Moderator / Co-Host, Team Futurowise & TOC
+* **Priyamvada Agarwal** – Founder & Director, Education & You
+* **Paritosh K.** – Founder, RECO Education
+* **Venki** – Attendee / Participant (asked questions during Q&A and interactive exercises)
+* **Poonam** – Attendee / Participant (contributed to interactive exercise)
+
+## Organizations & Programs Mentioned
+* **The Outreach Collective (TOC)**
+* **Futurowise**
+* **Education & You**
+* **RECO Education**
+* **Stanford University**
+* **University of Chicago**
+* **Ashoka University** (including Young Scholars Programme / YSP, Horizons)
+* **Nayantā University**
+* **Standardized Tests & Admissions Exams:** Digital SAT, GRE, GMAT, IELTS, TOEFL, PTE, IE Madrid UG Admission Test, Bocconi UG Admission Test, SMU PG Admission Test, ISB - BAT PG Admission Test, Indian UG Entrance Exams (Ashoka AAA, FLAME FEAT, Krea Immersive Case Day, O.P. Jindal JSAT, Shiv Nadar SNUSAT, ISBF iMET, Azim Premji NET, Symbiosis SET, NMIMS NPAT, Christ University CUET, IIM Bangalore BBE, IIM Indore & Rohtak IPMAT, IIM Jammu & Bodh Gaya JIPMAT, Mumbai Universities MH-CET, Delhi Universities CUET, IIM Kozhikode BMS AT).
+* **Tools / Products:** NotebookLM (Google), Canva, Substack, Medium.
+
+## Key Topics & Takeaways
+
+### Education & You (Presented by Priyamvada Agarwal)
+* **Core Philosophy:** Focuses on student-centric personalized test preparation rather than a one-size-fits-all curriculum.
+* **Diagnostic-First Approach:** Every student starts with a diagnostic assessment to identify skill gaps, foundational errors, and strategic pacing needs before creating a customized study schedule.
+* **Key Exclusive Offerings:**
+  * *Student-Teacher Tracker:* A transparent shared log of class progress, assignments, and mock scores accessible to students, parents, counselors, and faculty.
+  * *Resource Pool:* Curated authentic practice materials from established sources (Princeton Review, Kaplan, College Board).
+  * *Parent-Teacher Meetings (PTMs):* Fortnightly individual check-ins.
+  * *One-on-One Live Classes:* Interactive live sessions (no recorded lectures) to maintain accountability.
+  * *Flashcards Box ("Mithai ka Dabba"):* 1,500+ physical vocabulary flashcards paired with online interactive quizzes/games via QR codes.
+* **Preparation Timelines:** Ideally a 3-month structured preparation timeline (10–12 classes/month), though intensive crash courses are accommodated when necessary.
+
+### RECO Education (Presented by Paritosh K.)
+* **College Access vs. College Success:** While college counseling often focuses on admissions access, students frequently struggle with academic readiness ("academically adrift") upon entering rigorous university environments.
+* **Core Challenges in Transitioning to Higher Education:**
+  * *Complex Academic Reading:* High school students are rarely trained to parse dense, jargon-heavy academic papers and scholarly texts.
+  * *Curricular Autonomy & Choice:* Moving from a rigid school curriculum to choosing from hundreds of multidisciplinary college courses and concentrations requires developed academic discernment.
+* **Program Structure:**
+  * Individualized, tutorial-style 1-on-1 mentorship (typically 9 to 12 sessions).
+  * In-depth reading analysis, structured writing workshops, and capstone essay/portfolio creation (without external ghostwriting or forced publication).
+  * Available across Humanities, Social Sciences, and select STEM topics for serious Grade 9–12 students.
+
+### Q&A Insights
+* **Standardized Testing vs. College Academic Reality:** Standard admissions filters (SAT scores, basic school grades) do not fully measure a student's ability to engage in seminar-style discussions and university-level literature synthesis.
+* **Leveraging AI in Education:** AI tools such as Google's NotebookLM can be used productively to summarize dense readings and generate discussion outlines to enhance reading comprehension rather than replacing original writing.
+
+---
+
+## Full Transcript
+
+[00:00] **Devesh:** We'll start.
+
+[00:01] **Priyamvada Agarwal:** Perfect, perfect, yeah.
+
+[00:02] **Bhakti Shah:** But I'm so excited about this one, Priyamvada and Paritosh, really. Very excited.
+
+[00:08] **Priyamvada Agarwal:** Thank you, Bhakti.
+
+[00:09] **Bhakti Shah:** Yeah, very, really looking forward. Two very distinct companies, and you know, "In Focus" itself is a very interesting concept, and we're really... Please tell us what more we can do once, you know, we finish the session. Of course, it'll be distributed. I think your brochures are also going to be available. But let us know if there's anything else that you need from TOC. We'd love to take your work out to the wider world. But yeah, I think, Devesh, let's go. It's 6:00. Let's start.
+
+[00:39] **Devesh:** Okay. Perfect, perfect. Super. Welcome, everyone. Good evening. Welcome to the third "In Focus" in this in the monthly series of sessions. The "In Focus" series was started in June, where we had two speakers, two presenters, talk about their companies, their organizations, share about the wonderful work that they are doing. I was one of the presenters last month. And now we have two exceptional speakers coming in and talk about their companies. It's a great opportunity to learn about what's happening in the education space, what's happening in... So today, Priyamvada is going to talk about her organization, Education & You. She has been doing some wonderful work. I had an opportunity of meeting Priyamvada, I think around 2018 or 2019, and we have been working together since then. And I know she's exceptionally passionate about the work that she do. And she has... Education & You was founded in 2010. So it's been a 16-year journey. Priya, over to you. We look forward to learning about Education & You. Yeah.
+
+[01:54] **Priyamvada Agarwal:** Thank you, Devesh. And before I start, yes, Devesh is one of the key people for me to be in TOC. For the first time I met him, and he said, "How are you not a part of TOC?" And I think over lunch, I was a member of TOC. So thank you, Devesh. Yes, it's been a wonderful journey for me to be in the in the education industry and among you people, because the TOC community has been fantastic.
+
+[02:23] **Priyamvada Agarwal:** Education & You started... I started this back—just one second—in the year 2014. Before that, I was working. And my purpose to start Education & You was because I wanted to bring back to the plate to students what they need, rather than what we want to give them. So I'm going to take you down the test prep side of Education & You, where we provide a very customized and niche prep part, where we're involved with each child's journey.
+
+[03:00] **Priyamvada Agarwal:** So, as I said, 12 years, one priority, and it's always been students. So we've been working around a lot of data. We keep improvising ourselves on how what has to be done, study plans are changed. We look up to understanding what is changing every time in every exam that's happening. Like, for example, this Monday, the GRE exam changed its difficulty level in the quant section, which was reported to us. And immediately we went back to falling it up with a lot of other tutors back in Middle East and all, and have been able to understand what has happened. And it's already been into implemented in with all the students who are currently studying GRE. So that is how fast we work around. And yes, AI has always been helpful in the coming days, because it helps us understand how and what has to be worked in manner making life much easier for us.
+
+[03:59] **Priyamvada Agarwal:** So these are some facts about we've taught about 6,000-plus students. And we have taught different students across different domains, like SAT, GRE, GMAT. The Indian aptitude test I started back in 2018 in a very small manner, but we've grown over time. When I say Indian UG entrance exams is we cover entrance exam preps for most of the exams.
+
+[04:27] **Priyamvada Agarwal:** So this is what are the offerings we have: the regular SAT, GRE, GMAT, IELTS, TOEFL, PTE. Along with that, we also have some specialized tests for the IE Madrid undergrads, the Bocconi undergrads, the SMU PG test, the ISB BAT which is required, and obviously the Indian UG entrance exams, I think we cover practically all of it.
+
+[04:59] **Priyamvada Agarwal:** And we do not have one single study plan for a student. Each student has a separate study plan. Depending on what they come from, what is the background in terms of maths, no maths, what is a weak area, everything is analyzed, and then we work around it.
+
+[05:18] **Priyamvada Agarwal:** Now, analysis when I talk about, does not really mean just talking on a phone call and having an analysis, because that's not going to help. A lot of parents come and tell me, "Oh, I can help you with their school results, I can help you with their board results." Well, that's not going to help me. Because we forget that the exams require do not only require the syllabus knowledge or a curriculum knowledge, they require skills, they require confidence, they require time management, which only comes when they are able to do that paper of an exam. So we do a diagnosis first, always.
+
+[05:57] **Priyamvada Agarwal:** So all our exams, be it the very basic IELTS, or be it any of the other exams, we try to run a diagnostic test for them. Which helps us analyze a student's detailed understanding, gaps, strengths, weaknesses, which teacher to map—because we have to understand from the child also that you know, there's a foundational error, a strategical error, what is required before we are able to make a personalized plan. Also, it gives the student an understanding of what are they mentally coming to face. Because, you know, some of these exams are really overwhelming, at times intimidating, and time-consuming. So if a child comes without thinking of the amount of time they have to spend, just hearing peers or looking at Instagram, it's not going to help. This is like a reality check.
+
+[06:56] **Priyamvada Agarwal:** And it's also a reality check to a lot of parents, because they come and say, "My child has scored a 99 in maths in class 10, so they would easily score, for example, in an SAT, maybe a 760 or a 770 math section. Walk through." No. When they actually take a diagnostic test and they land at 660, that is when the reality check sets in.
+
+[07:20] **Priyamvada Agarwal:** So six things that we essentially and exclusively do at Education & You is we have a student-teacher tracker. So call me a little old school, a little traditional. So remember we all had a teacher's diary back in school, which was always on the desk, and the teacher wrote what she taught us in class and what she gave us as homework because she had to report to the principal? And I think that is a very interesting way of having accountability of what's happening in a class when I cannot attend every class, or I cannot be present everywhere. So that when I am attending a PTM, I know what we are talking on. I don't have to have a separate meeting with the teacher to take an update, and a separate teacher the student to take an update, and then correlate. So we have this Excel sheet where we have all the entire study plan is shared at the start of the program. And every at the end of every class, the teacher updates what has been done in the class and what is the homework provided. And this Excel sheet or a tracker is viewed by student, parent, and even the counselor. They all have access to it, to viewing it. This also has another sheet where we talk about curated practice and mocks, and we keep updating all mock scores taken by a student to see the progress of performance, rips and goods. And we see the difference of the timing, as in the first mock is to second mock, what was the duration, as in, you know, the time gaps, which helps.
+
+[08:58] **Priyamvada Agarwal:** Second is a resource pool. I have no shame in saying that none of our resources are in-house built. We do pick up a lot of resources from across the table. We do not white label them. We very proudly say that we're using a Princeton resource, or a Kaplan resource, or a College Board resource, because we know that they are authenticated resources, and they will help the students rather than trying to create our own. But yes, there's a huge pool that it's very, very... It's very difficult for most students to finish it in an entire tenure till the first attempt.
+
+[09:39] **Priyamvada Agarwal:** Having at least fortnightly PTMs, where I am mandatorily available, so that we can have a discussion with the parent to update them what's happening. The student tells us if they're having a problem, the teachers are there to share what is the difficulty faced, and we also are okay with the counselors joining in for this session, because they have to also be in sync in knowing that where is the trigger moving. Is it going up-sale or down-sale?
+
+[10:12] **Priyamvada Agarwal:** And yes, all our classes are one-on-one live classes. We only do curated group classes for certain counselors who come back and tell us that, "We want our six of our students, please create a group class." We will do it. Otherwise, everything that we have on the table is one-on-one. And they are live; we do not provide recorded sessions. Very basic reason is kids become very, very laid back when they hear that it's a recorded, that they will get a session, they will take the notes later, they'll use an AI bot to, you know, to summarize and, you know, go through it. No. It has to be a live interactive session where there are questions asked, solved, done, everything.
+
+[10:57] **Priyamvada Agarwal:** And the sixth thing that we provide them is a *mithai ka dabba*, which is basically a flashcard box of words. And this is across for all exams, be it a GRE, a SAT, or be it even for Indian aptitude. Vocabulary is the base essence for everybody to understand English. And I think vocabulary goes a little way ahead. Vocabulary also goes ahead when we talk about when they have to draft essays, when they have to work on research papers, they need essentially a good pool of words. So this flashcard box comes with about 1,500-plus words. Now, the reason I call this a *mithai ka dabba* is most people don't want to open it, because they feel that it's too rich and too heavy. So to make it more easy for them, we've made sure that they open it, because there are each box comes with a curated QR code and a what do you say, like a ticket number, which is your access to your quizzes and your games available online, which nobody has access to.
+
+[12:12] **Priyamvada Agarwal:** And so this is what we do exclusively.
+
+[12:17] **Priyamvada Agarwal:** Now, this is basically a seven-step journey from where you start from an assessment to starting your class. So this is where I am practically available at every step, from you taking a from a student taking a diagnostic test, to helping them understand, trying to align it, scheduling demos, slot bookings, and then we start the live classes. Till then, everything. Demo is a mandatory for all exams at our place. A 30-minute demo has to be done. Once in a while, some demos can be maybe 10 minutes lesser or maybe 10 minutes more, depending on case to case.
+
+[13:06] **Priyamvada Agarwal:** So when I work with so I work with a lot of associate partners, and some of them are at TOC, or I would say many of them are at TOC, and I have met some of them recently at the TOC soiree. I have been working with them not from today, but from really long, and I really share a very, very good relation. And the reason is because we all work as one team. Why? Because there is shared visibility. There's nothing hidden; it's all transparent. There are regular checks. So I am very upfront about sharing a feedback about a student if I feel there is some downfall or there is a stubbornness, rather than, you know, it going off the track. Before it's too late, it's better to raise an alarm. And I do that on a personal chat with the relevant counselor or an associate. The associate is added on the WhatsApp group with a warning that you might receive 50 messages on that group every day, so please be very careful. And very last and very important: the roles and the definitions are very, very clearly defined. No stepping off boundaries. Your student remains your student. You give that student to me for teaching purpose, I teach and I hand it over back to you. No hanky-pankies. Any child comes to me asking for anything additional, it's always routed back to you. And you are informed again by me on a WhatsApp that this was a question raised and I've directed it towards you, please take care.
+
+[14:43] **Priyamvada Agarwal:** Again, as I said, one shared account. So these are all the things that we just spoke about, that four people, and our goal is one. So the student-teacher tracker is what is very important for us to keep always a tab to knowing what's happening. Actions speaks louder.
+
+[15:03] **Priyamvada Agarwal:** Some of our non-negotiables that we have with our students, which we result have helped in our results, and we always request each of our associates that please make sure that you push this to your students, is that they have to have a camera. They cannot be camera-shy. They're not being judged, they're they do not have a group, so it's not going to be any disadvantage. It's not recorded that, you know, parents fear that, you know, anything can be misused later. But having a camera on helps the teacher and the student both interact better. And we've all learned this post-COVID, that you know, how important is it to have a face to a voice, rather than just a voice.
+
+[15:42] **Priyamvada Agarwal:** The one WhatsApp group. I've been very, very strict about it that no communication on any private chats with any faculties or anything, everything on the group. Let's be transparent; there's nothing to hide. You don't like it, I don't like it, let's put it up there. And last is that everything is documented also so that later there are no mishaps. We do obviously, we all understand being in the industry that there are good critics and there are bad critics, all turn. We've all faced it. So during bad critics, having all of it in the same place in a transparent and a documented manner is adds to all of our advantage, rather than trying to say that this was half in verbal and half was in this. So there are a lot of times when we have conversations with parents verbally, so right after the call, I put it as a minutes to the call on the group again.
+
+[16:41] **Priyamvada Agarwal:** This is how my team looks. So we have faculties sitting across the globe. So we have a lot of faculties who, and most of these faculties have been a part of the industry for at least two decades, if not more. Our most senior faculty is both Usha ma'am and Amit sir. They've been in the they've been here for three decades, if I'm not wrong. Usha ma'am is the seniormost faculty, comes with oodles amount of experience. And the best part is that we all are able to work hand in hand. So some of our faculties are also are abroad, they're in the US, so they work in different time zones, whereas others work. So we all go hand in hand, so that's the reason it's easy for us to map students according to their timings available and all with different faculties. And I'm always the chief mentor, I would say the mother hen sitting on top of everybody.
+
+[17:44] **Priyamvada Agarwal:** So these are some of our reviews from our students. Few of you may be able to recognize few names if they are your students or parents, but these are... And you could read more about us on Google. So these are all taken from Google. So I encourage students to please put their feedback directly on a Google rather than, you know, taking them anywhere else, because it's much easier.
+
+[18:09] **Priyamvada Agarwal:** So yes, we've had students who've come in last minute also with three weeks, as to people who've come for two weeks, we do two months. There have been crazy cases, but it's always a joy to work with them. It's always a joy to push, push, and push, and you know, work odd hours, odd number of hours, with the classes going from maybe a minimum of 1 hour to a maximum of 3 hours, because they have less time in hand.
+
+[18:44] **Priyamvada Agarwal:** So, and my philosophy has always been trust and relationship building. It's taken me 16 years in this industry to have built each relation take each step to build that relation with most of you. As I said at the beginning of the call, Devesh, the first meeting, and I was like, we back then, since then, I think there's been no turning around. I can message him anytime, and that's because the relation has been built step by step. And you know, he introduced me to this huge community, and I'm so blessed that I have made so many such relations. I am looking forward to building more.
+
+[19:23] **Priyamvada Agarwal:** So I'm always just a WhatsApp away. I will never say I'm a call away; I'm always a WhatsApp away because I'm very bad at taking calls. So there is no one one-size-fit model for any student or any associate counselor. What you want, tell me. If I can do it, I come back to you. But yes, our goal is always going to be a student, so we will always work. And yes, we we can take this out on in details later to discuss about what kind of pricings are there, what are the referrals, and all of that, which can be discussed in more details with each of you at different levels. Thank you.
+
+[20:16] **Devesh:** Perfect, super. Thank you so much, Priyamvada. May I also request to put your contact details in the chat first? And I would also ask you if you could put the the slide with the names of the exams once in the chat so that at least everyone who joined a little late can look at those exam names. So your contact details and the names of the exams that you help with. Wonderful presentation. Thanks for sharing all the fantastic work that you do. And, you know, I know you are one of the most sincere academicians, or you call yourself a mentor and not a CEO or, you know, the founder of the company, which is great. You are the chief mentor, which means you are deeply invested in the academics of the students, which is fantastic. So thanks for sharing all that, Priyamvada.
+
+[21:07] **Devesh:** And now we are up with Paritosh. Hi, Paritosh. Such a pleasure to have you with us here today. Thank you. And Paritosh, RECO Education offers project-based courses in academic reading, writing, and critical thinking across all subjects for students in grade 8 to 12. And you know, again, I've had an opportunity of connecting with Paritosh probably a couple of years ago, and we have since been in touch, and we also recorded a podcast last year, I think. So it's a pleasure, Paritosh. We look forward to learning more about about RECO Education. Over to you, Paritosh.
+
+[21:51] **Paritosh K.:** Wonderful. Thank you so much, firstly to TOC for organizing this event, and Bijoya, Devesh for making it happen, Bhakti, Janhvi as well. So good to see you. Could I just please request everybody to put their cameras on if you can, because I'm trying to make this really interactive, right? Because TOC told me to, right? So TOC said make this as interactive as possible, as experiential as possible. And I think that there's going to be moments in this presentation when you will need to be a little bit of vulnerable as well. But we're all in a sort of human business, right? And we should all kind of get used to that.
+
+[22:31] **Paritosh K.:** So I'm just going to share my slides. It's going to be There's quite a few slides, so I'm going to go as quickly as possible as I can. I'm not going to talk too much about our courses, okay? I mean, we'll talk about that a bit. We can reserve that a little bit more for Q&A. But what I loved about the event format was that we were encouraged to talk about a general problem in education that we're all kind of facing or involved in in some way, and then to have a conversation about how we can kind of work through that. So that's what I'm really going to focus a little bit more on. Great.
+
+[23:04] **Paritosh K.:** So, you know, as Devesh very kindly said, we're RECO Education. We're about 2 years old. We offer one-on-one courses in reading, writing, and critical thinking for high school students. And we're going to come to it in a second, but what's really important to us is that they succeed both in college applications, but also in college itself, right?
+
+[23:25] **Paritosh K.:** So I'm going to start off with something interactive, and, you know, whoever whoever feels like something they have something to say, please, please raise your hand. Right. So, oops, sorry, I think I missed a slide.
+
+[23:39] **Paritosh K.:** Actually, sorry, I'll just introduce myself really quickly. I grew up in Bombay. I did my bachelors at Stanford, my masters at UChicago. And I've always been interested in sort of school to college transitions, because when I was a freshman at Stanford, I had a really hard time academically, even though I did very well in high school. And I think it's really important to prepare high school students for, you know, success in college as well as, you know, success in the process of getting into college.
+
+[24:05] **Paritosh K.:** So when I came back to India after my masters, I worked at Ashoka University in the office of high school programs. So you might be familiar with YSP or Horizons, I was part of the team organizing that and running that, where we were trying to, you know, help students prepare for college exactly as I said. And I've been running RECO for 2 years, and for the last year and a half I've also been involved in the in the architectural planning of the new campus of Nayantā University, among a couple of other things. But I've been involved in higher education sort of my whole career, and I don't plan to leave.
+
+[24:36] **Paritosh K.:** Here's an image. Can anyone who relates to this, just unmute and tell us when you might have felt like this? Right. And let's please be a little bit quick. I know it's a kind of crazy question, but I really want to get through, you know, all the slides and keep the whole thing interactive, so. And I will share my answer as well, so.
+
+[25:06] **Paritosh K.:** Anyone? Feels any affinity to this image? Have you ever felt like this hamster?
+
+[25:12] **Poonam:** So, Poonam here. This is the rat race, and I started my own practice because I wanted to get away from the rat race. So that's my association with this.
+
+[25:26] **Paritosh K.:** Wonderful. Thank you. Anybody else?
+
+[25:29] **Devesh:** To me, it looks like the run of, you know, the everyday day-to-day things, and you have to just keep doing it, keep doing it every day. Although it looks like the rat or the hamster is not getting anywhere, but that's what it signifies to me.
+
+[25:43] **Paritosh K.:** No, that's that's so great. I mean, I love what you said about it not getting anywhere. It's not going anywhere. Look at its eye. I mean, it does it even know where to look, in a way, right? And I felt like this when I was a student in college, because I wasn't prepared with the reading and writing skills I needed. I did not know how to choose courses, right? There were so many options. I was there, I made it, but now what, right? And a lot of students feel like this.
+
+[26:08] **Paritosh K.:** So this is a book called *Academically Adrift*. It was published about, you know, 15 years ago, made a big headline because it said and showed that a lot of students who are in very good colleges don't know how to navigate college, right? And this is a powerful quote from that book: "Drifting through college without a clear sense of purpose is readily apparent." Meenal, would you like to say something?
+
+[26:33] **Devesh:** I think she accidentally put her hand up. Okay.
+
+[26:36] **Paritosh K.:** Okay. I'll keep going then. And and this is what I want us to sort of think about, you know. As a community, we are really interested in helping students get into college, the best college that they can get into, the one that fits them best. But we also need to make sure that they're going to colleges prepared to succeed in those colleges, right? And too often, for us, it's very difficult to address these two issues at the same time: college access and college success. Because college access has become so competitive and so difficult that if you focus on anything apart from college access, getting into college, while you're in school, you're probably not going to get into college, right? I mean, if you're constantly thinking about preparing for what's coming later, who's going to think about the present? But that's a problem. We need to find ways as a community to bring this together, and I think that's what we're really interested in.
+
+[27:27] **Paritosh K.:** Can we, can counselors and academic service providers such as RECO collaborate to getting students into college and also getting prepared for college? And that's a big part of what we believe in, right? So now how does this come now what does this all have to do with the application, right? So this is a stage where students are preparing their applications. We want them to prepare great applications, and we want them to learn a lot while they prepare those applications, right? So colleges are more likely to admit students who are going to succeed on their campus, and who are going to be less likely to drift around aimlessly like the hamster that we saw, right?
+
+[28:04] **Paritosh K.:** So now I'm going to talk a little bit about the two key reasons that, according to this book and a lot of other research, students actually lose their footing in college. And I experienced both these reasons personally.
+
+[28:15] **Paritosh K.:** So the first one, I'm going to introduce them both through exercises. So this is another element of activity. Could I have a volunteer to please read a passage, right? So I'm going to turn the passage on and if anyone can just unmute and start. Okay.
+
+[28:40] **Paritosh K.:** Please, someone just jump in.
+
+[28:42] **Devesh:** Someone wants to go ahead? Janhvi, you want to do it?
+
+[28:47] **Janhvi:** Still reading, still reading.
+
+[28:49] **Paritosh K.:** No, no, please read it out loud.
+
+[28:51] **Janhvi:** Oh, read it out loud.
+
+[28:53] **Venki:** "The move from a structuralist account in which capital is understood to structure social relations in relatively homologous ways to a view of hegemony in which power relations are subject to repetition, convergence, and rearticulation brought the question of temporality into thinking of the structure, and marked a shift from a form of Althusserian theory that takes structural totalities as theoretical objects to one in which the insights into the contingent possibility of structure inaugurate a renewed conception of hegemony as bound up with the contingent sites and strategies of the rearticulation of power." I give up.
+
+[29:34] **Paritosh K.:** Thank you, Venki. And I was going to ask you how you feel, but those three words summarize it, I think, very well.
+
+[29:43] **Paritosh K.:** I'm going to move to another passage as well. This one is from comparative literature, right? And this one is from economics. So, anyone? Please jump in and just read this out loud.
+
+[29:57] **Devesh:** Let's see. Maybe I'll do it. "We provide sufficient conditions for equilibrium existence in first-price auctions with private values that accommodate non-quasi-linear utilities and value-distributions that contain atoms and exhibit positive or negative correlation. These conditions show that equilibrium existence often turns on properties of a single statistic of the joint distribution of values, namely, the minimum value in the support of the high-value distribution (the MHV). We also show that modifying the standard tie-breaking rule only at the MHV is enough to guarantee equilibrium existence without our sufficient conditions. Our results also apply to Bertrand price competition when each firm's constant marginal cost is private information." Okay, I I got all of it, actually.
+
+[30:57] **Paritosh K.:** No, thank you. So so that was what I wanted to firstly make you feel, right? I mean, imagine being a high school student, going to college, and then this is the sort of text that's put in front of you. You're in a classroom where a bunch of other people can understand something like this, talk about it in an intelligent way, you're sitting in a class completely lost, right? And when we want to tell colleges that we're prepared for college so that they admit us into college, we need to prove to them that, you know, we can at least understand something about these types of texts, which are very, very hard to do, right? So that's a big part of what RECO is about. Can you read something like this? What can you say about what you read? Right.
+
+[31:38] **Paritosh K.:** Exercise two: this is the second reason that high schoolers sort of falter when they get into college. I'm just going to play this quick video of the list of things that you can major in at Stanford University. And we're all familiar with this type of thing. This list goes on and on. We're still on the letter C in an alphabetical list, right? I mean, we're talking about some 70-plus majors. In school, you're taught seven subjects. So how many of these 70 majors are you actually even exposed to, right?
+
+[32:08] **Paritosh K.:** So I'm just going to skip over. And and so the point is that you need to make choices as a as a college student, and you're not prepared to make choices because in school, everything is kind of decided for you, right? And over there, you're just overwhelmed with all the options that you have. And that's at the level of choosing a major. But let's see how micro this also gets, right? So this is a screenshot of the Stanford requirements for the history major, okay?
+
+[32:34] **Paritosh K.:** And now what I'm going to ask, and please just unmute and answer, can you see anything in this layout, the structure of the syllabus for the history major, where the student actually has to make a choice, right? I mean, like some things are decided for the student, but some other things the students has to make a choice. Can anyone just point something out?
+
+[33:00] **Devesh:** The four courses in geography, chronological, and thematic concentration. You can select...
+
+[33:06] **Paritosh K.:** Exactly. So you have to choose you have to choose whether you want to do a geographical, chronological, or a thematic concentration. And then you also have to choose I mean, you have to choose which concentration you want to do, and then you have to choose which four courses you're going to do in that concentration. That's perfect. Anything else?
+
+[33:34] **Priyamvada Agarwal:** They could choose between the thesis or a project, capstone.
+
+[33:38] **Paritosh K.:** Exactly. Exactly. Thank you. Yeah. Right? I'll just wait for one more. There's a lot on the slide, actually, but I'll wait for one more, if anyone has one more to point out.
+
+[33:50] **Speaker 1:** Yeah, I think the first one: complete 13 eligible courses for a minimum of 63 units, including, and then the list starts, I think, 13 eligible courses, yeah.
+
+[34:02] **Paritosh K.:** That's right. And so, for example, the first course, which is Sources and Methods, is a specific course that every history student has to do. Same with the second one. And same with the third one. But the fourth one is two 200-level colloquia, so you can choose any two 100-level colloquia. Right? I mean, you have to make these choices every day as an undergraduate student, and you're not required to make choices as a high schooler. So how are you going to prove to a college that you're going to be able to take advantage of the amount of freedom that you're given in college, right? It's a lot easier to do something that's told to you, it's very difficult to take a decision for yourself. So these are just some of the elements that I've highlighted, where and we already spoke about a couple of these, where the student actually has to make a choice.
+
+[34:44] **Paritosh K.:** Now, how many options do they have? Okay, so this is the total number of courses that Stanford is offering in history in spring of one year! I mean, it's 10 pages of courses, right? And each page has about like seven courses, so there's some 70, 80 options that you have to choose from, and it's not easy because you have to do this every single term, right?
+
+[35:13] **Paritosh K.:** So so that's the second area. So the first area is that students don't read properly, because they're not trained to read these types of academic texts, and the second is that they're not, you know, required to make a lot of choices regarding their education, but suddenly when you go to college, you have to decide everything for yourself. And students get lost because of this, and then they start drifting all over the place.
+
+[35:31] **Paritosh K.:** Now, it's as I said, you know, colleges obviously want students who are going to succeed in college, so they also try to test that in the application process, as we all know. And these are the places in which I think the specific skills that I mentioned are tested out the most. So how good is a student's "Why Major" essay, right? Do they know what they're applying for, what you know, they're saying they're not trying to apply for, and within what they are applying for, what specifically they're interested in, things like that? Do they have experience reading the sort of scholarship in their field? And then, of course, can they talk about it in their interviews, and can they also showcase some academic work in their portfolio? So these are the areas that RECO's courses actually help students do really well in, as well.
+
+[36:15] **Paritosh K.:** So the basic structure of our courses is that it's one-on-one online. It starts off with a discovery call with me one-on-one, where we basically come up with a curriculum of readings that the student is going to do, and then they're paired up with a mentor. And then basically every session, they do a different reading and they also do writing workshops. And in in some of our courses, students also can opt for a kind of capstone project, where they write one paper about everything they've read. But our the projects that students, you know, create through our courses differ across our courses. We don't offer anything regarding publication, so there's no external publication involved, but students are leaving with polished, finished items that are really unique, because they actually don't have to subscribe to any particular form of any particular publication. So it's actually very differentiating, unique factor. And they can publish it online on on Substack or Medium or any of these places, and easily share them with the universities.
+
+[37:08] **Paritosh K.:** So this is just a quick example of a student. Her name is Freya. She was really interested in behavioral econ and management, applying mostly to UK universities. And she ended up reading four book chapters, two research papers, and two HBS case studies. And we curate all of this in terms of content, length, level, you know, to the student's abilities, interests, etc. And she wrote a lot. She wrote over 7,500 words, seven academic essays, which is a really nice sort of series to have on Substack, saying, "Here's a series of seven essays on behavioral economics and management, and that's and I'm going to apply for this course." And then, of course, she can speak about all of this in her interview. And you actually get some practice for that as well, because we always have RECO student showcases where students actually present their work, which is great fun. And students practice, you know, talking about their work and their arguments, which helps them in their interview as well.
+
+[37:59] **Paritosh K.:** So our mentors are kind of all across the country, especially. Most of them are PhD students at places like Ashoka. So that's just broadly speaking what the profile is like.
+
+[38:10] **Paritosh K.:** Here are a couple of our testimonials. And I just, you know, re-put the hamster icon with an X on it, because I think that's kind of the big feedback that we get from people. What the reason that they like our courses, and they do well in our courses, is because they don't feel pressure. They feel as though they're learning, they feel as though they're, you know, doing something that's productive for their applications, and they feel like they're going to be prepared for whatever is to come next.
+
+[38:34] **Paritosh K.:** Right. So just broad strokes on the details: it's one-on-one courses, Zoom. The length is customizable. We typically do nine sessions at the minimum, and then 12 sessions if you want a sort of larger project. The price is TBD, but in the past it's been approximately 8K per session, and that includes everything, right? I mean, that includes the interface and all all the different Google Docs that go around, all the readings, the full curation of the curriculum, feedback on, you know, before every session, everything is fully included in that. We're not accepting students anymore this year, but we're going to reopen it in the summer of next year. So if you have questions about the courses and things like that, please just reach out to me, and I'm happy to have a conversation. And I really wanted today to be more about kind of the larger issues that we're dealing with as a community, and the responsibilities that we have to our students.
+
+[39:27] **Paritosh K.:** And just finally, you know, who is RECO for? Any academic level, okay? So the student can really not be doing well in school, the student can be doing very, very well in school, and we've had a lot of success with both kinds of students, and everybody in the middle. In terms of subjects, yes, it's a reading, writing program, right? So humanities and social sciences, including economics and psychology, are the bulk of the students who come to us. And in some cases, we take on STEM students as well, especially if they want to look at something from a social science angle. So if someone's interested in AI and they want to read about, you know, how is AI going to affect jobs, then that's something that we can help with. So I'll just leave it at that for now.
+
+[40:05] **Paritosh K.:** But what's really important is that we we we only work with serious students. And we I'm sure like all of us, RECO also gets a lot of inquiries, and we turn away way more students than we take on, because we're very clear about, you know, what we offer, and the level of work that's required to actually get anything from our courses. Because if you come to our session without having done the reading, you're not going to gain anything, right? And we don't do any work for students. So so you have to be serious. And we're also very clear about our timings and everything. We're very organized in our scheduling. So we have, of course, a lot of flexibility for students to change sessions, even we need to do that sometimes, we're all human. But if if you're going to come for the session unprepared, if you're going to try to ask for them change last minute, we won't do it. So it's it's meant for people who are genuinely serious about learning, and who are also, you know, really serious about doing their work and showing up on time and things like that. That's all. So thank you so much for everyone, and I'm really looking forward to the discussion.
+
+[41:08] **Devesh:** Fantastic. Thank you so much, Paritosh. Such a wonderful presentation, so engaging. You had so many interesting activities. Thanks for bringing that to us. Can I also request to put your email ID and your phone number in the chat, or the website and all, so that everyone can reach out to you? We have about 5 minutes for the Q&A, so you can either unmute yourself and ask your question, or you can also put that in the chat. I request you to post your questions in the chat so that we can have more and more questions answered while one of them is responding on the call, the others can actually respond via the chat. So we have some time. Please feel free to ask your questions to both of these fantastic, wonderful presenters and founders that we had today, and mentors, both of them. Yeah.
+
+[42:10] **Venki:** So I have a question. So if the college admission process, which includes SAT and the essays that they write, all of that is used to filter out and say, "You are now good to be part of this college system," do you think that still there is a significant gap? I mean, I know I have a kid who is in college there, and I see and he has taken writing courses in his year one and even in year two in the college. But why do you think that there is a gap in how the college is assessing the suitability versus what is required in the college to make good of the college?
+
+[42:50] **Paritosh K.:** Venki, is that for me?
+
+[42:52] **Venki:** Yeah. I'm talking about reading.
+
+[42:55] **Paritosh K.:** Yeah.
+
+[42:56] **Venki:** If the college intake system, exam system, is designed to find students who are appropriate to get into college, right? They have this SATs and the essays that they evaluate, and what they expect, the reading level and understanding level, is that very different from what the intake system measures?
+
+[43:19] **Paritosh K.:** I think it is. Because I mean, one way in which, you know, students demonstrate academic capability is that they publish research papers, right? Many students who've written research papers that I've spoken to have said that they have not read even one or two of the things that they've cited in the in their own research paper front to end. And and sometimes writing is easier than reading. So I think I think that's one issue.
+
+[43:56] **Paritosh K.:** The second is, I don't even think that the IB system, for example—I did the IB, I got a 7 in English—but I was not prepared to read college-level texts. So even if you do well in school, like the school assessment system is itself not the best indicator. And in the US, they they they have hundreds of years of history of teaching really high-quality reading and writing, which we don't have in India. So, you know, even in a even in an IB school, which is supposed to be teaching more reading and more writing than say CBSE or ISC ICSE, maybe there's a gap, you know, in terms of the what the teacher is aware of that is required and what's actually taught, and things like that as well. I don't know. Would love your views as well. But there's there's a lot of data on this that shows that students are are struggling to read in college, and ask any faculty member at Ashoka University, and that's what they'd say.
+
+[44:55] **Venki:** Oh, I mean, as a parent I know that it is a real problem. I was just wondering the exam system should be designed to filter out and admit at the appropriate level. So why is there a vast difference between what is expected in college versus...
+
+[45:12] **Paritosh K.:** Right.
+
+[45:13] **Venki:** ...intake system, that's all.
+
+[45:15] **Paritosh K.:** No, no, completely agree with you. And I I think I think part of it is, you know, in college you're expected to kind of do a reading, come to a classroom, discuss the reading. Now, that is something that is very hard to assess besides doing an interview. And interviews are very labor-intensive. So I really hope, you know, that as AI kind of comes into our processes more, that we use it really effectively to to scale, you know, higher education's abilities to do interviews. And I think if we do that, then we will have fewer problems, you know. But also I think part of it is, you know, that students don't know, and parents don't know, like what the reading expectations of college are even like. So they don't want to invest that much in preparing for something that they don't feel as though they need to prepare for.
+
+[46:02] **Devesh:** Priyamvada, I have a question for you. What is the typical duration of preparation required for the exams the university-specific exams like at Ashoka, NMIMS, Flame, etc., and Krea? Approximate range or sort of number of weeks or sessions, how does that work?
+
+[46:20] **Priyamvada Agarwal:** See, if you ask me on a interest I mean, on an easy way method, a 3-month program is very interesting, because students have to balance it with their school curriculum, exams, a lot of projects. And even their applications that they have to write, the essays and everything. So they generally would want to invest weekends to prepare for this. So, you know, being able to run maybe about 10 to 12 classes in a month for them, you know, mapping them across weekends, or maybe 1 hour in the week or something like that, is much easier for them to handle than, you know, pushing them to do it just back to back.
+
+[47:03] **Priyamvada Agarwal:** But yes, we also at times have some students who come in the last minute, and they run through those crash courses of, you know, 25 or 30 classes back to back. Again, so they come with that mindset because they put their entire calendar everything else on aside and just concentrate on that.
+
+[47:22] **Devesh:** Okay, super.
+
+[47:23] **Priyamvada Agarwal:** But if they come with a 3-month planning, it's great. And some of our students even divide this into two phases, because of the the admission cycle in India running into different parts. That is one is the November-December category now, and one is the post-board. So, you know, a lot of kids they decide to do two months now, and you know, split it between September to November, the first phase, and keep one month for April and then do it. Because what happens is that we provide a portal practice for them, there's a portal access which is given to them for practice, which gets activated right now and it's got a validity till the end of for a year. So they have it. And the group and everything is valid during even when they are on an exam break. So what happens is once a month maybe, you know, you can push them, or maybe once a week, that you know, if you have a little time, why don't you just do a quick revision on the portal? Keeps them in the loop.
+
+[48:26] **Devesh:** Yeah. Super.
+
+[48:30] **Devesh:** Okay, perfect. Fantastic. Thanks, Paritosh and...
+
+[48:33] **Priyamvada Agarwal:** Neeraj has asked me a question, and I'd like to answer. Say, "Same teacher for all the students throughout?" Okay. No, so we generally have the same teacher and the team of teachers working, until and unless a student comes in with a requirement after maybe a few classes of asking for a change of faculty, and the reasons are valid; or a faculty comes in asking for a change or that they require to step down because of a health reason or something, then I have to. Generally, the timing issues don't happen. We try to work around, and you know, move around the schedules and make it work.
+
+[49:15] **Devesh:** Paritosh, there's a question for you as well in the chat.
+
+[49:19] **Paritosh K.:** Yeah. Yeah, Neeraj, I mean, the question is, "What AI tools can be used for better reading and writing?" I'm not sure about writing, but definitely for reading, we use NotebookLM a lot, which is one of Google's tools. So you upload the reading into NotebookLM, and then you ask it specific things that you want sort of fleshed out and explained, and then it can kind of create like a podcast episode that discusses that thing. It's really good. We use it all the time for our students, and we encourage our students to use AI all the time. So that's a big part of of what we focus on, is is you use the AI and then come and let's talk. So.
+
+[49:58] **Devesh:** Super. So, perfect. Once again, thank you everyone for joining. Thank you, Paritosh and Priyamvada, for sharing about the fantastic work that you are doing. Both of you are in the TOC group, so you know, please everyone who could not ask your question now, please feel free to reach out to them, ask your questions, get in touch, set up a Zoom call. And yeah, with that, we close today's session. See you back again in a few weeks with the next next "In Focus" with two more fantastic organizations sharing about their their work. Have a great evening, everyone. Thank you and bye-bye.
+
+[50:43] **Bhakti Shah:** Thank you everyone.
+
+[50:44] **Priyamvada Agarwal:** Thank you, Devesh.
+
+[50:45] **Bijoya:** Thank you, Bijoya.
+
+[50:46] **Devesh:** Thank you, Priya and Paritosh. Bye.
+
+[50:48] **Priyamvada Agarwal:** Bye.
