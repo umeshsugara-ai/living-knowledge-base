@@ -7,7 +7,7 @@
 export interface TreeIndexNode {
   node_id: string;
   title: string;
-  level: "tenant" | "year" | "month" | "session" | "topic";
+  level: "tenant" | "year" | "month" | "session" | "topic" | "org";
   summary: string;
   evidence?: {
     sessionRef?: string;
@@ -19,7 +19,7 @@ export interface TreeIndexNode {
 export interface TreeIndexNode1 {
   node_id: string;
   title: string;
-  level: "tenant" | "year" | "month" | "session" | "topic";
+  level: "tenant" | "year" | "month" | "session" | "topic" | "org";
   summary: string;
   evidence?: {
     sessionRef?: string;

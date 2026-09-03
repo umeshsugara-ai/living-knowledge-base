@@ -1,18 +1,33 @@
 /**
  * packages/index/src/tree/build.ts — vectorless tree-index generator (port of
- * tree_index/build_tree.py, T-004 → T-016; behaviour-identical).
+ * tree_index/build_tree.py, T-004 → T-016; extended T-004b with topic/org child levels).
  *
- * Builds a hierarchical tree (tenant -> year -> month -> session) from `sessions` and
- * `session_pages` documents (schema/sessions.schema.json, schema/session_pages.schema.json).
+ * Builds a hierarchical tree (tenant -> year -> month -> session -> topic|org) from `sessions`
+ * and `session_pages` documents (schema/sessions.schema.json, schema/session_pages.schema.json).
  * No dense-vector math, no similarity search, no network calls: structure IS the index; an LLM
  * (or, for tests, a plain fallback) supplies each node's summary.
  *
  * `summarize` is an injectable seam — pass a function to have an LLM write node summaries;
  * omit it and the session_page's own `summary` field is used verbatim (network-free, testable).
+ *
+ * `extractFn` is the same kind of seam for topic children — defaults to the heuristic
+ * `extractTopicRefs` (extract-topics.ts); an LLM-backed extractor can be injected with the same
+ * signature. Topic node ids/shape follow schema/topics.schema.json; org node ids/shape follow
+ * schema/orgs.schema.json. A topic can span sessions, so each topic node's
+ * `evidence.sessionRefs` lists every session (in this `sessions` call) that surfaced it — not
+ * just the one it's nested under — while `evidence.sessionRef` keeps pointing at its own parent
+ * session (same field T-004 already used for session nodes).
  */
 import type { SessionPages, Sessions, TreeIndexNode } from "@lkb/core";
+import { extractTopicRefs, type ExtractTopicRefs } from "./extract-topics.js";
 
 export type Summarize = (session: Sessions, page: SessionPages | null) => string;
+export type { ExtractTopicRefs };
+
+/** Lowercases, replaces runs of non-alphanumerics with "-", trims leading/trailing "-". */
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
 
 function node(nodeId: string, title: string, level: TreeIndexNode["level"], summary = "",
   evidence?: TreeIndexNode["evidence"]): TreeIndexNode {
@@ -35,10 +50,29 @@ function childById(parent: TreeIndexNode, nodeId: string): TreeIndexNode | undef
  *
  * `summarize(session, page)`, if provided, produces the summary text for a session node.
  * If omitted, falls back to `page.summary` (or "" if no page exists for that session yet).
+ *
+ * `extractFn(page)`, if provided, overrides the default heuristic `extractTopicRefs` used to
+ * derive each session's topic children (see module doc above).
  */
 export function buildTree(sessions: Sessions[], sessionPages: SessionPages[],
-  summarize?: Summarize): Record<string, TreeIndexNode> {
+  summarize?: Summarize, extractFn: ExtractTopicRefs = extractTopicRefs):
+  Record<string, TreeIndexNode> {
   const roots: Record<string, TreeIndexNode> = {};
+
+  // Pass 1: cross-session topic map (slug -> {displayName, sessionIds}) so a topic node nested
+  // under any one session can still report every session (in this call) that shares it.
+  const topicSessionIds = new Map<string, Set<string>>();
+  const topicDisplayName = new Map<string, string>();
+  for (const session of sessions) {
+    const page = sessionPageFor(session._id, sessionPages);
+    for (const name of extractFn(page)) {
+      const slug = slugify(name);
+      if (slug === "") continue;
+      if (!topicSessionIds.has(slug)) topicSessionIds.set(slug, new Set());
+      topicSessionIds.get(slug)!.add(session._id);
+      if (!topicDisplayName.has(slug)) topicDisplayName.set(slug, name);
+    }
+  }
 
   for (const session of sessions) {
     const tenantId = session.tenantId;
@@ -64,8 +98,31 @@ export function buildTree(sessions: Sessions[], sessionPages: SessionPages[],
     const page = sessionPageFor(session._id, sessionPages);
     const summary = summarize !== undefined ? summarize(session, page) : page?.summary ?? "";
 
-    monthNode.children.push(node(`${monthId}/session:${session._id}`, session.title, "session",
-      summary, { sessionRef: session._id }));
+    const sessionId = `${monthId}/session:${session._id}`;
+    const sessionNode = node(sessionId, session.title, "session", summary,
+      { sessionRef: session._id });
+    monthNode.children.push(sessionNode);
+
+    // Topic children (schema/topics.schema.json id shape: tenant-scoped slug of the name).
+    const seenSlugs = new Set<string>();
+    for (const name of extractFn(page)) {
+      const slug = slugify(name);
+      if (slug === "" || seenSlugs.has(slug)) continue;
+      seenSlugs.add(slug);
+      const sessionRefs = [...(topicSessionIds.get(slug) ?? [session._id])].sort();
+      sessionNode.children.push(node(`${sessionId}/topic:${slug}`,
+        topicDisplayName.get(slug) ?? name, "topic", "",
+        { sessionRef: session._id, sessionRefs }));
+    }
+
+    // Org child (schema/orgs.schema.json id shape: tenant-scoped slug of the name).
+    if (session.org !== undefined && session.org !== "") {
+      const orgSlug = slugify(session.org);
+      if (orgSlug !== "") {
+        sessionNode.children.push(node(`${sessionId}/org:${orgSlug}`, session.org, "org", "",
+          { sessionRef: session._id }));
+      }
+    }
   }
 
   return roots;
