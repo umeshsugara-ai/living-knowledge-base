@@ -22,3 +22,10 @@ reference/kb-deck-screens/*.png
 # logs
 *.log
 whatsapp_msg/
+
+# python bytecode
+**/__pycache__/
+*.pyc
+
+# claude-code local state
+.claude/scheduled_tasks.lock
