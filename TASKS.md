@@ -29,7 +29,7 @@
 | T-002 | done | Migrate 23 TOC sessions into schema v2 | checker PASS 7/7, verdict `b59e0ff`; content ground-truthed against source transcripts |
 | T-003 | BLOCKED | Scale Gemini transcription 1→23 sessions | ISS-015: GEMINI_API_KEY in .env is invalid (Google API_KEY_INVALID) — needs a valid key from Umesh |
 | T-004b | done | Tree topic/org child nodes + incremental regen (real T-002 data) | checker PASS 5/5, verdict `15e4ecf`; found real cross-session "New Zealand" topic |
-| T-004c | open | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | flagged by /checker during T-004b; depends T-004b |
+| T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |
 | T-006 | done | Recording-gap tracking (never silently drop) | checker PASS 7/7, verdict `819262a` |
 | T-021 | open | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | depends T-002 |
 | T-022 | open | Evaluator calibration on 30 hand-scored pairs | depends T-021 |
