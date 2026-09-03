@@ -299,4 +299,5 @@ edited, per its own contract.)
   `.env.example`; `docs/SNAPSHOT.md` (generated).
 - **Deliberately NOT staged:** `.goal/goal.json`, `qa/.last-tick`.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-018-schema-v2.md (Cycle checked: 1) — 7/7 criteria met.
