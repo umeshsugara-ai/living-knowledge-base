@@ -10,3 +10,8 @@ export * from "./capture.js";
 export * from "./joiners/vexa-joiner.js";
 export * from "./joiners/browser-joiner.js";
 export * from "./joiners/system-audio-joiner.js";
+
+// T-025 — calendar auto-join decision layer (interface only; no real Google Calendar
+// implementation yet, see docs/adr/0005-calendar-auto-join.md).
+export * from "./calendar/calendar-client.js";
+export * from "./calendar/auto-join.js";
