@@ -145,4 +145,5 @@ OK: docs/SNAPSHOT.md matches a fresh regeneration (109 lines, budget 200)
 
 No criterion left unmet.
 
-## Status: ready-for-check
+## Status: checked-PASS
+Verdict: qa/verdicts/T-012-compete-screen.md (Cycle checked: 1, commit 71b5fd2) — 6/6 criteria met; credibility:'internal' confirmed hardcoded, no path to misrepresentation.
