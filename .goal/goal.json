@@ -1,0 +1,317 @@
+{
+  "product": "living-knowledge-base",
+  "project_path": "D:\\KnowledgeBase",
+  "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
+  "status": "active",
+  "created": "2026-09-03T07:01:15",
+  "updated": "2026-09-03T07:37:51",
+  "progress": {
+    "total": 27,
+    "done": 2,
+    "in_progress": 1,
+    "blocked": 0,
+    "pending": 24,
+    "current": "T-005",
+    "percent": 7
+  },
+  "tasks": [
+    {
+      "id": "T-001",
+      "title": "Mongo schema + deterministic validators (sources/sessions/turns/speakers/session_pages/claims/topics/orgs/programs/decisions)",
+      "status": "done",
+      "base_criticality": "LOW",
+      "deps": [],
+      "criticality": "low",
+      "completed": "2026-09-03T07:05:00"
+    },
+    {
+      "id": "T-002",
+      "title": "Migrate 23 TOC sessions into the DB with turn-level citations",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-018"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-003",
+      "title": "Scale Gemini diarize/timestamp/name/summarize pipeline from 1 to 23 sessions",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-019"
+      ],
+      "note": "real API spend, sequence deliberately",
+      "criticality": "low"
+    },
+    {
+      "id": "T-004",
+      "title": "Vectorless tree-index generator over session_pages",
+      "status": "done",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-002"
+      ],
+      "criticality": "low",
+      "completed": "2026-09-03T07:07:41"
+    },
+    {
+      "id": "T-005",
+      "title": "POST /ask CRAG router (tree-search -> evaluator -> internal/web) with provenance",
+      "status": "in_progress",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-004"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-006",
+      "title": "Recording-gap rows + standing-ask process",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-018"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-007",
+      "title": "WhatsApp -> claims ingestion review",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-020"
+      ],
+      "note": "needs Q4 consent decision first",
+      "criticality": "low"
+    },
+    {
+      "id": "T-008",
+      "title": "Vector index + unstructured search",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-007"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-009",
+      "title": "Developer API + webhooks",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-005b"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-010",
+      "title": "Product shell (hosted multi-tenant app)",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-009"
+      ],
+      "note": "needs Q2 stack decision",
+      "criticality": "low"
+    },
+    {
+      "id": "T-011",
+      "title": "Meeting bot (auto-join, consent, live capture)",
+      "status": "pending",
+      "base_criticality": "HIGH",
+      "deps": [
+        "T-024"
+      ],
+      "note": "needs Q4 consent decision",
+      "criticality": "low"
+    },
+    {
+      "id": "T-012",
+      "title": "Counsellor eval harness + human golden set",
+      "status": "pending",
+      "base_criticality": "HIGH",
+      "deps": [
+        "T-005"
+      ],
+      "note": "needs Q3: who are top counsellors / who judges",
+      "criticality": "low"
+    },
+    {
+      "id": "T-013",
+      "title": "Avatar/voice counsellor client",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-009"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-014",
+      "title": "Championship run",
+      "status": "pending",
+      "base_criticality": "CRITICAL",
+      "deps": [
+        "T-012",
+        "T-013"
+      ],
+      "note": "outward-facing public event",
+      "criticality": "low"
+    },
+    {
+      "id": "T-015",
+      "title": "Own-model training path",
+      "status": "pending",
+      "base_criticality": "CRITICAL",
+      "deps": [
+        "T-002"
+      ],
+      "note": "needs explicit approval before any data export",
+      "criticality": "low"
+    },
+    {
+      "id": "T-016",
+      "title": "Repo restructure to TS pnpm monorepo; port tree_index/ask_router to TS; ARCHITECTURE <=150",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [],
+      "criticality": "low"
+    },
+    {
+      "id": "T-017",
+      "title": "Structure lint in CI: lint-loc, dependency-cruiser, lint-dupes, root-file cap, ARCHITECTURE cap",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-016"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-018",
+      "title": "Schema v2: camelCase evidence, new collections, index.json, generated TS types, migrate-mongo baseline, db accessors",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-016"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-019",
+      "title": "AI provider seam: gemini (primary), claude-code (OAuth), anthropic (flag), stt seam, routing.yaml, parity test",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-016"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-020",
+      "title": "Ingestion source seam + recording/document adapters",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-018"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-005b",
+      "title": "Ask v2: select_nodes job, (score,reason) evaluator, refine, answer, per-call log",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-019"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-021",
+      "title": "Golden set 50-100 Qs + recall@k report (target recall@5 >= 0.85)",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-002"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-022",
+      "title": "Evaluator calibration on 30 hand-scored pairs",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-021"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-023",
+      "title": "URL ingestion adapter (Jina Reader / Firecrawl)",
+      "status": "pending",
+      "base_criticality": "LOW",
+      "deps": [
+        "T-020"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-024",
+      "title": "Meeting bot: self-hosted Vexa + Whisper, pluggable STT, consent_policies default silent-full, provenance, vault",
+      "status": "pending",
+      "base_criticality": "HIGH",
+      "deps": [
+        "T-019",
+        "T-020"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-025",
+      "title": "Google Calendar connect + auto-join",
+      "status": "pending",
+      "base_criticality": "MEDIUM",
+      "deps": [
+        "T-024"
+      ],
+      "criticality": "low"
+    },
+    {
+      "id": "T-026",
+      "title": "Recording purge-after-processing policy + migration (deferred by Umesh)",
+      "status": "pending",
+      "base_criticality": "HIGH",
+      "deps": [
+        "T-024"
+      ],
+      "criticality": "low"
+    }
+  ],
+  "decisions": [],
+  "notifications": [
+    {
+      "ts": "2026-09-03T07:01:48",
+      "level": "warn",
+      "message": "STALLED — last agentic tick never; open work is not advancing",
+      "task_id": null,
+      "kind": "stalled",
+      "acked": false
+    }
+  ],
+  "preferences": {
+    "extraction_tool": "firecrawl",
+    "commit_style": "ask-first",
+    "risk_tolerance": "conservative"
+  },
+  "analytics": {
+    "velocity_per_day": 48.0,
+    "eta_days": 0.5
+  },
+  "last_deterministic_tick": "2026-09-03T07:37:51"
+}

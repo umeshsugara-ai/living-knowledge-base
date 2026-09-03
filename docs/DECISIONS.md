@@ -44,3 +44,32 @@ them from scratch.
 **Result:** Recorded here; no code changed.
 **Links:** `TOC/TOC-Materials/KNOWLEDGE-BANK.md`, `Living-Knowledge-Base-Architecture.html`,
 `whatsapp_msg/docs/DECISIONS.md` (that repo's own independent decision log).
+
+## D-002 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** Meeting/webinar capture mode = SILENT FULL CAPTURE (Option B of the product brief), not announced-bot (A) or notes-only tiered (C). Every captured fact must be diarized and cited with who said it, when, and in which session, so the team can return to that expert for guidance. Recordings are to be purged after processing to a defined level; the purge design is explicitly deferred (T-026).
+**Why:** Founder's stated requirement: organizers often do not provide recordings; Vidysea attends as a paid member and wants its own copy for manual review and to feed the counsellor brain. Provenance is what makes the resulting knowledge defensible and actionable.
+**Result:** Legal/reputational exposure noted once and accepted by the Approver: India DPDP Act 2023 notice obligation for identifiable audio/video; platform T&Cs commonly prohibit recording; two-party-consent jurisdictions abroad; discovery risks bans from the communities that form the moat. Mitigations designed in: consent_policies row exists (default silent-full, switchable), provenance is a frozen invariant (no turn without speakerRef, no claim without evidence), retention field added now so purge is a migration later.
+**Changes-authorized:** ARCHITECTURE Â§3 (H3 provenance becomes the basis for a future frozen contract; add H8 capture-mode hypothesis); ARCHITECTURE Â§6 (Q4 resolved, Q6 purge level added)
+**Approved-by:** Umesh
+**Links:** T-024, T-011, T-026; plan file section 6c.0
+
+## D-003 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** Stack = TypeScript pnpm monorepo (packages/{core,db,ai,ingest,index,ask,meeting-bot}, apps/, workers/), Python only in isolated ML workers. Existing Python units (tree_index/, ask_router/) are ported to TS with tests first; schema/ JSON Schemas remain the single source of truth with TS types generated from them. whatsapp_msg/ becomes a workspace source (submodule), not the product shell.
+**Why:** Designed against the D:\erp failure audit: two checkouts, 5k-line god-files, 32 schemas in one file with dated patch migrations, a 1,105-line duplication map, 6k lines of onboarding prose. Baileys and Playwright are Node-native; a single service language plus generated types removes hand-copied field lists.
+**Result:** Hard CI budgets adopted: 300 LOC per file (tests 400), 30 files per dir, root <= 15 loose files, one exported symbol per concept, ARCHITECTURE.md <= 150 lines, migrations only via migrate-mongo.
+**Changes-authorized:** ARCHITECTURE Â§4 (directory map replaced by the monorepo tree); ARCHITECTURE Â§5 (add file/size/dependency budgets); ARCHITECTURE Â§6 (Q2 resolved)
+**Links:** T-016, T-017, T-018; plan file section 6c.1
+
+## D-004 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** Meeting-bot and transcription vendor = self-hosted Vexa (Apache-2.0) with Whisper diarization as the default, behind a pluggable STT seam (packages/ai/stt) so an API key for an advanced model such as gemini-3.5-transcribe can be supplied and preferred. Recall.ai rejected.
+**Why:** Corpus must not transit a third party; open-source keeps control and cost near zero; the seam preserves the option to use the better diarization already validated on the 27th-August pilot.
+**Result:** Market scan recorded in plan section 6c.2 (Recall, Vexa, Meeting BaaS, Deepgram, AssemblyAI, Jina, Firecrawl, Tavily; Fireflies/Otter/Onyx rejected).
+**Changes-authorized:** ARCHITECTURE Â§3 (add H9 pluggable STT); ARCHITECTURE Â§6 (vendor question closed)
+**Links:** T-024, T-019; plan file section 6c.2
+
+## D-005 | 2026-09-03 | type: decision | status: ACTIVE
+**What:** AI backend = Gemini-first (purchased Gemini API tokens carry 80-90% of the load; Google-side monthly budget is the cap). Claude is used through the same OAuth login flow as the claude CLI (email -> OTP), i.e. Claude Code / Agent SDK under the Max subscription, not API keys. Anthropic Messages API is optional behind a feature flag (off by default) and may be dropped. No budget-guard / throttling work now; a jobs ledger with per-job maxCost only.
+**Why:** Founder does not want to manage a second metered budget; Gemini tokens are already purchased; the OAuth flow is how the team already logs in.
+**Result:** Routing matrix in plan section 6c.3 re-mapped: Gemini Flash for cheap/many stages, Gemini Pro for claims/answers, Claude Code for agentic/bulk/dev-loop; parity contract test runs Gemini vs Claude Code.
+**Changes-authorized:** ARCHITECTURE Â§3 (add H10 provider routing); ARCHITECTURE Â§6 (budget question closed)
+**Links:** T-019; plan file section 6c.0 and 6c.3

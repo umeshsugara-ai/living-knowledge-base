@@ -29,3 +29,9 @@ whatsapp_msg/
 
 # claude-code local state
 .claude/scheduled_tasks.lock
+
+# goal tracker regenerated artefacts
+.goal/dashboard.html
+.goal/monitor_task.cmd
+.goal/monitor_task.vbs
+.goal/audits/
