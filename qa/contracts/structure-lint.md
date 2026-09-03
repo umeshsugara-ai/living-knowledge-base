@@ -47,3 +47,7 @@ any violation, plus a GitHub Actions workflow that runs it (and the existing tes
 ## Non-goals for T-017
 - No SNAPSHOT/FEATURES ledger (T-017b). No schema/migration changes (T-018). No ESLint/Prettier
   style rules — structure only.
+
+## Amendment log
+- 2026-09-03 · routine · checker ADOPTS this contract as checker-owned (maker-drafted, as T-016/ISS-006): content re-read against D-003 Result ("300 LOC per file (tests 400), 30 files per dir, root <= 15 loose files, one exported symbol per concept, ARCHITECTURE.md <= 150 lines, migrations only via migrate-mongo") and ARCHITECTURE §5 dependency rules — faithful; START stands on D-003 (plan §6c.1). Maker never writes qa/contracts/ again · T-017 cycle-1 check
+- 2026-09-03 · routine · C6 verify command: the literal `npx depcruise --validate packages apps workers` is mis-parsed by depcruise 18.2.0's CLI (commander takes `packages` as --validate's optional config-file argument; reproduced: "2 modules, 0 dependencies cruised"). The C6 command is now `depcruise --config .dependency-cruiser.cjs packages apps workers` (= the `lint:structure` script; `npx depcruise packages apps workers --validate` is an equivalent form). Intent unchanged: exits 0 on the current tree, non-zero on a planted violation · T-017 cycle-1 check
