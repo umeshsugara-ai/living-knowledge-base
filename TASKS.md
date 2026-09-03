@@ -15,18 +15,18 @@
 | T-001 | done | Mongo schema v1 + validators | checker PASS, verdict `2ce65d1` |
 | T-004 | done | Vectorless tree-index generator v1 | checker PASS, verdict `222314a` |
 | T-005 | done | `POST /ask` CRAG router v1 | checker PASS cycle 2, verdict `129f8f1` |
-| T-016 | open | **Repo restructure → TS pnpm monorepo** (`packages/{core,db,ai,ingest,index,ask,meeting-bot}`, `apps/`, `workers/transcribe`, `raw/TOC`, `sources/whatsapp_msg` submodule); port `tree_index/`→`packages/index`, `ask_router/`→`packages/ask` (tests first); `ARCHITECTURE.md` ≤150 lines | plan §6c.1; one working tree |
-| T-017 | open | **Structure lint in CI**: `lint-loc` (300/400), `dependency-cruiser`, `lint-dupes`, root ≤15 files, ARCHITECTURE ≤150 | gate for everything after |
-| T-018 | open | **Schema v2**: bounded web research + `docs/adr/0001-schema-v2.md` first; camelCase evidence keys; add `programs, media(+retention, kind incl. evidence-clip), chunks, graph_edges, jobs, tenants, api_keys, consent_policies`; `sources.captureMode`; `schema/index.json`; generated TS types; `migrate-mongo` baseline; `packages/db` `coll(tenantId)` + boot index assertion | depends T-016 |
-| T-019 | open | **AI provider seam** `packages/ai`: FIVE adapters `gemini` (default first), `anthropic` (API key + OAuth), `openai`, `ollama`, `claude-code`, each with `listModels()` (per-provider model dropdown); user-editable ordered chain per jobKind in `config/ai-routing.yaml` (len ≥1); `stt/{whisper,gemini}.ts`; `jobs` ledger; parity test on 3 fixture sessions; web-search provider (Tavily) for CRAG fallback | D-005 + D-008; depends T-016 |
-| T-020 | open | **Ingestion source seam** `packages/ingest/source.ts` + `recording`, `document` adapters | depends T-018 |
-| T-005b | open | Ask v2: `select_nodes` job, `(score, reason)` evaluator, `refine`, `answer`, per-call log | depends T-019 |
+| T-016 | done | Repo restructure → TS pnpm monorepo | checker PASS 9/9, verdict `66f1372` |
+| T-017 | done | Structure lint in CI | checker PASS 10/10, verdict `4ccfcfd` |
+| T-018 | done | Schema v2 (ADR-first, camelCase evidence, 8 new collections, migrate-mongo) | checker PASS 7/7, verdict cycle-1 (recovered from network-error-interrupted dispatch) |
+| T-019 | done | AI provider seam (5 adapters + STT sub-seam) | checker PASS 8/8, verdict `424bb38` |
+| T-020 | done | Ingestion source seam (recording, document adapters) | checker PASS 7/7, verdict `3d2bb6f` |
+| T-005b | done | Ask v2: selectNodes/refine/answer + audit log | checker PASS 6/6, verdict `e5dafe3` |
 
 ## Phase 1b — Prove the loop on TOC
 
 | ID | Status | Task | Notes |
 |---|---|---|---|
-| T-002 | open | Migrate 23 TOC sessions into schema v2 (via Claude Code backend) | depends T-018 |
+| T-002 | done | Migrate 23 TOC sessions into schema v2 | checker PASS 7/7, verdict `b59e0ff`; content ground-truthed against source transcripts |
 | T-003 | BLOCKED | Scale Gemini transcription 1→23 sessions | ISS-015: GEMINI_API_KEY in .env is invalid (Google API_KEY_INVALID) — needs a valid key from Umesh |
 | T-004b | open | Tree topic/speaker child nodes + incremental regen by `sessionRef` | depends T-002 |
 | T-006 | open | Recording-gap rows + standing-ask process | depends T-018 |
@@ -38,7 +38,7 @@
 | ID | Status | Task | Notes |
 |---|---|---|---|
 | T-023 | open | URL adapter (Jina Reader / Firecrawl → paragraphs-as-turns) | depends T-020 |
-| T-024 | open | **FIRST FEATURE UNIT (grill Q9/Q10):** paste-a-link capture CLI `lkb capture <url>` → platform adapter (Vexa: Meet/Teams · browser-profile join: Zoom/others · system-audio fallback) → record → diarize → `sources/sessions/turns` w/ `captureMode`+`platform`+`joinStrategy`; provided-first soft gate warns before silent join; private vault | D-002/D-004/D-008; depends T-018 (bot fields), T-019 (STT), T-020 (recording adapter) |
+| T-024 | done | **FIRST DEMO SHIPPED (grill Q9/Q10):** paste-a-link capture CLI `lkb capture <url>` → platform adapter (Vexa: Meet/Teams · browser-profile join: Zoom/others · system-audio fallback) → record → diarize → `sources/sessions/turns` w/ `captureMode`+`platform`+`joinStrategy`; provided-first soft gate warns before silent join; private vault | D-002/D-004/D-008; depends T-018 (bot fields), T-019 (STT), T-020 (recording adapter) |
 | T-025 | open | Google Calendar connect + auto-join | depends T-024 |
 
 ## Later (unchanged)
@@ -59,6 +59,7 @@
 | T-027 | open | **Watched Sources** (A13): bookmark reputed URLs/landing pages → periodic fetch → hash+diff → re-ingest changed sections → provenance `{url, fetchedAt, diffFrom}` → change notifications | depends T-023 |
 | T-017b | open | SNAPSHOT.md (generated, ≤200) + FEATURES.jsonl ledger + hook injection of recent removed/updated features + memory pointer (plan §6d) | depends T-017 |
 
-**Maker picks next, in order:** T-016 → T-017 → T-017b → T-018 → T-019 → T-020 (all done) →
-T-005b → **T-024 (first demo)** → T-002/T-003 (real data) → **T-009 (Developer API — promoted)**
-→ T-012 (simple compete screen). T-010/T-028 stay deferred per Umesh's 2026-09-03 note.
+**Done (2026-09-03):** T-016, T-017, T-017b, T-018, T-019, T-020, T-005b, T-024, T-002 — all
+checker-PASSed and pushed. **T-003 BLOCKED** on ISS-015 (invalid Gemini key).
+**Maker picks next:** T-009 (Developer API, promoted, unblocked since T-005b is done) →
+T-004b → T-006 → T-012 (simple compete screen). T-010/T-028 stay deferred per Umesh's note.
