@@ -5,6 +5,22 @@
  * (already checker-PASSed, working) rather than risk a refactor of it — new pages adopt the
  * shared shell, the existing one keeps its own copy.
  */
+/** HTML-attribute-escapes a route-param or other request-derived string before it's embedded in
+ * an HTML attribute value (e.g. `data-*`). Never use this for values placed directly in JS
+ * source position (inside a `<script>` body) -- that needs its own escaping (see pages.ts's
+ * session-detail route for why: a route param went through `JSON.stringify` there, which does
+ * NOT escape `</script>` or U+2028/U+2029, a real XSS finding). The safe pattern is: escape with
+ * this function into an HTML attribute, then read it back client-side via `.dataset`, never
+ * interpolate a request-derived value into JS source text at all. */
+export function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const SHARED_CSS = `
   :root {
     --ink: #14181f; --muted: #5b6472; --line: #e4e7ec; --bg: #f7f8fa; --card: #ffffff;

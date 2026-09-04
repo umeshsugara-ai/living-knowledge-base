@@ -8,7 +8,7 @@
  * the same XSS guard `compete-page.ts` was flagged on applies here).
  */
 import { Router, type Request, type Response } from "express";
-import { renderPage, CLIENT_AUTH_JS } from "./ui-shell.js";
+import { renderPage, CLIENT_AUTH_JS, escapeHtmlAttr } from "./ui-shell.js";
 import { STUB_ROUTES } from "./stubs.js";
 
 interface RealRoute { label: string; scope: string; }
@@ -116,10 +116,17 @@ export function createPagesRouter(): Router {
           <button id="loadBtn">Load</button>
           <div id="status"></div>
         </div>
-        <div id="detail"></div>
+        <div id="detail" data-session-id="${escapeHtmlAttr(id)}"></div>
       `,
+      // The route param is attacker-controlled (a crafted URL an operator might click) --
+      // real XSS finding, caught live 2026-09-04: JSON.stringify() does NOT escape "</script>"
+      // or U+2028/U+2029, so interpolating it straight into an inline <script> body let a
+      // session id like "</script><script>alert(1)</script>" break out of the script context
+      // regardless of JS-string quoting. Fixed by never putting the id in JS-source position at
+      // all -- it travels via an HTML-escaped data attribute (escapeHtmlAttr above) and the
+      // script reads it back through .dataset, staying in HTML-attribute context throughout.
       scriptJs: `${CLIENT_AUTH_JS}
-        const sessionId = ${JSON.stringify(id)};
+        const sessionId = document.getElementById("detail").dataset.sessionId;
         function el(tag, className, text) {
           const e = document.createElement(tag);
           if (className) e.className = className;

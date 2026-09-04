@@ -41,6 +41,24 @@ test("GET /docs-ui lists both a real live route and a real still-stubbed route",
   }
 });
 
+test("GET /sessions-ui/:id with a script-breakout id never lets </script> reach the page unescaped", async () => {
+  // Real finding (2026-09-04): the route param used to be interpolated via JSON.stringify()
+  // straight into the inline <script> body. JSON.stringify does NOT escape "</script>", so the
+  // HTML parser (which looks for that literal byte sequence regardless of JS-string context)
+  // would end the script tag early and start executing whatever followed as real markup/script.
+  const server = await startTestServer(buildTestDeps());
+  try {
+    const maliciousId = "</script><script>window.__pwned = true;</script>";
+    const res = await fetch(`${server.baseUrl}/sessions-ui/${encodeURIComponent(maliciousId)}`);
+    assert.equal(res.status, 200);
+    const text = await res.text();
+    assert.doesNotMatch(text, /<\/script><script>window\.__pwned/, "the raw payload must never appear unescaped in the response body");
+    assert.match(text, /data-session-id="[^"]*&lt;\/script&gt;/, "the id must arrive HTML-escaped inside the data attribute instead");
+  } finally {
+    await server.close();
+  }
+});
+
 test("every page's inline script never assigns innerHTML with a variable (XSS discipline)", async () => {
   const server = await startTestServer(buildTestDeps());
   try {
