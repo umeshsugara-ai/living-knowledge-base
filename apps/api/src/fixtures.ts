@@ -14,6 +14,7 @@ import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { CalendarReadDeps, UpcomingMeeting } from "./routes/calendar.js";
 import type { MeetingCandidate, MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
+import type { WhatsAppGroup, WhatsAppIngestResult, WhatsAppRouteDeps } from "./routes/whatsapp.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { IngestDeps } from "./routes/ingest.js";
 import type { ServerDeps } from "./server.js";
@@ -168,6 +169,20 @@ export function fakeMeetingCandidatesDeps(overrides: Partial<MeetingCandidatesDe
   };
 }
 
+/** A REAL in-memory `WhatsAppRouteDeps` — tests never touch either Mongo. Overridable per-test
+ * so a failure path (a real fetch/adapter error) can be exercised too. */
+export function fakeWhatsAppDeps(overrides: Partial<WhatsAppRouteDeps> = {}): WhatsAppRouteDeps {
+  const fixtureGroups: WhatsAppGroup[] = [
+    { groupJid: "g1@g.us", ownerUserId: "u1", subject: "Fixture Group", trackedPersonCount: 2 },
+  ];
+  const fixtureResult: WhatsAppIngestResult = { sessionId: "fake-wa-session", sourceId: "fake-wa-source", turnCount: 3 };
+  return {
+    async listGroups() { return fixtureGroups; },
+    async ingestGroup(_tenantId, _groupJid, _ownerUserId) { return fixtureResult; },
+    ...overrides,
+  };
+}
+
 /** A REAL in-memory `KeysDeps` (not read-only like the fakes above — create/list/revoke must
  * stay consistent within one test, matching what the real Mongo-backed impl guarantees). Never
  * exposes a raw key or hash from `listKeys`, same as the production implementation. */
@@ -214,6 +229,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     graph: fakeGraphReadDeps(),
     calendar: fakeCalendarReadDeps(),
     meetingCandidates: fakeMeetingCandidatesDeps(),
+    whatsapp: fakeWhatsAppDeps(),
     keys: fakeKeysDeps(),
     ingest: fakeIngestDeps(),
     ...overrides,

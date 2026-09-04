@@ -9,6 +9,7 @@ export * from "./gap-tracking.js";
 export * from "./sources/recording.js";
 export * from "./sources/document.js";
 export * from "./sources/url.js";
+export * from "./sources/whatsapp.js";
 
 export * from "./watched/schedule.js";
 export * from "./watched/check.js";

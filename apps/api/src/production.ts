@@ -13,6 +13,7 @@ import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
 import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps, createGwsCalendarReadDeps, createMeetingCandidatesDeps, createMongoKeysDeps } from "./store.js";
 import { createMongoIngestDeps } from "./ingest-store.js";
+import { createMongoWhatsAppDeps } from "./whatsapp-store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 import { createTavilySearchFn } from "./ask-web-fallback.js";
@@ -41,6 +42,7 @@ export function buildProductionDeps(): ServerDeps {
     graph: createMongoGraphReadDeps(),
     calendar: createGwsCalendarReadDeps(),
     meetingCandidates: createMeetingCandidatesDeps(),
+    whatsapp: createMongoWhatsAppDeps(),
     keys: createMongoKeysDeps(),
     ingest: createMongoIngestDeps(),
     // CORS_ORIGINS is a comma-separated allowlist (e.g. "http://localhost:5173" in dev, the real

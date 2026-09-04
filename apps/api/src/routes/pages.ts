@@ -26,6 +26,8 @@ const REAL_ROUTES: RealRoute[] = [
   { label: "GET /meeting-candidates", scope: "gmail" },
   { label: "POST /meeting-candidates/:id/approve", scope: "gmail" },
   { label: "POST /meeting-candidates/:id/reject", scope: "gmail" },
+  { label: "GET /whatsapp/groups", scope: "whatsapp" },
+  { label: "POST /whatsapp/ingest", scope: "whatsapp" },
 ];
 
 export function createPagesRouter(): Router {
