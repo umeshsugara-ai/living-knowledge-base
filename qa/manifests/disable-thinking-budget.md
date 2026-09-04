@@ -1,6 +1,6 @@
 # Manifest — disable-thinking-budget (T-003, two real bugs found and fixed)
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/disable-thinking-budget.md)
 Contract: `qa/contracts/disable-thinking-budget.md`
 
 ## Two real bugs found live during this unit, told honestly in order of discovery

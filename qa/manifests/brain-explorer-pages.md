@@ -1,6 +1,6 @@
 # Manifest — brain-explorer-pages
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/brain-explorer-pages.md)
 Contract: `qa/contracts/brain-explorer-pages.md`
 Fix cycle: 1
 

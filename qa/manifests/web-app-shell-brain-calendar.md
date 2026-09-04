@@ -1,6 +1,6 @@
 # Manifest — web-app-shell-brain-calendar
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/web-app-shell-brain-calendar.md)
 Contract: `qa/contracts/web-app-shell-brain-calendar.md`
 Fix cycle: 1
 

@@ -1,6 +1,6 @@
 # Manifest — web-ingest-and-meetingbot
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/web-ingest-and-meetingbot.md)
 Contract: `qa/contracts/web-ingest-and-meetingbot.md`
 Fix cycle: 1
 

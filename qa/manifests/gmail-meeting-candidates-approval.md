@@ -1,6 +1,6 @@
 # Manifest — gmail-meeting-candidates-approval
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/gmail-meeting-candidates-approval.md)
 Contract: `qa/contracts/gmail-meeting-candidates-approval.md`
 Fix cycle: 1
 

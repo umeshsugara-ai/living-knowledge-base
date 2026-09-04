@@ -1,6 +1,6 @@
 # Manifest — diarization-marker-frequency-fix
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/diarization-marker-frequency-fix.md)
 Contract: `qa/contracts/diarization-marker-frequency-fix.md`
 Fix cycle: 2 (cycle 1 checker independently found a real, isolated corrupted-speakerRef bug
 while verifying — see "Fix cycle 2" section below)

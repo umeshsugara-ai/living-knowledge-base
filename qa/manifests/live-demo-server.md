@@ -1,6 +1,6 @@
 # Manifest — live-demo-server
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/live-demo-server.md)
 Contract: `qa/contracts/live-demo-server.md`
 Fix cycle: 1
 

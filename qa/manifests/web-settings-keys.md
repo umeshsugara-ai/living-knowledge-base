@@ -1,6 +1,6 @@
 # Manifest — web-settings-keys
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/web-settings-keys.md)
 Contract: `qa/contracts/web-settings-keys.md`
 Fix cycle: 1
 

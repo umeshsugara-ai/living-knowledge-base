@@ -1,6 +1,6 @@
 # Manifest — web-sessions-calendar-brain-richness
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/web-sessions-calendar-brain-richness.md)
 Contract: `qa/contracts/web-sessions-calendar-brain-richness.md`
 Fix cycle: 2
 

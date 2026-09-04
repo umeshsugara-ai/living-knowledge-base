@@ -1,6 +1,6 @@
 # Manifest — web-dashboard-visual-polish
 
-Status: ready-for-check
+Status: checked-PASS (see qa/verdicts/web-dashboard-visual-polish.md)
 Contract: `qa/contracts/web-dashboard-visual-polish.md`
 Fix cycle: 1
 
