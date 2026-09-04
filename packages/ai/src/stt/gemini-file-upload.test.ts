@@ -120,6 +120,45 @@ test("parseDiarizedTranscript real bug repro: many turns arriving with NO newlin
   assert.equal(turns[2]!.text, "Thank you so much.");
 });
 
+test("parseDiarizedTranscript real bug repro: an implausibly long speaker capture is recovered as text, not kept as a fake speakerRef", () => {
+  // Real corruption found live 2026-09-04 in production data (T-003 phase 4 checker sweep): a
+  // real session's turn 2 had NO real "Name:" marker right after its timestamp, so the
+  // non-greedy speaker capture ran on until it found some unrelated ": " deep inside a sentence,
+  // swallowing ~280 real characters of spoken content into `speakerRef`. This reproduces that
+  // shape (a marker with no clean short label before the next real colon) at small scale.
+  const text = "[00:00] spk:0: Or [00:01] so, good evening to all our members joining from different parts of the Global South today, you know: It is ciao, bonjour, and kia ora.";
+  const turns = parseDiarizedTranscript(text);
+  assert.equal(turns.length, 2);
+  assert.equal(turns[0]!.speakerRef, "spk:0");
+  assert.equal(turns[1]!.speakerRef, "spk:0", "an implausible speaker capture inherits the previous turn's real speaker, never a sentence fragment");
+  assert.match(turns[1]!.text, /^so, good evening to all our members/, "the swallowed text is recovered into the turn's own content");
+  assert.match(turns[1]!.text, /It is ciao, bonjour, and kia ora\.$/);
+});
+
+test("parseDiarizedTranscript: a normal short speaker label right after the first marker is unaffected by the length guard", () => {
+  const text = "[00:00] Dr. Priya Sharma: Welcome everyone to this session.";
+  const turns = parseDiarizedTranscript(text);
+  assert.equal(turns[0]!.speakerRef, "Dr. Priya Sharma");
+  assert.equal(turns[0]!.text, "Welcome everyone to this session.");
+});
+
+test("parseDiarizedTranscript parses [H:MM:SS] timestamps (real bug: Gemini switches format past 60 minutes)", () => {
+  const text = "[0:59:50] Bob: Almost an hour in.\n[1:26:30] Ann: Past the hour mark now.";
+  const turns = parseDiarizedTranscript(text);
+  assert.equal(turns.length, 2);
+  assert.equal(turns[0]!.speakerRef, "Bob");
+  assert.equal(turns[0]!.tStart, 59 * 60 + 50);
+  assert.equal(turns[1]!.speakerRef, "Ann");
+  assert.equal(turns[1]!.tStart, 1 * 3600 + 26 * 60 + 30);
+});
+
+test("parseDiarizedTranscript handles a mix of [MM:SS] and [H:MM:SS] in the same transcript", () => {
+  const text = "[05:00] Bob: Early on.\n[1:05:00] Ann: An hour and five minutes in.";
+  const turns = parseDiarizedTranscript(text);
+  assert.equal(turns[0]!.tStart, 5 * 60);
+  assert.equal(turns[1]!.tStart, 3600 + 5 * 60);
+});
+
 test("parseDiarizedTranscript on empty text returns an empty array", () => {
   assert.deepEqual(parseDiarizedTranscript(""), []);
 });

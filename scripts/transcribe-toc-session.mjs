@@ -8,12 +8,14 @@
  *
  * Usage: node scripts/transcribe-toc-session.mjs <sessionId>
  */
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, resolve, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { register } from "tsx/esm/api";
 import { Agent, setGlobalDispatcher } from "undici";
+import { findAudioFile } from "./lib/find-audio-file.mjs";
+import { realUploadTransport } from "./lib/real-upload-transport.mjs";
 
 // Real audio transcription (generateContent processing a large uploaded file server-side) can
 // legitimately take several minutes to return headers — undici's default headersTimeout (300s)
@@ -42,49 +44,10 @@ register();
 
 const MIME_BY_EXT = { ".m4a": "audio/mp4", ".mp4": "video/mp4", ".mp3": "audio/mpeg" };
 
-/** Real UploadTransport — fetch()-based, reads response headers (needed for the resumable
- * upload's x-goog-upload-url handoff), which apps/api/src/ai-transport.ts's httpTransport
- * (built for the JSON-only Transport seam) does not expose. */
-async function realUploadTransport(req) {
-  const headers = { ...req.headers };
-  const isRawBytes = req.body instanceof Uint8Array;
-  const res = await fetch(req.url, {
-    method: req.method,
-    headers,
-    body: isRawBytes ? req.body : req.body !== undefined ? JSON.stringify(req.body) : undefined,
-  });
-  const text = await res.text();
-  let body;
-  try { body = JSON.parse(text); } catch { body = text; }
-  const respHeaders = {};
-  for (const [k, v] of res.headers.entries()) respHeaders[k.toLowerCase()] = v;
-  return { status: res.status, headers: respHeaders, body };
-}
-
-function findAudioFile(sid) {
-  // T-002's source.json.path is the ORIGINAL raw transcript file (e.g.
-  // "raw/TOC/TOC-Materials/Transcripts/23rd-May-UniAccess-ATLAS-Skilltech.content.md") — its
-  // basename (minus ".content.md") is the exact same stem the Audio/ directory's extracted audio
-  // uses. This is an exact-basename match, not a fuzzy title-word heuristic (which mismatched
-  // "UniAccess Live: ATLAS SkillTech University" against a different UniAccess session's audio
-  // on first use — real bug caught by the proof-of-concept run itself).
-  const sourceJsonPath = join(DATA_DIR, sid, "source.json");
-  if (!existsSync(sourceJsonPath)) throw new Error(`no data/toc-migrated/${sid}/source.json found`);
-  const source = JSON.parse(readFileSync(sourceJsonPath, "utf8"));
-  const rawStem = source.path.split("/").pop().replace(/\.content\.md$/i, "");
-
-  const files = readdirSync(AUDIO_DIR).filter((f) => [".m4a", ".mp4", ".mp3"].includes(extname(f).toLowerCase()));
-  const match = files.find((f) => f.slice(0, f.lastIndexOf(".")).toLowerCase() === rawStem.toLowerCase());
-  if (!match) {
-    throw new Error(`no exact audio-file basename match for "${rawStem}" (from source.json path "${source.path}") among: ${files.join(", ")}`);
-  }
-  return { path: join(AUDIO_DIR, match), filename: match };
-}
-
 async function main() {
   const { uploadFile, pollFileState, transcribeUploadedAudio } = await import("../packages/ai/src/stt/gemini-file-upload.ts");
 
-  const { path: audioPath, filename } = findAudioFile(sessionId);
+  const { path: audioPath, filename } = findAudioFile(DATA_DIR, AUDIO_DIR, sessionId);
   const mimeType = MIME_BY_EXT[extname(filename).toLowerCase()] ?? "audio/mp4";
   const bytes = readFileSync(audioPath);
   console.log(`uploading ${filename} (${(bytes.byteLength / 1024 / 1024).toFixed(1)} MB, ${mimeType})...`);

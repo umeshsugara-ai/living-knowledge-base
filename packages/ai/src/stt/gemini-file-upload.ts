@@ -91,8 +91,14 @@ export async function pollFileState(name: string, transport: UploadTransport,
   throw new Error(`gemini file upload: unexpected file state "${String(state)}"`);
 }
 
-function parseTimestamp(minutes: string, seconds: string): number {
-  return Number(minutes) * 60 + Number(seconds);
+/** `hours` is `undefined` for a `[MM:SS]` match, or the parsed hour string for `[H:MM:SS]` —
+ * real bug found live (2026-09-04): Gemini switches to the 3-group form once a transcript
+ * crosses the 60-minute mark, which the original 2-group-only regex could not match at all,
+ * silently absorbing everything past that point as unparsed trailing text glued onto the last
+ * recognized turn. */
+function parseTimestamp(hours: string | undefined, minutes: string, seconds: string): number {
+  const h = hours !== undefined ? Number(hours) : 0;
+  return h * 3600 + Number(minutes) * 60 + Number(seconds);
 }
 
 // Global, NOT anchored to line-start — real bug found live (2026-09-04): the model does not
@@ -105,8 +111,9 @@ function parseTimestamp(minutes: string, seconds: string): number {
 // whether the model inserted a newline before it. Speaker capture is non-greedy up to a colon
 // followed by whitespace ("<speaker>: text"), not just any colon — a speakerRef like "spk:1"
 // contains its own colon with no following space, so a naive "first colon" split would wrongly
-// cut it at "spk".
-const TIMESTAMP_MARKER_RE = /\[(\d{1,3}):(\d{2})\]\s*(.+?):\s+/g;
+// cut it at "spk". The timestamp itself matches EITHER `[MM:SS]` (2 groups) OR `[H:MM:SS]`
+// (3 groups, optional middle `(?:(\d{1,2}):)?` group) — see parseTimestamp's doc comment.
+const TIMESTAMP_MARKER_RE = /\[(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\]\s*(.+?):\s+/g;
 
 /**
  * Parses `[MM:SS] SpeakerName: text` markers into `Turn[]` — matches anywhere in the text, not
@@ -116,18 +123,40 @@ const TIMESTAMP_MARKER_RE = /\[(\d{1,3}):(\d{2})\]\s*(.+?):\s+/g;
  * (headers, preamble) is dropped; text between two markers belongs entirely to the FIRST one's
  * turn (it is that speaker's continued content, not a separate unparseable line to discard).
  */
+// Real bug found live (2026-09-04, T-003 phase 4): the non-greedy `(.+?):\s+` speaker capture
+// occasionally has no real "Name:"/"spk:N:" marker immediately after a timestamp to anchor on
+// (the model continued straight into prose without one) and instead runs on until it happens to
+// find SOME unrelated ": " later in that sentence -- swallowing real spoken content into
+// `speakerRef` (observed: a real session's turn 2 had a ~280-character sentence fragment as its
+// "speaker label"). A genuine speaker label (a name, a title, "spk:N") is never that long, so an
+// implausibly long capture is treated as a mis-split: the swallowed text is recovered into the
+// turn's own content (prepended, since it's real spoken words, not a label) and the speaker is
+// inherited from the previous turn (the far more common case here is the same speaker
+// continuing, not a genuine unlabeled speaker change).
+const MAX_PLAUSIBLE_SPEAKER_LABEL_LENGTH = 60;
+
 export function parseDiarizedTranscript(text: string): Turn[] {
   const matches = [...text.matchAll(TIMESTAMP_MARKER_RE)];
   const parsed: { speakerRef: string; tStart: number; text: string }[] = [];
+  let lastPlausibleSpeaker = "spk:0";
 
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i]!;
-    const [, mm, ss, speaker] = match;
+    const [, hours, mm, ss, speaker] = match;
     const contentStart = match.index + match[0].length;
     const contentEnd = i + 1 < matches.length ? matches[i + 1]!.index : text.length;
-    const turnText = text.slice(contentStart, contentEnd).trim();
+    let turnText = text.slice(contentStart, contentEnd).trim();
+    let speakerRef = speaker!.trim();
+
+    if (speakerRef.length > MAX_PLAUSIBLE_SPEAKER_LABEL_LENGTH) {
+      turnText = `${speakerRef}: ${turnText}`.trim();
+      speakerRef = lastPlausibleSpeaker;
+    } else {
+      lastPlausibleSpeaker = speakerRef;
+    }
+
     if (!turnText) continue;
-    parsed.push({ speakerRef: speaker!.trim(), tStart: parseTimestamp(mm!, ss!), text: turnText });
+    parsed.push({ speakerRef, tStart: parseTimestamp(hours, mm!, ss!), text: turnText });
   }
 
   const LAST_TURN_FALLBACK_SECONDS = 30;
@@ -150,6 +179,15 @@ const DIARIZE_PROMPT = [
   "[MM:SS] SpeakerName: spoken text",
   "Use the speaker's actual name if it is said aloud or clearly inferable from context;",
   "otherwise use spk:0, spk:1, etc. consistently for the same voice.",
+  // Real bug found live (2026-09-04): without this, one speaker talking continuously for
+  // several minutes came back as ONE turn with a single leading marker and no others -- the
+  // downstream parser's only way to guess that turn's real tEnd (the next marker's tStart, or
+  // this +30s fallback for the very last turn) then drastically understated how much real
+  // content/time it actually covered, making a fully-transcribed passage look like it stopped
+  // after 30 seconds. Forcing a fresh marker at least every ~20s, even mid-monologue, keeps
+  // tEnd accurate throughout instead of relying on speaker changes that may never come.
+  "Insert a fresh [MM:SS] marker at least every 15-20 seconds even when the same speaker keeps",
+  "talking without interruption -- never let one turn span more than about 20 seconds.",
   "No headers, no summary, no commentary outside the transcript lines.",
 ].join(" ");
 
