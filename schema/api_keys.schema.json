@@ -8,6 +8,7 @@
     "_id": { "type": "string" },
     "tenantId": { "type": "string", "minLength": 1 },
     "keyHash": { "type": "string", "minLength": 8 },
+    "label": { "type": "string", "description": "Human-readable name so a tenant can tell their own keys apart in a list; never the raw key itself." },
     "scopes": { "type": "array", "items": { "type": "string" } },
     "revokedAt": { "type": ["string", "null"], "format": "date-time" },
     "createdAt": { "type": "string", "format": "date-time" }

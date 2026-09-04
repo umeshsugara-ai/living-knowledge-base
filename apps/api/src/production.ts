@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, type Provider } from "@lkb/ai";
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
-import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps } from "./store.js";
+import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps, createMongoKeysDeps } from "./store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 
@@ -35,6 +35,7 @@ export function buildProductionDeps(): ServerDeps {
     evalRuns: createMongoEvalRunStore(),
     brain: createMongoBrainReadDeps(),
     graph: createMongoGraphReadDeps(),
+    keys: createMongoKeysDeps(),
     // CORS_ORIGINS is a comma-separated allowlist (e.g. "http://localhost:5173" in dev, the real
     // apps/web deployment origin in prod) — no default beyond "" -> empty list, matching
     // server.ts's safe-by-default stance.

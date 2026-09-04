@@ -8,6 +8,7 @@ import { SessionsListPage } from "./pages/sessions/SessionsListPage.js";
 import { SessionDetailPage } from "./pages/sessions/SessionDetailPage.js";
 import { BrainPage } from "./pages/BrainPage.js";
 import { CalendarPage } from "./pages/CalendarPage.js";
+import { SettingsPage } from "./pages/SettingsPage.js";
 
 export function App(): React.ReactElement {
   return (
@@ -22,6 +23,7 @@ export function App(): React.ReactElement {
               <Route path="/brain" element={<BrainPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/sources" element={<SourcesPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </AppShell>
         </BrowserRouter>

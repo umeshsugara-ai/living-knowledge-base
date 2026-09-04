@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/brain", label: "Brain" },
   { to: "/calendar", label: "Calendar" },
   { to: "/sources", label: "Sources" },
+  { to: "/settings", label: "Settings" },
 ];
 
 export function NavSidebar(): React.ReactElement {

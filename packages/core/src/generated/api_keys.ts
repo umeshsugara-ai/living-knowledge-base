@@ -8,6 +8,10 @@ export interface ApiKeys {
   _id: string;
   tenantId: string;
   keyHash: string;
+  /**
+   * Human-readable name so a tenant can tell their own keys apart in a list; never the raw key itself.
+   */
+  label?: string;
   scopes?: string[];
   revokedAt?: string | null;
   createdAt: string;

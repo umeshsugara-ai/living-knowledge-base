@@ -49,7 +49,7 @@
 | T-007 | open | WhatsApp → claims ingestion review | depends T-020 |
 | T-008 | open | Vector index (`chunks`, Atlas Vector Search) + unstructured search | depends T-007 |
 | T-009 | done | Developer API — `POST /ask` real, honest 501 stubs, rate limiting | checker PASS 8/8, verdict `cb04252`; post-verdict security fix `be86bf8` (shell:true removed) |
-| T-010 | in_progress | Product shell (`apps/web`, real Vite+React SPA) — un-deferred 2026-09-04 (Umesh asked for a proper professional UI: sidebar nav, dashboard, Obsidian-style brain/graph view, calendar). Phases 0-3 shipped in one unit (`qa/contracts/web-app-shell-brain-calendar.md`): app shell, Dashboard/Sessions/Sources, `GET /graph` + Brain graph view, Calendar (past real, upcoming honest-empty). Phase 4 (Settings/API-key CRUD) remains. | depends T-009 |
+| T-010 | done | Product shell (`apps/web`, real Vite+React SPA) — un-deferred 2026-09-04 (Umesh asked for a proper professional UI: sidebar nav, dashboard, Obsidian-style brain/graph view, calendar). Phases 0-3: `qa/verdicts/web-app-shell-brain-calendar.md`, checker PASS. Phase 4 (Settings/API-key CRUD — real list/create/revoke, tenant-isolated, raw key shown once): `qa/verdicts/web-settings-keys.md`, checker PASS. Ingest/Meeting-Bot pages remain a separate, later unit (not part of T-010's original scope). | depends T-009 |
 | T-011 | done | Phase-B per-user browser profile bot + live monitor | checker PASS 1/1, verdict `qa/verdicts/browser-profile-privacy.md`, commit `59dc2db`; real Playwright/UI wiring remains future work (see contract Non-goals) |
 | T-012 | done | Compete screen (internal tier, manual entry) | checker PASS 6/6, verdict `71b5fd2` |
 | T-009b | done | Make `@lkb/ask`'s `ScoreFn` async; wire a real LLM-based scorer into apps/api's /ask (replaces the heuristic keyword-overlap scorer) | checker PASS 6/6, verdict `089d2b6` |
@@ -68,5 +68,5 @@ Gemini diarized transcription. 4 sessions remain placeholder (2 structurally-blo
 files, 2 unexplained STOP-empty-text failures) — real follow-up engineering work, not yet started;
 Mongo re-seed of the newly-real turns also deferred. T-003 stays `in_progress`, not `done`.
 **Maker picks next:**
-T-004c (regenerate edge cases, low urgency). T-010 in_progress (Phase 4: Settings/API-key CRUD
-remains). T-028 stays deferred.
+T-004c (regenerate edge cases, low urgency). T-010 done. T-028 stays deferred. Ingest +
+Meeting-Bot pages (apps/web) are open follow-up work, not yet started.

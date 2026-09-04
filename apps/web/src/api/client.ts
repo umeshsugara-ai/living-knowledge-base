@@ -16,10 +16,20 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(path: string, apiKey: string | null): Promise<T> {
+export interface ApiFetchOptions {
+  method?: "GET" | "POST" | "DELETE";
+  body?: unknown;
+}
+
+export async function apiFetch<T>(path: string, apiKey: string | null, options: ApiFetchOptions = {}): Promise<T> {
   if (!apiKey) throw new ApiError(401, "no API key set");
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { authorization: `Bearer ${apiKey}` },
+    method: options.method ?? "GET",
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      ...(options.body !== undefined ? { "content-type": "application/json" } : {}),
+    },
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
   if (!res.ok) {
     let message = `HTTP ${res.status}`;

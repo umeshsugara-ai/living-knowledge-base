@@ -8,7 +8,7 @@
  * `getDb()` directly, the same low-level accessor `packages/db/src/collections/*.ts` itself
  * wraps — no new cross-package pattern invented.
  */
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes } from "node:crypto";
 import {
   getDb, createEvalRun, recordScore as recordEvalRunScore,
   sessions as sessionsColl, sources as sourcesColl, gaps as gapsColl,
@@ -22,6 +22,7 @@ import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
+import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import { sha256Hex } from "./hash.js";
 
 export function createMongoApiKeyStore(): ApiKeyStore {
@@ -99,6 +100,48 @@ export function createMongoGraphReadDeps(): GraphReadDeps {
     async loadGraph(tenantId): Promise<Graph | null> {
       const root = await getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
       return root ? flattenTreeToGraph(root) : null;
+    },
+  };
+}
+
+/** Real `KeysDeps` (routes/keys.ts) — the only place that generates or hashes a raw API key
+ * outside `scripts/seed-demo-server.mjs`. `listKeys` projects out `keyHash` explicitly (never
+ * relies on the caller to remember not to serialize it) so a masked list can never accidentally
+ * leak the one thing that must never leave this function. */
+export function createMongoKeysDeps(): KeysDeps {
+  const coll = () => getDb().collection<ApiKeys>("api_keys");
+
+  return {
+    async listKeys(tenantId): Promise<ApiKeySummary[]> {
+      const docs = await coll().find({ tenantId }).toArray();
+      return docs.map((d) => ({
+        _id: d._id,
+        label: d.label ?? "(unlabeled)",
+        scopes: d.scopes ?? [],
+        createdAt: d.createdAt,
+        revokedAt: d.revokedAt ?? null,
+      }));
+    },
+    async createKey(tenantId, label, scopes) {
+      const id = randomUUID();
+      const rawKey = `lkb_${randomBytes(24).toString("hex")}`;
+      await coll().insertOne({
+        _id: id,
+        tenantId,
+        keyHash: sha256Hex(rawKey),
+        label,
+        scopes,
+        createdAt: new Date().toISOString(),
+        revokedAt: null,
+      });
+      return { id, rawKey };
+    },
+    async revokeKey(tenantId, id) {
+      const result = await coll().updateOne(
+        { _id: id, tenantId, revokedAt: null },
+        { $set: { revokedAt: new Date().toISOString() } },
+      );
+      return result.matchedCount > 0;
     },
   };
 }

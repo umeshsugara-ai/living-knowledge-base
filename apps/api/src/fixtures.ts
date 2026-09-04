@@ -9,8 +9,10 @@ import type { AskV2Deps } from "@lkb/ask";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
+import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
+import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { ServerDeps } from "./server.js";
 
 export const FIXTURE_TREE: TreeIndexNode = {
@@ -119,6 +121,32 @@ export function fakeGraphReadDeps(overrides: Partial<GraphReadDeps> = {}): Graph
   };
 }
 
+/** A REAL in-memory `KeysDeps` (not read-only like the fakes above — create/list/revoke must
+ * stay consistent within one test, matching what the real Mongo-backed impl guarantees). Never
+ * exposes a raw key or hash from `listKeys`, same as the production implementation. */
+export function fakeKeysDeps(): KeysDeps & { _raw: Map<string, { tenantId: string; label: string; scopes: string[]; createdAt: string; revokedAt: string | null }> } {
+  const rows = new Map<string, { tenantId: string; label: string; scopes: string[]; createdAt: string; revokedAt: string | null }>();
+  return {
+    _raw: rows,
+    async listKeys(tenantId): Promise<ApiKeySummary[]> {
+      return [...rows.entries()]
+        .filter(([, r]) => r.tenantId === tenantId)
+        .map(([_id, r]) => ({ _id, label: r.label, scopes: r.scopes, createdAt: r.createdAt, revokedAt: r.revokedAt }));
+    },
+    async createKey(tenantId, label, scopes) {
+      const id = randomUUID();
+      rows.set(id, { tenantId, label, scopes, createdAt: new Date().toISOString(), revokedAt: null });
+      return { id, rawKey: `fake_${id}` };
+    },
+    async revokeKey(tenantId, id) {
+      const row = rows.get(id);
+      if (!row || row.tenantId !== tenantId || row.revokedAt) return false;
+      row.revokedAt = new Date().toISOString();
+      return true;
+    },
+  };
+}
+
 export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
   return {
     keyStore: fakeKeyStore({ "good-ask-key": { tenantId: "tenant-1", scopes: ["ask"] } }),
@@ -126,6 +154,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     evalRuns: fakeEvalRunStore(),
     brain: fakeBrainReadDeps(),
     graph: fakeGraphReadDeps(),
+    keys: fakeKeysDeps(),
     ...overrides,
   };
 }
