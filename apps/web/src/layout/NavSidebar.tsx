@@ -20,6 +20,8 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/brain", label: "Brain" },
   { to: "/calendar", label: "Calendar" },
   { to: "/sources", label: "Sources" },
+  { to: "/ingest", label: "Ingest" },
+  { to: "/meeting-bot", label: "Meeting Bot" },
   { to: "/settings", label: "Settings" },
 ];
 

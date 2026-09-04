@@ -12,6 +12,7 @@ import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCode
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
 import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps, createMongoKeysDeps } from "./store.js";
+import { createMongoIngestDeps } from "./ingest-store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 
@@ -36,6 +37,7 @@ export function buildProductionDeps(): ServerDeps {
     brain: createMongoBrainReadDeps(),
     graph: createMongoGraphReadDeps(),
     keys: createMongoKeysDeps(),
+    ingest: createMongoIngestDeps(),
     // CORS_ORIGINS is a comma-separated allowlist (e.g. "http://localhost:5173" in dev, the real
     // apps/web deployment origin in prod) — no default beyond "" -> empty list, matching
     // server.ts's safe-by-default stance.

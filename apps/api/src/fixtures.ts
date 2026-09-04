@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
+import type { IngestDeps } from "./routes/ingest.js";
 import type { ServerDeps } from "./server.js";
 
 export const FIXTURE_TREE: TreeIndexNode = {
@@ -147,6 +148,17 @@ export function fakeKeysDeps(): KeysDeps & { _raw: Map<string, { tenantId: strin
   };
 }
 
+/** A REAL in-memory `IngestDeps` — tests never touch Mongo or a real network fetch. Overridable
+ * per-test so a failure path (a real fetch/adapter error) can be exercised too. */
+export function fakeIngestDeps(overrides: Partial<IngestDeps> = {}): IngestDeps {
+  return {
+    async ingestUrl(_tenantId, url) {
+      return { sessionId: `fake-session-for-${url}`, sourceId: `fake-source-for-${url}`, turnCount: 3 };
+    },
+    ...overrides,
+  };
+}
+
 export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
   return {
     keyStore: fakeKeyStore({ "good-ask-key": { tenantId: "tenant-1", scopes: ["ask"] } }),
@@ -155,6 +167,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     brain: fakeBrainReadDeps(),
     graph: fakeGraphReadDeps(),
     keys: fakeKeysDeps(),
+    ingest: fakeIngestDeps(),
     ...overrides,
   };
 }

@@ -9,6 +9,8 @@ import { SessionDetailPage } from "./pages/sessions/SessionDetailPage.js";
 import { BrainPage } from "./pages/BrainPage.js";
 import { CalendarPage } from "./pages/CalendarPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
+import { IngestPage } from "./pages/IngestPage.js";
+import { MeetingBotPage } from "./pages/MeetingBotPage.js";
 
 export function App(): React.ReactElement {
   return (
@@ -24,6 +26,8 @@ export function App(): React.ReactElement {
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/sources" element={<SourcesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/ingest" element={<IngestPage />} />
+              <Route path="/meeting-bot" element={<MeetingBotPage />} />
             </Routes>
           </AppShell>
         </BrowserRouter>

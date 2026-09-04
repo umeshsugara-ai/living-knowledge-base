@@ -50,6 +50,9 @@ importers:
       '@lkb/index':
         specifier: workspace:*
         version: link:../../packages/index
+      '@lkb/ingest':
+        specifier: workspace:*
+        version: link:../../packages/ingest
       express:
         specifier: 5.2.1
         version: 5.2.1

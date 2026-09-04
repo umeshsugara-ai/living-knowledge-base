@@ -14,6 +14,7 @@ import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
 import { createGraphRouter, type GraphReadDeps } from "./routes/graph.js";
 import { createKeysRouter, type KeysDeps } from "./routes/keys.js";
+import { createIngestRouter, type IngestDeps } from "./routes/ingest.js";
 import { createPagesRouter } from "./routes/pages.js";
 import { createStubsRouter } from "./routes/stubs.js";
 import { createRateLimiter, type RateLimitOptions } from "./rate-limit.js";
@@ -26,6 +27,7 @@ export interface ServerDeps {
   brain: BrainReadDeps;
   graph: GraphReadDeps;
   keys: KeysDeps;
+  ingest: IngestDeps;
   rateLimit?: RateLimitOptions;
   /** apps/web's real origin(s) in dev/prod (e.g. "http://localhost:5173") — no default, an
    * empty list means no cross-origin browser call succeeds, which is the safe default until a
@@ -51,6 +53,7 @@ export function createServer(deps: ServerDeps): Express {
   app.use(createBrainRouter(deps.brain));
   app.use(createGraphRouter(deps.graph));
   app.use(createKeysRouter(deps.keys));
+  app.use(createIngestRouter(deps.ingest));
   app.use(createStubsRouter());
   return app;
 }
