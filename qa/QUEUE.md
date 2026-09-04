@@ -1,74 +1,94 @@
 # QUEUE — top-3 recommended next units (checker sweep 2026-09-04T~15:10Z, Mode B safety net)
 
-> Prior queue (stamped 2026-09-03T14:12Z) is now over 24h old — this sweep is due, per the
-> session-start hook. Since that sweep: three maker units shipped and were independently
-> checker-PASSed and committed — `web-dashboard-visual-polish` (e9e90e2), `web-sessions-
-> calendar-brain-richness` (f20216a, 2 cycles), `gmail-meeting-candidates-approval` (300bba4) —
-> plus a maker close-out tick flipped 10 manifests to `checked-PASS` (a0e783a) and marked T-003
-> done in goal.json (all 25 sessions confirmed `status.transcribe: "done"` in Mongo).
+> Prior queue (stamped 2026-09-04T~14:31Z) is now due for refresh. Since that sweep: ISS-022
+> (T-010 goal.json sync) and ISS-019 (qa/loop.md missing) were both closed (commit `ed7d389`),
+> and a real new maker unit shipped — `ask-web-fallback-tavily` (commit `bedd090`, checker PASS
+> cycle 1) — closing the third sub-gap ISS-010 had named. `qa/.last-tick` was stamped 3 times
+> since (`c2fbb9f` latest).
 
 ## This sweep's findings
 
-- **No bypass.** All 4 commits since the last sweep stamp (`a0e783a`, `300bba4`, `f20216a`,
-  `e9e90e2`) have a matching manifest + verdict on disk, re-verified this sweep.
-- **Manifest close-out: re-verified CLEAN.** Independently re-scanned all 39 manifests
-  (`qa/manifests/*.md`, older ones use `**Fix cycle:**`/`**Status:**` bold-header format, newer
-  ones plain `Status:`/`Fix cycle:` lines — checked both). Every manifest is `checked-PASS` with
-  a matching `qa/verdicts/<slug>.md` carrying `Cycle checked:` equal to the manifest's
-  `Fix cycle`. The 10-manifest gap the maker's own tick found and fixed (commit `a0e783a`) is
-  confirmed genuinely closed, not just claimed — this sweep did not simply trust that commit
-  message.
-- **T-003 goal-task closure re-verified.** `.goal/goal.json` T-003 now `status: done`, matching
-  two real checker-PASS verdicts (`toc-transcription-scale-up`, `transcription-empty-result-
-  guard`) plus the phase-1/1.5/3 history already on record. Not re-disputed.
-- **Feedback inbox: fully folded.** No new unfolded entries since the last sweep.
-- **Enforcement liveness: confirmed installed and firing.** `.claude/settings.json` carries both
-  SessionStart hooks (`lab-session-start.ps1`, `mc-sessionstart.ps1`), both SessionEnd hooks
-  (`lab-session-end.ps1`, `features-snapshot-session-end.ps1`, per D-009 Approved-by: Umesh), the
-  PreToolUse guards (`decisions-append-guard.ps1`, `mc-precommit.ps1`). Repo has 138 commits
-  (not a dead/empty-history gate). D-006 (Approved-by: Umesh) already authorizes the base mc
-  wiring — no re-ask needed.
-- **Loop spec: still missing (ISS-019, carried forward, not re-filed).** `qa/loop.md` and
-  `qa/adapter.json` remain absent (falls back to DEFAULT coding adapter — itself correct, not a
-  finding). ISS-019 (medium) stays open; remedy unchanged (`/maker init` step 3b).
-- **Ledger hygiene:** 22 lines now in `qa/issues.jsonl`; only line 17 (pre-existing ISS-017,
-  tracked by ISS-020) is invalid JSON — append-only, correctly left untouched. New line (ISS-022)
-  validated with `json.loads` before being treated as written.
-- **NEW FINDING — ISS-022 (high), the item Umesh flagged directly:** `.goal/goal.json` T-010
-  ("Product shell, hosted multi-tenant app") is still `status: pending` with a stale note
-  ("needs Q2 stack decision" — Q2 was resolved 2026-09-03 per D-003), while **`TASKS.md:52`
-  already records T-010 as `done`** (un-deferred 2026-09-04, two checker-PASS verdicts cited:
-  `web-app-shell-brain-calendar`, `web-settings-keys`, both re-verified `Verdict: PASS` this
-  sweep). Root cause: the checker's close-on-PASS wiring keys off unit-slug == task-id, and none
-  of the T-010 units are literally slugged `T-010`, so the automatic close never fired even
-  though TASKS.md was correctly hand-updated. This sweep **attempted** the direct fix —
-  `goal_cli.py done --root "D:\KnowledgeBase" --task-id T-010` — citing the same two verdicts
-  TASKS.md already cites; the harness's auto-mode permission classifier **blocked** the write as
-  a decision only Umesh can make. Filed as `ISS-022` with full evidence and the exact command to
-  run/approve. **Not** recommended as a blanket done-without-review — see ISS-022 for why a
-  same-evidence sync fix (not a new scoping judgment) is the right call here.
-- **Backlog gating re-confirmed, largely unchanged from last sweep:**
-  - T-007/T-008 — genuinely out of this repo's governance (whatsapp_msg submodule) / depends on
-    T-007.
-  - T-011 — done (re-confirmed, not touched this sweep).
-  - T-013/T-014 — need a product/tech decision from Umesh before buildable.
-  - T-015 — needs explicit approval before any data export.
-  - T-028 (TASKS.md only, not in goal.json) — explicitly user-deferred.
+- **No bypass.** All commits since the last sweep stamp (`ed7d389`, `2524be7`, `458a900`,
+  `bedd090`, `2c825a5`, `e2c1061`, `c2fbb9f`) are either qa-ledger/tick housekeeping or the one
+  real feature commit (`bedd090`), which has a matching manifest + verdict on disk — re-verified
+  this sweep (typecheck re-run clean, `git diff --stat` on the frozen `router.ts`/`router.test.ts`
+  confirmed empty).
+- **T-010 goal-sync (ISS-022) independently re-verified as honestly closed.** `.goal/goal.json`
+  T-010 now reads `status: done`, `completed: 2026-09-04T20:05:31`, matching the two cited
+  verdicts (`web-app-shell-brain-calendar.md`, `web-settings-keys.md`, both `Verdict: PASS`,
+  `Cycle checked: 1`, re-read this sweep). Not a rubber stamp — the fix was applied outside the
+  blocked sandboxed sweep, as the ledger entry discloses, and the evidence trail is real.
+- **qa/loop.md (ISS-019) independently re-verified against Loop-Doctor-lite.** File exists, names
+  all seven maker terminal states verbatim on its `Stop:` line (`ADVANCED`, `BACKLOG_EMPTY`,
+  `HUMAN_GATE`, `STALLED`, `EXHAUSTED`, `BLOCKED`, `PAUSED`) and carries a `Human gate:` line
+  matching this project's actual CRITICAL-action list (Mongo writes, irreversible deletes, real
+  external comms, prod/customer-facing publishes, ownership/scope calls). No `qa/adapter.json`
+  exists, so the DEFAULT coding adapter applies and is not contradicted. Check 4 passes clean.
+- **ISS-010's four sub-gap closure claims independently re-verified, not just trusted:**
+  1. `POST /ask` route — confirmed present and wired (`apps/api/src/routes/ask.ts:28`).
+  2. Web-search provider — confirmed real (`apps/api/src/ask-web-fallback.ts` +
+     `packages/ask/src/ask-v2.ts` `tavilySearchFn`), this sweep's own re-run of `tsc --noEmit` on
+     both `packages/ask` and `apps/api` passes clean, `router.ts`/`router.test.ts` untouched.
+  3. `media.schema.json` `retention` field — confirmed required
+     (`schema/media.schema.json:7,17`).
+  4. T-004b turn-level tree nodes — confirmed `done` in `TASKS.md:31`, checker PASS 5/5, verdict
+     `15e4ecf`.
+  All four hold. ISS-010's `fixed` status is honest, not corner-cut.
+- **Ledger hygiene:** hand-edited status transitions (ISS-010/019/022 `open→fixed`,
+  ISS-014/016 below) are the checker's normal Mode A/B write path (schema explicitly allows
+  status mutation; only IDs are append-only/never-reused) — not itself a process violation.
+  Re-validated the full ledger with `json.loads` per line: 22/23 lines valid; line 17 (ISS-017)
+  remains the one pre-existing invalid-JSON line, already tracked by ISS-020 (append-only, left
+  untouched, correctly still open).
+- **NEW FINDING — ISS-014 and ISS-016 are stale, closed this sweep.** Both named a specific bad
+  `.goal/goal.json` `current` pointer value (`T-002`, then `T-003`) that no longer exists — the
+  pointer has since advanced (through the ordinary tick cadence, not a direct fix to either
+  issue) to `T-007`, which is a real open `TASKS.md:49` task (depends `T-020`, done) and is
+  correctly human-gated on the Q4 consent decision, matching `TASKS.md`'s own note. Marked
+  `fixed` with `fixed_evidence` explaining the supersession — not deleted, per append-only
+  discipline on IDs/history.
+- **7 open issues re-confirmed accurate** as of this sweep's start (`ISS-007, ISS-011, ISS-014,
+  ISS-016, ISS-017, ISS-020, ISS-021`) — all low/medium severity, all documentation/hygiene, no
+  functional defects; two of the seven (`ISS-014`, `ISS-016`) closed by this sweep as shown
+  above, so **the live open count is now 5**: `ISS-007` (contract shape, low), `ISS-011`
+  (attribution drift, low), `ISS-017` (verdict-wording legacy defect, low — superseded
+  functionally by `ISS-018`'s fix but the format gap itself is `ISS-021`, not re-litigated here),
+  `ISS-020` (one malformed JSON line, low, append-only so left alone), `ISS-021` (verdict format
+  standardization, low). None is more serious than filed; none touches a functional/security/data
+  invariant.
+- **Enforcement liveness: unchanged and still confirmed live** (not re-audited line-by-line this
+  sweep since nothing in `.claude/settings.json` or `.claude/hooks/` changed since the last full
+  check) — `mc-sessionstart.ps1`/`mc-precommit.ps1` present and registered, D-006/D-009 both
+  `Approved-by: Umesh`.
+- **Feedback inbox: fully folded**, no new entries since last sweep.
+- **Goal-drift / re-grill: not due.** No `qa/.regrill-due` stamp, no `qa/.paused`, north star
+  unchanged since last contract amendment, no unit re-PASSed twice on the same evidence. Check 6
+  is CLEAN.
+- **Goal coverage:** 23/29 done (79%), `current: T-007`. Remaining 6 pending tasks (`T-007,
+  T-008, T-011, T-013, T-014, T-015`) are each either out-of-repo-governance (whatsapp_msg
+  submodule), depend on an undone human-gated task, or explicitly require Umesh's approval
+  before any buildable work exists (`T-011` meeting-bot auto-join needs the Q4 consent decision;
+  `T-015` needs explicit approval before any data export). No coverage gap that a new contract
+  criterion could close autonomously.
 
 ## Top-3 recommended next units
 
-1. **ISS-022 — close T-010 in `.goal/goal.json`** (Umesh action: run or approve the cited
-   `goal_cli.py done` command; TASKS.md and both verdicts already justify it — this is a sync
-   fix, not new work).
-2. **ISS-019 — scaffold `qa/loop.md`** (medium, re-run `/maker init` step 3b; Loop-Doctor-lite
-   check has flagged this every sweep since project init with no remedy applied yet).
-3. **No third genuinely unblocked buildable unit exists.** Every other open item (T-007/T-008/
-   T-013/T-014/T-015/T-028, plus low-severity hygiene items ISS-007/010/011/020/021) requires a
-   human decision, an out-of-repo dependency, or is non-blocking cosmetic debt. This sweep does
-   not manufacture a marginal unit to fill the slot.
+1. **ISS-007 (low) — bring all 4 contracts to the standard shape** (status / north-star link /
+   `[I*]` invariants / append-only amendment log). Routine, checker-owned, no human gate —
+   the only remaining item in the queue that is both real and autonomously actionable.
+2. **ISS-011 (low) — append a routine DECISIONS clarification naming Q5 under D-003** (or a new
+   D-entry) to fix the architecture-doc attribution drift. Routine amendment, no human gate.
+3. **ISS-021 (low) — standardize the `VERDICT: PASS|FAIL|CONTRACT_MISMATCH` opening line** across
+   the still-nonstandard verdict files (`evaluator-calibration.md`, `watched-sources.md`,
+   `calendar-auto-join.md`, `browser-profile-privacy.md`) per the checker SKILL's Mode A step 8
+   format — not enforcement-breaking today, but a template/reminder fix (e.g. via `qa/loop.md`)
+   would close this structurally rather than needing another sweep catch.
+
+No fourth slot filled: every remaining backlog item (`T-007/T-008/T-013/T-014/T-015`, `ISS-017`,
+`ISS-020`) requires a human decision, an out-of-repo dependency, or is an append-only historical
+record that should not be touched. This sweep does not manufacture a marginal unit to pad the
+list.
 
 ## Overall progress
-`python D:/ai_os/.claude/skills/goal/scripts/monitor.py "D:\KnowledgeBase"` → **76% complete**,
-7 eligible tasks, 0 pending notifications (T-007 flagged `auto-advance`/low but is out-of-repo-
-governance per CLAUDE.md, not actually buildable here). If ISS-022 is applied, percent rises
-further (22/29 → 23/29 done tasks already reflected by TASKS.md's own tracking).
+`.goal/goal.json` → **79% complete** (23/29 done), `current: T-007` (correctly human-gated on
+the Q4 consent decision, not a stale pointer — see ISS-014/016 closure above).
