@@ -45,6 +45,9 @@ export function IngestIcon(props: IconProps): React.ReactElement {
 export function MeetingBotIcon(props: IconProps): React.ReactElement {
   return <Svg {...props}><rect x="4" y="7" width="16" height="11" rx="2" /><path d="M9 3.5h6M12 3.5V7" /><circle cx="9" cy="12.5" r="1" fill="currentColor" /><circle cx="15" cy="12.5" r="1" fill="currentColor" /></Svg>;
 }
+export function WhatsAppIcon(props: IconProps): React.ReactElement {
+  return <Svg {...props}><path d="M4.5 19.5 5.7 15.6A8 8 0 1 1 8.9 18.4Z" /><path d="M9 9.7c0-.6.5-1 1-1h.6c.3 0 .6.2.7.5l.5 1.4c.1.3 0 .6-.2.8l-.6.6c.5 1 1.3 1.8 2.3 2.3l.6-.6c.2-.2.5-.3.8-.2l1.4.5c.3.1.5.4.5.7v.6c0 .5-.4 1-1 1-3 0-6.6-2.6-6.6-6.6Z" fill="currentColor" stroke="none" /></Svg>;
+}
 export function SettingsIcon(props: IconProps): React.ReactElement {
   return <Svg {...props}><circle cx="12" cy="12" r="3" /><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V19a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H4a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H10a1.7 1.7 0 0 0 1-1.5V4a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V10a1.7 1.7 0 0 0 1.5 1H20a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></Svg>;
 }

@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   DashboardIcon, SessionsIcon, BrainIcon, CalendarIcon, SourcesIcon,
-  IngestIcon, MeetingBotIcon, SettingsIcon, ExternalLinkIcon, DocsIcon,
+  IngestIcon, MeetingBotIcon, WhatsAppIcon, SettingsIcon, ExternalLinkIcon, DocsIcon,
 } from "../components/icons.js";
 
 // apps/api serves /compete and /docs-ui itself, not apps/web -- in dev these run on different
@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/sources", label: "Sources", icon: <SourcesIcon /> },
   { to: "/ingest", label: "Ingest", icon: <IngestIcon /> },
   { to: "/meeting-bot", label: "Meeting Bot", icon: <MeetingBotIcon /> },
+  { to: "/whatsapp", label: "WhatsApp", icon: <WhatsAppIcon /> },
   { to: "/settings", label: "Settings", icon: <SettingsIcon /> },
 ];
 

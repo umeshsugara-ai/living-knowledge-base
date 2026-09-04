@@ -11,6 +11,7 @@ import { CalendarPage } from "./pages/CalendarPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
 import { IngestPage } from "./pages/IngestPage.js";
 import { MeetingBotPage } from "./pages/MeetingBotPage.js";
+import { WhatsAppPage } from "./pages/WhatsAppPage.js";
 
 export function App(): React.ReactElement {
   return (
@@ -28,6 +29,7 @@ export function App(): React.ReactElement {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/ingest" element={<IngestPage />} />
               <Route path="/meeting-bot" element={<MeetingBotPage />} />
+              <Route path="/whatsapp" element={<WhatsAppPage />} />
             </Routes>
           </AppShell>
         </BrowserRouter>
