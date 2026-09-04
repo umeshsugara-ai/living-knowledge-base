@@ -1,0 +1,30 @@
+# docker-compose.yml — local/production packaging for @lkb/api.
+#
+# Mongo is NOT containerized here on purpose: production data lives in the real shared cluster
+# (`MONGODB_URL` in .env, database `lkb` only — see ARCHITECTURE.md / D-003 on why this repo
+# never touches any other database on that cluster). `local-mongo` below is an OPT-IN profile for
+# a fully offline dev loop against empty local data, never started by a plain `docker compose up`.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URL: ${MONGO_URL:?set MONGO_URL (see .env's MONGODB_URL)}
+      MONGO_DB: ${MONGO_DB:-lkb}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?set GEMINI_API_KEY}
+      PORT: 3000
+    restart: unless-stopped
+
+  local-mongo:
+    image: mongo:7
+    profiles: ["local-dev"]
+    ports:
+      - "27018:27017"
+    volumes:
+      - lkb-local-mongo:/data/db
+
+volumes:
+  lkb-local-mongo:

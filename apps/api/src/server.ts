@@ -11,6 +11,8 @@ import { requireAuth } from "./auth.js";
 import { createAskRouter, type AskRouteDeps } from "./routes/ask.js";
 import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
 import { createCompetePageRouter } from "./routes/compete-page.js";
+import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
+import { createPagesRouter } from "./routes/pages.js";
 import { createStubsRouter } from "./routes/stubs.js";
 import { createRateLimiter, type RateLimitOptions } from "./rate-limit.js";
 
@@ -18,17 +20,25 @@ export interface ServerDeps {
   keyStore: ApiKeyStore;
   ask: AskRouteDeps;
   evalRuns: EvalRunStore;
+  brain: BrainReadDeps;
   rateLimit?: RateLimitOptions;
 }
 
 export function createServer(deps: ServerDeps): Express {
   const app = express();
   app.use(express.json());
+  // Every *-page.ts route is static markup carrying no data of its own (its own JS/server-side
+  // render is what attaches the API key to each fetch) -- mounted BEFORE requireAuth, or a plain
+  // browser navigation (which never sends a custom Authorization header) 401s before the HTML
+  // that would even prompt for a key ever loads. Real bug found live (2026-09-04) on /compete;
+  // the same reasoning now covers every UI page. Every JSON/data route stays behind auth.
+  app.use(createCompetePageRouter());
+  app.use(createPagesRouter());
   app.use(requireAuth(deps.keyStore));
   app.use(createRateLimiter(deps.rateLimit));
   app.use(createAskRouter(deps.ask));
   app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
-  app.use(createCompetePageRouter());
+  app.use(createBrainRouter(deps.brain));
   app.use(createStubsRouter());
   return app;
 }

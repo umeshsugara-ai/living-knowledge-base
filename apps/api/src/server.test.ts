@@ -83,17 +83,17 @@ test("POST /ask with a valid key that lacks the ask scope returns 403, not 401",
 test("a valid key hitting a stub route gets 501 (authorized but not built), never 403 or 200", async () => {
   const server = await startTestServer(
     buildTestDeps({
-      keyStore: fakeKeyStore({ "sources-key": { tenantId: "tenant-1", scopes: ["sources", "webhooks"] } }),
+      keyStore: fakeKeyStore({ "sources-key": { tenantId: "tenant-1", scopes: ["search", "webhooks"] } }),
     }),
   );
   try {
-    const getRes = await fetch(`${server.baseUrl}/sources`, {
+    const getRes = await fetch(`${server.baseUrl}/search`, {
       headers: { authorization: "Bearer sources-key" },
     });
     assert.equal(getRes.status, 501);
     const getBody = (await getRes.json()) as { error: string; message: string };
     assert.equal(getBody.error, "not_implemented");
-    assert.match(getBody.message, /GET \/sources is planned, not yet built/);
+    assert.match(getBody.message, /GET \/search is planned, not yet built/);
 
     const postRes = await fetch(`${server.baseUrl}/webhooks/register`, {
       method: "POST",
@@ -112,7 +112,7 @@ test("a valid key lacking a stub route's scope still gets 403 there (scope check
     }),
   );
   try {
-    const res = await fetch(`${server.baseUrl}/sources`, { headers: { authorization: "Bearer ask-only-key" } });
+    const res = await fetch(`${server.baseUrl}/search`, { headers: { authorization: "Bearer ask-only-key" } });
     assert.equal(res.status, 403);
   } finally {
     await server.close();
@@ -122,15 +122,15 @@ test("a valid key lacking a stub route's scope still gets 403 there (scope check
 test("rate limit trips after N requests with 429 and a Retry-After header", async () => {
   const server = await startTestServer(
     buildTestDeps({
-      keyStore: fakeKeyStore({ "rl-key": { tenantId: "tenant-rl", scopes: ["sources"] } }),
+      keyStore: fakeKeyStore({ "rl-key": { tenantId: "tenant-rl", scopes: ["search"] } }),
       rateLimit: { windowMs: 60_000, max: 2 },
     }),
   );
   try {
     const headers = { authorization: "Bearer rl-key" };
-    const first = await fetch(`${server.baseUrl}/sources`, { headers });
-    const second = await fetch(`${server.baseUrl}/sources`, { headers });
-    const third = await fetch(`${server.baseUrl}/sources`, { headers });
+    const first = await fetch(`${server.baseUrl}/search`, { headers });
+    const second = await fetch(`${server.baseUrl}/search`, { headers });
+    const third = await fetch(`${server.baseUrl}/search`, { headers });
 
     assert.equal(first.status, 501);
     assert.equal(second.status, 501);

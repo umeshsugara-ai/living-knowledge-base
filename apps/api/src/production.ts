@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, type Provider } from "@lkb/ai";
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
-import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore } from "./store.js";
+import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps } from "./store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 
@@ -33,6 +33,7 @@ export function buildProductionDeps(): ServerDeps {
   return {
     keyStore: createMongoApiKeyStore(),
     evalRuns: createMongoEvalRunStore(),
+    brain: createMongoBrainReadDeps(),
     ask: {
       tree: createMongoTreeStore(),
       askDeps: {

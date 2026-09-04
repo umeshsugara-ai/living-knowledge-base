@@ -39,6 +39,7 @@ a client of that API — with the long-range goal of beating top human counsello
   - `packages/meeting-bot/`
 - `qa/`
   - `qa/contracts/`
+  - `qa/evidence/`
   - `qa/manifests/`
   - `qa/verdicts/`
 - `raw/` — Data and source repos

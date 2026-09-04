@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.env
+**/.env
+**/.env.*
+!**/.env.example
+raw/TOC/TOC-Materials/Audio
+raw/TOC/TOC-Materials/Recordings
+.playwright-mcp
+*.png
+qa/debug

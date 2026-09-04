@@ -9,12 +9,17 @@
  * wraps — no new cross-package pattern invented.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, createEvalRun, recordScore as recordEvalRunScore } from "@lkb/db";
+import {
+  getDb, createEvalRun, recordScore as recordEvalRunScore,
+  sessions as sessionsColl, sources as sourcesColl, gaps as gapsColl,
+  claims as claimsColl, turns as turnsColl, sessionPages as sessionPagesColl,
+} from "@lkb/db";
 import type { ApiKeys, Jobs, TreeIndexNode } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
+import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import { sha256Hex } from "./hash.js";
 
 export function createMongoApiKeyStore(): ApiKeyStore {
@@ -31,7 +36,10 @@ export function createMongoApiKeyStore(): ApiKeyStore {
 export function createMongoTreeStore(): TreeStore {
   return {
     async load(tenantId: string): Promise<TreeIndexNode | null> {
-      return getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: tenantId, level: "tenant" });
+      // buildTree's own root node_id is `tenant:<id>` (packages/index/src/tree/build.ts), not
+      // the bare tenantId -- real bug found live (2026-09-04) while first standing up the API
+      // against real seeded data: this query never matched anything buildTree ever produced.
+      return getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
     },
   };
 }
@@ -50,5 +58,33 @@ export function createMongoEvalRunStore(): EvalRunStore {
 export function createMongoJobWriter(): WriteJobFn {
   return async (entry) => {
     await getDb().collection<Jobs>("jobs").insertOne({ _id: randomUUID(), ...entry });
+  };
+}
+
+/** Real `BrainReadDeps` (routes/brain.ts) — wraps the already-real `@lkb/db` accessors, same
+ * composition-root pattern as every store above. Claims/turns don't carry a bare `sessionId`
+ * field (claims relate via `evidence[].sessionId`; turns via their own `sessionId`), so the
+ * session-detail join queries each accordingly rather than assuming a shared shape. */
+export function createMongoBrainReadDeps(): BrainReadDeps {
+  return {
+    async listSessions(tenantId) {
+      return sessionsColl(tenantId).find({}).toArray();
+    },
+    async getSessionDetail(tenantId, sessionId): Promise<SessionDetail | null> {
+      const session = await sessionsColl(tenantId).findOne({ _id: sessionId });
+      if (!session) return null;
+      const [page, sessionClaims, sessionTurns] = await Promise.all([
+        sessionPagesColl(tenantId).findOne({ sessionId }),
+        claimsColl(tenantId).find({ "evidence.sessionId": sessionId }).toArray(),
+        turnsColl(tenantId).find({ sessionId }).toArray(),
+      ]);
+      return { session, page: page ?? null, claims: sessionClaims, turns: sessionTurns };
+    },
+    async listSources(tenantId) {
+      return sourcesColl(tenantId).find({}).toArray();
+    },
+    async listGaps(tenantId) {
+      return gapsColl(tenantId).find({}).toArray();
+    },
   };
 }

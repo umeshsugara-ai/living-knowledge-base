@@ -75,7 +75,12 @@ export function createCompeteRouter(deps: CompeteRouteDeps): Router {
     if (typeof counsellorOrg === "string" && counsellorOrg.trim() !== "") {
       counsellor.org = counsellorOrg;
     }
-    const aiAnswer = { text: result.answer, sources: result.sources };
+    // `scored` (which source nodes were judged relevant, and why) is what the /compete page
+    // renders as "cited sources" -- real gap found live (2026-09-04) testing the actual UI: this
+    // object used to drop it, so every real answer showed as uncited even when askV2 had scored
+    // real candidates. `/ask`'s own response already includes it; this route stayed consistent
+    // with that shape instead of re-deriving citations from `sources` alone.
+    const aiAnswer = { text: result.answer, sources: result.sources, scored: result.scored, verdict: result.verdict };
 
     await deps.evalRuns.create(tenantId, {
       _id: evalRunId,

@@ -1,5 +1,6 @@
 // @lkb/ai — T-019. Provider seam, five adapters, router, jobs ledger, STT sub-seam.
 export * from "./provider.js";
+export * from "./json.js";
 export * from "./jobs.js";
 export * from "./router.js";
 export * from "./routing-config.js";

@@ -9,6 +9,7 @@
  */
 import type { TreeIndexNode } from "@lkb/core";
 import type { Job, CompleteResult } from "@lkb/ai";
+import { parseJsonLoose } from "@lkb/ai";
 
 function tokenize(text: string): Set<string> {
   return new Set(text.toLowerCase().split(/\W+/).filter(Boolean));
@@ -34,16 +35,12 @@ const JUDGE_SYSTEM_PROMPT = [
 ].join(" ");
 
 function parseJudgeResponse(text: string): [number, string] | undefined {
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (typeof parsed !== "object" || parsed === null) return undefined;
-    const { score, reason } = parsed as { score?: unknown; reason?: unknown };
-    if (typeof score !== "number" || Number.isNaN(score)) return undefined;
-    const clamped = Math.min(1, Math.max(0, score));
-    return [clamped, typeof reason === "string" ? reason : "llm judge (no reason given)"];
-  } catch {
-    return undefined;
-  }
+  const parsed = parseJsonLoose(text);
+  if (typeof parsed !== "object" || parsed === null) return undefined;
+  const { score, reason } = parsed as { score?: unknown; reason?: unknown };
+  if (typeof score !== "number" || Number.isNaN(score)) return undefined;
+  const clamped = Math.min(1, Math.max(0, score));
+  return [clamped, typeof reason === "string" ? reason : "llm judge (no reason given)"];
 }
 
 /**

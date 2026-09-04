@@ -8,6 +8,7 @@
  * recompose: join the kept strips (doc order, strip order preserved) into one context string.
  */
 import type { CompleteResult } from "@lkb/ai";
+import { parseJsonLoose } from "@lkb/ai";
 import type { CompleteFn } from "./select-nodes.js";
 
 /** The minimal shape `refine` needs from a doc — callers adapt tree nodes / web results to this. */
@@ -36,19 +37,11 @@ function buildFilterPrompt(query: string, strip: string): string {
 
 /** Parses `{keep: boolean}` out of a completion's `json` field, falling back to its `text`. */
 export function parseKeep(completion: CompleteResult): boolean {
-  const candidate = completion.json ?? tryParseJson(completion.text);
+  const candidate = completion.json ?? parseJsonLoose(completion.text);
   if (candidate !== null && typeof candidate === "object" && "keep" in candidate) {
     return Boolean((candidate as { keep: unknown }).keep);
   }
   return /true/i.test(completion.text) && !/false/i.test(completion.text);
-}
-
-function tryParseJson(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
 }
 
 /**

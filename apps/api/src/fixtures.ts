@@ -9,6 +9,7 @@ import type { AskV2Deps } from "@lkb/ask";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
+import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { ServerDeps } from "./server.js";
 
 export const FIXTURE_TREE: TreeIndexNode = {
@@ -78,11 +79,33 @@ export function fakeEvalRunStore(): EvalRunStore & { _rows: Map<string, EvalRuns
   };
 }
 
+/** An in-memory `BrainReadDeps` — tests never touch Mongo. Seeded with one fixture session so
+ * both the list and detail routes have something real to return by default. */
+export function fakeBrainReadDeps(overrides: Partial<BrainReadDeps> = {}): BrainReadDeps {
+  const fixtureDetail: SessionDetail = {
+    session: {
+      _id: "session-1", tenantId: "tenant-1", sourceId: "source-1", title: "Fixture Session",
+      date: "2026-01-15", status: { transcribe: "done", index: "done" },
+    },
+    page: { _id: "page-1", tenantId: "tenant-1", sessionId: "session-1", summary: "A fixture summary.", evidence: [{ turnId: "t1", sessionId: "session-1" }] },
+    claims: [{ _id: "claim-1", tenantId: "tenant-1", text: "A fixture claim.", status: "verified", evidence: [{ turnId: "t1", sessionId: "session-1" }] }],
+    turns: [{ _id: "t1", tenantId: "tenant-1", sessionId: "session-1", speakerRef: "spk:0", tStart: 0, tEnd: 5, text: "Hello." }],
+  };
+  return {
+    listSessions: async () => [fixtureDetail.session],
+    getSessionDetail: async (_tenantId, id) => (id === "session-1" ? fixtureDetail : null),
+    listSources: async () => [],
+    listGaps: async () => [],
+    ...overrides,
+  };
+}
+
 export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
   return {
     keyStore: fakeKeyStore({ "good-ask-key": { tenantId: "tenant-1", scopes: ["ask"] } }),
     ask: { tree: fakeTreeStore(), askDeps: fakeAskDeps() },
     evalRuns: fakeEvalRunStore(),
+    brain: fakeBrainReadDeps(),
     ...overrides,
   };
 }

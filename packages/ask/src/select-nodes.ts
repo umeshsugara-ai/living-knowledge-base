@@ -17,6 +17,7 @@
  */
 import type { TreeIndexNode } from "@lkb/core";
 import type { CompleteResult, Job } from "@lkb/ai";
+import { parseJsonLoose } from "@lkb/ai";
 
 export type CompleteFn = (job: Job) => Promise<CompleteResult>;
 
@@ -49,7 +50,7 @@ function buildPrompt(query: string, nodes: TreeIndexNode[]): string {
 
 /** Parses `{node_ids: string[]}` out of a completion's `json` field, falling back to its `text`. */
 export function parseNodeIds(completion: CompleteResult): string[] {
-  const candidate = completion.json ?? tryParseJson(completion.text);
+  const candidate = completion.json ?? parseJsonLoose(completion.text);
   if (
     candidate !== null &&
     typeof candidate === "object" &&
@@ -60,14 +61,6 @@ export function parseNodeIds(completion: CompleteResult): string[] {
     );
   }
   return [];
-}
-
-function tryParseJson(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
 }
 
 /**

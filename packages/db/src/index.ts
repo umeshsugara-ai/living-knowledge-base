@@ -9,3 +9,4 @@ export * from "./collections/claims.js";
 export * from "./collections/session-pages.js";
 export * from "./collections/eval-runs.js";
 export * from "./collections/watched-sources.js";
+export * from "./collections/gaps.js";
