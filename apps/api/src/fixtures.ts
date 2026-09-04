@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { CalendarReadDeps, UpcomingMeeting } from "./routes/calendar.js";
+import type { MeetingCandidate, MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { IngestDeps } from "./routes/ingest.js";
 import type { ServerDeps } from "./server.js";
@@ -136,6 +137,37 @@ export function fakeCalendarReadDeps(overrides: Partial<CalendarReadDeps> = {}):
   };
 }
 
+/** A REAL in-memory `MeetingCandidatesDeps` (not read-only like the fakes above — scan/approve/
+ * reject must stay consistent within one test). `_rows`/`_trust` exposed for assertions. */
+export function fakeMeetingCandidatesDeps(overrides: Partial<MeetingCandidatesDeps> = {}): MeetingCandidatesDeps & {
+  _rows: Map<string, MeetingCandidate>; _trust: Map<string, number>;
+} {
+  const rows = new Map<string, MeetingCandidate>();
+  const trust = new Map<string, number>();
+  return {
+    _rows: rows,
+    _trust: trust,
+    async scanGmail() { return { created: 0, autoApproved: 0 }; },
+    async listCandidates() { return [...rows.values()]; },
+    async approve(_tenantId, id) {
+      const row = rows.get(id);
+      if (!row || row.status !== "pending") return false;
+      row.status = "approved";
+      row.decidedAt = new Date().toISOString();
+      trust.set(row.senderDomain, (trust.get(row.senderDomain) ?? 0) + 1);
+      return true;
+    },
+    async reject(_tenantId, id) {
+      const row = rows.get(id);
+      if (!row || row.status !== "pending") return false;
+      row.status = "rejected";
+      row.decidedAt = new Date().toISOString();
+      return true;
+    },
+    ...overrides,
+  };
+}
+
 /** A REAL in-memory `KeysDeps` (not read-only like the fakes above — create/list/revoke must
  * stay consistent within one test, matching what the real Mongo-backed impl guarantees). Never
  * exposes a raw key or hash from `listKeys`, same as the production implementation. */
@@ -181,6 +213,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     brain: fakeBrainReadDeps(),
     graph: fakeGraphReadDeps(),
     calendar: fakeCalendarReadDeps(),
+    meetingCandidates: fakeMeetingCandidatesDeps(),
     keys: fakeKeysDeps(),
     ingest: fakeIngestDeps(),
     ...overrides,

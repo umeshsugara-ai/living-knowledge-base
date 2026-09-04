@@ -11,6 +11,7 @@ export * from "./generated/gaps.js";
 export * from "./generated/graph_edges.js";
 export * from "./generated/jobs.js";
 export * from "./generated/media.js";
+export * from "./generated/meeting_candidates.js";
 export * from "./generated/orgs.js";
 export * from "./generated/programs.js";
 export * from "./generated/session_pages.js";
@@ -20,6 +21,7 @@ export * from "./generated/speakers.js";
 export * from "./generated/tenants.js";
 export * from "./generated/topics.js";
 export * from "./generated/tree_index.js";
+export * from "./generated/trusted_senders.js";
 export * from "./generated/turns.js";
 export * from "./generated/watched_sources.js";
 

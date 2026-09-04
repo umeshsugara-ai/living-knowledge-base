@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://trusted_senders",
+  "title": "trusted_senders",
+  "description": "T-028. Tracks how many times a sender domain's meeting candidates have been manually approved. Umesh's own rule (2026-09-04): after 3 manual approvals from the same sender, future candidates from it auto-confirm instead of waiting for review.",
+  "type": "object",
+  "required": ["_id", "tenantId", "senderDomain", "approvalCount", "autoApprove"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "senderDomain": { "type": "string", "minLength": 1 },
+    "approvalCount": { "type": "integer", "minimum": 0 },
+    "autoApprove": { "type": "boolean" },
+    "lastApprovedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

@@ -72,6 +72,7 @@ a client of that API — with the long-range goal of beating top human counsello
 | graph_edges | _id, tenantId, from, to, type | no |
 | jobs | _id, tenantId, kind, status, createdAt | no |
 | media | _id, tenantId, sourceRef, kind, retention | no |
+| meeting_candidates | _id, tenantId, messageId, subject, senderEmail, senderDomain, status, detectedAt | no |
 | orgs | _id, tenantId, name | no |
 | programs | _id, tenantId, name | no |
 | session_pages | _id, tenantId, sessionId, summary, evidence | yes |
@@ -81,6 +82,7 @@ a client of that API — with the long-range goal of beating top human counsello
 | tenants | _id, name | no |
 | topics | _id, tenantId, name | no |
 | tree_index | node_id, title, level, summary, children | yes |
+| trusted_senders | _id, tenantId, senderDomain, approvalCount, autoApprove | no |
 | turns | _id, tenantId, sessionId, speakerRef, tStart, tEnd, text | no |
 | watched_sources | _id, tenantId, url, reputationTier, checkIntervalHours, active | no |
 

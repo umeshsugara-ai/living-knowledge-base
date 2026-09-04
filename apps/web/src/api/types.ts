@@ -73,6 +73,18 @@ export interface UpcomingMeeting {
   organizer?: string;
 }
 
+export interface MeetingCandidate {
+  _id: string;
+  messageId: string;
+  subject: string;
+  senderEmail: string;
+  senderDomain: string;
+  meetingUrl?: string;
+  status: "pending" | "approved" | "rejected" | "auto_approved";
+  detectedAt: string;
+  decidedAt?: string;
+}
+
 export interface Graph {
   nodes: GraphNode[];
   edges: GraphEdge[];

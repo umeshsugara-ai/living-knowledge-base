@@ -17,7 +17,7 @@ module.exports = {
   },
   migrationsDir: "migrations",
   changelogCollectionName: "migrations_changelog",
-  migrationFileExtension: ".js",
+  migrationFileExtension: ".cjs",
   useFileHash: false,
   moduleSystem: "commonjs",
 };

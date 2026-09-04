@@ -10,3 +10,5 @@ export * from "./collections/session-pages.js";
 export * from "./collections/eval-runs.js";
 export * from "./collections/watched-sources.js";
 export * from "./collections/gaps.js";
+export * from "./collections/meeting-candidates.js";
+export * from "./collections/trusted-senders.js";

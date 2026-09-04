@@ -13,6 +13,8 @@ import {
   getDb, createEvalRun, recordScore as recordEvalRunScore,
   sessions as sessionsColl, sources as sourcesColl, gaps as gapsColl,
   claims as claimsColl, turns as turnsColl, sessionPages as sessionPagesColl,
+  listAll as listAllMeetingCandidates, createIfNew as createMeetingCandidateIfNew,
+  decide as decideMeetingCandidate, get as getTrustedSender, recordApproval as recordSenderApproval,
 } from "@lkb/db";
 import type { ApiKeys, Jobs, TreeIndexNode } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
@@ -25,6 +27,8 @@ import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { CalendarReadDeps } from "./routes/calendar.js";
 import { listUpcomingGwsMeetings } from "./gws-calendar.js";
+import type { MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
+import { scanGmailForMeetingCandidates } from "./gws-gmail.js";
 import { sha256Hex } from "./hash.js";
 
 export function createMongoApiKeyStore(): ApiKeyStore {
@@ -115,6 +119,49 @@ export function createGwsCalendarReadDeps(): CalendarReadDeps {
     async listUpcoming(_tenantId) {
       return listUpcomingGwsMeetings();
     },
+  };
+}
+
+/** Real `MeetingCandidatesDeps` (routes/meeting-candidates.ts) — wraps the already-real
+ * `@lkb/db` `meeting-candidates`/`trusted-senders` accessors plus the `gws`-backed Gmail scan.
+ * `scanGmail`'s per-message trust check is why this composes the two collections here rather
+ * than in the route: a candidate whose sender already crossed `AUTO_APPROVE_THRESHOLD` is filed
+ * straight in as `auto_approved`, never sitting in the pending review queue Umesh has to clear
+ * by hand for a sender he's already trusted three times over. */
+export function createMeetingCandidatesDeps(): MeetingCandidatesDeps {
+  return {
+    async scanGmail(tenantId) {
+      const found = await scanGmailForMeetingCandidates();
+      let created = 0;
+      let autoApproved = 0;
+      for (const candidate of found) {
+        const trusted = await getTrustedSender(tenantId, candidate.senderDomain);
+        const status = trusted?.autoApprove ? "auto_approved" : "pending";
+        const wrote = await createMeetingCandidateIfNew(tenantId, {
+          _id: randomUUID(),
+          messageId: candidate.messageId,
+          subject: candidate.subject,
+          senderEmail: candidate.senderEmail,
+          senderDomain: candidate.senderDomain,
+          ...(candidate.meetingUrl ? { meetingUrl: candidate.meetingUrl } : {}),
+          status,
+          detectedAt: new Date().toISOString(),
+        });
+        if (wrote) {
+          created += 1;
+          if (status === "auto_approved") autoApproved += 1;
+        }
+      }
+      return { created, autoApproved };
+    },
+    listCandidates: (tenantId) => listAllMeetingCandidates(tenantId),
+    async approve(tenantId, id) {
+      const candidate = await listAllMeetingCandidates(tenantId).then((rows) => rows.find((r) => r._id === id));
+      const ok = await decideMeetingCandidate(tenantId, id, "approved");
+      if (ok && candidate) await recordSenderApproval(tenantId, candidate.senderDomain);
+      return ok;
+    },
+    reject: (tenantId, id) => decideMeetingCandidate(tenantId, id, "rejected"),
   };
 }
 

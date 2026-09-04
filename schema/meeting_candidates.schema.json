@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kb://meeting_candidates",
+  "title": "meeting_candidates",
+  "description": "A meeting-shaped email found by scanning Gmail (T-028: Gmail meeting-candidate approval workflow). Never auto-ingested as a real session — a human approves it first, or the sending pattern has already earned trust (see trusted_senders). One row per real Gmail message, deduped by messageId.",
+  "type": "object",
+  "required": ["_id", "tenantId", "messageId", "subject", "senderEmail", "senderDomain", "status", "detectedAt"],
+  "properties": {
+    "_id": { "type": "string" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "messageId": { "type": "string", "minLength": 1, "description": "The real Gmail message id — dedup key." },
+    "subject": { "type": "string" },
+    "senderEmail": { "type": "string", "minLength": 1 },
+    "senderDomain": { "type": "string", "minLength": 1 },
+    "meetingUrl": { "type": "string" },
+    "eventDate": { "type": "string", "format": "date-time" },
+    "status": { "type": "string", "enum": ["pending", "approved", "rejected", "auto_approved"] },
+    "detectedAt": { "type": "string", "format": "date-time" },
+    "decidedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": true
+}

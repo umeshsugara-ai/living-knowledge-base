@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.js";
 import { listSessions } from "../api/sessions.js";
 import { listUpcomingMeetings } from "../api/calendar.js";
+import { scanGmail, listMeetingCandidates, approveMeetingCandidate, rejectMeetingCandidate } from "../api/meeting-candidates.js";
 import { ApiError } from "../api/client.js";
 import { ExternalLinkIcon } from "../components/icons.js";
-import type { SessionSummary, UpcomingMeeting } from "../api/types.js";
+import type { SessionSummary, UpcomingMeeting, MeetingCandidate } from "../api/types.js";
 
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -40,6 +41,10 @@ export function CalendarPage(): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [meetings, setMeetings] = useState<UpcomingMeeting[] | null>(null);
   const [meetingsError, setMeetingsError] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<MeetingCandidate[] | null>(null);
+  const [candidatesError, setCandidatesError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanNote, setScanNote] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +65,33 @@ export function CalendarPage(): React.ReactElement {
     return () => { cancelled = true; };
   }, [apiKey]);
 
+  function refreshCandidates(): void {
+    listMeetingCandidates(apiKey)
+      .then((data) => setCandidates(data.candidates))
+      .catch((err: unknown) => setCandidatesError(err instanceof ApiError ? err.message : "failed to load Gmail meeting candidates"));
+  }
+
+  useEffect(() => { refreshCandidates(); }, [apiKey]);
+
+  function handleScan(): void {
+    setScanning(true);
+    setScanNote(null);
+    scanGmail(apiKey)
+      .then((result) => {
+        setScanNote(`Found ${result.created} new candidate(s), ${result.autoApproved} auto-confirmed (trusted sender).`);
+        refreshCandidates();
+      })
+      .catch((err: unknown) => setCandidatesError(err instanceof ApiError ? err.message : "Gmail scan failed"))
+      .finally(() => setScanning(false));
+  }
+
+  function handleDecision(id: string, decision: "approve" | "reject"): void {
+    const action = decision === "approve" ? approveMeetingCandidate : rejectMeetingCandidate;
+    action(apiKey, id).then(() => refreshCandidates());
+  }
+
   const grouped = useMemo(() => groupByMonth(sessions ?? []), [sessions]);
+  const pendingCandidates = (candidates ?? []).filter((c) => c.status === "pending");
 
   return (
     <>
@@ -94,6 +125,44 @@ export function CalendarPage(): React.ReactElement {
                     </a>
                   </>
                 )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="section-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span>Needs review (from Gmail)</span>
+        <button type="button" onClick={handleScan} disabled={scanning} style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem", borderRadius: 6, border: "1px solid var(--line)", background: "var(--card)", cursor: "pointer" }}>
+          {scanning ? "Scanning…" : "Scan Gmail"}
+        </button>
+      </div>
+      <p className="row-meta" style={{ marginTop: "-0.4rem", marginBottom: "0.5rem" }}>
+        Meeting-shaped mail is held for your approval; once a sender has been approved 3 times, its future
+        meetings auto-confirm.
+      </p>
+      {scanNote && <div className="card empty-note">{scanNote}</div>}
+      {candidatesError && <div className="card error-note">{candidatesError}</div>}
+      {!candidatesError && candidates === null && <div className="card empty-note">Loading&hellip;</div>}
+      {candidates && pendingCandidates.length === 0 && !scanNote && (
+        <div className="card empty-note">No meeting candidates awaiting review. Click "Scan Gmail" to check.</div>
+      )}
+      {pendingCandidates.length > 0 && (
+        <div className="card">
+          {pendingCandidates.map((c) => (
+            <div key={c._id} className="row-card">
+              <div className="row-title">{c.subject}</div>
+              <div className="row-meta">
+                {c.senderEmail}
+                {c.meetingUrl ? ` · ${c.meetingUrl}` : ""}
+              </div>
+              <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.5rem" }}>
+                <button type="button" onClick={() => handleDecision(c._id, "approve")} className="badge badge-good" style={{ border: "none", cursor: "pointer" }}>
+                  Approve
+                </button>
+                <button type="button" onClick={() => handleDecision(c._id, "reject")} className="badge badge-bad" style={{ border: "none", cursor: "pointer" }}>
+                  Reject
+                </button>
               </div>
             </div>
           ))}
