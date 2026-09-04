@@ -8,6 +8,7 @@
  * rendering library, which is the part of this component that's actually ours to get right.
  */
 import { render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { vi, describe, test, expect } from "vitest";
 import { AuthProvider } from "../auth/AuthContext.js";
@@ -29,7 +30,9 @@ function renderWithKey() {
   localStorage.setItem("lkbApiKey", "test-key");
   return render(
     <AuthProvider>
-      <BrainPage />
+      <MemoryRouter>
+        <BrainPage />
+      </MemoryRouter>
     </AuthProvider>,
   );
 }
@@ -81,6 +84,32 @@ describe("BrainPage", () => {
     await user.click(await screen.findByText("Visas"));
     await waitFor(() => expect(screen.getByText("Session One", { selector: ".row-meta" })).toBeInTheDocument());
     expect(getSessionSpy).not.toHaveBeenCalled();
+  });
+
+  test("a linked session inside a topic panel is itself clickable and opens its real content", async () => {
+    vi.spyOn(graphApi, "loadGraph").mockResolvedValue({
+      nodes: [
+        { id: "s1", label: "Session One", kind: "session" },
+        { id: "visas", label: "Visas", kind: "topic" },
+      ],
+      edges: [{ source: "s1", target: "visas", kind: "session-topic", inferred: false }],
+    });
+    vi.spyOn(sessionsApi, "getSession").mockResolvedValue({
+      session: { _id: "s1", title: "Session One", date: "2026-04-21", status: { transcribe: "done", index: "done" } },
+      page: { summary: "A real summary." },
+      claims: [],
+      turns: [],
+    });
+    renderWithKey();
+    const user = userEvent.setup();
+    await user.click(await screen.findByText("Visas"));
+    // Two buttons now read "Session One": the mocked graph's own node button, and the panel's
+    // linked-session link -- the panel's is the last one rendered (it's a sibling after the
+    // graph container in DOM order).
+    const linkedButtons = await screen.findAllByRole("button", { name: "Session One" });
+    await user.click(linkedButtons[linkedButtons.length - 1]!);
+    await waitFor(() => expect(screen.getByText("A real summary.")).toBeInTheDocument());
+    expect(sessionsApi.getSession).toHaveBeenCalledWith("test-key", "s1");
   });
 
   test("shows an honest empty state when the tenant has no tree index yet", async () => {

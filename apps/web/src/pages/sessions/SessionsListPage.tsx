@@ -3,7 +3,15 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext.js";
 import { listSessions } from "../../api/sessions.js";
 import { ApiError } from "../../api/client.js";
+import { SessionsIcon } from "../../components/icons.js";
 import type { SessionSummary } from "../../api/types.js";
+
+function statusBadgeClass(status: string): string {
+  if (status === "done") return "badge badge-good";
+  if (status === "processing") return "badge badge-warn";
+  if (status === "failed") return "badge badge-bad";
+  return "badge";
+}
 
 export function SessionsListPage(): React.ReactElement {
   const { apiKey } = useAuth();
@@ -28,12 +36,20 @@ export function SessionsListPage(): React.ReactElement {
       {!error && sessions === null && <div className="card empty-note">Loading&hellip;</div>}
       {sessions && sessions.length === 0 && <div className="card empty-note">No sessions found for this tenant.</div>}
       {sessions && sessions.length > 0 && (
-        <div className="card">
+        <div className="session-grid">
           {sessions.map((s) => (
-            <Link key={s._id} to={`/sessions/${encodeURIComponent(s._id)}`} className="row-card">
-              <div className="row-title">{s.title}</div>
-              <div className="row-meta">
-                {s.date}{s.org ? ` · ${s.org}` : ""} &middot; index: {s.status?.index ?? "unknown"}
+            <Link key={s._id} to={`/sessions/${encodeURIComponent(s._id)}`} className="session-card">
+              <div className="session-card-icon"><SessionsIcon /></div>
+              <div className="session-card-body">
+                <div className="row-title">{s.title}</div>
+                <div className="row-meta">
+                  {s.date}{s.org ? ` · ${s.org}` : ""}{s.participants?.length ? ` · ${s.participants.length} participant(s)` : ""}
+                </div>
+                <div style={{ marginTop: "0.4rem" }}>
+                  <span className={statusBadgeClass(s.status?.transcribe ?? "unknown")}>transcribe: {s.status?.transcribe ?? "unknown"}</span>
+                  {" "}
+                  <span className={statusBadgeClass(s.status?.index ?? "unknown")}>index: {s.status?.index ?? "unknown"}</span>
+                </div>
               </div>
             </Link>
           ))}

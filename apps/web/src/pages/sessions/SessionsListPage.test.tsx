@@ -27,6 +27,16 @@ describe("SessionsListPage", () => {
     expect(link).toHaveAttribute("href", "/sessions/s1");
   });
 
+  test("renders real transcribe/index status badges per session", async () => {
+    vi.spyOn(sessionsApi, "listSessions").mockResolvedValue({
+      sessions: [{ _id: "s1", title: "A Real Session", date: "2026-04-21", org: "TOC", status: { transcribe: "done", index: "processing" } }],
+    });
+    renderPage();
+    await screen.findByRole("link", { name: /A Real Session/ });
+    expect(screen.getByText("transcribe: done")).toBeInTheDocument();
+    expect(screen.getByText("index: processing")).toBeInTheDocument();
+  });
+
   test("shows an honest empty state when there are no sessions", async () => {
     vi.spyOn(sessionsApi, "listSessions").mockResolvedValue({ sessions: [] });
     renderPage();

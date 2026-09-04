@@ -13,6 +13,7 @@ import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
 import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
 import { createGraphRouter, type GraphReadDeps } from "./routes/graph.js";
+import { createCalendarRouter, type CalendarReadDeps } from "./routes/calendar.js";
 import { createKeysRouter, type KeysDeps } from "./routes/keys.js";
 import { createIngestRouter, type IngestDeps } from "./routes/ingest.js";
 import { createPagesRouter } from "./routes/pages.js";
@@ -26,6 +27,7 @@ export interface ServerDeps {
   evalRuns: EvalRunStore;
   brain: BrainReadDeps;
   graph: GraphReadDeps;
+  calendar: CalendarReadDeps;
   keys: KeysDeps;
   ingest: IngestDeps;
   rateLimit?: RateLimitOptions;
@@ -52,6 +54,7 @@ export function createServer(deps: ServerDeps): Express {
   app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
   app.use(createBrainRouter(deps.brain));
   app.use(createGraphRouter(deps.graph));
+  app.use(createCalendarRouter(deps.calendar));
   app.use(createKeysRouter(deps.keys));
   app.use(createIngestRouter(deps.ingest));
   app.use(createStubsRouter());

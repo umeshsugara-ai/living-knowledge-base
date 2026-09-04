@@ -10,6 +10,7 @@ export interface SessionSummary {
   title: string;
   date: string;
   org?: string;
+  participants?: string[];
   status: { transcribe: string; index: string; [k: string]: unknown };
 }
 
@@ -61,6 +62,15 @@ export interface GraphEdge {
   target: string;
   kind: "session-topic" | "session-org" | "topic-cooccurrence";
   inferred: boolean;
+}
+
+export interface UpcomingMeeting {
+  id: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+  meetingUrl?: string;
+  organizer?: string;
 }
 
 export interface Graph {

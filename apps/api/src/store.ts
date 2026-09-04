@@ -23,6 +23,8 @@ import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
+import type { CalendarReadDeps } from "./routes/calendar.js";
+import { listUpcomingGwsMeetings } from "./gws-calendar.js";
 import { sha256Hex } from "./hash.js";
 
 export function createMongoApiKeyStore(): ApiKeyStore {
@@ -100,6 +102,18 @@ export function createMongoGraphReadDeps(): GraphReadDeps {
     async loadGraph(tenantId): Promise<Graph | null> {
       const root = await getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
       return root ? flattenTreeToGraph(root) : null;
+    },
+  };
+}
+
+/** Real `CalendarReadDeps` (routes/calendar.ts) — thin wrapper over the `gws`-backed adapter.
+ * `tenantId` is accepted for interface parity with every other read-dep but unused today: `gws`
+ * reads one calendar ("primary", Umesh's own), not a per-tenant mapping — a real, disclosed
+ * limitation of this being a single-operator tool today, not a hosted multi-tenant one. */
+export function createGwsCalendarReadDeps(): CalendarReadDeps {
+  return {
+    async listUpcoming(_tenantId) {
+      return listUpcomingGwsMeetings();
     },
   };
 }

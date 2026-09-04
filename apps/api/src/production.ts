@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, type Provider } from "@lkb/ai";
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
-import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps, createMongoKeysDeps } from "./store.js";
+import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps, createGwsCalendarReadDeps, createMongoKeysDeps } from "./store.js";
 import { createMongoIngestDeps } from "./ingest-store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
@@ -36,6 +36,7 @@ export function buildProductionDeps(): ServerDeps {
     evalRuns: createMongoEvalRunStore(),
     brain: createMongoBrainReadDeps(),
     graph: createMongoGraphReadDeps(),
+    calendar: createGwsCalendarReadDeps(),
     keys: createMongoKeysDeps(),
     ingest: createMongoIngestDeps(),
     // CORS_ORIGINS is a comma-separated allowlist (e.g. "http://localhost:5173" in dev, the real

@@ -20,6 +20,8 @@ const REAL_ROUTES: RealRoute[] = [
   { label: "GET /sessions/:id", scope: "sessions" },
   { label: "GET /sources", scope: "sources" },
   { label: "GET /gaps", scope: "gaps" },
+  { label: "GET /graph", scope: "graph" },
+  { label: "GET /calendar/upcoming", scope: "calendar" },
 ];
 
 export function createPagesRouter(): Router {

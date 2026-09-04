@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.js";
 import { listSessions } from "../api/sessions.js";
+import { listUpcomingMeetings } from "../api/calendar.js";
 import { ApiError } from "../api/client.js";
-import type { SessionSummary } from "../api/types.js";
+import { ExternalLinkIcon } from "../components/icons.js";
+import type { SessionSummary, UpcomingMeeting } from "../api/types.js";
 
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -23,10 +25,21 @@ function monthLabel(key: string): string {
   return `${MONTH_NAMES[idx] ?? month} ${year}`;
 }
 
+function formatMeetingTime(startTime: string, endTime: string): string {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const dateStr = start.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  const startStr = start.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const endStr = end.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return `${dateStr} · ${startStr}–${endStr}`;
+}
+
 export function CalendarPage(): React.ReactElement {
   const { apiKey } = useAuth();
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [meetings, setMeetings] = useState<UpcomingMeeting[] | null>(null);
+  const [meetingsError, setMeetingsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,21 +49,56 @@ export function CalendarPage(): React.ReactElement {
     return () => { cancelled = true; };
   }, [apiKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    // A failed real-calendar fetch (gws unauthenticated, not installed, etc.) degrades to the
+    // honest "not connected" state below -- never a page-wide error, since Past sessions still
+    // work independently of this.
+    listUpcomingMeetings(apiKey)
+      .then((data) => { if (!cancelled) setMeetings(data.meetings); })
+      .catch((err: unknown) => { if (!cancelled) setMeetingsError(err instanceof ApiError ? err.message : "failed to load upcoming meetings"); });
+    return () => { cancelled = true; };
+  }, [apiKey]);
+
   const grouped = useMemo(() => groupByMonth(sessions ?? []), [sessions]);
 
   return (
     <>
       <div className="page-header">
         <h1>Calendar</h1>
-        <p>Past sessions, chronologically, and upcoming events (a real, honest empty state today).</p>
+        <p>Past sessions, chronologically, and real upcoming meetings from your connected calendar.</p>
       </div>
 
       <div className="section-title">Upcoming</div>
-      <div className="card empty-note">
-        No upcoming events are tracked yet. Real calendar sync (meeting-bot's Google Calendar
-        integration) and gap due-dates aren't wired to a live data source yet &mdash; this section
-        will populate once one of those ships, not before.
-      </div>
+      {meetingsError && <div className="card error-note">{meetingsError}</div>}
+      {!meetingsError && meetings === null && <div className="card empty-note">Loading&hellip;</div>}
+      {!meetingsError && meetings && meetings.length === 0 && (
+        <div className="card empty-note">
+          No upcoming meetings found in the next two weeks &mdash; either your calendar is clear, or
+          the calendar connection (`gws`) isn&rsquo;t reachable from this server right now.
+        </div>
+      )}
+      {meetings && meetings.length > 0 && (
+        <div className="card">
+          {meetings.map((m) => (
+            <div key={m.id} className="row-card">
+              <div className="row-title">{m.title}</div>
+              <div className="row-meta">
+                {formatMeetingTime(m.startTime, m.endTime)}
+                {m.organizer ? ` · ${m.organizer}` : ""}
+                {m.meetingUrl && (
+                  <>
+                    {" · "}
+                    <a href={m.meetingUrl} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                      Join <ExternalLinkIcon className="row-meta" />
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="section-title">Past</div>
       {error && <div className="card error-note">{error}</div>}

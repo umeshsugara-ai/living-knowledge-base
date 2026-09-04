@@ -12,6 +12,7 @@ import type { EvalRunStore } from "./routes/compete.js";
 import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { GraphReadDeps } from "./routes/graph.js";
+import type { CalendarReadDeps, UpcomingMeeting } from "./routes/calendar.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { IngestDeps } from "./routes/ingest.js";
 import type { ServerDeps } from "./server.js";
@@ -122,6 +123,19 @@ export function fakeGraphReadDeps(overrides: Partial<GraphReadDeps> = {}): Graph
   };
 }
 
+/** An in-memory `CalendarReadDeps` — tests never shell out to `gws`. One fixture meeting by
+ * default so both the populated and (via override) empty shapes are reachable. */
+export function fakeCalendarReadDeps(overrides: Partial<CalendarReadDeps> = {}): CalendarReadDeps {
+  const fixtureMeeting: UpcomingMeeting = {
+    id: "evt-1", title: "Fixture Sync", startTime: "2026-09-05T10:00:00.000Z",
+    endTime: "2026-09-05T10:30:00.000Z", meetingUrl: "https://meet.google.com/fixture", organizer: "umeshsugara@vidysea.com",
+  };
+  return {
+    listUpcoming: async () => [fixtureMeeting],
+    ...overrides,
+  };
+}
+
 /** A REAL in-memory `KeysDeps` (not read-only like the fakes above — create/list/revoke must
  * stay consistent within one test, matching what the real Mongo-backed impl guarantees). Never
  * exposes a raw key or hash from `listKeys`, same as the production implementation. */
@@ -166,6 +180,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     evalRuns: fakeEvalRunStore(),
     brain: fakeBrainReadDeps(),
     graph: fakeGraphReadDeps(),
+    calendar: fakeCalendarReadDeps(),
     keys: fakeKeysDeps(),
     ingest: fakeIngestDeps(),
     ...overrides,
