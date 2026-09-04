@@ -15,6 +15,7 @@ import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, 
 import { createMongoIngestDeps } from "./ingest-store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
+import { createTavilySearchFn } from "./ask-web-fallback.js";
 
 const ROUTING_CONFIG_PATH = fileURLToPath(new URL("../../../config/ai-routing.yaml", import.meta.url));
 /** `write` for the router's own per-attempt ledger entries — a tenant isn't known until a
@@ -30,6 +31,8 @@ export function buildProductionDeps(): ServerDeps {
     gemini: new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY ?? "" }),
     "claude-code": new ClaudeCodeProvider(realTransport),
   };
+
+  const tavilySearchFn = createTavilySearchFn();
 
   return {
     keyStore: createMongoApiKeyStore(),
@@ -54,6 +57,10 @@ export function buildProductionDeps(): ServerDeps {
           (job) => routeComplete("evaluator", job, { chains, providers, write: jobWrite, tenantId: ROUTER_TENANT_ID }),
         ),
         treeSearchFn: treeSearch,
+        // ISS-010: real Tavily web-supplement, only when TAVILY_API_KEY is actually set (it's
+        // empty in .env today) -- createTavilySearchFn() returns undefined in that case, so
+        // /ask's insufficient_coverage:true behavior is unchanged until a real key exists.
+        ...(tavilySearchFn ? { tavilySearchFn } : {}),
         write: jobWrite,
       },
     },

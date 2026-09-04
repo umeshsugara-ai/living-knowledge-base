@@ -96,3 +96,58 @@ test("ambiguous verdict: refines both good_docs and web docs, keeps sources sepa
   assert.ok(steps.filter((s) => s === "score").length === 2);
   assert.ok(steps.includes("answer"));
 });
+
+test("insufficient coverage with no sync webFallbackFn: tavilySearchFn fills the real gap (ISS-010)", async () => {
+  const complete = fakeComplete(
+    { json: { node_ids: ["tenant:t1/session:b"] } }, // selectNodes -- single candidate, scored below lower -> incorrect, good_docs empty
+    { json: { keep: true } }, // refine: the tavily doc -> kept
+    { text: "Final answer" }, // answer
+  );
+  const write = fakeWrite();
+  let tavilyCalledWith: string | undefined;
+  const tavilySearchFn = async (query: string) => {
+    tavilyCalledWith = query;
+    return [{ content: "Real web result." }];
+  };
+
+  const result = await askV2("what color are apples?", TREE, {
+    complete,
+    scoreFn: fakeScoreFn({ "tenant:t1/session:b": 0.05 }),
+    treeSearchFn: fakeTreeSearch,
+    // no webFallbackFn -- this is the exact production shape today (apps/api/src/production.ts
+    // never wires one), so ask() must come back insufficient_coverage:true before tavilySearchFn
+    // is tried.
+    tavilySearchFn,
+    write,
+    tenantId: "t1",
+  });
+
+  assert.equal(tavilyCalledWith, "what color are apples?");
+  assert.equal(result.verdict, "incorrect");
+  assert.equal(result.insufficient_coverage, false, "tavilySearchFn must clear insufficient_coverage");
+  assert.equal(result.web_used, true);
+  assert.deepEqual(result.sources.web, [{ content: "Real web result." }]);
+  assert.ok(result.auditLog.some((e) => e.step === "web_fallback"), "the fallback call must be audited");
+  assert.ok(write.writes.some((w) => (w as { kind?: string }).kind === "ask.web_fallback"));
+});
+
+test("insufficient coverage with no tavilySearchFn provided: behavior is unchanged (byte-identical)", async () => {
+  const complete = fakeComplete(
+    { json: { node_ids: ["tenant:t1/session:a"] } }, // selectNodes
+    { text: "Final answer" }, // answer -- low score means no refine call happens (empty docs)
+  );
+  const write = fakeWrite();
+
+  const result = await askV2("what color are apples?", TREE, {
+    complete,
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.1 }),
+    treeSearchFn: fakeTreeSearch,
+    write,
+    tenantId: "t1",
+  });
+
+  assert.equal(result.insufficient_coverage, true);
+  assert.equal(result.web_used, false);
+  assert.deepEqual(result.sources.web, []);
+  assert.ok(!result.auditLog.some((e) => e.step === "web_fallback"));
+});

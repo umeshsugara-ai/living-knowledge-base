@@ -29,6 +29,15 @@ export interface AskV2Deps {
   /** `@lkb/index`'s `treeSearch` — injected, never imported (see select-nodes.ts module doc). */
   treeSearchFn: NodeSearchFn;
   webFallbackFn?: WebFallbackFn;
+  /** ISS-010: the real, async web-search escape hatch. `router.ts`'s `WebFallbackFn` is
+   * synchronous by design (T-005/T-016, already shipped and checker-PASSed — never touched by
+   * this addition), so a real HTTP-backed provider (Tavily) can't be that function directly.
+   * Instead: when `ask()` comes back `insufficient_coverage` (verdict != correct AND no
+   * `webFallbackFn` fired), this optional async fn is tried as a second, real fallback — layered
+   * on top of `router.ts`, never inside it. Omitted in production until a real `TAVILY_API_KEY`
+   * exists (apps/api/src/ask-web-fallback.ts); absent here, behavior is byte-identical to before
+   * this addition. */
+  tavilySearchFn?: (query: string) => Promise<WebSource[]>;
   write: WriteJobFn;
   tenantId: string;
   upper?: number;
@@ -49,7 +58,7 @@ function webDocText(source: WebSource): string {
 }
 
 export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps): Promise<AskV2Result> {
-  const { complete, scoreFn, treeSearchFn, webFallbackFn, write, tenantId } = deps;
+  const { complete, scoreFn, treeSearchFn, webFallbackFn, tavilySearchFn, write, tenantId } = deps;
   const upper = deps.upper ?? UPPER_THRESHOLD;
   const lower = deps.lower ?? LOWER_THRESHOLD;
   const auditLog: AuditEntry[] = [];
@@ -74,7 +83,18 @@ export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps)
   // ask() re-scores `candidates` via `scoreFn` internally (T-005's evaluate()) — reused here, not
   // duplicated. Each candidate's node comes back on `scored[].node`, still the full node object
   // selectNodes/treeSearch resolved (with `summary`), so refine below needs no second lookup.
-  const askResult = await ask(query, tree, () => candidates, scoreFn, webFallbackFn, upper, lower);
+  let askResult = await ask(query, tree, () => candidates, scoreFn, webFallbackFn, upper, lower);
+
+  // ISS-010: real async web-search fallback, layered on top of router.ts (never inside it — see
+  // AskV2Deps.tavilySearchFn doc). Only reachable when the sync webFallbackFn path didn't already
+  // cover it (insufficient_coverage is true exactly when verdict != correct AND no webFallbackFn
+  // fired), so this and the sync path never both run for the same query.
+  if (askResult.insufficient_coverage && tavilySearchFn) {
+    const webResults = await tavilySearchFn(query);
+    await recordJob({ tenantId, kind: "ask.web_fallback", status: "done" }, write);
+    auditLog.push({ jobKind: "ask.web_fallback", step: "web_fallback" });
+    askResult = { ...askResult, web_used: true, insufficient_coverage: false, sources: { ...askResult.sources, web: webResults } };
+  }
 
   for (const s of askResult.scored) {
     await recordJob({ tenantId, kind: "ask.score", status: "done" }, write);
