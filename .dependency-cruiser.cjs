@@ -82,7 +82,12 @@ module.exports = {
       exportsFields: ["exports"],
       conditionNames: ["import", "require", "node", "default", "types"],
       mainFields: ["main", "types"],
-      extensions: [".ts", ".mts", ".cts", ".js", ".mjs", ".cjs", ".json"],
+      // .tsx added for apps/web (T-010/§8b) -- the first .tsx-containing package in the
+      // monorepo; every import here is written with a ".js" extension per TS/ESM convention
+      // even though the real source file is .tsx (e.g. "./LoginGate.js" -> LoginGate.tsx),
+      // and depcruise's resolver needs .tsx in its own extension list to find it, independent
+      // of what extension the import string itself uses.
+      extensions: [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".json"],
     },
     reporterOptions: { text: { highlightFocused: true } },
   },

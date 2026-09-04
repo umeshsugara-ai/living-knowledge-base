@@ -10,6 +10,7 @@ import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
+import type { GraphReadDeps } from "./routes/graph.js";
 import type { ServerDeps } from "./server.js";
 
 export const FIXTURE_TREE: TreeIndexNode = {
@@ -100,12 +101,31 @@ export function fakeBrainReadDeps(overrides: Partial<BrainReadDeps> = {}): Brain
   };
 }
 
+/** An in-memory `GraphReadDeps` — tests never touch Mongo. One session/topic node + edge so
+ * both the empty-graph and non-empty-graph shapes are reachable from a default fixture. */
+export function fakeGraphReadDeps(overrides: Partial<GraphReadDeps> = {}): GraphReadDeps {
+  return {
+    loadGraph: async (tenantId) =>
+      tenantId === "tenant-1"
+        ? {
+            nodes: [
+              { id: "session-1", label: "Fixture Session", kind: "session" },
+              { id: "visas", label: "Visas", kind: "topic" },
+            ],
+            edges: [{ source: "session-1", target: "visas", kind: "session-topic", inferred: false }],
+          }
+        : null,
+    ...overrides,
+  };
+}
+
 export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
   return {
     keyStore: fakeKeyStore({ "good-ask-key": { tenantId: "tenant-1", scopes: ["ask"] } }),
     ask: { tree: fakeTreeStore(), askDeps: fakeAskDeps() },
     evalRuns: fakeEvalRunStore(),
     brain: fakeBrainReadDeps(),
+    graph: fakeGraphReadDeps(),
     ...overrides,
   };
 }

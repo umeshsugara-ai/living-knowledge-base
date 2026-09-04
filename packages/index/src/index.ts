@@ -5,6 +5,7 @@ export { buildTree, type Summarize } from "./tree/build.js";
 export { treeSearch } from "./tree/search.js";
 export { extractTopicRefs, type ExtractTopicRefs } from "./tree/extract-topics.js";
 export { regenerate } from "./tree/regenerate.js";
+export { flattenTreeToGraph, type Graph, type GraphNode, type GraphEdge } from "./tree/flatten-graph.js";
 
 export { computeRecallAtK, type GoldenQuestion, type RetrieveFn, type RecallResult, type RecallMiss } from "./eval/recall.js";
 export { createHeuristicRetriever } from "./eval/heuristic-retriever.js";

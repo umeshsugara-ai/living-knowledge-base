@@ -16,10 +16,12 @@ import {
 } from "@lkb/db";
 import type { ApiKeys, Jobs, TreeIndexNode } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
+import { flattenTreeToGraph, type Graph } from "@lkb/index";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
+import type { GraphReadDeps } from "./routes/graph.js";
 import { sha256Hex } from "./hash.js";
 
 export function createMongoApiKeyStore(): ApiKeyStore {
@@ -85,6 +87,18 @@ export function createMongoBrainReadDeps(): BrainReadDeps {
     },
     async listGaps(tenantId) {
       return gapsColl(tenantId).find({}).toArray();
+    },
+  };
+}
+
+/** Real `GraphReadDeps` (routes/graph.ts) — reuses the exact same `tree_index` query
+ * `createMongoTreeStore` already uses (the `tenant:<id>` node_id fix), then flattens it with
+ * `@lkb/index`'s pure `flattenTreeToGraph`. No new Mongo access pattern. */
+export function createMongoGraphReadDeps(): GraphReadDeps {
+  return {
+    async loadGraph(tenantId): Promise<Graph | null> {
+      const root = await getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
+      return root ? flattenTreeToGraph(root) : null;
     },
   };
 }

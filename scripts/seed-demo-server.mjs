@@ -45,7 +45,7 @@ async function main() {
     _id: randomUUID(),
     tenantId,
     keyHash,
-    scopes: ["ask", "compete", "sources", "sessions", "search", "citations", "webhooks", "gaps"],
+    scopes: ["ask", "compete", "sources", "sessions", "search", "citations", "webhooks", "gaps", "graph"],
     label: "demo-server",
     createdAt: new Date().toISOString(),
     revokedAt: null,

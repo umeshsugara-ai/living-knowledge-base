@@ -12,21 +12,29 @@ import { createAskRouter, type AskRouteDeps } from "./routes/ask.js";
 import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
 import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
+import { createGraphRouter, type GraphReadDeps } from "./routes/graph.js";
 import { createPagesRouter } from "./routes/pages.js";
 import { createStubsRouter } from "./routes/stubs.js";
 import { createRateLimiter, type RateLimitOptions } from "./rate-limit.js";
+import { createCors } from "./cors.js";
 
 export interface ServerDeps {
   keyStore: ApiKeyStore;
   ask: AskRouteDeps;
   evalRuns: EvalRunStore;
   brain: BrainReadDeps;
+  graph: GraphReadDeps;
   rateLimit?: RateLimitOptions;
+  /** apps/web's real origin(s) in dev/prod (e.g. "http://localhost:5173") — no default, an
+   * empty list means no cross-origin browser call succeeds, which is the safe default until a
+   * caller explicitly opts a frontend origin in. */
+  corsOrigins?: string[];
 }
 
 export function createServer(deps: ServerDeps): Express {
   const app = express();
   app.use(express.json());
+  app.use(createCors(deps.corsOrigins ?? []));
   // Every *-page.ts route is static markup carrying no data of its own (its own JS/server-side
   // render is what attaches the API key to each fetch) -- mounted BEFORE requireAuth, or a plain
   // browser navigation (which never sends a custom Authorization header) 401s before the HTML
@@ -39,6 +47,7 @@ export function createServer(deps: ServerDeps): Express {
   app.use(createAskRouter(deps.ask));
   app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
   app.use(createBrainRouter(deps.brain));
+  app.use(createGraphRouter(deps.graph));
   app.use(createStubsRouter());
   return app;
 }
