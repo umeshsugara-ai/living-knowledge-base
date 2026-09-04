@@ -17,6 +17,7 @@ import { createMongoWhatsAppDeps } from "./whatsapp-store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 import { createTavilySearchFn } from "./ask-web-fallback.js";
+import { indexSession, type BoundIndexer } from "./indexing.js";
 
 const ROUTING_CONFIG_PATH = fileURLToPath(new URL("../../../config/ai-routing.yaml", import.meta.url));
 /** `write` for the router's own per-attempt ledger entries — a tenant isn't known until a
@@ -35,6 +36,14 @@ export function buildProductionDeps(): ServerDeps {
 
   const tavilySearchFn = createTavilySearchFn();
 
+  // Real "make ingested content searchable" step (ISS: summarize/claims/tree_index were declared
+  // job kinds with no implementation until now — see indexing.ts). Bound once here so every
+  // ingest composition root only ever calls `(tenantId, sessionId) => Promise<void>`.
+  const boundIndexer: BoundIndexer = (tenantId, sessionId) =>
+    indexSession(tenantId, sessionId, {
+      complete: (job) => routeComplete(job.kind, job, { chains, providers, write: jobWrite, tenantId }),
+    });
+
   return {
     keyStore: createMongoApiKeyStore(),
     evalRuns: createMongoEvalRunStore(),
@@ -42,9 +51,9 @@ export function buildProductionDeps(): ServerDeps {
     graph: createMongoGraphReadDeps(),
     calendar: createGwsCalendarReadDeps(),
     meetingCandidates: createMeetingCandidatesDeps(),
-    whatsapp: createMongoWhatsAppDeps(),
+    whatsapp: createMongoWhatsAppDeps(boundIndexer),
     keys: createMongoKeysDeps(),
-    ingest: createMongoIngestDeps(),
+    ingest: createMongoIngestDeps(boundIndexer),
     // CORS_ORIGINS is a comma-separated allowlist (e.g. "http://localhost:5173" in dev, the real
     // apps/web deployment origin in prod) — no default beyond "" -> empty list, matching
     // server.ts's safe-by-default stance.

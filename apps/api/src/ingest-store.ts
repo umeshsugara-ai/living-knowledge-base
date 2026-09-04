@@ -14,6 +14,7 @@ import type { Sources, Sessions, Turns } from "@lkb/core";
 import { createUrlSource, type ConsentContext, type Turn } from "@lkb/ingest";
 import type { IngestDeps, IngestResult } from "./routes/ingest.js";
 import { sha256Hex } from "./hash.js";
+import type { BoundIndexer } from "./indexing.js";
 
 async function jinaReaderFetch(url: string): Promise<string> {
   const apiKey = process.env.JINA_API_KEY;
@@ -24,7 +25,12 @@ async function jinaReaderFetch(url: string): Promise<string> {
   return res.text();
 }
 
-export function createMongoIngestDeps(): IngestDeps {
+/** `indexSession` is optional (tests never wire it) — real production wiring passes
+ * `indexing.ts`'s `indexSession`, bound with the real routed `complete`. A rejected indexing
+ * call is logged and swallowed: the ingest itself already succeeded (source/session/turns are
+ * safely stored), so it still returns 201 with the real result rather than failing the whole
+ * request over the searchability step. */
+export function createMongoIngestDeps(indexSession?: BoundIndexer): IngestDeps {
   const urlSource = createUrlSource({ hasher: sha256Hex, fetcher: jinaReaderFetch });
 
   return {
@@ -58,6 +64,14 @@ export function createMongoIngestDeps(): IngestDeps {
         text: t.text,
       }));
       if (turnDocs.length > 0) await getDb().collection<Turns>("turns").insertMany(turnDocs);
+
+      if (indexSession) {
+        try {
+          await indexSession(tenantId, sessionId);
+        } catch (err) {
+          console.error(`ingestUrl: indexing failed for session ${sessionId} (raw content still stored):`, err);
+        }
+      }
 
       return { sessionId, sourceId: source._id, turnCount: turnDocs.length };
     },

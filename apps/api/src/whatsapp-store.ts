@@ -13,6 +13,7 @@ import type { Sources, Sessions, Turns } from "@lkb/core";
 import { createWhatsAppSource, type WhatsAppFetcher, type WhatsAppMessage, type ConsentContext, type Turn } from "@lkb/ingest";
 import type { WhatsAppRouteDeps, WhatsAppGroup, WhatsAppIngestResult } from "./routes/whatsapp.js";
 import { sha256Hex } from "./hash.js";
+import type { BoundIndexer } from "./indexing.js";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;
@@ -85,7 +86,7 @@ export async function listTrackableGroups(): Promise<TrackableGroup[]> {
 /** Real `WhatsAppRouteDeps` (routes/whatsapp.ts). Same persist shape `ingest-store.ts` writes
  * for a URL ingest (sources + sessions + turns), reusing the already-real `GET /sessions/:id`
  * view — no second "ingested content" viewer built for this source kind either. */
-export function createMongoWhatsAppDeps(): WhatsAppRouteDeps {
+export function createMongoWhatsAppDeps(indexSession?: BoundIndexer): WhatsAppRouteDeps {
   const whatsAppSource = createWhatsAppSource({ hasher: sha256Hex, fetcher: fetchWhatsAppMessages });
 
   return {
@@ -122,6 +123,14 @@ export function createMongoWhatsAppDeps(): WhatsAppRouteDeps {
         text: t.text,
       }));
       if (turnDocs.length > 0) await getAppDb().collection<Turns>("turns").insertMany(turnDocs);
+
+      if (indexSession) {
+        try {
+          await indexSession(tenantId, sessionId);
+        } catch (err) {
+          console.error(`ingestGroup: indexing failed for session ${sessionId} (raw content still stored):`, err);
+        }
+      }
 
       return { sessionId, sourceId: source._id, turnCount: turnDocs.length };
     },
