@@ -182,7 +182,7 @@ try {
       additionalContext = $ctx
     }
   }
-  $payload | ConvertTo-Json -Depth 6 -Compress | Write-Output
+  $payload | ConvertTo-Json -Depth 6 -Compress | ForEach-Object { [regex]::Replace($_, "[^\x00-\x7F]", { param($m) ("\u{0:x4}" -f [int][char]$m.Value) }) } | Write-Output   # ASCII-only JSON: under the harness PowerShell writes stdout in the OEM codepage and non-ASCII becomes 0x1a, which is invalid inside a JSON string (found 2026-09-05)
   exit 0
 }
 catch {
