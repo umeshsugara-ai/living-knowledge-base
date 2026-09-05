@@ -6,7 +6,6 @@
  * instead") — this file only ever reads, never writes, and never imports its source code, only
  * its documented collection shapes (`src/db/types.ts` there: `PersonDoc`/`MessageDoc`/`GroupDoc`).
  */
-import { randomUUID } from "node:crypto";
 import { MongoClient, ObjectId, type Db } from "mongodb";
 import { getDb as getAppDb } from "@lkb/db";
 import type { Sources, Sessions, Turns } from "@lkb/core";
@@ -29,7 +28,7 @@ async function getWhatsAppDb(): Promise<Db> {
 }
 
 interface PersonDoc { _id: ObjectId; displayName: string | null; savedName: string | null; pushName: string | null; }
-interface MessageDoc { personId: ObjectId; text: string | null; ts: Date; deletedAt: Date | null; }
+interface MessageDoc { messageId: string; groupJid: string; personId: ObjectId; text: string | null; ts: Date; deletedAt: Date | null; }
 interface GroupDoc { _id: ObjectId; jid: string; subject: string; ownerUserId: ObjectId; isTracked: boolean; }
 
 function displayNameOf(p: PersonDoc | undefined, fallback: string): string {
@@ -38,12 +37,16 @@ function displayNameOf(p: PersonDoc | undefined, fallback: string): string {
 
 /** The real `WhatsAppFetcher` `@lkb/ingest`'s whatsapp adapter needs. Deleted messages and
  * media-only messages (no `text`) are excluded — a claims pipeline has nothing to extract from
- * either, and a deleted message being silently un-deleted into the KB would be a real bug. */
+ * either, and a deleted message being silently un-deleted into the KB would be a real bug.
+ * Sorted `{ ts: 1, _id: 1 }` — real data-engineer review (2026-09-06) found genuine same-second
+ * timestamp ties in the live `whatsapp_msg` data; `ts` alone gives Mongo no stable tiebreak, so
+ * turn order (and this file's own zip against `messageId` below) could silently reorder between
+ * runs without the `_id` tiebreak. */
 export const fetchWhatsAppMessages: WhatsAppFetcher = async (groupJid, ownerUserId) => {
   const wadb = await getWhatsAppDb();
   const messages = await wadb.collection<MessageDoc>("messages")
     .find({ groupJid, ownerUserId: new ObjectId(ownerUserId), deletedAt: null, text: { $ne: null } })
-    .sort({ ts: 1 })
+    .sort({ ts: 1, _id: 1 })
     .toArray();
 
   const personIds = [...new Set(messages.map((m) => m.personId.toString()))].map((id) => new ObjectId(id));
@@ -51,6 +54,7 @@ export const fetchWhatsAppMessages: WhatsAppFetcher = async (groupJid, ownerUser
   const peopleById = new Map(people.map((p) => [p._id.toString(), p]));
 
   return messages.map((m): WhatsAppMessage => ({
+    messageId: m.messageId,
     personId: m.personId.toString(),
     displayName: displayNameOf(peopleById.get(m.personId.toString()), m.personId.toString()),
     text: m.text ?? "",
@@ -85,36 +89,60 @@ export async function listTrackableGroups(): Promise<TrackableGroup[]> {
 
 /** Real `WhatsAppRouteDeps` (routes/whatsapp.ts). Same persist shape `ingest-store.ts` writes
  * for a URL ingest (sources + sessions + turns), reusing the already-real `GET /sessions/:id`
- * view — no second "ingested content" viewer built for this source kind either. */
+ * view — no second "ingested content" viewer built for this source kind either.
+ *
+ * Idempotency (real bug fixed per this session's data-engineer review, 2026-09-06): `source._id`
+ * and `sessionId` are both now stable per `(groupJid, ownerUserId)` (the adapter's own `_id` hash
+ * — see whatsapp.ts), and every write below is an upsert. A re-ingest of the same group always
+ * targets the SAME source/session doc and upserts turns keyed by the real WhatsApp `messageId`
+ * (never a positional index), so running this twice with no new messages leaves the corpus
+ * byte-identical, and running it after N new messages arrive adds exactly N new turns — never a
+ * duplicate-key failure, never a re-write of the group's whole history. */
 export function createMongoWhatsAppDeps(indexSession?: BoundIndexer): WhatsAppRouteDeps {
   const whatsAppSource = createWhatsAppSource({ hasher: sha256Hex, fetcher: fetchWhatsAppMessages });
 
   return {
     listGroups: listTrackableGroups,
 
-    async ingestGroup(tenantId, groupJid, ownerUserId): Promise<WhatsAppIngestResult> {
+    async ingestGroup(tenantId, groupJid): Promise<WhatsAppIngestResult> {
+      // Real bug fixed per this session's data-engineer review: ownerUserId used to come straight
+      // from the request body (routes/whatsapp.ts), letting any `whatsapp`-scoped key ingest any
+      // archiver owner's private groups. It is now ALWAYS resolved here, from the live trackable-
+      // groups list, by the groupJid the caller actually asked to ingest -- never client-supplied.
+      const groups = await listTrackableGroups();
+      const group = groups.find((g) => g.groupJid === groupJid);
+      if (!group) throw new Error(`no tracked WhatsApp group with jid "${groupJid}"`);
+      const ownerUserId = group.ownerUserId;
+
       // The archiver only captures a sender the account owner explicitly selected for tracking
       // (its own D-002/D-005) -- a deliberate, informed choice, never a background silent
       // capture (D-008 provided-first ordering).
       const consent: ConsentContext = { captureMode: "provided", given: true, recordedBy: `whatsapp-owner:${ownerUserId}` };
       const { source } = await whatsAppSource.fetch({ kind: "whatsapp", groupJid, ownerUserId, tenantId }, consent);
-      await getAppDb().collection<Sources>("sources").insertOne(source);
+      await getAppDb().collection<Sources>("sources")
+        .replaceOne({ _id: source._id, tenantId }, source, { upsert: true });
 
+      // Fetched once here (real messages, with the real messageId each turn keys on) AND once
+      // more inside `toTurns()` below -- a disclosed, low-severity duplicate read (same
+      // deterministic query, no correctness cost) rather than widening the shared `Source`
+      // adapter interface just for this one adapter's stable-id needs.
+      const messages = await fetchWhatsAppMessages(groupJid, ownerUserId);
       const turns = await whatsAppSource.toTurns(source);
 
-      const sessionId = randomUUID();
+      const sessionId = source._id; // stable per (groupJid, ownerUserId) -- see whatsapp.ts
       const session: Sessions = {
         _id: sessionId,
         tenantId,
         sourceId: source._id,
-        title: `WhatsApp: ${groupJid}`,
-        date: new Date().toISOString().slice(0, 10),
+        title: `WhatsApp: ${group.subject}`,
+        date: (messages[0]?.ts ?? new Date().toISOString()).slice(0, 10),
         status: { transcribe: "done", index: "pending" },
       };
-      await getAppDb().collection<Sessions>("sessions").insertOne(session);
+      await getAppDb().collection<Sessions>("sessions")
+        .replaceOne({ _id: sessionId, tenantId }, session, { upsert: true });
 
       const turnDocs: Turns[] = turns.map((t: Turn, i: number) => ({
-        _id: `${sessionId}-t${String(i + 1).padStart(3, "0")}`,
+        _id: sha256Hex(`${sessionId}:${messages[i]!.messageId}`),
         tenantId,
         sessionId,
         speakerRef: t.speakerRef,
@@ -122,7 +150,13 @@ export function createMongoWhatsAppDeps(indexSession?: BoundIndexer): WhatsAppRo
         tEnd: t.tEnd,
         text: t.text,
       }));
-      if (turnDocs.length > 0) await getAppDb().collection<Turns>("turns").insertMany(turnDocs);
+      if (turnDocs.length > 0) {
+        await getAppDb().collection<Turns>("turns").bulkWrite(
+          turnDocs.map((doc) => ({
+            replaceOne: { filter: { _id: doc._id, tenantId }, replacement: doc, upsert: true },
+          })),
+        );
+      }
 
       if (indexSession) {
         try {

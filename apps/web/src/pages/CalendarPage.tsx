@@ -87,7 +87,9 @@ export function CalendarPage(): React.ReactElement {
 
   function handleDecision(id: string, decision: "approve" | "reject"): void {
     const action = decision === "approve" ? approveMeetingCandidate : rejectMeetingCandidate;
-    action(apiKey, id).then(() => refreshCandidates());
+    action(apiKey, id)
+      .then(() => refreshCandidates())
+      .catch((err: unknown) => setCandidatesError(err instanceof ApiError ? err.message : "failed to record decision"));
   }
 
   const grouped = useMemo(() => groupByMonth(sessions ?? []), [sessions]);

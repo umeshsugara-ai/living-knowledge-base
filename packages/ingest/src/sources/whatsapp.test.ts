@@ -27,8 +27,8 @@ test("detect matches only the whatsapp hint, never a bare string", () => {
 
 test("fetch pulls real messages via the injected fetcher, sets kind/captureMode/ownerUserId", async () => {
   const messages: WhatsAppMessage[] = [
-    { personId: "p1", displayName: "Harshita", text: "hello", ts: "2026-08-25T09:43:21.000Z" },
-    { personId: "p2", displayName: "Karunn", text: "hi there", ts: "2026-08-25T09:43:45.000Z" },
+    { messageId: "m1", personId: "p1", displayName: "Harshita", text: "hello", ts: "2026-08-25T09:43:21.000Z" },
+    { messageId: "m2", personId: "p2", displayName: "Karunn", text: "hi there", ts: "2026-08-25T09:43:45.000Z" },
   ];
   const adapter = createWhatsAppSource({
     hasher: fakeHasher,
@@ -49,6 +49,29 @@ test("fetch pulls real messages via the injected fetcher, sets kind/captureMode/
   assert.deepEqual(media, []);
 });
 
+test("fetch's source._id is stable per (groupJid, ownerUserId) regardless of message count -- a re-ingest with new messages targets the same source (data-engineer review, 2026-09-06)", async () => {
+  const oneMessage: WhatsAppMessage[] = [
+    { messageId: "m1", personId: "p1", displayName: "Harshita", text: "hello", ts: "2026-08-25T09:43:21.000Z" },
+  ];
+  const twoMessages: WhatsAppMessage[] = [
+    ...oneMessage,
+    { messageId: "m2", personId: "p2", displayName: "Karunn", text: "hi there", ts: "2026-08-25T09:43:45.000Z" },
+  ];
+  const adapterFirstRun = createWhatsAppSource({ hasher: fakeHasher, fetcher: fakeFetcher({ "g1@g.us": oneMessage }) });
+  const adapterSecondRun = createWhatsAppSource({ hasher: fakeHasher, fetcher: fakeFetcher({ "g1@g.us": twoMessages }) });
+
+  const { source: firstSource } = await adapterFirstRun.fetch(
+    { kind: "whatsapp", groupJid: "g1@g.us", ownerUserId: "u1", tenantId: TENANT },
+    baseConsent(),
+  );
+  const { source: secondSource } = await adapterSecondRun.fetch(
+    { kind: "whatsapp", groupJid: "g1@g.us", ownerUserId: "u1", tenantId: TENANT },
+    baseConsent(),
+  );
+
+  assert.equal(firstSource._id, secondSource._id, "same group+owner must hash to the same source id no matter how many messages exist");
+});
+
 test("fetch throws on an unrecognized input, never silently no-ops", async () => {
   const adapter = createWhatsAppSource({ hasher: fakeHasher, fetcher: fakeFetcher({}) });
   await assert.rejects(() => adapter.fetch("not a whatsapp hint", baseConsent()), /unrecognized input/);
@@ -56,9 +79,9 @@ test("fetch throws on an unrecognized input, never silently no-ops", async () =>
 
 test("toTurns maps real messages to turns: speakerRef = real personId, tStart/tEnd = seconds elapsed since the first message", async () => {
   const messages: WhatsAppMessage[] = [
-    { personId: "p1", displayName: "Harshita", text: "first", ts: "2026-08-25T09:43:00.000Z" },
-    { personId: "p2", displayName: "Karunn", text: "second", ts: "2026-08-25T09:43:10.000Z" },
-    { personId: "p1", displayName: "Harshita", text: "third", ts: "2026-08-25T09:44:00.000Z" },
+    { messageId: "m1", personId: "p1", displayName: "Harshita", text: "first", ts: "2026-08-25T09:43:00.000Z" },
+    { messageId: "m2", personId: "p2", displayName: "Karunn", text: "second", ts: "2026-08-25T09:43:10.000Z" },
+    { messageId: "m3", personId: "p1", displayName: "Harshita", text: "third", ts: "2026-08-25T09:44:00.000Z" },
   ];
   const adapter = createWhatsAppSource({ hasher: fakeHasher, fetcher: fakeFetcher({ "g1@g.us": messages }) });
   const { source } = await adapter.fetch(

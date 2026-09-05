@@ -11,6 +11,12 @@
  * duplicate flagging, an approve-before-publish queue — is explicitly OUT of this slice, a
  * separate, larger follow-up (same disclosed-scope pattern as the Gmail meeting-candidate unit's
  * split from its own approval workflow).
+ *
+ * Real bug fixed in this session's own data-engineer review (2026-09-06): `POST /whatsapp/ingest`
+ * used to accept `ownerUserId` straight from the request body with no binding to the caller's
+ * tenant — any key with the `whatsapp` scope could ingest ANY archiver owner's private group
+ * messages. The body now takes `groupJid` only; `ingestGroup`'s real implementation resolves the
+ * owner itself from the live trackable-groups list (never trusts a client-supplied identity).
  */
 import { Router, type Request, type Response } from "express";
 import { requireScope } from "../auth.js";
@@ -30,7 +36,10 @@ export interface WhatsAppIngestResult {
 
 export interface WhatsAppRouteDeps {
   listGroups(): Promise<WhatsAppGroup[]>;
-  ingestGroup(tenantId: string, groupJid: string, ownerUserId: string): Promise<WhatsAppIngestResult>;
+  /** `ownerUserId` is intentionally NOT a parameter here — the real implementation resolves it
+   * itself from the live trackable-groups list, so a caller can never ingest on behalf of an
+   * owner it didn't actually look up via `listGroups()`. */
+  ingestGroup(tenantId: string, groupJid: string): Promise<WhatsAppIngestResult>;
 }
 
 export function createWhatsAppRouter(deps: WhatsAppRouteDeps): Router {
@@ -42,17 +51,17 @@ export function createWhatsAppRouter(deps: WhatsAppRouteDeps): Router {
   });
 
   router.post("/whatsapp/ingest", requireScope("whatsapp"), async (req: Request, res: Response) => {
-    const body = req.body as { groupJid?: unknown; ownerUserId?: unknown } | undefined;
-    if (!body || typeof body.groupJid !== "string" || typeof body.ownerUserId !== "string") {
-      res.status(400).json({ error: "bad_request", message: "body must be { groupJid: string, ownerUserId: string }" });
+    const body = req.body as { groupJid?: unknown } | undefined;
+    if (!body || typeof body.groupJid !== "string") {
+      res.status(400).json({ error: "bad_request", message: "body must be { groupJid: string }" });
       return;
     }
     try {
-      const result = await deps.ingestGroup(req.auth!.tenantId, body.groupJid, body.ownerUserId);
+      const result = await deps.ingestGroup(req.auth!.tenantId, body.groupJid);
       res.status(201).json(result);
     } catch (err) {
-      // A real fetch failure (whatsapp_msg's Mongo unreachable, unknown group) is an environment/
-      // input problem, not a server bug -- 502, not 500, with the real error message.
+      // A real fetch failure (whatsapp_msg's Mongo unreachable, unknown/untracked group) is an
+      // environment/input problem, not a server bug -- 502, not 500, with the real error message.
       const message = err instanceof Error ? err.message : String(err);
       res.status(502).json({ error: "whatsapp_ingest_failed", message });
     }

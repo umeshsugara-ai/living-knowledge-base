@@ -8,7 +8,7 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, type Provider } from "@lkb/ai";
+import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, OllamaProvider, type Provider } from "@lkb/ai";
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
 import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoGraphReadDeps, createGwsCalendarReadDeps, createMeetingCandidatesDeps, createMongoKeysDeps } from "./store.js";
@@ -29,9 +29,19 @@ export function buildProductionDeps(): ServerDeps {
   const chains = parseRoutingYaml(readFileSync(ROUTING_CONFIG_PATH, "utf8"));
   const jobWrite = createMongoJobWriter();
 
+  // Real bug found in this session's own senior-engineer review (2026-09-06): `router.route()`
+  // eagerly resolves EVERY name in a jobKind's chain to a registered Provider before trying any
+  // of them (packages/ai/src/router.ts:38-42) -- an unregistered chain member throws before the
+  // first (working) provider is ever attempted. `summarize`'s chain (config/ai-routing.yaml)
+  // lists `ollama` third; leaving it unregistered here meant every real `summarizeSession` call
+  // threw immediately and silently degraded to its own fallback, even though gemini alone would
+  // have succeeded. Registering the already-built (D-008, "Ollama is a required adapter from the
+  // outset") `OllamaProvider` fixes this for every chain that lists it (`summarize`, `answer`),
+  // not just a targeted patch for the one job kind that happened to be caught.
   const providers: Record<string, Provider> = {
     gemini: new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY ?? "" }),
     "claude-code": new ClaudeCodeProvider(realTransport),
+    ollama: new OllamaProvider(realTransport, { baseUrl: process.env.OLLAMA_BASE_URL }),
   };
 
   const tavilySearchFn = createTavilySearchFn();

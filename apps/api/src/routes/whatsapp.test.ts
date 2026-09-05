@@ -42,7 +42,7 @@ test("POST /whatsapp/ingest with a valid body creates a real session/source/turn
     const res = await fetch(`${server.baseUrl}/whatsapp/ingest`, {
       method: "POST",
       headers: { authorization: "Bearer wa-key", "content-type": "application/json" },
-      body: JSON.stringify({ groupJid: "g1@g.us", ownerUserId: "u1" }),
+      body: JSON.stringify({ groupJid: "g1@g.us" }),
     });
     assert.equal(res.status, 201);
     const body = (await res.json()) as { sessionId: string; sourceId: string; turnCount: number };
@@ -53,7 +53,7 @@ test("POST /whatsapp/ingest with a valid body creates a real session/source/turn
   }
 });
 
-test("POST /whatsapp/ingest with a missing field returns 400, never attempts an ingest", async () => {
+test("POST /whatsapp/ingest with a missing groupJid returns 400, never attempts an ingest", async () => {
   const server = await startTestServer(
     buildTestDeps({ keyStore: fakeKeyStore({ "wa-key": { tenantId: "tenant-1", scopes: ["whatsapp"] } }) }),
   );
@@ -61,9 +61,37 @@ test("POST /whatsapp/ingest with a missing field returns 400, never attempts an 
     const res = await fetch(`${server.baseUrl}/whatsapp/ingest`, {
       method: "POST",
       headers: { authorization: "Bearer wa-key", "content-type": "application/json" },
-      body: JSON.stringify({ groupJid: "g1@g.us" }),
+      body: JSON.stringify({}),
     });
     assert.equal(res.status, 400);
+  } finally {
+    await server.close();
+  }
+});
+
+test("a client-supplied ownerUserId in the body is ignored, never trusted (regression, 2026-09-06 data-engineer review)", async () => {
+  let receivedArgs: unknown[] = [];
+  const server = await startTestServer(
+    buildTestDeps({
+      keyStore: fakeKeyStore({ "wa-key": { tenantId: "tenant-1", scopes: ["whatsapp"] } }),
+      whatsapp: fakeWhatsAppDeps({
+        ingestGroup: async (...args: unknown[]) => {
+          receivedArgs = args;
+          return { sessionId: "s1", sourceId: "src1", turnCount: 0 };
+        },
+      }),
+    }),
+  );
+  try {
+    await fetch(`${server.baseUrl}/whatsapp/ingest`, {
+      method: "POST",
+      headers: { authorization: "Bearer wa-key", "content-type": "application/json" },
+      body: JSON.stringify({ groupJid: "g1@g.us", ownerUserId: "attacker-supplied-owner-id" }),
+    });
+    // Real assertion: the route only ever forwards (tenantId, groupJid) -- a client-supplied
+    // ownerUserId in the body has no way to reach ingestGroup's real implementation, which
+    // resolves the owner itself from the live trackable-groups list.
+    assert.deepEqual(receivedArgs, ["tenant-1", "g1@g.us"]);
   } finally {
     await server.close();
   }
@@ -82,7 +110,7 @@ test("a real fetch/adapter failure surfaces as 502 with the real error message, 
     const res = await fetch(`${server.baseUrl}/whatsapp/ingest`, {
       method: "POST",
       headers: { authorization: "Bearer wa-key", "content-type": "application/json" },
-      body: JSON.stringify({ groupJid: "g1@g.us", ownerUserId: "u1" }),
+      body: JSON.stringify({ groupJid: "g1@g.us" }),
     });
     assert.equal(res.status, 502);
     const body = (await res.json()) as { message: string };
@@ -100,7 +128,7 @@ test("POST /whatsapp/ingest without the whatsapp scope returns 403", async () =>
     const res = await fetch(`${server.baseUrl}/whatsapp/ingest`, {
       method: "POST",
       headers: { authorization: "Bearer ask-only-key", "content-type": "application/json" },
-      body: JSON.stringify({ groupJid: "g1@g.us", ownerUserId: "u1" }),
+      body: JSON.stringify({ groupJid: "g1@g.us" }),
     });
     assert.equal(res.status, 403);
   } finally {

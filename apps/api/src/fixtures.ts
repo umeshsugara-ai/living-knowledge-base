@@ -178,7 +178,7 @@ export function fakeWhatsAppDeps(overrides: Partial<WhatsAppRouteDeps> = {}): Wh
   const fixtureResult: WhatsAppIngestResult = { sessionId: "fake-wa-session", sourceId: "fake-wa-source", turnCount: 3 };
   return {
     async listGroups() { return fixtureGroups; },
-    async ingestGroup(_tenantId, _groupJid, _ownerUserId) { return fixtureResult; },
+    async ingestGroup(_tenantId, _groupJid) { return fixtureResult; },
     ...overrides,
   };
 }

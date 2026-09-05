@@ -50,7 +50,7 @@ describe("WhatsAppPage", () => {
     renderPage();
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Ingest into knowledge base/ }));
-    expect(ingestSpy).toHaveBeenCalledWith("test-key", "g1@g.us", "u1");
+    expect(ingestSpy).toHaveBeenCalledWith("test-key", "g1@g.us");
     await waitFor(() => expect(screen.getByText(/Ingested 50 real message/)).toBeInTheDocument());
     expect(screen.getByRole("link", { name: "View it" })).toHaveAttribute("href", "/sessions/s1");
   });

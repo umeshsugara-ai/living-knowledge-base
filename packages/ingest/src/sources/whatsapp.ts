@@ -23,6 +23,10 @@
 import type { Source, SourceDoc, MediaDoc, ConsentContext, Turn } from "../source.js";
 
 export interface WhatsAppMessage {
+  /** The real, upstream-unique WhatsApp message id (`sources/whatsapp_msg`'s own
+   * `MessageDoc.messageId`, unique per owner) — the stable key a caller uses to make a re-ingest
+   * idempotent instead of re-deriving one from position or count. */
+  messageId: string;
   personId: string;
   displayName: string;
   text: string;
@@ -76,8 +80,15 @@ export function createWhatsAppSource(deps: WhatsAppAdapterDeps): Source {
       const tenantId = input.tenantId;
       if (!tenantId) throw new Error("whatsapp adapter: fetch() requires a tenantId");
 
-      const messages = await deps.fetcher(input.groupJid, input.ownerUserId);
-      const hash = await deps.hasher(`${input.groupJid}:${input.ownerUserId}:${messages.length}`);
+      // Real bug found in this session's own data-engineer review (2026-09-06): hashing the
+      // message COUNT made `_id` change on every new message (duplicating the whole history on
+      // re-ingest) and collide back to the same id whenever the count coincidentally repeated
+      // (e.g. one deleted + one added), which then made that group permanently un-ingestable via
+      // a Mongo duplicate-key error. `_id` is now stable per `(groupJid, ownerUserId)` — the
+      // caller upserts by this id, so a re-ingest of the same group always targets the same
+      // source/session and only NEW messages (see whatsapp-store.ts's messageId-keyed turn
+      // upserts) get added.
+      const hash = await deps.hasher(`${input.groupJid}:${input.ownerUserId}`);
 
       const source: WhatsAppSourceDoc = {
         _id: hash,

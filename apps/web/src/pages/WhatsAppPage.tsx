@@ -23,7 +23,7 @@ export function WhatsAppPage(): React.ReactElement {
   function handleIngest(group: WhatsAppGroup): void {
     setIngestingJid(group.groupJid);
     setIngestError(null);
-    ingestWhatsAppGroup(apiKey, group.groupJid, group.ownerUserId)
+    ingestWhatsAppGroup(apiKey, group.groupJid)
       .then((result) => setResults((prev) => ({ ...prev, [group.groupJid]: result })))
       .catch((err: unknown) => setIngestError(err instanceof ApiError ? err.message : "failed to ingest this group"))
       .finally(() => setIngestingJid(null));

@@ -90,6 +90,20 @@ describe("CalendarPage", () => {
     expect(approveSpy).toHaveBeenCalledWith("test-key", "mc1");
   });
 
+  test("a failed approve/reject shows the real error, never a silent no-op button", async () => {
+    vi.spyOn(sessionsApi, "listSessions").mockResolvedValue({ sessions: [] });
+    vi.spyOn(calendarApi, "listUpcomingMeetings").mockResolvedValue({ meetings: [] });
+    vi.spyOn(candidatesApi, "listMeetingCandidates").mockResolvedValue({
+      candidates: [{ _id: "mc1", messageId: "gm-1", subject: "Invite: Weekly Sync", senderEmail: "manish.k@vidysea.com", senderDomain: "vidysea.com", status: "pending", detectedAt: "2026-09-04T00:00:00Z" }],
+    });
+    vi.spyOn(candidatesApi, "approveMeetingCandidate").mockRejectedValue(new ApiError(404, "no pending candidate with that id for this tenant"));
+    renderPage();
+    await screen.findByText("Invite: Weekly Sync");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Approve" }));
+    await waitFor(() => expect(screen.getByText("no pending candidate with that id for this tenant")).toBeInTheDocument());
+  });
+
   test("scanning Gmail reports a real created/auto-approved count", async () => {
     vi.spyOn(sessionsApi, "listSessions").mockResolvedValue({ sessions: [] });
     vi.spyOn(calendarApi, "listUpcomingMeetings").mockResolvedValue({ meetings: [] });
