@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\lab-session-start.ps1\\\" -InputJson $i\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/lab-session-start.ps1",
             "timeout": 15
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"& \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\mc-sessionstart.ps1\\\"\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/mc-sessionstart.ps1",
             "timeout": 15
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\lab-session-end.ps1\\\" -InputJson $i\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/lab-session-end.ps1",
             "timeout": 10
           }
         ]
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\features-snapshot-session-end.ps1\\\" -InputJson $i\"",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/features-snapshot-session-end.ps1",
             "timeout": 10
           }
         ]
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\decisions-append-guard.ps1\\\" -InputJson $i\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/decisions-append-guard.ps1"
           }
         ]
       },
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$i=[Console]::In.ReadToEnd(); & \\\"$env:CLAUDE_PROJECT_DIR\\.claude\\hooks\\mc-precommit.ps1\\\" -InputJson $i\""
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/mc-precommit.ps1"
           }
         ]
       }

@@ -105,3 +105,11 @@ them from scratch.
 **Changes-authorized:** .claude/settings.json (add a second SessionEnd hooks entry for features-snapshot-session-end.ps1, merged alongside the existing lab-session-end.ps1 entry, never overwriting it)
 **Approved-by:** Umesh
 **Links:** T-017b, ISS-013; qa/contracts/snapshot-features-ledger.md criterion 6a
+
+## D-010 | 2026-09-05 | type: decision | status: ACTIVE
+**What:** Rewrite every hook command in .claude/settings.json from `powershell -Command "$i=[Console]::In.ReadToEnd(); & \"$env:CLAUDE_PROJECT_DIR\...\" -InputJson $i"` to `powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/<script>.ps1` for: decisions-append-guard.ps1, features-snapshot-session-end.ps1, lab-session-end.ps1, lab-session-start.ps1, mc-precommit.ps1, mc-sessionstart.ps1. No hook script changes; the scripts already read stdin when -InputJson is empty.
+**Why:** Claude Code executes hook commands through bash -c on this machine, which expands `$i` and `$env:...` to empty strings before PowerShell parses the command. Every hook in this repo has therefore failed with a parse error on every invocation since it was installed (evidence: `hook_non_blocking_error` records in the session transcripts; AIOS decisions/log.md 2026-09-05). The append-only DECISIONS guard, the session-start protocol snapshot and the /landplane reminder have never actually run here. Run with -File, the repo copies work (verified in D:/KnowledgeBase on 2026-09-05: lab-session-start injects the snapshot with a RECOVERY warning; decisions-append-guard denies a direct edit).
+**Result:** Enforcement becomes live from the next session. The /init-lab template in the AIOS carries the same fix (templates/lab-protocol/project-settings.template.json, commit d2d93a4) so new repos are correct.
+**Changes-authorized:** .claude/settings.json (hook command strings only; matchers, timeouts and entries unchanged)
+**Approved-by:** Umesh
+**Links:** AIOS decisions/log.md 2026-09-05 (two entries: machine-wide hook fix; Lab-repo finding); memory reference_hook_commands_run_under_bash
