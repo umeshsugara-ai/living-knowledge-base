@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
+    "dev": "tsx src/index.ts",
     "test": "node --test --import tsx \"src/**/*.test.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
@@ -17,7 +18,8 @@
     "@lkb/ingest": "workspace:*",
     "mongodb": "7.6.0",
     "express": "5.2.1",
-    "express-rate-limit": "8.6.2"
+    "express-rate-limit": "8.6.2",
+    "dotenv": "17.4.2"
   },
   "devDependencies": {
     "typescript": "5.9.3",

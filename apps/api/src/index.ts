@@ -1,14 +1,23 @@
 // @lkb/api — T-009. Production entrypoint: connect Mongo, wire real deps, start listening.
 // `createServer`/`startServer` (server.ts) stay importable+injectable on their own for tests.
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import path from "node:path";
+import { config as loadEnv } from "dotenv";
 import { connect } from "@lkb/db";
 import { startServer } from "./server.js";
 import { buildProductionDeps } from "./production.js";
 
 export { createServer, startServer, type ServerDeps } from "./server.js";
 
+// Real bug found live 2026-09-06: nothing here ever loaded the repo-root .env, and the var name
+// this file read (MONGO_URL) never matched the one actually set there (MONGODB_URL) -- every
+// plain `tsx src/index.ts` silently fell back to localhost:27017 and failed, even with the real
+// remote Mongo URL sitting in .env the whole time.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: path.resolve(__dirname, "../../../.env") });
+
 async function main(): Promise<void> {
-  await connect(process.env.MONGO_URL ?? "mongodb://localhost:27017", process.env.MONGO_DB ?? "lkb");
+  await connect(process.env.MONGODB_URL ?? "mongodb://localhost:27017", process.env.MONGODB_DB ?? "lkb");
   const server = startServer(buildProductionDeps());
   server.on("listening", () => {
     const addr = server.address();
