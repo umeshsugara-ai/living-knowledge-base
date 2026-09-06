@@ -16,5 +16,13 @@ export interface Turns {
   tEnd: number;
   text: string;
   confidence?: number;
+  /**
+   * human-readable speaker name, when the source already knows one (e.g. a WhatsApp archiver's real pushName/savedName); speakerRef stays the stable id
+   */
+  speakerLabel?: string;
+  /**
+   * real wall-clock ISO datetime the turn occurred, when the source has one (e.g. a WhatsApp message's real ts); tStart/tEnd stay relative-offset seconds
+   */
+  occurredAt?: string;
   [k: string]: unknown;
 }

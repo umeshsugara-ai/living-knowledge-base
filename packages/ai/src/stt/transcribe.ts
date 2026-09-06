@@ -12,6 +12,14 @@ export interface Turn {
   tEnd: number;
   text: string;
   confidence?: number;
+  /** Optional human-readable speaker name, when the source already knows one (e.g. a WhatsApp
+   * archiver's real pushName/savedName) -- `speakerRef` stays the stable id for citations even
+   * when this is set. Absent for sources with no real name (audio diarization -> `spk:N`). */
+  speakerLabel?: string;
+  /** Optional real wall-clock ISO datetime the turn occurred, when the source has one (e.g. a
+   * WhatsApp message's real `ts`). `tStart`/`tEnd` stay relative-offset seconds for adapters
+   * that model duration; this is the absolute moment, for a UI that wants to show real times. */
+  occurredAt?: string;
 }
 
 export interface TranscribeOpts {

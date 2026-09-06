@@ -17,6 +17,20 @@ function timeUnitLabel(speakerRef: string): string {
   return speakerRef === "url" || speakerRef === "document" ? "chars" : "s";
 }
 
+function formatOccurredAt(iso: string): string {
+  const d = new Date(iso);
+  return `${d.toLocaleDateString(undefined, { day: "numeric", month: "short" })}, ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+}
+
+// A palette of distinct, low-saturation colors so each speaker gets a stable, readable name
+// color (WhatsApp's own convention) without needing a real color-per-person assignment service.
+const SPEAKER_COLORS = ["#d17a00", "#0a7f5f", "#1a6fbf", "#a23b8f", "#a23636", "#5c6bc0", "#00838f"];
+function speakerColor(ref: string): string {
+  let hash = 0;
+  for (let i = 0; i < ref.length; i++) hash = (hash * 31 + ref.charCodeAt(i)) >>> 0;
+  return SPEAKER_COLORS[hash % SPEAKER_COLORS.length]!;
+}
+
 export function SessionDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>();
   const { apiKey } = useAuth();
@@ -63,15 +77,45 @@ export function SessionDetailPage(): React.ReactElement {
       <div className="card">
         <div className="section-title">Transcript ({detail.turns.length} turns)</div>
         {detail.turns.length === 0 && <div className="empty-note">No turns for this session.</div>}
-        {detail.turns.slice(0, MAX_TURNS_SHOWN).map((t) => {
-          const unit = timeUnitLabel(t.speakerRef);
-          return (
-            <div key={t._id} className="row-card">
-              <div className="row-title">{t.speakerRef} &middot; {t.tStart}{unit}&ndash;{t.tEnd}{unit}</div>
-              <div>{t.text}</div>
-            </div>
-          );
-        })}
+        {/* Real turns with a resolved speakerLabel (currently: WhatsApp) get a chat-style
+            rendering -- real sender name + real send time, closer to how the source itself
+            looks, instead of a raw personId hash and a relative-offset timestamp. */}
+        {detail.turns.slice(0, MAX_TURNS_SHOWN).some((t) => t.speakerLabel) ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            {detail.turns.slice(0, MAX_TURNS_SHOWN).map((t) => (
+              <div
+                key={t._id}
+                style={{
+                  background: "var(--card-bg, #f7f7f5)",
+                  border: "1px solid var(--border, #e5e5e0)",
+                  borderRadius: "8px",
+                  padding: "0.5rem 0.75rem",
+                  maxWidth: "70%",
+                }}
+              >
+                <div style={{ fontWeight: 600, fontSize: "0.85rem", color: speakerColor(t.speakerRef) }}>
+                  {t.speakerLabel ?? t.speakerRef}
+                </div>
+                <div>{t.text}</div>
+                {t.occurredAt && (
+                  <div className="row-meta" style={{ textAlign: "right", marginTop: "0.15rem" }}>
+                    {formatOccurredAt(t.occurredAt)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          detail.turns.slice(0, MAX_TURNS_SHOWN).map((t) => {
+            const unit = timeUnitLabel(t.speakerRef);
+            return (
+              <div key={t._id} className="row-card">
+                <div className="row-title">{t.speakerRef} &middot; {t.tStart}{unit}&ndash;{t.tEnd}{unit}</div>
+                <div>{t.text}</div>
+              </div>
+            );
+          })
+        )}
         {detail.turns.length > MAX_TURNS_SHOWN && (
           <div className="empty-note">&hellip; and {detail.turns.length - MAX_TURNS_SHOWN} more turns (truncated for this view).</div>
         )}

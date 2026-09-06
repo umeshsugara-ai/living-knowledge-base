@@ -149,6 +149,11 @@ export function createMongoWhatsAppDeps(indexSession?: BoundIndexer): WhatsAppRo
         tStart: t.tStart,
         tEnd: t.tEnd,
         text: t.text,
+        // Real bug found live 2026-09-06: `t.speakerLabel` (the real resolved WhatsApp
+        // pushName/savedName from `displayNameOf` above) was computed then discarded --
+        // every ingested WhatsApp turn showed a raw personId hash in the UI, not who said it.
+        ...(t.speakerLabel ? { speakerLabel: t.speakerLabel } : {}),
+        ...(t.occurredAt ? { occurredAt: t.occurredAt } : {}),
       }));
       if (turnDocs.length > 0) {
         await getAppDb().collection<Turns>("turns").bulkWrite(

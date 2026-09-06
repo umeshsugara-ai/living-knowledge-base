@@ -26,6 +26,12 @@ export interface Turn {
   tStart: number;
   tEnd: number;
   text: string;
+  /** Real human-readable speaker name, when the source already knows one (e.g. a WhatsApp
+   * message's real pushName/savedName). Absent for sources with no real name (audio -> spk:N). */
+  speakerLabel?: string;
+  /** Real wall-clock ISO datetime the turn occurred (e.g. a WhatsApp message's real send time).
+   * `tStart`/`tEnd` stay relative-offset seconds; this is the absolute moment, when known. */
+  occurredAt?: string;
 }
 
 export interface SessionDetail {

@@ -122,7 +122,19 @@ export function createWhatsAppSource(deps: WhatsAppAdapterDeps): Source {
       const firstMs = new Date(messages[0]!.ts).getTime();
       return messages.map((m) => {
         const offsetSeconds = Math.max(0, Math.round((new Date(m.ts).getTime() - firstMs) / 1000));
-        return { speakerRef: m.personId, tStart: offsetSeconds, tEnd: offsetSeconds, text: m.text };
+        return {
+          speakerRef: m.personId,
+          tStart: offsetSeconds,
+          tEnd: offsetSeconds,
+          text: m.text,
+          // Real bug found live 2026-09-06: this was fetched onto `m.displayName` and then
+          // never used anywhere -- every WhatsApp turn showed a raw personId hash in the UI
+          // instead of who actually said it.
+          ...(m.displayName ? { speakerLabel: m.displayName } : {}),
+          // Same session: tStart/tEnd are relative offsets, not real times -- a chat view
+          // wanting to show "9:28 AM" needs the actual wall-clock moment.
+          occurredAt: m.ts,
+        };
       });
     },
   };
