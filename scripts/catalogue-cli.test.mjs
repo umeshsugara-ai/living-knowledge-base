@@ -14,7 +14,7 @@
  * restores it in a `finally`, then puts docs/PROGRESS.md back in step.
  * Run: node --test scripts/catalogue-cli.test.mjs
  */
-import { test } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -26,6 +26,32 @@ const CLI = fileURLToPath(new URL("./catalogue-score.mjs", import.meta.url));
 const DOC = join(REPO, "docs", "PROGRESS.md");
 
 const run = (...args) => spawnSync(process.execPath, [CLI, ...args], { cwd: REPO, encoding: "utf8" });
+
+const RESTORE_WATCHED = ["docs/PROGRESS.md", ".goal/catalogue.json", "apps/web/src/App.tsx"];
+
+/**
+ * Whether every watched path is byte-identical to HEAD. Extracted so the regression test below
+ * exercises the SAME code the real gate runs, not a hand-copied duplicate — a duplicate would not
+ * redden if this logic regressed (exactly the false-green shape ISS-064's own fix could have
+ * repeated: a check that "proves" a bug is fixed by re-deriving the fix instead of calling it).
+ */
+function watchedInputsClean() {
+  const dirty = spawnSync("git", ["status", "--porcelain", "--", ...RESTORE_WATCHED],
+    { cwd: REPO, encoding: "utf8" }).stdout.trim();
+  const contentChanged = spawnSync("git", ["diff", "--quiet", "HEAD", "--", ...RESTORE_WATCHED],
+    { cwd: REPO }).status;
+  return { clean: contentChanged === 0, dirty };
+}
+
+// Suite-level safety net, on top of each test's own try/finally: a test that throws BEFORE its
+// finally block runs (or a suite killed mid-run) must not leave a tracked input dirty for the next
+// command to trip over. Snapshotted at module load — before any test executes — and force-restored
+// unconditionally after every test in this file has run, regardless of individual outcomes. This is
+// the "cleanup path, not just the happy path" ISS-064 asked for.
+const PRE_SUITE_SNAPSHOT = new Map(RESTORE_WATCHED.map((rel) => [rel, readFileSync(join(REPO, rel))]));
+after(() => {
+  for (const [rel, content] of PRE_SUITE_SNAPSHOT) writeFileSync(join(REPO, rel), content);
+});
 
 /**
  * Corrupt a tracked file, run `fn`, then restore BOTH it and the generated doc.
@@ -204,9 +230,27 @@ test("EVERY scraper reads through the recorder — dropping one from generate() 
 
 test("the suite leaves the repo clean — no tracked file is left modified", () => {
   // ISS-046 in assertion form: if any test above failed to restore, this catches it.
-  const dirty = spawnSync("git", ["status", "--porcelain", "--", "docs/PROGRESS.md", ".goal/catalogue.json", "apps/web/src/App.tsx"],
-    { cwd: REPO, encoding: "utf8" }).stdout.trim();
-  const contentChanged = spawnSync("git", ["diff", "--quiet", "HEAD", "--", ".goal/catalogue.json", "apps/web/src/App.tsx"],
-    { cwd: REPO }).status;
-  assert.equal(contentChanged, 0, `tests left tracked input files modified:\n${dirty}`);
+  //
+  // ISS-064: this test USED TO compute `dirty` (porcelain status) over all three watched paths but
+  // only assert `contentChanged` for TWO of them — docs/PROGRESS.md was in the error message but
+  // never in the actual check, so a test that left the generated doc modified passed this gate
+  // silently. `watchedInputsClean()` now covers every watched path, not just the two that happened
+  // to be content-diffed already.
+  const { clean, dirty } = watchedInputsClean();
+  assert.ok(clean, `tests left tracked input files modified:\n${dirty}`);
 });
+
+test("the cleanliness check itself catches a dirtied docs/PROGRESS.md (ISS-064 regression)", () => {
+  // Proves the fix, not just the symptom, by calling the SAME `watchedInputsClean()` the real gate
+  // above uses — before ISS-064 this path never included docs/PROGRESS.md, so leaving it modified
+  // passed silently. Deliberately dirty it (as a buggy test-in-this-file would) and confirm it's
+  // now caught.
+  const original = readFileSync(DOC);
+  try {
+    writeFileSync(DOC, `${original.toString("utf8")}\nleft dirty on purpose\n`);
+    assert.equal(watchedInputsClean().clean, false, "a dirtied docs/PROGRESS.md must be caught by the same check the suite-clean gate uses");
+  } finally {
+    writeFileSync(DOC, original);
+  }
+});
+
