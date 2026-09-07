@@ -9,6 +9,8 @@
  * wraps — no new cross-package pattern invented.
  */
 import { randomUUID, randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   getDb, createEvalRun, recordScore as recordEvalRunScore,
   sessions as sessionsColl, sources as sourcesColl, gaps as gapsColl,
@@ -24,6 +26,7 @@ import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
+import type { HealthDeps, HealthReport } from "./routes/health.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { CalendarReadDeps } from "./routes/calendar.js";
@@ -31,6 +34,11 @@ import { listUpcomingGwsMeetings } from "./gws-calendar.js";
 import type { MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
 import { scanGmailForMeetingCandidates } from "./gws-gmail.js";
 import { sha256Hex } from "./hash.js";
+
+/** `schema/index.json`'s top-level keys ARE the canonical list of real Mongo collections (its
+ * own comment excludes `features_event` deliberately — a JSONL-file schema, not a collection) —
+ * reused here instead of a second hand-maintained list that could drift from it. */
+const SCHEMA_INDEX_PATH = fileURLToPath(new URL("../../../schema/index.json", import.meta.url));
 
 export function createMongoApiKeyStore(): ApiKeyStore {
   return {
@@ -229,6 +237,34 @@ export function createMongoKeysDeps(): KeysDeps {
         { $set: { revokedAt: new Date().toISOString() } },
       );
       return result.matchedCount > 0;
+    },
+  };
+}
+
+/** Real `HealthDeps` (routes/health.ts). `db.command({ping: 1})` is the standard MongoDB
+ * liveness probe — cheaper than a real query and works even against an empty database. Counts
+ * are ACROSS ALL TENANTS deliberately (this is an ops signal, not a tenant-scoped read — the
+ * route is unauthenticated for exactly that reason, so it must never leak tenant-scoped content,
+ * only aggregate numbers). A ping failure returns `db: "error"` and empty counts rather than
+ * throwing — the route's whole job is to report an unhealthy backend, not crash reporting it. */
+export function createMongoHealthDeps(): HealthDeps {
+  return {
+    async checkHealth(): Promise<HealthReport> {
+      const db = getDb();
+      try {
+        await db.command({ ping: 1 });
+      } catch {
+        return { db: "error", collections: {} };
+      }
+      const index = JSON.parse(readFileSync(SCHEMA_INDEX_PATH, "utf8")) as Record<string, unknown>;
+      const names = Object.keys(index).filter((k) => !k.startsWith("$"));
+      const collections: Record<string, number> = {};
+      await Promise.all(
+        names.map(async (name) => {
+          collections[name] = await db.collection(name).countDocuments();
+        }),
+      );
+      return { db: "ok", collections };
     },
   };
 }

@@ -12,6 +12,7 @@ import type { EvalRunStore } from "./routes/compete.js";
 import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationsDeps } from "./routes/citations.js";
+import type { HealthDeps, HealthReport } from "./routes/health.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { CalendarReadDeps, UpcomingMeeting } from "./routes/calendar.js";
 import type { MeetingCandidate, MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
@@ -122,6 +123,16 @@ export function fakeCitationsDeps(overrides: Partial<CitationsDeps> = {}): Citat
   };
   return {
     getCitation: async (_tenantId, claimId) => (claimId === "claim-1" ? fixtureCitation : null),
+    ...overrides,
+  };
+}
+
+/** An in-memory `HealthDeps` — tests never touch Mongo. Defaults to a healthy report with two
+ * fixture collection counts. */
+export function fakeHealthDeps(overrides: Partial<HealthDeps> = {}): HealthDeps {
+  const healthy: HealthReport = { db: "ok", collections: { sessions: 1, claims: 1 } };
+  return {
+    checkHealth: async () => healthy,
     ...overrides,
   };
 }
@@ -246,6 +257,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     evalRuns: fakeEvalRunStore(),
     brain: fakeBrainReadDeps(),
     citations: fakeCitationsDeps(),
+    health: fakeHealthDeps(),
     graph: fakeGraphReadDeps(),
     calendar: fakeCalendarReadDeps(),
     meetingCandidates: fakeMeetingCandidatesDeps(),

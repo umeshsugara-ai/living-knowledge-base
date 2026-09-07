@@ -13,6 +13,7 @@ import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
 import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
 import { createCitationsRouter, type CitationsDeps } from "./routes/citations.js";
+import { createHealthRouter, type HealthDeps } from "./routes/health.js";
 import { createGraphRouter, type GraphReadDeps } from "./routes/graph.js";
 import { createCalendarRouter, type CalendarReadDeps } from "./routes/calendar.js";
 import { createMeetingCandidatesRouter, type MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
@@ -30,6 +31,7 @@ export interface ServerDeps {
   evalRuns: EvalRunStore;
   brain: BrainReadDeps;
   citations: CitationsDeps;
+  health: HealthDeps;
   graph: GraphReadDeps;
   calendar: CalendarReadDeps;
   meetingCandidates: MeetingCandidatesDeps;
@@ -51,9 +53,13 @@ export function createServer(deps: ServerDeps): Express {
   // render is what attaches the API key to each fetch) -- mounted BEFORE requireAuth, or a plain
   // browser navigation (which never sends a custom Authorization header) 401s before the HTML
   // that would even prompt for a key ever loads. Real bug found live (2026-09-04) on /compete;
-  // the same reasoning now covers every UI page. Every JSON/data route stays behind auth.
+  // the same reasoning now covers every UI page. Every JSON/data route stays behind auth, with
+  // ONE deliberate exception: /health (an ops liveness probe should not need a scoped key), which
+  // is safe to expose unauthenticated because it returns only aggregate cross-tenant counts,
+  // never tenant-scoped content.
   app.use(createCompetePageRouter());
   app.use(createPagesRouter());
+  app.use(createHealthRouter(deps.health));
   app.use(requireAuth(deps.keyStore));
   app.use(createRateLimiter(deps.rateLimit));
   app.use(createAskRouter(deps.ask));
