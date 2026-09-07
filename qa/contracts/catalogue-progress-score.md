@@ -73,6 +73,22 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
   exit 0, all tests passing and the probe fingerprint unchanged. `loadCollectionCounts` takes the
   lexically-last `live-*` folder, so the folder NAME is attacker-controlled. ISS-035.)*
 
+### Added by /checker cycle 3 — effective from cycle 4 / the next unit that touches this scorer
+
+- **[I11] "Committed" must mean the CONTENT, not the path.** Any gate that admits evidence on the
+  grounds that it is committed must compare the evidence's **content** to the committed blob (e.g.
+  `git diff --quiet HEAD -- <path>`, or hashing `git show HEAD:<path>`), never merely assert that
+  the path is tracked. The sha printed in `docs/PROGRESS.md` must be **line-ending-normalised** (or
+  read from the blob) so it is identical on an LF and a CRLF checkout. Each such gate carries its
+  own regression test. *(Measured cycle 3: `isTracked()` used `git ls-files --error-unmatch`, which
+  is a path query. Rewriting every count in the ALREADY-COMMITTED `preflight.json` in place — no new
+  folder, no commit, same internal stamp — moved the headline 20.2% → 39.5% with `--check` exit 0,
+  `pnpm lint:structure` exit 0 and NO uncommitted banner, defeating the very gate built to close
+  ISS-035 and at the same magnitude, +19.3 points. ISS-037. Separately, the same checkout run as
+  CRLF changes the printed sha `5f7ed1c0d434` → `3a73c60dcc6d` and turns `--check` STALE on an
+  untouched clone — ISS-039. And the `--check` refusal itself had no test: neutering it left all 29
+  green — ISS-038.)*
+
 ## Honest limits of this instrument (disclosed, not defects)
 
 - **Probes are hand-authored**, so the catalogue can be wrong by omission: an under-specified probe
@@ -103,6 +119,11 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
     scale line in `docs/PROGRESS.md` must change with it.
 12. *(I10, from cycle 3)* Drop a future-dated `qa/evidence/live-*/preflight.json` with inflated
     counts → the scorer must refuse, or the doc must make the substitution unmissable.
+13. *(I11, from cycle 4)* Rewrite the counts **inside the already-committed** `preflight.json`
+    without committing → `--check` and `pnpm lint:structure` must refuse, not pass.
+14. *(I11, from cycle 4)* `git checkout --` the evidence file on a CRLF-configured clone
+    (`core.autocrlf=true`) → the sha printed in `docs/PROGRESS.md` must not change and `--check`
+    must stay exit 0.
 
 ## Amendment log
 
@@ -110,3 +131,4 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
 |---|---|---|---|
 | 2026-09-07 | START | Initial contract, I1–I8, drafted by the maker | No document stated this unit's acceptance criteria; cycle-1 checker had to re-derive them (cycle-1 verdict, commit `b5596e6`) |
 | 2026-09-07 | routine (tighten) | /checker ADOPTED I1–I8 unchanged; ADDED I9 (scoring scale pinned + self-describing) and I10 (collection evidence bounded + attributable), effective cycle 3 | Cycle-2 check found two inflation levers I1–I8 do not reach: `POINTS` tampering (+8.3 pts, all gates green, doc misstates its own scale — ISS-034) and evidence-file substitution (+19.3 pts, all gates green — ISS-035). Both measured by execution. Tightening only; nothing weakened. |
+| 2026-09-07 | routine (tighten) | ADDED I11 (committed means CONTENT not path; sha must be line-ending-normalised; each such gate carries a test), effective cycle 4 | Cycle-3 check confirmed I9 and I10 are met, and found the next layer in the same place the last two were: the new `tracked` gate admits evidence on a path query, so tampering with the already-committed `preflight.json` in place restores the full +19.3-point lever with `--check` and `lint:structure` both green (ISS-037). Also ISS-039 (CRLF flips the printed sha, `--check` STALE on a clean clone) and ISS-038 (that gate had no regression test). Measured by execution. Tightening only; nothing weakened. |
