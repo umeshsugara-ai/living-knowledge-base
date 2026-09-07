@@ -1,132 +1,141 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-07T~12:35Z UTC, Mode B safety net)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-07, Mode B safety net)
 
-> Previous sweep: `2026-09-07T15:35:00Z` (per the stamp — this session's wall clock showed skew all
-> session, so the range was verified by `git log`, not by trusting that timestamp). Six commits
-> confirmed since `555dcb4` by `git log 555dcb4..HEAD`: `de81b8a`, `3d0c442`, `b7be919`, `41accce`,
-> `0c52bfa`, `ab8168c`, `3c6407f` (`3c6407f` lands after `ab8168c`, so seven total — all listed
-> below).
+> Previous sweep: stamp read `2026-09-07T12:35:00Z` (commit `83feb37`). This session's wall clock
+> has shown skew all session, so the range was verified by `git log 83feb37..HEAD`, not by
+> trusting timestamps: six commits confirmed — `1d32382`, `d325d8a`, `985dd52`, `1ed5d87`,
+> `ec323da`, `9131e34`.
 
-## Terminal state: FINDINGS: 3
+## Terminal state: CLEAN
 
 ### 1 — Bypass detection + pair-state reconciliation
 
-**No bypass.** Every commit in the range resolves to a manifest *and* a matching-cycle verdict on
-disk, re-checked against the manifest's own `Fix cycle` field, not assumed:
+**No bypass.** Three units landed in range, each a manifest + matching-cycle verdict, both
+re-read from disk (not trusted from prior session prose):
 
 | commits | unit | manifest Fix cycle | verdict Cycle checked | Status |
 |---|---|---|---|---|
-| `de81b8a` (fix) / earlier `a51b9c8` PASS | tracker-honesty | 1 | 1 (commit `a51b9c8`) | checked-PASS |
-| `3d0c442` (PASS+amend) / `b7be919` (fix) | claims-degradation-honesty | 1 | 1 | checked-PASS |
-| `41accce` (PASS+amend) / `0c52bfa` (fix) | tenant-scoped-writes | 1 | 1 | checked-PASS |
-| `ab8168c` (PASS) / `3c6407f` (fix) | indexSession-insert-confinement | 1 | 1 | checked-PASS |
+| `d325d8a` (fix) / `1d32382` (checker) | lint-score-split | 1 | 1 | checked-PASS |
+| `1ed5d87` (test) / `985dd52` (checker) | assertAllCallsConfined-unset-coverage | 1 | 1 | checked-PASS |
+| `9131e34` (fix) / `ec323da` (checker) | summarize-degradation-honesty | 1 | 1 | checked-PASS |
 
-Every `qa/manifests/*.md` in the repo reads `checked-PASS` or `superseded-by` — **zero manifests
-pending check.** No `ready-for-check` orphan, no verdict lagging its manifest's cycle.
+All three manifests read `checked-PASS`; both verdict files carry the same commit hash the
+manifest cites for it. No `ready-for-check` orphan anywhere in `qa/manifests/` — every manifest in
+the repo is `checked-PASS` or `superseded-by`. `qa/.last-tick`'s live tail runs continuously through
+`2026-09-07T13:13:43Z`, covering exactly these three units plus the sweep dispatch itself — no
+"maker asleep" finding.
 
-**Ledger cross-check:** manifests' claimed `Issues addressed` (ISS-056, ISS-060, ISS-061) all carry
-a matching `fixed_date: 2026-09-07` and a `checker_verdict`/`fixed_evidence` note citing the actual
-Mode A re-derivation (mutation testing + a live two-tenant proof against the real database for
-ISS-056/ISS-060). None was closed on the maker's say-so.
+**Ledger cross-check:** ISS-058, ISS-066, ISS-059 all read `status: "fixed"`, `fixed_date:
+"2026-09-07"`, each with a `checker_verdict` note citing the actual Mode A re-derivation (own-wording
+mutation reproduction in all three cases, not a pasted maker claim). None closed on the maker's
+say-so.
 
-**ISS-066 filed correctly.** The Mode A check of `indexSession-insert-confinement` (commit
-`ab8168c`) found and filed a new gap two commits before HEAD: `assertAllCallsConfined` doesn't
-inspect `$unset`, so a tenantId-stripping mutation via `$unset` (vs. reassignment via `$set`) would
-slip through undetected. Correctly scoped **medium** — the evidence itself says latent, not live
-(`indexSession`'s real code has no `$unset` call today).
+### 2 — Feedback-inbox fold-in
 
-### 2 — Feedback-inbox fold-in — one gap found and closed this sweep
+`qa/feedback-inbox.md` — all entries, including the one closed last sweep (2026-09-07, maker,
+ISS-056-unit PATTERN note), carry an explicit `— folded <date>` marker. **No new entries since the
+last sweep, nothing unfolded.**
 
-Three of four entries already carried an explicit `— folded <date>` marker. **The fourth (dated
-2026-09-07, maker, ISS-056-unit PATTERN note) did not**, despite the substance already being ruled
-on in `qa/contracts/catalogue-progress-score.md`'s amendment log (commit `3d0c442`, two commits
-before HEAD): I13/I14 upheld unchanged, the workflow-harm complaint sustained separately as
-**ISS-058** (open, medium — split `catalogue-score --check` out of `lint:structure` into its own
-commit/CI-gated `lint:score`). **Folded now** with the ruling cited and commit-pinned — this closes
-the fold-in gap without touching the ruling itself (routine documentation, not a contract change).
+### 3 — Ledger integrity (`scripts/tracker-audit.mjs`, run fresh)
 
-### 3 — Ledger integrity (`scripts/tracker-audit.mjs`)
+```
+tracker-audit: 2 finding(s)
+  G2 unverified: 7 issue(s) are "fixed" with no verified_date — ISS-054, ISS-056, ISS-058, ISS-059,
+  ISS-060, ISS-061, ISS-066
+  G3 stale sweep: qa/.last-sweep predates HEAD by 0.0 day(s)
+```
 
-Ran it fresh (not trusted from a pasted result): **G1 clean** (trackers agree), **G2: 1 finding**
-— `ISS-056`, `ISS-060`, `ISS-061` are `fixed` with `verified_date: null`. This is the *expected*
-shape for issues closed by a Mode A PASS minutes-to-hours ago, not a defect: `verified_date` moves
-only on a **later, separate** re-check per the ledger's own rule (`fixed → verified` is not
-same-cycle). Not queued as an issue; flagged here so the next sweep knows to look for
-`verified_date` on these three rather than re-deriving them from scratch. **G3: was stale by the
-raw stamp comparison (this session's clock skew), cleared by re-stamping below** — the actual
-commit-range check (§1) is what settled bypass detection, not the G3 arithmetic.
+**G1 clean** (trackers agree). **G2 is the expected shape**, not a defect: these seven were all
+closed by a Mode A PASS within the last several hours; `fixed → verified` is a later, separate
+re-check per the ledger's own rule, never same-cycle. Cross-checked against the ledger directly
+(python scan) — the seven G2 names match exactly. **G3 is transient-expected**: this sweep's own
+`.last-sweep` write (below) resolves it the moment this commit lands; not queued as an issue.
 
-**Also corrected this sweep, off the ledger's own contradiction:** `ISS-054` ("maker asleep",
-filed by the prior sweep against a `.last-tick` stamped `2026-09-04`) was still `status: open`.
-`qa/.last-tick`'s live tail now reads through `2026-09-07T12:20:57Z` — 4 ticks, continuous, across
-exactly the units this sweep verified. The liveness problem the issue named is resolved; left it
-`fixed` (not `verified`) rather than silently dropping it, with the tick evidence quoted in the
-ledger row.
+**Ledger status vocabulary — specifically re-verified this sweep** (per this session's earlier
+self-caught bug: a severity/backlog read that treated `verified` rows as still-open, when the
+ledger actually carries three statuses — `open` / `fixed` / `verified` — not two):
 
-### 4 — Goal coverage
+- `scripts/tracker-audit.mjs:67` — `if (r.status === "fixed" && !r.verified_date)` — correct, only
+  flags the intermediate `fixed`-not-yet-`verified` state, never conflates `verified` with `open`.
+- `.claude/hooks/mc-sessionstart.ps1:8` — `Where-Object { $_ -match '"status":\s*"(open|Open)"' }`
+  — matches the literal string `open` only; does not match `verified` or `fixed` substrings (no
+  false-positive on `"status":"verified"` — the pattern requires an exact quoted value, and no
+  ledger status string contains `open` as a substring of another status).
+- Repo-wide grep for other `issues.jsonl` consumers under `scripts/`, `.claude/hooks/`, and
+  `apps/`/`packages/` (`*.mjs .ps1 .js .py .ts`) turned up only these two — no third tool silently
+  miscounting the same way. (Other `status: "open"|"verified"` hits in the codebase are unrelated
+  domain enums — `claims`/`gaps` collections, `apps/web/src/api/types.ts` — not the qa ledger.)
+- Own count (18 open / 8 fixed / 40 verified = 66 total) matches `tracker-audit`'s G2 list and the
+  task brief's "~18 genuinely open" exactly.
 
-`.goal/goal.json`: 26/35 done, 74%, 9 pending (`T-007`, `T-008`, `T-011`, `T-013`–`T-015`, `T-021`,
-`T-022`, `T-028`). Nothing in this range changed goal-task shape — `tenant-scoped-writes` and
-`indexSession-insert-confinement` are ledger-driven units with no goal task (correctly, per their
-own manifests: "Goal task: none"). No new missing requirement; no `GRILL:` row.
+**Status counts:** 66 total — 18 `open`, 8 `fixed`, 40 `verified`.
 
-### 5 — Goal-drift / re-grill (check 6)
+### 4 — Enforcement liveness
 
-`qa/.regrill-due` absent. No unit re-PASSed twice on the same evidence (reopen-power untouched this
-sweep — nothing met its bar). No `STALLED`/`EXHAUSTED` tick since the last sweep (all four ticks in
-range are `ADVANCED`), so no `qa/debug/` report is owed. `qa/gates/` still doesn't exist as a
-directory — no gate to have been answered off-disk. **CLEAN.**
+182+ commits on HEAD (not zero-history). `.claude/settings.json` hooks present, `-File` form
+(D-010) — `lab-session-start.ps1`, `mc-sessionstart.ps1`, `mc-precommit.ps1`,
+`decisions-append-guard.ps1`, session-end hooks all registered. `qa/loop.md` present with `Stop:`
+and `Human gate:` lines, uncontradicted by `qa/adapter.json` (absent — default coding adapter).
+Loop-design triad: **can it spin** — no, Stop reads real signals (this sweep found zero pending
+manifests). **Can it Goodhart the verifier** — no; all three units this range were checked by
+mutation-tested re-derivation, not a self-reported score. **Can it run a wrong answer to
+completion** — no; every `done_check` this range was at least as strong as its criterion (own-
+wording reproduction each time). **Live.**
 
-### 6 — Silent-failure hunt (check 7)
+### 5 — Goal coverage
 
-Read the 7 non-test/non-audit-script source files touched in range (`indexing.ts`, `claims.ts`,
-`tenantScope.ts`, plus their three test files and `tracker-audit.mjs`). **Zero new hits** — this
-range is itself the fix for the one silent-failure pattern found last sweep
-(`claims.ts:66-68`'s bare `catch { return []; }` is now a discriminated `{ claims, degraded }`
-result, `claims.ts:83-84`). No new empty catch, no new masking fallback, no new lost-cause
-re-raise, no new unawaited/untimed side effect in the touched surface.
+`.goal/goal.json`: 35 tasks / 26 done / 74% — unchanged from last sweep. All three units this range
+are ledger-driven with no goal task (manifests state "Goal task: none" — correct, per their own
+scope). No new missing requirement surfaced; no `GRILL:` row.
 
-### 7 — Enforcement liveness
+### 6 — Goal-drift / re-grill
 
-182 commits on HEAD (not zero-history). Hooks registered in `.claude/settings.json`, `-File` form
-(D-010). `qa/loop.md` present with `Stop:` (:41) and `Human gate:` (:50) lines, uncontradicted by
-`qa/adapter.json` (none present — default coding adapter). Loop-design triad re-asked: **can it
-spin** — no, Stop reads real signals (this sweep found zero pending manifests). **Can it Goodhart
-the verifier** — no new instance; this range's Mode A checks each ran mutation tests + one live
-two-tenant database proof, not a self-reported score. **Can it run a wrong answer to completion** —
-no; `indexSession-insert-confinement`'s own manifest records a prior checker dispatch that died
-without a verdict (API error) and states plainly that no cycle was consumed — correct handling, not
-a completion on a weak check. **Live.**
+`qa/.regrill-due` absent. `qa/gates/` doesn't exist as a directory — no gate to have been answered
+off-disk. Reopen-power: one historical escalation reference in the ledger (ISS-006, already
+standing/open, not freshly reversed this sweep) — no unit re-PASSed twice on the same evidence in
+this range. No `STALLED`/`EXHAUSTED` tick since the last sweep (all ticks in range are `ADVANCED`
+per `qa/.last-tick`) — no `qa/debug/` report owed. North star unchanged since the last contract
+amendment. **CLEAN.**
+
+### 7 — Silent-failure hunt
+
+Read the touched surface in range: `apps/api/src/indexing.ts`, `packages/index/src/pipeline/
+summarize.ts`, `apps/api/src/indexing.test.ts`, `packages/index/src/pipeline/summarize.test.ts`,
+`package.json`, `.github/workflows/ci.yml`. **Zero new hits.** The `summarize.ts` catch block
+(previously an empty `catch { // fall through }`) is now a discriminated return carrying the real
+error message (`degraded: { reason: `summarize provider call failed: ${err.message}` } }`) — this
+range is itself a silent-failure *fix* (ISS-059), not a new instance. No new empty catch, no new
+masking fallback, no new lost-cause re-raise, no new unawaited/untimed side effect.
 
 ---
 
-## Standing issue, unchanged this sweep (not reopened, not touched)
+## Standing issue, unchanged this sweep
 
-**ISS-006** (segregation of duties — high, open since prior sweep): of the four maker-authored
-contracts named in the last sweep, `qa/contracts/ingest-indexing-pipeline.md` has since been
-formally adopted (amendment-log entry, commit `527d8f7`, pre-dating this sweep's range). The other
-three — `whatsapp-ingestion-first-slice.md`, `web-whatsapp-tab.md`,
-`post-review-fixes-2026-09-06.md` — are still maker-drafted with no checker adoption recorded.
-Reopen-power was not exercised again this sweep (already open, not freshly reversed); it remains
-queued as-is.
+**ISS-006** (segregation of duties — high, open since prior sweeps): `ingest-indexing-pipeline.md`
+was formally adopted before this range began; `whatsapp-ingestion-first-slice.md`,
+`web-whatsapp-tab.md`, `post-review-fixes-2026-09-06.md` are still maker-drafted with no checker
+adoption recorded. Untouched this sweep — no commit in range touches these three contracts.
 
 ---
 
 ## Top-3 recommended next units
 
-1. **`contract-adoption-backfill`** (closes the remaining two-thirds of **ISS-006** high) —
-   *checker work.* Adopt-or-amend `whatsapp-ingestion-first-slice.md`, `web-whatsapp-tab.md`,
-   `post-review-fixes-2026-09-06.md` the same way `ingest-indexing-pipeline.md` was done: read in
-   full, dated amendment-log entry, adopt-faithful-except-where-amended.
-2. **`lint-score-split`** (closes **ISS-058**, medium) — pull `catalogue-score --check` out of
-   `pnpm lint:structure` into its own `lint:score`, gated on the commit/CI path per the ruling in
-   `qa/contracts/catalogue-progress-score.md`'s amendment log. Composition fix only; I13/I14 stay
-   exactly as strong.
-3. **`assertAllCallsConfined-unset-coverage`** (closes **ISS-066**, medium, filed two commits ago)
-   — extend `apps/api/src/indexing.test.ts`'s confinement check to also flag `$unset` (and other
-   update operators) touching `tenantId`, not just `$set`/bare reassignment. Small, same family as
-   the `$set` gap this range just closed.
+1. **`contract-adoption-backfill`** (closes **ISS-006**, high) — *checker work.* Adopt-or-amend
+   `whatsapp-ingestion-first-slice.md`, `web-whatsapp-tab.md`, `post-review-fixes-2026-09-06.md`
+   the same way `ingest-indexing-pipeline.md` was done: read in full, dated amendment-log entry,
+   adopt-faithful-except-where-amended. Highest severity in the open backlog and the oldest
+   standing item.
+2. **`tree-index-tenant-scoping`** (closes **ISS-062** + **ISS-063**, both medium,
+   `ingest-indexing-pipeline`) — `tree_index` has no `tenantId` field at all; tenants are separated
+   only by the root filter written out longhand at each call site rather than through
+   `scopedCollection` the way `claims`/`session_pages` now are (post `tenant-scoped-writes`,
+   commit `0c52bfa`). Same risk family as ISS-060/ISS-061 which this session already fixed for two
+   other collections — `tree_index` is the one gap the tenant-scoping unit explicitly flagged and
+   left to the checker as "schema decision, not mine" (`qa/.last-tick` 2026-09-07T11:15:18Z).
+3. **`manifest-close-out-and-contract-shape-sweep`** (closes **ISS-017** + **ISS-055**, both
+   medium) — `real-llm-scorer.md`'s manifest is stuck at `ready-for-check` past its check window
+   (T-009b close-out gap), and four contracts still carry no append-only amendment log at all
+   (blocks routine amendment/prune on any of them). Lower urgency than items 1–2 (hygiene, not a
+   live data-isolation gap) but next in severity order.
 
-Also queued, low/medium, unchanged from last sweep: **ISS-017**, **ISS-055** (amendment-log gap on
-the same three unadopted contracts as ISS-006 — closes alongside item 1), **ISS-059**, **ISS-062**,
-**ISS-063**, **ISS-007**, **ISS-011**, **ISS-020**, **ISS-021**, **ISS-036**, **ISS-040**,
-**ISS-050**–**ISS-053**, **ISS-057**, **ISS-064**, **ISS-065**.
+Also queued, low, unchanged from last sweep: **ISS-007**, **ISS-011**, **ISS-020**, **ISS-021**,
+**ISS-036**, **ISS-040**, **ISS-050**–**ISS-053**, **ISS-057**, **ISS-064**, **ISS-065**.
