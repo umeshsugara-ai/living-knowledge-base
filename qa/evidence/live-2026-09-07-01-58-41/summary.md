@@ -1,8 +1,8 @@
-# live-verify — 2026-09-07T01:46:55.865Z
+# live-verify — 2026-09-07T01:58:41.367Z
 
-**Overall: PASS (DIRTY-TREE — not attributable to fbda37b4)** · DIRTY-TREE: 1 · PASS: 15 · STUB: 2 · MISSING: 1
+**Overall: PASS** · PASS: 16 · STUB: 2 · MISSING: 1
 
-- commit: `fbda37b4182b13c97203a7d76d0f58b4d8cc896d` — **working tree DIRTY**, so this run is not valid as final acceptance evidence for this commit
+- commit: `7f1df0d96d484b3b8852707dfa243bee17904b63`
 - api: http://localhost:3300 · web: http://localhost:5173
 - `POST /ask` exercised — appended 12 real `jobs` ledger row(s) this run (measured, not assumed)
 
@@ -10,7 +10,7 @@
 
 | verdict | check | detail |
 |---|---|---|
-| DIRTY-TREE | preflight: evidence attributable to a commit | 9 uncommitted file(s) — not reproducible from fbda37b4 alone; not valid as final acceptance evidence for a shipped commit |
+| PASS | preflight: evidence attributable to a commit | 7f1df0d9 |
 | PASS | preflight: mongo collection counts | 11/24 collection(s) have ≥1 real document |
 | PASS | GET /sessions (scope: sessions) | HTTP 200 |
 | PASS | GET /sources (scope: sources) | HTTP 200 |
@@ -43,7 +43,7 @@
 | features_event | 0 |
 | gaps | 0 |
 | graph_edges | 0 |
-| jobs | 178 |
+| jobs | 214 |
 | media | 0 |
 | meeting_candidates | 13 |
 | orgs | 0 |
