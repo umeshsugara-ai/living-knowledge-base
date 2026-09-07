@@ -18,7 +18,7 @@ import {
 } from "@lkb/db";
 import type { ApiKeys, Jobs, TreeIndexNode } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
-import { flattenTreeToGraph, type Graph } from "@lkb/index";
+import { flattenTreeToGraph, treeIndexRootFilter, type Graph } from "@lkb/index";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
@@ -45,10 +45,11 @@ export function createMongoApiKeyStore(): ApiKeyStore {
 export function createMongoTreeStore(): TreeStore {
   return {
     async load(tenantId: string): Promise<TreeIndexNode | null> {
-      // buildTree's own root node_id is `tenant:<id>` (packages/index/src/tree/build.ts), not
-      // the bare tenantId -- real bug found live (2026-09-04) while first standing up the API
-      // against real seeded data: this query never matched anything buildTree ever produced.
-      return getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
+      // treeIndexRootFilter (ISS-063) is the single source of the `tenant:<id>` convention this
+      // query used to hand-write -- that hand-written copy was the exact query that got the
+      // node_id shape wrong once, live, on 2026-09-04, before this file matched what buildTree
+      // actually produces.
+      return getDb().collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
     },
   };
 }
@@ -98,13 +99,13 @@ export function createMongoBrainReadDeps(): BrainReadDeps {
   };
 }
 
-/** Real `GraphReadDeps` (routes/graph.ts) — reuses the exact same `tree_index` query
- * `createMongoTreeStore` already uses (the `tenant:<id>` node_id fix), then flattens it with
- * `@lkb/index`'s pure `flattenTreeToGraph`. No new Mongo access pattern. */
+/** Real `GraphReadDeps` (routes/graph.ts) — reuses the exact same `treeIndexRootFilter` query
+ * `createMongoTreeStore` already uses, then flattens it with `@lkb/index`'s pure
+ * `flattenTreeToGraph`. No new Mongo access pattern. */
 export function createMongoGraphReadDeps(): GraphReadDeps {
   return {
     async loadGraph(tenantId): Promise<Graph | null> {
-      const root = await getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
+      const root = await getDb().collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
       return root ? flattenTreeToGraph(root) : null;
     },
   };

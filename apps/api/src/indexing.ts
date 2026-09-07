@@ -18,7 +18,7 @@ import { randomUUID } from "node:crypto";
 import type { Db } from "mongodb";
 import { getDb, scopedCollection } from "@lkb/db";
 import type { SessionPages, Claims, Sessions, TreeIndexNode, Turns } from "@lkb/core";
-import { summarizeSession, extractClaims, buildTree, regenerate, type SummarizeCompleteFn } from "@lkb/index";
+import { summarizeSession, extractClaims, buildTree, regenerate, treeIndexRootFilter, type SummarizeCompleteFn } from "@lkb/index";
 
 /** `schema/{session_pages,claims}.schema.json` both declare `evidence.minItems: 1`, which the
  * generated types express as a non-empty tuple. Both callers below only ever build this from an
@@ -39,16 +39,9 @@ export interface IndexSessionDeps {
   db?: Pick<Db, "collection">;
 }
 
-/** The one collection here that CANNOT go through `scopedCollection`: `schema/
- * tree_index.schema.json` declares no `tenantId` property at all, so the type does not satisfy
- * `T extends {tenantId: string}` and a `{tenantId}` filter would match nothing. A tenant's tree
- * is separated only by the `tenant:<id>` prefix inside `node_id` — a string convention, not a
- * field, and therefore not something the compiler can enforce. Both callers below are pinned by
- * `indexing.test.ts` instead. Raised in the ISS-060 manifest for the checker to rule on. */
-function treeIndexRootFilter(tenantId: string) {
-  return { node_id: `tenant:${tenantId}`, level: "tenant" as const };
-}
-
+/** `tree_index` is the one collection here that CANNOT go through `scopedCollection` — see
+ * `treeIndexRootFilter`'s own doc comment (`@lkb/index`, ISS-063) for why, and why this file
+ * imports it rather than re-deriving the `tenant:<id>` convention itself (as it briefly did). */
 async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promise<TreeIndexNode | null> {
   return db.collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
 }

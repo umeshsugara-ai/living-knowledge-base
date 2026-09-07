@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import type { SessionPages, Sessions } from "@lkb/core";
-import { buildTree } from "./build.js";
+import { buildTree, treeIndexRootFilter } from "./build.js";
 import { treeSearch } from "./search.js";
 
 const SESSIONS: Sessions[] = [
@@ -91,4 +91,21 @@ test("summarize injection and fallback", () => {
   const sess1Llm = treeSearch(withLlm["toc"]!, ["toc/year:2026/month:04/session:sess1"])[0]!;
   assert.equal(sess1Llm.summary, "MOCK SUMMARY for 21st-April-Visa-Blueprint",
     "expected injected summarize() callable to override the fallback");
+});
+
+// ISS-063: treeIndexRootFilter is the single source of the `tenant:<id>` node_id convention —
+// buildTree's own root node ids must match it exactly, or apps/api's readers (which import this
+// same function) would never find the tree buildTree just produced.
+test("treeIndexRootFilter's node_id matches buildTree's own root node_id exactly", () => {
+  const root = buildTree(SESSIONS, SESSION_PAGES)["toc"]!;
+  const filter = treeIndexRootFilter("toc");
+  assert.equal(root.node_id, filter.node_id);
+  assert.equal(root.level, filter.level);
+});
+
+test("treeIndexRootFilter is stable and tenant-specific — no collision between two tenants", () => {
+  const a = treeIndexRootFilter("tenant-a");
+  const b = treeIndexRootFilter("tenant-b");
+  assert.notEqual(a.node_id, b.node_id);
+  assert.equal(treeIndexRootFilter("tenant-a").node_id, a.node_id, "must be deterministic, not random per call");
 });
