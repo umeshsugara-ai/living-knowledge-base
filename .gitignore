@@ -30,6 +30,7 @@ reference/kb-deck-screens/*.png
 
 # claude-code local state
 .claude/scheduled_tasks.lock
+.handoffs/
 
 # goal tracker regenerated artefacts
 .goal/dashboard.html
