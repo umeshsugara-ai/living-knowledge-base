@@ -91,6 +91,34 @@ test("a SUCCESSFUL extraction still replaces the session's claims (delete then i
  * `insertOne` added anywhere inside `indexSession` passed the whole suite and typechecked clean
  * under that version. Checking documents closes the exact gap the checker demonstrated live.
  */
+/**
+ * Checks an `updateOne` call's UPDATE BODY, not just its filter — `updateOne`'s filter can carry
+ * the right tenantId while the update itself moves the document to a different one. First found
+ * (2026-09-07) as a single `$set`-only check; that missed `$unset` stripping `tenantId` entirely
+ * (ISS-066) — the second instance of this project's own untested-guard pattern landing inside a
+ * unit built specifically to close the first instance. Fixed generically this time: every
+ * MongoDB update operator's sub-object (`$set`, `$unset`, `$rename`, `$currentDate`, …) and a raw
+ * replacement document are all scanned the same way, so a THIRD operator doesn't need a THIRD
+ * special case.
+ */
+function assertUpdateBodyConfined(call: Call, tenantId: string) {
+  const update = call.update!;
+  for (const [key, value] of Object.entries(update)) {
+    if (!key.startsWith("$")) {
+      // A raw replacement document (no operators at all) — `key` is a field name directly.
+      if (key === "tenantId") assert.equal(value, tenantId, `${call.coll}.${call.op}'s update body reassigns tenantId — it can move a document into another tenant`);
+      continue;
+    }
+    const operand = value as Record<string, unknown>;
+    if (operand === null || typeof operand !== "object" || !("tenantId" in operand)) continue;
+    if (key === "$unset") {
+      assert.fail(`${call.coll}.${call.op}'s ${key} strips tenantId — the document would carry no tenant at all (ISS-066)`);
+    } else {
+      assert.equal(operand.tenantId, tenantId, `${call.coll}.${call.op}'s ${key} reassigns tenantId — it can move a document into another tenant`);
+    }
+  }
+}
+
 function assertAllCallsConfined(calls: Call[], tenantId: string) {
   for (const call of calls) {
     if (call.coll === "tree_index") {
@@ -106,20 +134,7 @@ function assertAllCallsConfined(calls: Call[], tenantId: string) {
     for (const doc of call.docs ?? []) {
       assert.equal(doc.tenantId, tenantId, `${call.coll}.${call.op} wrote a document with no tenantId — it can be written into another tenant's data (ISS-061)`);
     }
-    if (call.update) {
-      // A checker-reported gap (2026-09-07, cycle 1 dispatch that terminated on an API error
-      // before writing a verdict): `updateOne`'s FILTER can carry the right tenantId while its
-      // UPDATE body reassigns the document to a different one — a cross-tenant takeover this
-      // check did not previously look for at all. Both the `$set` shape and a raw replacement
-      // document are covered; a call with neither present is not reassigning anything.
-      const setBlock = (call.update.$set ?? {}) as Record<string, unknown>;
-      if ("tenantId" in setBlock) {
-        assert.equal(setBlock.tenantId, tenantId, `${call.coll}.${call.op}'s $set reassigns tenantId — it can move a document into another tenant`);
-      }
-      if ("tenantId" in call.update) {
-        assert.equal(call.update.tenantId, tenantId, `${call.coll}.${call.op}'s update body reassigns tenantId — it can move a document into another tenant`);
-      }
-    }
+    if (call.update) assertUpdateBodyConfined(call, tenantId);
   }
 }
 
