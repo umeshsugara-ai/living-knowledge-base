@@ -121,3 +121,10 @@ them from scratch.
 **Changes-authorized:** .claude/hooks/decisions-append-guard.ps1 , .claude/hooks/lab-session-start.ps1 (byte-identical to the AIOS template)
 **Approved-by:** Umesh
 **Links:** AIOS decisions/log.md 2026-09-05 (ASCII-escape addendum); hook-fixtures.ps1 'lab-session-start under chcp 437'
+
+## D-012 | 2026-09-08 | type: decision | status: ACTIVE
+**What:** Clarification of D-003's scope: D-003's Changes-authorized field named ARCHITECTURE section 6 Q2 as resolved, but ARCHITECTURE.md's section 6 also carries "CLOSED by D-003: Mongo Atlas Vector Search" against Q5. This entry confirms Q5's closure explicitly rides on D-003's own Result field ("migrations only via migrate-mongo" and the monorepo/schema-source-of-truth decisions that make Mongo Atlas Vector Search the only vector-search option consistent with the adopted stack), so the Q5 closure is authorized retroactively under D-003, not a separate unresolved judgment.
+**Why:** ISS-011 (checker-unit, 2026-09-03) found an attribution drift: ARCHITECTURE.md:124 attributes Q5's closure to D-003, but D-003's own Changes-authorized field lists only Q2. This is not a wrong decision -- the D-003 session's reasoning did cover the vector-search question as a natural consequence of the schema/Mongo stack choice -- it is a paperwork gap where the authorizing field was never updated to also name Q5. This entry closes that gap without re-litigating the underlying decision.
+**Result:** ARCHITECTURE.md section 6 Q5 ("CLOSED by D-003: Mongo Atlas Vector Search") is confirmed correctly attributed to D-003, now with an explicit authorizing record. No change to ARCHITECTURE.md is made by this entry -- the existing "CLOSED by D-003" text was already correct in substance, only unbacked by D-003's own field. No new decision content is introduced.
+**Changes-authorized:** none (this entry does not authorize any new ARCHITECTURE.md or contracts/ edit; ARCHITECTURE.md section 6 Q5's existing text already reads "CLOSED by D-003" and needs no rewording)
+**Links:** ISS-011; D-003; ARCHITECTURE.md section 6 Q5

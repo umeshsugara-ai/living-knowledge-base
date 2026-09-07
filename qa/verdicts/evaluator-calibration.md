@@ -1,5 +1,6 @@
 # Verdict — evaluator-calibration (T-022)
 
+**VERDICT: PASS**
 **PASS** — Cycle checked: 1
 Contract: `qa/contracts/evaluator-calibration.md`
 Manifest: `qa/manifests/evaluator-calibration.md`

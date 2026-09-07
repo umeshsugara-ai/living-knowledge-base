@@ -1,6 +1,7 @@
 # Verdict — regenerate-year-migration (T-004c)
 
 **Result: PASS**
+**Cycle checked: 1**
 
 Contract: `qa/contracts/regenerate-year-migration.md`
 Manifest: `qa/manifests/regenerate-year-migration.md`

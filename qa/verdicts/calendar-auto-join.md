@@ -1,5 +1,6 @@
 # Verdict — calendar-auto-join (T-025)
 
+**VERDICT: PASS**
 **Result: PASS** (cycle 1)
 
 Contract: `qa/contracts/calendar-auto-join.md`

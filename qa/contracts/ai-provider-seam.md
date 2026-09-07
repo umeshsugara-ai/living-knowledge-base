@@ -63,8 +63,21 @@ fakes, matching the pattern already used in `packages/ask` (injectable `score_fn
   provider for CRAG (folds into `ask-router` v2, a separate unit, T-005b) unless trivially reusing
   this same `Provider` shape — if so, note it in the manifest but don't block T-019 on it.
 
+## Invariants
+- **[I1] No live network call is ever required to pass.** Every adapter's HTTP/process-spawn call
+  sits behind an injectable transport, so the contract stays testable offline with fakes (Scope).
+- **[I2] One `Provider` interface, one definition.** No adapter re-declares its own return shape;
+  all five import the same `packages/ai/src/provider.ts` interface (C1).
+- **[I3] Every `complete()` attempt is logged.** Success or failure, each call writes to the
+  `jobs` ledger via the injectable `write` function — a silent, unlogged call is a violation
+  (C5, C7).
+
 ## Amendment log
 - 2026-09-03 · routine · checker adopts this maker-drafted contract as-is (T-019 cycle-1 check) ·
   verified faithful to D-005 (Gemini-first, Claude via OAuth not API keys, Anthropic Messages API
   optional/flagged, jobs ledger with maxCost, no budget-guard work) and D-008 (multi-provider
   chain, five adapters + listModels() + STT seam) and plan §6c.3 — no wording changes needed.
+- 2026-09-08 · routine · added `## Invariants` section (I1-I3), derived from this contract's own
+  already-stated Scope/Criteria text (injectable-transport-only, single Provider interface, every
+  call logged) — no new requirement introduced, only structure per the checker SKILL's "Contract
+  file shape" · ISS-007 housekeeping

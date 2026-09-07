@@ -55,7 +55,21 @@ tree — nothing is copied, only moved (git history preserved via `git mv`).
 - No CI workflow, no lint scripts (T-017). No schema changes, no new collections, no migrations
   tool (T-018). No provider code (T-019). No Express routes, no Mongo connection.
 
+## Invariants
+- **[I1] History is never lost.** Files move via `git mv`, never a copy; a Python original is
+  deleted only after its TS port's tests pass, and git history keeps it (Scope; C4).
+- **[I2] Ports stay behaviour-identical.** The TS ports must reproduce the same node_id scheme,
+  thresholds/kwargs, and normalisation rules as the Python originals they replace — a divergence
+  is a regression against this contract, not a new feature to scope separately (C3).
+- **[I3] Generated types are the only types.** No hand-written interface may duplicate a schema
+  field list anywhere in `packages/`; the generated output under `packages/core/src/generated/` is
+  the single source (C5).
+
 ## Amendment log
 - 2026-09-03 · routine · folded inbox 2026-09-03 design-first line (already covered by C5/C7/C8/C9) · sweep #1
 - 2026-09-03 · routine · checker ADOPTS this contract as checker-owned (ISS-006): content re-read against D-003 (packages list, TS-first port with tests, schema/ as source of truth, whatsapp_msg submodule) — faithful; START stands on the D-003 Approved plan §6c.1. Maker never writes qa/contracts/ again · T-016 cycle-1 check
 - 2026-09-03 · routine · C9 count 9/9 → 10/10 (tree_index schema added by ISS-004; already logged in knowledge-base-schema.md) · T-016 cycle-1 check
+- 2026-09-08 · routine · added `## Invariants` section (I1-I3), derived from this contract's own
+  already-stated Scope/Criteria text (git-mv history preservation, port behaviour-parity,
+  generated-types-only) — no new requirement introduced, only structure per the checker SKILL's
+  "Contract file shape" ([C*] criteria + [I*] invariants + amendment log) · ISS-007 housekeeping

@@ -61,6 +61,16 @@ readers/fixtures, matching the transport-injection pattern from T-019.
 - No `url`, `whatsapp`, `meeting-bot` adapters (separate units). No live TOC file reads (T-002
   wires this seam to real data). No claim-extraction pipeline wiring (later unit).
 
+## Invariants
+- **[I1] Downstream never knows which adapter ran.** Every adapter shares one `Source` interface
+  and emits the same pre-persistence `Turn` shape, so turns→pages→claims→tree stay adapter-agnostic
+  (blockquote; C1).
+- **[I2] No re-declared shapes.** `SourceDoc`/`MediaDoc`/`ConsentContext`/`Turn` are imported from
+  `core/generated` or `@lkb/ai`, never redefined locally by an adapter (C1).
+- **[I3] Silent capture is never silently allowed.** `captureMode === 'silent'` without an explicit
+  no-provided-alternative confirmation must produce a warning from `assertProvidedFirst` — it may
+  never pass through unnoticed (C5, D-008).
+
 ## Amendment log
 - 2026-09-03 · routine · Reworded C1 so `Turn` is sourced from `@lkb/ai`'s `stt/transcribe.ts`
   (T-019's pre-persistence shape) instead of `core/generated` · `core/generated/turns.ts`'s
@@ -71,3 +81,7 @@ readers/fixtures, matching the transport-injection pattern from T-019.
   architecturally legal per ARCHITECTURE §5 either way. Verified against
   `packages/core/src/generated/turns.ts` and `packages/ai/src/stt/transcribe.ts` during T-020
   cycle-1 check.
+- 2026-09-08 · routine · added `## Invariants` section (I1-I3), derived from this contract's own
+  already-stated blockquote/Criteria text (adapter-agnostic downstream, no re-declared shapes,
+  silent-capture warning never skipped) — no new requirement introduced, only structure per the
+  checker SKILL's "Contract file shape" · ISS-007 housekeeping

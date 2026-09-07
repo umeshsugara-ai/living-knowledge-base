@@ -48,6 +48,20 @@ any violation, plus a GitHub Actions workflow that runs it (and the existing tes
 - No SNAPSHOT/FEATURES ledger (T-017b). No schema/migration changes (T-018). No ESLint/Prettier
   style rules — structure only.
 
+## Invariants
+- **[I1] Budgets live in one place.** `structure.config.json` holds every number the linters
+  enforce; no linter script or doc may hardcode a number that could drift from it (C10).
+- **[I2] Enforcement must be proven non-vacuous.** A linter that never fails on a planted
+  violation is not enforcement — each of the five linters must be shown to fail on a deliberately
+  broken fixture and pass on a clean one (C6, C8).
+- **[I3] Enforcement is CI-blocking, not advisory.** `pnpm lint:structure` runs on every push/PR
+  via the committed workflow and exits non-zero on any violation — a budget documented but not
+  gated does not satisfy this contract (Scope; C9).
+
 ## Amendment log
 - 2026-09-03 · routine · checker ADOPTS this contract as checker-owned (maker-drafted, as T-016/ISS-006): content re-read against D-003 Result ("300 LOC per file (tests 400), 30 files per dir, root <= 15 loose files, one exported symbol per concept, ARCHITECTURE.md <= 150 lines, migrations only via migrate-mongo") and ARCHITECTURE §5 dependency rules — faithful; START stands on D-003 (plan §6c.1). Maker never writes qa/contracts/ again · T-017 cycle-1 check
 - 2026-09-03 · routine · C6 verify command: the literal `npx depcruise --validate packages apps workers` is mis-parsed by depcruise 18.2.0's CLI (commander takes `packages` as --validate's optional config-file argument; reproduced: "2 modules, 0 dependencies cruised"). The C6 command is now `depcruise --config .dependency-cruiser.cjs packages apps workers` (= the `lint:structure` script; `npx depcruise packages apps workers --validate` is an equivalent form). Intent unchanged: exits 0 on the current tree, non-zero on a planted violation · T-017 cycle-1 check
+- 2026-09-08 · routine · added `## Invariants` section (I1-I3), derived from this contract's own
+  already-stated Scope/Criteria text (single-source budgets, non-vacuous enforcement, CI-blocking
+  not advisory) — no new requirement introduced, only structure per the checker SKILL's "Contract
+  file shape" · ISS-007 housekeeping
