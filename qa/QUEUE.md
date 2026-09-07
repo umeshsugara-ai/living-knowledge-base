@@ -1,130 +1,151 @@
 # QUEUE — top-3 recommended next units (checker sweep 2026-09-07, Mode B safety net)
 
-> Previous sweep stamp read `2026-09-07T13:20:00Z` (commit `173a931`). This session's wall clock
-> has shown skew all session, so the range was verified by `git log 173a931..HEAD`, not by
-> trusting timestamps: eight commits confirmed — `024cd43`, `889310d`, `9c07153`, `20f138d`,
-> `85c6ed9`, `fba8d3c`, `b7c894d`, `dc3bb10`.
+> Previous sweep stamp read `2026-09-07T17:41:28Z` (commit `dc88316`). Range verified by
+> `git log dc88316..HEAD`, not by trusting timestamps: **6 commits** confirmed —
+> `5a535c1`, `c2a5a9f`, `277c021`, `40f0666`, `b2d7618` (this sixth commit,
+> `catalogue-cli-clean-check`/ISS-064, landed concurrently WHILE this sweep was running — its
+> checker dispatch and this sweep were explicitly launched in parallel, same turn, per
+> `qa/.last-tick`'s final line; it is included below since it closed before this sweep's findings
+> were written).
 
 ## Terminal state: CLEAN
 
 ### 1 — Bypass detection + pair-state reconciliation
 
-**No bypass.** Three units landed in range, each a manifest + matching-cycle verdict(s), all
-re-read from disk (not trusted from prior session prose):
+**No bypass.** Five units landed in range, each a manifest + matching-cycle verdict, all re-read
+from disk (not trusted from any prior session's prose):
 
-| commits | unit | manifest Fix cycle | verdict(s) Cycle checked | Status |
+| commit | unit | manifest Fix cycle | verdict Cycle checked | Status |
 |---|---|---|---|---|
-| `024cd43` (checker PASS) / `889310d` (refactor) | tree-index-filter-consolidation | 1 | 1 | checked-PASS |
-| `9c07153` (checker PASS) / `20f138d` (feat/migration) | tree-index-tenant-id-migration | 1 | 1 | checked-PASS |
-| `85c6ed9` FAIL c1 / `fba8d3c` FAIL c2 / `b7c894d` PASS c3 / `dc3bb10` (refactor) | scoped-collection-updateOne | 3 of max 3 | 1, 2, 3 (all present) | checked-PASS |
+| `5a535c1` | orphaned-scratch-tenant-cleanup | 1 | 1 | checked-PASS |
+| `c2a5a9f` | bom-and-unreadable-evidence | 1 | 1 | checked-PASS |
+| `277c021` | empty-manual-verdict-refusal | 1 | 1 | checked-PASS |
+| `40f0666` | tracker-audit-g1-gate | 1 | 1 | checked-PASS |
+| `b2d7618` | catalogue-cli-clean-check | 1 | 1 | checked-PASS |
 
-All three manifests read `Status: checked-PASS`. A full-repo scan of every manifest's Status line
-(`grep -iE "^(## )?Status:"`) found zero manifests stuck at `ready-for-check` anywhere in the repo
-— every one is `checked-PASS` or `superseded-by`.
+Full-repo scan of every manifest's Status line (`grep -riE "^(## )?Status:" qa/manifests/*.md`)
+found **zero** manifests stuck at `ready-for-check` — every one reads `checked-PASS` or
+`superseded-by`. `catalogue-cli-clean-check.md` (line 97: `**Status: checked-PASS**`) was the
+one genuinely in flight at sweep start — verified it landed with a real, independently-run
+verdict (`qa/verdicts/catalogue-cli-clean-check.md`: fresh mutation test performed by the
+checker itself — reverted `watchedInputsClean()` to the old two-path list, confirmed via `diff`
+against a backup that content genuinely changed, re-ran, got exactly 12/13 with the new
+regression test reddening, restored, 13/13 green again) — not raced, not double-checked.
 
-**scoped-collection-updateOne specifically verified** (this was a 3-cycle unit — two real FAILs
-before the PASS, the deep-dive the sweep brief asked for):
-- `git log --follow -- qa/verdicts/scoped-collection-updateOne.md` shows three commits
-  (`85c6ed9`, `fba8d3c`, `b7c894d`) touching that file — the verdict file was overwritten in
-  place each cycle (expected — one slug, one live verdict path), but **git history preserves all
-  three versions**: `git show 85c6ed9:qa/verdicts/scoped-collection-updateOne.md` and
-  `git show fba8d3c:...` both return the full FAIL content (cycle 1: 8th raw call site in
-  `scripts/sync-real-turns.mjs`, ISS-068; cycle 2: `countDocuments` shipped with zero test
-  coverage, ISS-069) — neither FAIL was silently discarded or lost, both are permanently
-  reconstructable from commit history, and the cycle-3 PASS verdict itself explicitly cites
-  recovering cycle 1's content via `git show 85c6ed9` before judging.
-- Manifest's `Fix cycle: 3 of max 3` matches the PASS verdict's `Cycle checked: 3` exactly.
-- Ledger: ISS-065 and ISS-068 both `verified` (re-derived by the checker's own mutation
-  reproduction on cycle 3, not re-stamped from a prior cycle's finding); ISS-069 `fixed` (correct
-  per the ledger rule — `fixed → verified` requires a *later* separate re-check, never same-cycle,
-  even though the same PASS cycle that closed it also re-confirmed the other two).
-
-`qa/.last-tick`'s tail runs continuously through `2026-09-07T17:34:48Z`, covering exactly these
-three units in sequence (including both FAIL/re-dispatch cycles) plus the decision to dispatch this
-sweep — no "maker asleep" finding.
+`qa/.last-tick`'s final line explicitly records dispatching the checker for this unit **and**
+this Mode B sweep in parallel, same turn — the correct call per "the maker's own dispatched
+subagent gets first claim," and this sweep did not attempt its own Mode A check on the same unit
+while that was live.
 
 ### 2 — Feedback-inbox fold-in
 
-`qa/feedback-inbox.md` — all 4 entries carry an explicit `— folded <date>` marker, none newer than
-2026-09-03. **No new entries since the last sweep, nothing unfolded.**
+`qa/feedback-inbox.md` — 4 entries, all 4 carry an explicit `— folded <date>` marker (grep count
+of "folded" = 4, matching the entry count). **No new entries since the last sweep, nothing
+unfolded.**
 
-### 3 — Ledger integrity (`scripts/tracker-audit.mjs`, run fresh)
+### 3 — Ledger integrity (`node scripts/tracker-audit.mjs`, full + `--gate g1`)
 
 ```
+$ node scripts/tracker-audit.mjs
 tracker-audit: 2 finding(s)
-  G2 unverified: 10 issue(s) are "fixed" with no verified_date — ISS-054, ISS-056, ISS-058,
-  ISS-059, ISS-060, ISS-061, ISS-062, ISS-063, …
-  G3 stale sweep: qa/.last-sweep predates HEAD by 0.2 day(s)
+  G2 unverified: 13 issue(s) are "fixed" with no verified_date — ISS-036, ISS-053, ISS-054,
+  ISS-056, ISS-058, ISS-059, ISS-060, ISS-061, …
+  G3 stale sweep: qa/.last-sweep predates HEAD by 0.0 day(s)
+
+$ node scripts/tracker-audit.mjs --gate g1
+tracker-audit: OK (gate G1)
 ```
 
-**G1 clean** (trackers agree). **G2 is the expected shape**: these are all `fixed`-not-yet-
-`verified` rows per the ledger's own rule (moved to `verified` only on a *later* re-check) —
-own count confirms 11 `fixed` rows total (10 flagged + ISS-069, which the script's own output
-truncated with `…`). **G3 is transient-expected**: this sweep's own `.last-sweep` write (below)
-resolves it the moment this commit lands.
+**G1 clean.** **G2 is the expected shape** — `fixed`-not-yet-`verified` rows per the ledger's own
+rule (`fixed → verified` only on a *later* re-check); own count (below) confirms 16 `fixed` total.
+**G3 is transient-expected** — resolves the moment this sweep's `.last-sweep` commit lands.
 
-**Ledger status vocabulary — re-confirmed this sweep** (per this session's earlier self-caught bug
-where an ad hoc maker query treated `verified` as `open`; last sweep already audited the two
-committed consumers and found them clean — this is the requested quick re-confirmation, not a
-fresh audit):
-- `scripts/tracker-audit.mjs:67` — `if (r.status === "fixed" && !r.verified_date)` — unchanged,
-  still only flags the intermediate state, never conflates `verified` with `open`.
-- `.claude/hooks/mc-sessionstart.ps1:8` — `Where-Object { $_ -match '"status":\s*"(open|Open)"' }`
-  — unchanged, matches the literal quoted value only.
-- Repo-wide grep (ripgrep, respects `.gitignore`) for `issues.jsonl` across
-  `*.mjs .js .ps1 .py .ts` still returns exactly these same two files — no third consumer has been
-  added since last sweep.
-- `scripts/tracker-audit.mjs`'s only other `status`-adjacent logic (`NORMALISE` at line 28) is a
-  *different* vocabulary space entirely (`.goal/goal.json` task statuses — `open/pending/blocked/
-  in_progress/done`, collapsed to `done`/`not-done`) — not the qa ledger's `open/fixed/verified/
-  wontfix`, so it is not a candidate for this bug class and was correctly out of scope for last
-  sweep's audit too.
+**G1-gate refactor confirmed sound.** `scripts/tracker-audit.mjs` is now a 30-line thin CLI
+(`main()` → `parseGateArg` + `audit` + `filterByGate` from `scripts/lib/tracker-audit.mjs`, the
+110-line module holding the real G1/G2/G3 logic) — wired into `pnpm lint:structure` via
+`node scripts/tracker-audit.mjs --gate g1` (confirmed present at `package.json:16`) and it
+**passes** as part of a full green `pnpm lint:structure` run (lint-loc, lint-dirsize, lint-root,
+lint-dupes, lint-migrations, snapshot --check, tracker-audit gate G1, depcruise — all OK, 242
+modules / 712 deps cruised, zero violations). `--json` mode still supported for programmatic
+consumers.
 
-**Own count, verified by direct scan:** 69 total — 16 `open`, 11 `fixed`, 42 `verified`. Matches
-the sweep brief's "69 total rows, 16 open" exactly.
+**Ledger status vocabulary re-confirmed consistent** across `scripts/lib/tracker-audit.mjs:73`
+(`if (r.status === "fixed" && !r.verified_date)`) and `.claude/hooks/mc-sessionstart.ps1:8`
+(`'"status":\s*"(open|Open)"'`) — unchanged, no conflation, no third consumer added.
+
+**JSON-validity re-check (superseding a stale open finding):** re-parsed all 69 `issues.jsonl`
+lines with both `node`'s `JSON.parse` and `python3 json.loads` — **0 invalid lines**, including
+line 17 (ISS-017's row), which **ISS-020 claims is broken** ("an unescaped backslash... breaks
+strict JSON parsing"). Direct re-test of ISS-020's own cited evidence command
+(`python3 -c "import json; [json.loads(l) for l in open('qa/issues.jsonl')]"`) raised **no
+error** this sweep. ISS-020 appears to be a stale/false-positive finding as currently written —
+flagged for the next hygiene unit to verify and close, not closed unilaterally by this sweep
+(the sweep does not edit the ledger's own findings without a matching build/verify unit).
+
+**Own count, verified by direct scan:** 69 total — **11 open, 16 fixed, 42 verified.** Arithmetic
+checks out against last sweep's 16/11/42: exactly the 5 units this range closed (ISS-067, ISS-040,
+ISS-036, ISS-053, ISS-064) moved `open → fixed`, net effect −5 open / +5 fixed, verified count
+unchanged (none of the 16 `fixed` rows had a *later* re-check land in this range).
 
 ### 4 — Enforcement liveness
 
-198 commits on HEAD (not zero-history). `.claude/settings.json` hooks present in `-File` form
-(D-010) — `lab-session-start.ps1`, `mc-sessionstart.ps1`, `mc-precommit.ps1`,
-`decisions-append-guard.ps1`, session-end hooks all registered and unchanged since last sweep.
-`qa/loop.md` present with `Stop:`/`Human gate:` lines, uncontradicted by `qa/adapter.json` (absent
-— default coding adapter, unchanged). Loop-design triad: **can it spin** — no, this range's Stop
-signal was three real manifest close-outs plus two real FAILs, not busywork. **Can it Goodhart the
-verifier** — no; all units this range were checked by the checker's own mutation-tested
-reproduction (see #1), not a maker self-report, and the scoped-collection-updateOne FAILs are
-direct proof the gate has teeth. **Can it run a wrong answer to completion** — no; every
-`done_check` this range was at least as strong as its criterion. **Live.**
+204 commits on HEAD (not zero-history). `.claude/settings.json` hooks present in `-File` form
+(D-010, 6 `.ps1` references) — unchanged since last sweep. `qa/loop.md` present with
+`Stop:`/`Human gate:` lines, uncontradicted by `qa/adapter.json` (absent — default coding
+adapter, unchanged). Loop-design triad: **can it spin** — no, this range's Stop signal was five
+real manifest close-outs, not busywork. **Can it Goodhart the verifier** — no; every unit this
+range was checked by the checker's own mutation-tested reproduction (see #1 and the
+catalogue-cli-clean-check verdict's independent mutation run), not a maker self-report. **Can it
+run a wrong answer to completion** — no; every `done_check` this range was at least as strong as
+its criterion (the ISS-064 fix specifically *closed* a done_check gap that had been weaker than
+its criterion). **Live.**
 
 ### 5 — Goal coverage
 
-`.goal/goal.json`: 35 tasks / 26 done / 74% — unchanged from last sweep. All three units this
-range are ledger-driven with no goal task (each manifest states "Goal task: none" — correct, they
-strengthen a shared primitive/schema rather than close a T-* task). No new missing requirement
-surfaced; no `GRILL:` row.
+`.goal/goal.json`: 35 tasks / 26 done / 74% — unchanged from last sweep (the `updated` timestamp
+and `analytics.velocity_per_day`/`eta_days` moved as part of a routine deterministic recompute,
+`git diff .goal/goal.json` shows no task-row edits). All five units this range are ledger-driven
+with no goal task (each is a hygiene/robustness fix on a shared primitive, not a T-* closure) —
+confirmed still true. No new missing requirement surfaced; no `GRILL:` row.
 
 ### 6 — Goal-drift / re-grill
 
 `qa/.regrill-due` absent. No `qa/gates/` directory — no gate to have been answered off-disk.
-Reopen-power: no unit re-PASSed twice on the same evidence this range (scoped-collection-
-updateOne's two FAILs were genuine new findings each cycle, not a disagreement re-litigating the
-same evidence — ISS-068 then ISS-069, two different gaps). No `STALLED`/`EXHAUSTED` tick since the
-last sweep — all ticks in range are `ADVANCED` or `FAIL cycle N` (a normal fix-cycle step, not a
-stall) per `qa/.last-tick`. North star unchanged since the last contract amendment. **CLEAN.**
+Reopen-power: no unit re-PASSed twice on the same evidence this range. No `STALLED`/`EXHAUSTED`
+tick since the last sweep — all ticks in range are `ADVANCED`. North star unchanged since the
+last contract amendment. **CLEAN.**
 
 ### 7 — Silent-failure hunt
 
-Read the touched non-test/non-schema surface in range: `apps/api/src/indexing.ts`,
-`apps/api/src/store.ts`, `packages/db/src/collections/{eval-runs,gaps,meeting-candidates,
-trusted-senders,watched-sources}.ts`, `packages/db/src/lib/tenantScope.ts`,
-`packages/index/src/index.ts`, `packages/index/src/tree/build.ts`, `scripts/sync-real-turns.mjs`.
-**Zero hits.** No empty/log-only catch in any of these (only one `catch` in the whole set —
-`sync-real-turns.mjs`'s `main().catch((err) => { console.error(err); process.exitCode = 1; })`,
-which logs AND propagates via a non-zero exit code, not a swallow). `tenantScope.ts`'s diff adds
-`countDocuments`/`updateOne` accessors and removes the `raw` escape hatch entirely — the
-opposite of a masking fallback (it closes the exact hand-carried-tenantId escape hatch class that
-ISS-060/065/068 all belong to). No lost-cause re-raise, no unawaited/untimed side effect
-introduced.
+Read the touched surface in range: `scripts/lib/evidence.mjs`, `scripts/lib/catalogue.mjs`,
+`scripts/lib/tracker-audit.mjs` (new file), `scripts/catalogue-cli.test.mjs`,
+`scripts/catalogue-score.mjs`, `scripts/catalogue.test.mjs`, `package.json`. **Zero hits.**
+
+- `evidence.mjs`'s BOM-strip fix (ISS-040) pushes unreadable candidates into a returned
+  `unreadable[]` array that the caller renders as a warning line — the exact opposite of a
+  swallow (previously it silently `continue`d past unparseable files with no record at all).
+- `catalogue.mjs`'s guard fix (ISS-036) changed a truthy check (`f.manual?.verdict`) to a
+  key-presence check (`f.manual && "verdict" in f.manual`) so an empty-string verdict now hits
+  the same vocabulary-refusal path as any other bad value — closes a silent-bypass, doesn't add
+  one.
+- `tracker-audit.mjs`'s two `try {} catch { /* not a git checkout */ }` blocks are deliberate,
+  narrow control flow (falling back to a documented "unknown"/skip state, commented inline), not
+  error-swallowing of a failure the caller needed.
+- No lost-cause re-raise, no unawaited/untimed side effect introduced anywhere in this surface.
+
+Also specifically verified per this sweep's brief: the `orphaned-scratch-tenant-cleanup` unit's
+production Mongo delete. **Independently re-queried the live database** (read `.env` for
+`MONGODB_URL`, `db.collection("lkb").collection("tree_index")`, ran from `packages/db` so the
+`mongodb` driver resolved) rather than trusting the manifest:
+
+```
+Total tree_index documents: 1
+{"_id":"6a9d7b9033ea455b49422cb8","tenantId":"toc"}
+Remaining chk060-A-* scratch docs: 0
+```
+
+Exactly 1 document (the real `toc` tenant), zero scratch-tenant documents remain — the manifest's
+claim holds under independent live re-verification, not just a re-read of its own evidence.
 
 ---
 
@@ -147,14 +168,15 @@ adoption recorded. Untouched this sweep — no commit in range touches these thr
    medium) — `real-llm-scorer.md`'s manifest close-out gap and four contracts still carrying no
    append-only amendment log (blocks routine amendment/prune on any of them). Re-checked this
    sweep: still open, still the next-highest severity after ISS-006.
-3. **`orphaned-scratch-tenant-cleanup`** (closes **ISS-067**, low, filed this range) — two
-   orphaned scratch-tenant `tree_index` documents remain in the live database from an earlier
-   checker's live-proof cleanup. Deliberately left unfixed by the migration unit itself (a schema
-   migration should only add/backfill fields, not delete) — needs its own small, deliberate delete
-   unit against production data.
+3. **`ledger-hygiene-pass`** (closes **ISS-020** + **ISS-057**, both low) — this sweep re-tested
+   ISS-020's own cited evidence command and got **no error**: `qa/issues.jsonl` parses clean end
+   to end on both `node` and `python3 json.loads` (0/69 invalid lines). Verify that finding is
+   genuinely stale (not just transiently fixed) and close it if so; separately,
+   `qa/verdicts/regenerate-year-migration.md` still carries no `Cycle checked: N` line (ISS-057).
+   Small, low-risk, clears two of the longest-standing low-severity rows.
 
-Also queued, low, unchanged from last sweep: **ISS-007**, **ISS-011**, **ISS-020**, **ISS-021**,
-**ISS-036**, **ISS-040**, **ISS-050**–**ISS-053**, **ISS-057**, **ISS-064**.
+Also queued, low, unchanged from last sweep: **ISS-007**, **ISS-011**, **ISS-021**, **ISS-050**,
+**ISS-051**, **ISS-052**.
 
-ISS-062, ISS-063, ISS-065 (last sweep's #2 recommendation) are now closed/verified by the three
+ISS-036, ISS-040, ISS-053, ISS-064, ISS-067 (last sweep's queue) are now closed/fixed by the five
 units this range covers — removed from the queue.
