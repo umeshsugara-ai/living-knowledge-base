@@ -24,7 +24,9 @@ interface Call { coll: string; op: string; filter?: Record<string, unknown>; doc
  * extract), so an empty fixture silently tests the wrong branch. The first version of this fake
  * returned nothing anywhere and the degraded-run test failed for that reason, not a code fault.
  */
-function fakeDb(): { db: Pick<Db, "collection">; calls: Call[] } {
+/** `existingSessionPage`, when set, is what `session_pages.findOne` returns — used to test the
+ * ISS-059 guard (a degraded summarize run must not overwrite a real prior page). */
+function fakeDb(opts: { existingSessionPage?: Record<string, unknown> | null } = {}): { db: Pick<Db, "collection">; calls: Call[] } {
   const calls: Call[] = [];
   const TURN = { _id: "t1", tenantId: "t", sessionId: "s1", speakerRef: "spk:0", tStart: 0, tEnd: 1, text: "A real sentence." };
   const db = {
@@ -37,7 +39,10 @@ function fakeDb(): { db: Pick<Db, "collection">; calls: Call[] } {
         insertOne: async (doc?: Record<string, unknown>) => { rec("insertOne", { docs: doc ? [doc] : [] }); return {}; },
         insertMany: async (docs?: Record<string, unknown>[]) => { rec("insertMany", { docs: docs ?? [] }); return {}; },
         replaceOne: async (filter?: Record<string, unknown>) => { rec("replaceOne", { filter }); return {}; },
-        findOne: async (filter?: Record<string, unknown>) => { rec("findOne", { filter }); return null; },
+        findOne: async (filter?: Record<string, unknown>) => {
+          rec("findOne", { filter });
+          return name === "session_pages" ? (opts.existingSessionPage ?? null) : null;
+        },
         find: (filter?: Record<string, unknown>) => ({
           toArray: async () => { rec("find", { filter }); return name === "turns" ? [TURN] : []; },
         }),
@@ -50,13 +55,16 @@ function fakeDb(): { db: Pick<Db, "collection">; calls: Call[] } {
 
 const CLAIMS_JSON = JSON.stringify([{ text: "A real claim.", turnIds: ["t1"] }]);
 
-/** `complete` is called for both summarize and claims; route by the job kind. */
-function completeWith({ claimsFails = false } = {}) {
+/** `complete` is called for both summarize and claims; route by the job kind. Each path degrades
+ * independently, matching the real degradation shapes (ISS-056/ISS-059) — a claims outage must
+ * not take the summary down with it, and vice versa. */
+function completeWith({ claimsFails = false, summarizeFails = false } = {}) {
   return async (job: { kind: string }) => {
     if (job.kind === "claims") {
       if (claimsFails) throw new Error("provider down");
       return { text: CLAIMS_JSON, json: undefined, usage: {}, provider: "fake", model: "fake" };
     }
+    if (summarizeFails) throw new Error("provider down");
     return {
       text: JSON.stringify({ summary: "s", keyInsights: [], decisions: [], actionItems: [] }),
       json: undefined, usage: {}, provider: "fake", model: "fake",
@@ -168,4 +176,43 @@ test("session_pages are still written on a degraded CLAIMS run — the two paths
   await indexSession("t", "s1", { complete: completeWith({ claimsFails: true }) as never, db });
   const pageOps = calls.filter((c) => c.coll === "session_pages").map((c) => c.op);
   assert.ok(pageOps.includes("deleteMany"), "session_pages should still be replaced");
+});
+
+const pageOps = (calls: Call[]) => calls.filter((c) => c.coll === "session_pages").map((c) => c.op);
+
+// indexSession always ends with `sessionPagesColl(tenantId).find({}).toArray()` (feeding the
+// tree_index rebuild), so every op sequence below ends in a trailing "find" regardless of branch.
+
+test("a DEGRADED summarize run with NO existing page still writes the labelled fallback (ISS-059)", async () => {
+  // The fallback is a legitimate FIRST summary — this is the case criterion 1 still requires.
+  const { db, calls } = fakeDb({ existingSessionPage: null });
+  await indexSession("t", "s1", { complete: completeWith({ summarizeFails: true }) as never, db });
+  assert.deepEqual(pageOps(calls), ["findOne", "deleteMany", "insertOne", "find"], "no existing page -> the fallback is written as normal");
+});
+
+test("a DEGRADED summarize run with a REAL existing page must NOT touch it (ISS-059, criterion 1a)", async () => {
+  // The exact bug this unit fixes: before the fix, a transient outage during a re-index silently
+  // replaced a good summary with a 500-char transcript slice, and status.index still flipped to
+  // "done" as if nothing had gone wrong.
+  const existing = { _id: "p1", tenantId: "t", sessionId: "s1", summary: "A real, previously-written summary." };
+  const { db, calls } = fakeDb({ existingSessionPage: existing });
+  await indexSession("t", "s1", { complete: completeWith({ summarizeFails: true }) as never, db });
+  assert.deepEqual(pageOps(calls), ["findOne", "find"], "a degraded run with a real page on file must issue NO WRITE of any kind to session_pages");
+});
+
+test("a SUCCESSFUL summarize run always replaces the page, even when one already exists", async () => {
+  // The other half — a guard that refuses to replace ANY existing page would be just as broken,
+  // because a genuinely fresh, correct summary could never supersede an older one.
+  const existing = { _id: "p1", tenantId: "t", sessionId: "s1", summary: "An older summary." };
+  const { db, calls } = fakeDb({ existingSessionPage: existing });
+  await indexSession("t", "s1", { complete: completeWith() as never, db });
+  // A non-degraded run never calls findOne on session_pages (only the degraded branch does).
+  assert.deepEqual(pageOps(calls), ["deleteMany", "insertOne", "find"]);
+});
+
+test("a DEGRADED SUMMARIZE run does not take the claims write down with it — the two paths are independent", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith({ summarizeFails: true }) as never, db });
+  const claimOps = calls.filter((c) => c.coll === "claims").map((c) => c.op);
+  assert.deepEqual(claimOps, ["deleteMany", "insertMany"], "a summarize outage must not affect the claims write");
 });

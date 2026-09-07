@@ -25,6 +25,22 @@ export interface SessionSummaryResult {
   actionItems: string[];
 }
 
+/**
+ * The result of a summarization attempt. Same shape as `packages/index/src/pipeline/claims.ts`'s
+ * `ClaimsResult`, added for the same reason (ISS-059, the sibling of ISS-056): the labelled
+ * fallback page ("(fallback, LLM summary unavailable) ...") is a legitimate first summary for a
+ * session that has none yet, but it must never be allowed to REPLACE a real summary a prior
+ * successful run already wrote — the caller needs to be able to tell "I have a real page" from
+ * "I have nothing, fall back" apart from "I degraded", which a bare `SessionSummaryResult` cannot
+ * express. `degraded` is `null` for BOTH a genuinely successful LLM call and the zero-turns
+ * "(no content to summarize)" case — the latter is not a failure, it is an honest empty result.
+ */
+export interface SummarizeResult {
+  page: SessionSummaryResult;
+  /** `null` when the page is real (or genuinely empty); a reason when `page` is the fallback. */
+  degraded: { reason: string } | null;
+}
+
 const SUMMARIZE_SYSTEM_PROMPT = [
   "You summarize a transcript for a searchable knowledge base. Read the transcript below (each",
   "line is one turn, prefixed with the speaker) and produce a summary of what was actually said",
@@ -60,10 +76,14 @@ const FALLBACK_SLICE_LENGTH = 500;
 
 /** Real summary from real turns, via the injected LLM `complete`. Never throws — a rejected
  * `complete()` call or an unparseable response degrades to a clearly-labeled fallback (the raw
- * transcript's first slice) rather than blocking the ingest pipeline. */
-export async function summarizeSession(turns: Turns[], complete: SummarizeCompleteFn): Promise<SessionSummaryResult> {
+ * transcript's first slice) rather than blocking the ingest pipeline, and reports `degraded` so
+ * the caller can decline to let that fallback overwrite a real prior summary (ISS-059). */
+export async function summarizeSession(turns: Turns[], complete: SummarizeCompleteFn): Promise<SummarizeResult> {
   if (turns.length === 0) {
-    return { summary: "(no content to summarize)", keyInsights: [], decisions: [], actionItems: [] };
+    return {
+      page: { summary: "(no content to summarize)", keyInsights: [], decisions: [], actionItems: [] },
+      degraded: null,
+    };
   }
 
   const transcript = buildTranscript(turns);
@@ -76,11 +96,20 @@ export async function summarizeSession(turns: Turns[], complete: SummarizeComple
       ],
     });
     const parsed = parseSummaryResponse(completion.text);
-    if (parsed) return parsed;
-  } catch {
-    // fall through to the honest degraded summary below
+    if (parsed) return { page: parsed, degraded: null };
+    return {
+      page: fallbackPage(transcript),
+      degraded: { reason: "summarize response had no usable summary field" },
+    };
+  } catch (err) {
+    return {
+      page: fallbackPage(transcript),
+      degraded: { reason: `summarize provider call failed: ${err instanceof Error ? err.message : String(err)}` },
+    };
   }
+}
 
+function fallbackPage(transcript: string): SessionSummaryResult {
   return {
     summary: `(fallback, LLM summary unavailable) ${transcript.slice(0, FALLBACK_SLICE_LENGTH)}`,
     keyInsights: [],

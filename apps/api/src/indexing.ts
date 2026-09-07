@@ -68,10 +68,11 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
 
   const turns = await turnsColl(tenantId).find({ sessionId }).toArray();
 
-  const [summary, claimsResult] = await Promise.all([
+  const [summarizeResult, claimsResult] = await Promise.all([
     summarizeSession(turns, deps.complete),
     extractClaims(turns, deps.complete),
   ]);
+  const { page: summary, degraded: summaryDegraded } = summarizeResult;
   const { claims: extractedClaims, degraded: claimsDegraded } = claimsResult;
 
   // schema/session_pages.schema.json requires evidence.minItems: 1 -- a session with zero turns
@@ -79,19 +80,31 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   // than one with fabricated/empty evidence. tree_index/status update below still run, so the
   // session isn't stuck "pending" forever over an edge case that shouldn't occur for a real
   // ingest in the first place.
-  await sessionPagesColl(tenantId).deleteMany({ sessionId });
-  if (turns.length > 0) {
-    const page: SessionPages = {
-      _id: randomUUID(),
-      tenantId,
-      sessionId,
-      summary: summary.summary,
-      keyInsights: summary.keyInsights,
-      decisions: summary.decisions,
-      actionItems: summary.actionItems,
-      evidence: toEvidenceTuple(turns.map((t) => ({ turnId: t._id, sessionId }))),
-    };
-    await sessionPagesColl(tenantId).insertOne(page);
+  //
+  // The labelled fallback ("(fallback, LLM summary unavailable) ...") is a legitimate FIRST
+  // summary for a session that has none yet, but it must never REPLACE a real one a prior
+  // successful run already wrote (ISS-059, contract criterion 1a — the same shape as ISS-056's
+  // claims defect, one file over). So on a degraded run we check whether a real page already
+  // exists before touching anything; a non-degraded run keeps the unconditional replace, since a
+  // genuinely fresh summary is always allowed to supersede an older one, fallback or not.
+  const existingPage = summaryDegraded ? await sessionPagesColl(tenantId).findOne({ sessionId }) : null;
+  if (summaryDegraded && existingPage) {
+    console.warn(`indexSession(${tenantId}/${sessionId}): summary degraded — existing session_pages left unchanged: ${summaryDegraded.reason}`);
+  } else {
+    await sessionPagesColl(tenantId).deleteMany({ sessionId });
+    if (turns.length > 0) {
+      const page: SessionPages = {
+        _id: randomUUID(),
+        tenantId,
+        sessionId,
+        summary: summary.summary,
+        keyInsights: summary.keyInsights,
+        decisions: summary.decisions,
+        actionItems: summary.actionItems,
+        evidence: toEvidenceTuple(turns.map((t) => ({ turnId: t._id, sessionId }))),
+      };
+      await sessionPagesColl(tenantId).insertOne(page);
+    }
   }
 
   // Replace the session's claims ONLY when extraction actually ran. The delete used to be
