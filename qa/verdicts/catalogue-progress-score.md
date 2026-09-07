@@ -3,187 +3,237 @@
 **Date:** 2026-09-07
 **Checker:** /checker Mode A, fresh context, bound to `D:/KnowledgeBase`
 **Manifest:** qa/manifests/catalogue-progress-score.md
-**Contract:** qa/contracts/snapshot-features-ledger.md
-**Cycle checked: 1**
-**Verdict: FAIL** (core instrument is sound and the headline number is honest; four gaps in the
-guard that is this unit's entire value proposition, one of them undisclosed)
+**Contract:** qa/contracts/catalogue-progress-score.md — **NEW this cycle; ADOPTED as drafted, then AMENDED** (see below)
+**Cycle checked: 2**
+**Verdict: PASS**
+
+All five cycle-1 issues (ISS-029…ISS-033) independently confirmed fixed by execution, not by
+reading the manifest. Two new inflation levers found and filed (ISS-034, ISS-035) plus one low
+edge (ISS-036); none of them is a failure of the fixes under check, and all three are covered by
+contract amendments effective from cycle 3.
+
+---
+
+## Contract decision (I am the contract owner)
+
+**ADOPTED I1–I8 exactly as the maker drafted them.** They state this unit's acceptance criteria
+correctly, every one is machine-checkable, and none softens anything the cycle-1 verdict found —
+the drafting is faithful to the findings rather than shaped to pass them. This closes the
+governance gap the cycle-1 verdict flagged: there is now a document stating the honesty rules, so
+the next checker judges instead of re-deriving.
+
+**AMENDED (tightening → auto per the criticality gate)** with **I9** (scoring scale pinned and
+self-describing) and **I10** (collection evidence bounded and attributable), both **effective from
+cycle 3**. They were added after this cycle's work was submitted; judging cycle 2 against
+goalposts I moved mid-verdict would be exactly the thing the protocol forbids in the other
+direction. Amendment log written into the contract.
 
 ---
 
 ## What I re-ran myself
 
 Every command below was executed by me in `D:/KnowledgeBase`. No manifest output was trusted.
-The working tree was byte-restored afterwards (`.goal/catalogue.json` diff-identical to its
-pre-check state; `docs/PROGRESS.md` md5 `ec826bd6141dcc84f24b3415dd1bad26`; `git status --porcelain`
-unchanged from session start).
+**Working tree byte-restored afterwards** — `.goal/catalogue.json` md5 `881b1343956e9a5fa393012c3a8d466b`,
+`docs/PROGRESS.md` `99fb58643e83f8e9965b12348ee9992a`, `scripts/lib/catalogue.mjs`
+`f8662b9506fe7bf4cadd8761e5969efe`, `scripts/catalogue-score.mjs` `3f40f3f77d6979e0a421c4bfa3231723`,
+`scripts/catalogue.test.mjs` `d95275300469203a4304b2f99b5286c4`; `git status --porcelain` identical
+to session start.
 
-### 1. Determinism — PASS
-```
-node scripts/catalogue-score.mjs   (x2)
-wrote docs/PROGRESS.md — 20.2% adjusted / 28.9% machine-derived, 57 features
-md5: ec826bd6141dcc84f24b3415dd1bad26   (both runs)
-diff run1 run2 → empty
-```
-Byte-identical across runs.
+### ISS-029 — denominator inflation — **FIXED** (I re-ran my own cycle-1 attack, plus 4 variants)
 
-### 2. Staleness gate — PASS
-```
-node scripts/catalogue-score.mjs --check              → exit 0  "OK: docs/PROGRESS.md is current"
-echo "tampered" >> docs/PROGRESS.md ; --check         → exit 1  "STALE: ... differs from a fresh regeneration"
-in-place verdict swap (C2 MISSING→REAL in the table); --check → exit 1  STALE
-restored ; --check                                    → exit 0
-```
-Catches both an appended line and a silent in-place verdict edit. Not a trivially-passing check.
+| my attack | result |
+|---|---|
+| delete the 19 probe-less rows (the cycle-1 attack, 57→38) | **exit 2**, names all 19 ids, `docs/PROGRESS.md` md5 **unchanged** |
+| same attack under `--check` | **exit 2** (refuses in both modes, not just on write) |
+| rename `A6` → `A99` | **exit 2** — `dropped feature(s): A6` + `unknown feature(s): A99` |
+| add an extra id `G1` (58 rows) | **exit 2** — `unknown feature(s): G1` |
+| duplicate an existing id (58 rows) | **exit 2** — `duplicate id(s): A4` |
+| **reorder the rows** (shuffled, seed 7) | **exit 0, still 20.2%** — correctly HARMLESS, not over-strict |
 
-### 3. Verdicts derived, not hand-written — PASS
-```
-rm docs/PROGRESS.md ; node scripts/catalogue-score.mjs
-md5 docs/PROGRESS.md = ec826bd6141dcc84f24b3415dd1bad26   (identical to pre-delete)
-```
-Nothing in the document survives deletion that is not reproducible from the probes.
+The maker only demonstrated the first of these. The three variants it did not cover are all caught,
+and the one case that *should* be harmless is harmless. `assertDenominator` is called before any
+scoring (`catalogue-score.mjs:33`), so a drifted catalogue never reaches the writer.
 
-### 4. THE HONESTY RULE — the stated guard HOLDS, but I broke it three other ways
+### ISS-030 — no tests — **FIXED, and the tests have teeth**
 
-**Stated guard holds.** Setting a MISSING feature's `manual.verdict` to `"REAL"`:
 ```
-node scripts/catalogue-score.mjs
-REFUSED: .goal/catalogue.json tries to UPGRADE a derived verdict:
-  C2: manual "REAL" > auto "MISSING"
-→ exit 2, and docs/PROGRESS.md md5 UNCHANGED (it genuinely refused to write)
-node scripts/catalogue-score.mjs --check → exit 2 as well (the gate refuses in both modes)
+node --test scripts/catalogue.test.mjs   → 10/10 pass
+pnpm test:lint                           → 24 pass, 0 fail   (registered: package.json:17)
 ```
 
-**Inflation paths the guard does NOT cover** — all three verified by execution, all three leave
-`node scripts/catalogue-score.mjs --check` and `pnpm lint:structure` at **exit 0** afterwards:
+A passing suite proves nothing on its own, so I **mutation-tested every guard** — neutering each
+one in `scripts/lib/catalogue.mjs` and re-running:
 
-| # | attack | measured effect | caught? |
+| guard neutered | tests that went red |
+|---|---|
+| vocabulary check (I3) | 1 — *an unknown verdict string cannot bypass the ordering check* |
+| manual-upgrade ordering (I2) | 1 — *a manual upgrade is refused* |
+| `assertDenominator` (I4) | **2** — *dropping a feature…*, *an unknown or duplicated id…* |
+| dead-package → STUB (I6) | 1 — *a package imported by nothing scores STUB* |
+| 501-stub subtraction (I6) | 1 — *a stub route scores STUB, not REAL* |
+| probe fingerprint (I5) | 1 — *editing a probe changes the fingerprint* |
+
+6/6 mutations killed at least one test. **I8 holds**: every guard in I2–I6 has a test that fails
+when the guard is removed. Library restored byte-identically after each mutation.
+
+### ISS-031 — vocabulary bypass — **FIXED**
+
+```
+C2.manual.verdict = "EXCELLENT"  → exit 2  'manual verdict "EXCELLENT" is not one of MISSING/STUB/PARTIAL/REAL'
+C2.manual.verdict = "SHIPPED"    → exit 2  (same)
+C2.manual.verdict = "REAL"       → exit 2  'C2: manual "REAL" > auto "MISSING"'   (I2 still holds)
+```
+
+In every case `docs/PROGRESS.md` md5 **unchanged** — refused *and* no write. No row labelled
+"lowered", no `NaN%` headline. The vocabulary is validated **before** the ordering comparison
+(`catalogue.mjs:184`), which is the correct order and the actual root-cause fix, not a patch on
+the symptom.
+
+### ISS-032 — probe weakening — **FIXED as far as it honestly can be; my assessment below**
+
+`docs/PROGRESS.md:8` carries `Probe fingerprint 9acec0d56307`, and it moved on every probe edit I
+tried:
+
+| edit | score | fingerprint |
+|---|---|---|
+| baseline | 20.2% | `9acec0d56307` |
+| repoint B6 `chunks` → `turns` (cycle-1 attack C) | 21.9% | `b8a7ff971f9f` |
+| strip every failing probe repo-wide (cycle-1 attack B, maximal) | 21.9% (machine 28.9→31.6) | `58ce6cab990a` |
+
+**Honest assessment, as asked: this is still a live inflation path — no gate refuses it — and I
+accept it anyway.** Probes are hand-authored statements of what would *prove* a feature real; no
+machine can decide that a probe is the *wrong* probe without a second, equally hand-authored
+oracle. Reviewability is therefore the theoretical ceiling for this class, and the fingerprint
+reaches it: any probe edit now lands as a one-line diff in a committed generated file, so it must
+be argued for rather than slipped in. The contract (I5) says exactly this rather than overclaiming
+prevention, which is the right disclosure. I would have refused a fix that *called* itself
+prevention.
+
+### ISS-033 — the wrong count — **FIXED, and derived**
+
+`docs/PROGRESS.md:10` prints `19 feature(s) declare no probe … : A12, B12, C5, C6, C7, C10, C11,
+C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.` It is **computed**
+(`catalogue.mjs:208`, a filter over rows with an empty `probes` object), not typed — and it matches
+my own independent enumeration of `.goal/catalogue.json` exactly: 19, same ids, same order.
+
+**The other numbers, re-derived by me** using the project's own `walk.mjs countLoc` (not `wc -l`):
+
+| file | countLoc | manifest claims | budget |
 |---|---|---|---|
-| A | delete the 19 probe-less feature rows from `.goal/catalogue.json` | **20.2% → 30.3%** (denominator 57→38) | **no** |
-| B | strip only the *failing* probes from the 3 PARTIAL features | **20.2% → 23.7%** | no (disclosed) |
-| C | repoint B6's probe `chunks` → `turns` | B6 **MISSING → REAL**, 20.2% → 21.9% | no (disclosed) |
-| D | `manual.verdict: "SHIPPED"` (any string outside the ORDER map) | row printed `**SHIPPED** _(auto: MISSING, lowered)_`, headline `NaN%`, **exit 0, file written** | **no** |
+| `scripts/catalogue-score.mjs` | **120** | 120 | 300 |
+| `scripts/lib/catalogue.mjs` | **200** | 200 | 300 |
+| `scripts/catalogue.test.mjs` | **87** | 87 | 300 |
 
-Attack A is the serious one and is **not disclosed anywhere in the manifest**. Nothing pins the
-catalogue to plan §4c's 57 features, so the cheapest way to raise the number is to delete the rows
-that score zero — and the generated document then truthfully reports "30.3% of the 38-feature
-product catalogue", which reads as progress rather than as deletion.
+All three correct and within budget — the third-time-lucky re-derivation is real. One nit, not an
+issue: the manifest says `docs/PROGRESS.md` is "104 lines"; `countLines`/`wc -l` both say **103**
+(104 is `split("\n").length`, counting the trailing empty). Noted only because this unit's subject
+is numbers that match reality.
 
-Attack D is a genuine bypass of the ordering comparison: `ORDER["SHIPPED"]` is `undefined`,
-`undefined > 0` is `false`, so `scoreCatalogue` (scripts/lib/catalogue.mjs:135) takes the *else*
-branch and assigns the upgraded verdict — then labels it `lowered`. Only an accidental `NaN`
-(POINTS lookup miss) makes it visible; the per-row lie is silent and the process exits 0.
+### No regression on the cycle-1 properties — all hold
 
-Attacks B and C are the class the manifest does disclose ("a too-easy probe scores higher") and the
-"derived from" column does expose them to a reader — `collection turns (2118 docs)` under a feature
-named "Vector index" is visibly wrong. Residual, mitigated, but the `--check` gate is no defence.
+- **Determinism (I1):** two consecutive runs, md5 `99fb58643e83f8e9965b12348ee9992a` both times.
+- **Re-derivable from deletion (I1):** `rm docs/PROGRESS.md` then regenerate → same md5. Nothing in
+  the document survives deletion that is not computed from a probe.
+- **Staleness gate (I7):** `--check` exit 0 fresh; exit 1 after an appended line; exit 1 after a
+  silent **in-place verdict swap** (`C2 MISSING → REAL` inside the table). Proven to be genuinely in
+  the chain by *breaking* it, not by reading `package.json`: with a tampered doc,
+  `pnpm lint:structure` **exits 1** on the `STALE:` line. Clean: `pnpm lint:structure` **exit 0**.
+- **Manual-upgrade refusal (I2):** holds (above). All **11** remaining `manual` entries (A1, A4, A6,
+  A7, A10, A13, B8, C1, D1, D7, E2) are downgrades — exit 0 proves it, since any upgrade exits 2.
+  B3 and E1 still carry `manual: null` with the reasoning demoted to a non-verdict-changing note.
+- **`<!-- GENERATED … DO NOT EDIT -->` header** present.
 
-### 5. Probes attacked against reality — PASS, 7/7 correct (5 required)
+### Verdicts re-checked against reality — 6 of 6 correct (3 required)
 
 | row | claim | my independent check | ok |
 |---|---|---|---|
-| C2 | `/ask` page absent → MISSING | `grep path= apps/web/src/App.tsx` — 10 routes, no `/ask` | yes |
-| B6 | `chunks` empty → MISSING | **live Mongo `lkb.chunks.countDocuments()` = 0** | yes |
-| B4 | `claims` 81 → REAL | **live Mongo `lkb.claims` = 81**, exactly matches the evidence file | yes |
-| A10 | `@lkb/meeting-bot` dead code → STUB | `grep -rn '@lkb/meeting-bot' apps packages` — only its own package.json/src | yes |
-| C8 | `GET /search` a 501 stub → STUB | `apps/api/src/routes/stubs.ts:22` `STUB_ROUTES` + `res.status(501)` | yes |
-| A8 | 2 routes + page → REAL | `whatsapp.ts:48,53` literal `.get/.post`, `/whatsapp` in App.tsx | yes |
-| E3 | 3 of 6 routes → PARTIAL | POST /ask, GET /sessions, GET /sources literal; /search, /citations/:claimId, /webhooks/register only in STUB_ROUTES | yes |
+| C2 | `/ask` page absent → MISSING | `apps/web/src/App.tsx` — 10 `path=` routes, **no `/ask`** | yes |
+| C8 | `GET /search` is a 501 stub → STUB | `apps/api/src/routes/stubs.ts:22` in `STUB_ROUTES`, `:29` `res.status(501)` | yes |
+| A10 | `@lkb/meeting-bot` dead code → STUB | `grep -rn '@lkb/meeting-bot' apps packages` excluding its own package → **zero hits** | yes |
+| B6 | `chunks` empty → MISSING | **live Mongo `lkb.chunks` = 0** | yes |
+| B4 | `claims` 81 → REAL | **live Mongo `lkb.claims` = 81** | yes |
+| B3 / E1 | speakers / tenants empty → MISSING | **live Mongo `speakers` = 0, `tenants` = 0** | yes |
 
-Mongo was reachable this run. I independently counted `lkb`: chunks 0, claims 81, sessions 26,
-turns 2118, speakers 0, tenants 0, tree_index 1 — **every one matches
+Mongo (13.202.206.101) was reachable this run. I counted `lkb` myself: chunks 0, claims 81,
+sessions 26, turns 2118, tree_index 1, speakers 0, tenants 0 — **every one matches
 `qa/evidence/live-2026-09-07-01-58-41/preflight.json`**. Only `jobs` drifted (214 → 226), which is
-live activity and touches no verdict. The committed evidence file is trustworthy.
-
-### 6. The guard catching the BUILDER (B3, E1) — PASS
-Both now carry `manual: null` with the reasoning demoted to a non-verdict-changing `note`, and both
-score MISSING. I enumerated every `manual` entry in the file: 11 remain (A1, A4, A6, A7, A10, A13,
-B8, C1, D1, D7, E2) and **all 11 are downgrades or equal** — the scorer's exit 0 proves it, since any
-upgrade exits 2. **No `manual` upgrade remains anywhere in the file.**
-
-### 7. Lint / LOC — PASS
-```
-pnpm lint:structure → exit 0   (lint-loc OK 211 files, SNAPSHOT OK, "OK: docs/PROGRESS.md is current", depcruise clean)
-```
-`catalogue-score --check` is **genuinely** in the chain, proven by breaking it rather than by
-reading package.json: with a tampered `docs/PROGRESS.md`, `pnpm lint:structure` **exits 1** on the
-`STALE:` line. LOC via the project's own `scripts/lib/walk.mjs countLoc` (not `wc -l`):
-`scripts/catalogue-score.mjs` = **106**, `scripts/lib/catalogue.mjs` = **151**, budget **300**. Both
-within budget and both match the manifest's figures exactly.
-
-`docs/PROGRESS.md` is 99 lines with the required `<!-- GENERATED ... DO NOT EDIT -->` header.
-
-### 8. Contract criterion 8 (tests) — FAIL
-The contract requires tests for its generated-doc discipline and `scripts/snapshot.test.mjs` exists
-for the analogous `snapshot.mjs`. For this unit:
-```
-grep -rln "catalogue|scoreCatalogue|upgrades" scripts/*.test.mjs → NO MATCH
-pnpm test:lint → runs scripts/lint.test.mjs scripts/snapshot.test.mjs only
-```
-**There is no test anywhere covering the honesty guard, the ORDER comparison, determinism, or the
-staleness gate for this scorer.** The one property the unit exists to provide has zero regression
-coverage: a future refactor of `scoreCatalogue` that drops the `upgrades` check would break nothing
-in CI. Every finding above is a test that should exist.
+live activity and touches no verdict. The committed evidence file is accurate *today* (see ISS-035
+for why that is a matter of trust rather than of proof).
 
 ---
 
-## Contract-coverage note (not scored as a failure)
+## Adversarial pass: is there any remaining way to inflate this score? Yes — two.
 
-`qa/contracts/snapshot-features-ledger.md` is a contract about `docs/FEATURES.jsonl` +
-`docs/SNAPSHOT.md`. Criteria 1, 2, 5, 6, 7 and 9 have no bearing on this unit. The maker reused it
-as a *discipline template* (generated doc + GENERATED header + staleness gate in `lint:structure` +
-tests), which is reasonable and I judged those transferable parts — but it means **no contract
-states this unit's own acceptance criteria**, so there is no ground truth for the honesty rule
-itself. I did not rule CONTRACT_MISMATCH because the work is substantially checkable and good;
-declaring it would burn a cycle for a governance defect. Recommend the next cycle add
-`qa/contracts/catalogue-progress-score.md` stating the honesty invariants (denominator integrity,
-verdict-vocabulary validity, probe-change reviewability) so they can be checked rather than
-re-derived by each checker.
+Neither is a defect in the five fixes above; both are levers I1–I8 do not reach. Both are filed
+and both now have a contract invariant.
 
-## Assessment of the manifest's disclosed limitations
+**1. Rewrite the scoring scale (ISS-034, medium, +8.3 points).** Changing `POINTS` at
+`catalogue.mjs:30` from `{STUB:0, PARTIAL:0.5}` to `{STUB:0.5, PARTIAL:0.75}` moves the headline
+**20.2% → 28.5%** with **all 10 tests still passing**, `--check` exit 0, `lint:structure` exit 0,
+and the probe fingerprint **unchanged** (it hashes probes and manual verdicts, not the scale). The
+aggravating part: `catalogue-score.mjs:50` prints the scale as a **hardcoded string**, so the
+tampered document still asserts `Scoring: REAL=1, PARTIAL=0.5, STUB/MISSING=0` while actually
+scoring STUB at 0.5. A generated document that misstates its own arithmetic is worse than one that
+has none. Fix is two lines: render the scale from `POINTS`, and pin `POINTS` in a test.
 
-Mostly honest and unusually forthcoming — recording the guard catching the builder rather than
-tidying it away is exactly right, and I verified that story is true. Two problems:
+**2. Substitute the collection evidence (ISS-035, medium, +19.3 points — the largest lever in
+either cycle).** `loadCollectionCounts` picks the **lexically last** `qa/evidence/live-*` folder
+(`catalogue.mjs:94-95`), so the folder *name* is attacker-controlled. Adding one folder
+`live-2026-12-31-23-59-59/preflight.json` with every zero count replaced by `4242` moves the score
+**20.2% → 39.5%** (machine 28.9% → 50%) with `--check` exit 0, `lint:structure` exit 0, all tests
+passing and the fingerprint unchanged. It is *reviewable* — the chosen path is printed at
+`PROGRESS.md:12`, the per-row "derived from" column would show absurd counts, and `preflight.json`
+is git-tracked so it lands as a diff — but the score's single largest input is hashed by nothing
+and bounded by nothing. This is the same shape as ISS-029: guard the numerator and the verdicts,
+and the *input* is left open.
 
-- **The "13 features declare no probe" figure is wrong.** The real count is **19** (A12, B12, C5,
-  C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2). The manifest's own
-  parenthetical list enumerates **17**, omitting A12 and B12, and is labelled 13. In a unit whose
-  subject is not inflating numbers, a hand-counted disclosure that is wrong by six matters. The
-  limitation itself is adequately disclosed and is *not* a hidden weakness — probe-less rows score
-  MISSING, the conservative direction, and the generated table prints "no probe declared" for each.
-- **The denominator is not listed as a limitation at all**, and it is the largest single lever on
-  the number (attack A: +10.1 points). That is the gap, not the 19 probe-less rows.
+**Also filed: ISS-036 (low).** A falsy `manual.verdict` (`""`) is inert rather than refused —
+`f.manual?.verdict` at `catalogue.mjs:179` is falsy, so the vocabulary check at `:184` is never
+reached. **Not scored as a cycle-2 failure**: I3's stated regression is genuinely fixed (no bogus
+verdict can reach the output), and the impact is bounded — deleting a downgrade only restores the
+machine verdict, which can never exceed the machine-derived percentage the document already prints
+next to the headline, and the edit still moves the fingerprint and empties the "Human downgrades"
+section. It is a hardening nit, and it is written down rather than tidied away.
 
-The remaining two disclosures (evidence freshness, regex route scraping vs live probe) are accurate
-and correctly scoped; `pnpm verify:live` is a real complement and I confirmed its evidence matches
-Mongo today.
+**What I could NOT find a way to do:** raise the adjusted score above the machine-derived score
+without touching source; drop, rename, duplicate or smuggle a feature id; write any verdict not
+computed from a probe; or edit `docs/PROGRESS.md` by hand and survive `lint:structure`. The core
+claim — *the number cannot be inflated without tripping a gate or leaving a diff* — is now true for
+the data file. For the source file and the evidence file it is "without leaving a diff" only, which
+I9/I10 are there to close.
 
-## Incidental (pre-existing, NOT charged to this unit)
+---
 
-`qa/issues.jsonl` is not fully machine-readable: line 17 (**ISS-017**, dated 2026-09-03) fails
-`JSON.parse` — *"Bad escaped character at position 450"* — because it embeds the regex
-`'VERDICT:\s*PASS'` with a raw `\s`, which is an invalid JSON escape. 32 of 33 lines parse; that one
-does not. Any consumer that reads the canonical ledger line-by-line will crash or silently skip it.
-Recorded here rather than as a new issue because it predates this unit by four days and belongs to
-the enforcement/ledger feature; the next Mode B sweep should fix the escape in place.
+## Ledger
+
+ISS-029, ISS-030, ISS-031, ISS-032, ISS-033 → **verified** (each with the evidence I produced).
+ISS-034, ISS-035, ISS-036 → **open**, new this cycle.
+
+The pre-existing malformed `qa/issues.jsonl` line 17 (ISS-017, a raw `\s` in a JSON string) is
+still the only unparseable line of 36 and I left it byte-intact — it is append-only history, it
+predates this unit, and it is already tracked as ISS-020 for a Mode B sweep. Correctly untouched by
+the maker.
 
 ---
 
 ```
-VERDICT: FAIL
-SCOREBOARD: 6/7 dispatch criteria met, 3/4 honesty invariants hold
-FAILURES:
-- [C8-analogue] sev: high · No test anywhere covers the scorer — the honesty guard, ORDER comparison, determinism and staleness gate have zero regression coverage, so a later refactor can silently delete the guard · add scripts/catalogue.test.mjs asserting exit 2 on upgrade, byte-identical double run, exit 1 on tamper; register it in test:lint · issue: ISS-030
-- [honesty] sev: high · Denominator inflation is unguarded and undisclosed: deleting the 19 probe-less rows moves the score 20.2% → 30.3% and both --check and lint:structure stay exit 0 · pin the catalogue to plan §4c (assert features.length and the id set against a committed manifest; fail the run on drift) · issue: ISS-029
-- [honesty] sev: medium · A manual.verdict outside {MISSING,STUB,PARTIAL,REAL} bypasses the ordering guard entirely (ORDER lookup is undefined, `undefined > 0` is false), writing an UPGRADED verdict labelled "lowered" with exit 0 · validate the verdict vocabulary in scoreCatalogue and exit 2 on an unknown value · issue: ISS-031
-- [honesty] sev: medium · Probe weakening/repointing silently inflates (strip failing probes 20.2→23.7%; repoint B6 chunks→turns makes it REAL) with --check green · disclosed but unmitigated by any gate; make probe edits reviewable (hash the probe set into PROGRESS.md, or diff probes in the staleness check) · issue: ISS-032
-- [manifest] sev: low · "13 features declare no probe" is wrong — the real count is 19 and the manifest's own list enumerates 17 (A12, B12 omitted) · re-derive the figure from the file · issue: ISS-033
-ISSUES-WRITTEN: ISS-029, ISS-030, ISS-031, ISS-032, ISS-033
-EXPLANATION: The instrument itself is good and the 20.2% headline is honest — I independently
-confirmed 7 of 7 spot-checked verdicts against source and live Mongo, the score is byte-deterministic
-and fully re-derivable from a deleted file, the staleness gate is genuinely wired into
-lint:structure (proven by breaking it), and the advertised guard really does exit 2 and refuse to
-write on a manual upgrade, including the B3/E1 rows where it caught the builder. It FAILs because
-the guard that is this unit's whole value proposition has no test at all, and because I found an
-undisclosed inflation path that beats it outright: deleting probe-less rows raises the number ten
-points with every gate still green. Both fixes are small and the unit should pass cycle 2 easily.
+VERDICT: PASS
+SCOREBOARD: 10/10 verify steps met, 8/8 invariants hold (I1-I8; I9-I10 added this cycle, effective cycle 3)
+FAILURES: none
+ISSUES-WRITTEN: ISS-034 (medium), ISS-035 (medium), ISS-036 (low) — all NEW findings, none a regression of the fixes under check
+ISSUES-CLOSED: ISS-029, ISS-030, ISS-031, ISS-032, ISS-033 → verified
+EXPLANATION: All five cycle-1 issues are independently confirmed fixed by execution. The
+denominator guard refuses my original attack in both write and --check mode and also catches
+rename, extra-id and duplicate-id variants the maker never demonstrated, while correctly leaving a
+row reorder harmless. The new test suite is not decorative: I neutered six guards one at a time and
+every single mutation turned a test red, which is what ISS-030 actually asked for. The vocabulary
+bypass, the probe fingerprint and the derived probe-less count all check out, and the manifest's
+LOC figures are correct for the first time this session. No cycle-1 property regressed: determinism,
+re-derivability from deletion, the staleness gate proven by breaking lint:structure, the
+manual-upgrade refusal, and six verdicts re-confirmed against source and live Mongo. It PASSes.
+Thinking adversarially once more, I found two levers I1-I8 do not reach - rewriting POINTS (+8.3
+points, all tests green, and the doc then lies about its own scale) and substituting a future-dated
+evidence file (+19.3 points, the biggest lever in either cycle). Both are new findings rather than
+defects in this cycle's work, both are filed, and I amended the contract with I9/I10 effective
+cycle 3 so the next unit is judged on them.
 ```
