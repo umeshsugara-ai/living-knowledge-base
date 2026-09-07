@@ -20,8 +20,8 @@ export async function recordFetch(
   id: string,
   lastFetch: NonNullable<WatchedSources["lastFetch"]>,
 ): Promise<boolean> {
-  const result = await watchedSources(tenantId).raw.updateOne(
-    { _id: id, tenantId },
+  const result = await watchedSources(tenantId).updateOne(
+    { _id: id },
     { $set: { lastFetch } },
   );
   return result.matchedCount > 0;

@@ -6,7 +6,7 @@
 // at every call site — `coll(tenantId).find(filter)` — so a tenant-less query is a TS
 // compile error, not a runtime bug. Every packages/db/src/collections/<coll>.ts file
 // wraps this once; it is the only place the tenant-scoping logic itself is written.
-import type { Collection, Db, Filter, OptionalUnlessRequiredId } from "mongodb";
+import type { Collection, Db, Filter, OptionalUnlessRequiredId, UpdateFilter } from "mongodb";
 
 export type TenantId = string;
 
@@ -22,6 +22,10 @@ export function withTenant<T extends { tenantId: string }>(
  * Returns a `coll(tenantId): TenantScopedCollection<T>` accessor for one Mongo collection.
  * The returned object exposes only tenant-safe read/write helpers — never the raw
  * `Collection<T>` — so every query is pre-scoped and a tenant-less call cannot compile.
+ * (ISS-065: `raw` used to be exposed as an escape hatch for `updateOne`, which had no
+ * tenant-merged accessor of its own — seven call sites across this package and `apps/api`
+ * went around the guard for exactly that reason, each hand-carrying its own `tenantId` in the
+ * filter. `updateOne` below closes that gap; `raw` is gone.)
  */
 export function scopedCollection<T extends { tenantId: string; _id: string }>(
   db: Db,
@@ -44,7 +48,17 @@ export function scopedCollection<T extends { tenantId: string; _id: string }>(
        * live destroyed a second tenant's claims. A write that can erase another tenant's rows
        * must not be the one operation this accessor makes people go around it for. */
       deleteMany: (filter: Filter<T> = {}) => raw.deleteMany(withTenant<T>(tenantId, filter)),
-      raw,
+      /** Tenant-merged count. Added for ISS-068 (found by the checker verifying ISS-065's
+       * removal of `raw`): `scripts/sync-real-turns.mjs`, a real runnable T-003 sync script
+       * outside every workspace project's typecheck/test scope, called `raw.countDocuments`
+       * directly and broke the moment `raw` was removed — the eighth `raw` call site, missed by
+       * a grep scoped to `apps/`, `packages/` alone. */
+      countDocuments: (filter: Filter<T> = {}) => raw.countDocuments(withTenant<T>(tenantId, filter)),
+      /** Tenant-merged update. Added for ISS-065: this was the last write op with no accessor
+       * of its own, so every caller reached `raw` and hand-carried `tenantId` in the filter —
+       * exactly the shape of escape hatch ISS-060 went through on `deleteMany`, before that one
+       * was closed the same way. */
+      updateOne: (filter: Filter<T>, update: UpdateFilter<T>) => raw.updateOne(withTenant<T>(tenantId, filter), update),
     };
   };
 }

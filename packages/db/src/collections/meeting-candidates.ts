@@ -36,8 +36,8 @@ export async function decide(
   id: string,
   status: "approved" | "rejected" | "auto_approved",
 ): Promise<boolean> {
-  const result = await meetingCandidates(tenantId).raw.updateOne(
-    { _id: id, tenantId, status: "pending" },
+  const result = await meetingCandidates(tenantId).updateOne(
+    { _id: id, status: "pending" },
     { $set: { status, decidedAt: new Date().toISOString() } },
   );
   return result.matchedCount > 0;

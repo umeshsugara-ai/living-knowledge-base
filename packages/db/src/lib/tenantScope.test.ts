@@ -16,7 +16,7 @@ import { scopedCollection, withTenant } from "./tenantScope.js";
 
 interface Row { _id: string; tenantId: string; sessionId?: string }
 
-interface Call { op: string; filter?: unknown; docs?: unknown }
+interface Call { op: string; filter?: unknown; docs?: unknown; update?: unknown }
 
 /** Records what actually reaches the driver — the filter, not just the method name. */
 function fakeDb(): { db: Db; calls: Call[] } {
@@ -28,6 +28,8 @@ function fakeDb(): { db: Db; calls: Call[] } {
       insertOne: async (doc: unknown) => { calls.push({ op: "insertOne", docs: [doc] }); return {}; },
       insertMany: async (docs: unknown) => { calls.push({ op: "insertMany", docs }); return {}; },
       deleteMany: async (filter: unknown) => { calls.push({ op: "deleteMany", filter }); return { deletedCount: 0 }; },
+      updateOne: async (filter: unknown, update: unknown) => { calls.push({ op: "updateOne", filter, update }); return { matchedCount: 0 }; },
+      countDocuments: async (filter: unknown) => { calls.push({ op: "countDocuments", filter }); return 0; },
     }),
   } as unknown as Db;
   return { db, calls };
@@ -65,6 +67,42 @@ test("a caller CANNOT override the tenantId by putting a different one in the fi
   const { db, calls } = fakeDb();
   await coll(db)("t1").deleteMany({ tenantId: "t2-victim" } as never);
   assert.deepEqual(calls[0]!.filter, { tenantId: "t1" }, "the accessor's own tenantId must win");
+});
+
+test("updateOne is tenant-scoped, and its update body is passed through untouched (ISS-065)", async () => {
+  // ISS-065: updateOne had no tenant-merged accessor at all, so seven call sites across this
+  // package and apps/api went around this guard via a now-removed `raw` escape hatch, each
+  // hand-carrying its own tenantId in the filter.
+  const { db, calls } = fakeDb();
+  await coll(db)("t1").updateOne({ _id: "a" }, { $set: { sessionId: "s2" } });
+  assert.deepEqual(calls[0], { op: "updateOne", filter: { _id: "a", tenantId: "t1" }, update: { $set: { sessionId: "s2" } } });
+});
+
+test("updateOne's tenantId cannot be overridden by a caller-supplied one either", async () => {
+  const { db, calls } = fakeDb();
+  await coll(db)("t1").updateOne({ tenantId: "t2-victim" } as never, { $set: { sessionId: "s2" } });
+  assert.deepEqual(calls[0]!.filter, { tenantId: "t1" });
+});
+
+test("countDocuments is tenant-scoped — ISS-069, the accessor that shipped with no coverage at all", async () => {
+  // ISS-068/ISS-069: countDocuments was added to close the eighth `raw` call site
+  // (scripts/sync-real-turns.mjs) but was never given a test of its own — a checker's own
+  // mutation dispatch found the gap: stripping its tenant merge reddened zero tests.
+  const { db, calls } = fakeDb();
+  await coll(db)("t1").countDocuments({ sessionId: "s1" });
+  assert.deepEqual(calls[0], { op: "countDocuments", filter: { sessionId: "s1", tenantId: "t1" } });
+});
+
+test("countDocuments's tenantId cannot be overridden by a caller-supplied one either", async () => {
+  const { db, calls } = fakeDb();
+  await coll(db)("t1").countDocuments({ tenantId: "t2-victim" } as never);
+  assert.deepEqual(calls[0]!.filter, { tenantId: "t1" });
+});
+
+test("an EMPTY countDocuments filter still carries the tenantId", async () => {
+  const { db, calls } = fakeDb();
+  await coll(db)("t1").countDocuments();
+  assert.deepEqual(calls[0]!.filter, { tenantId: "t1" });
 });
 
 test("insertOne and insertMany stamp the tenantId onto every document", async () => {

@@ -60,8 +60,8 @@ async function main() {
   try {
     const tenantId = "toc";
     for (const s of realSessions) {
-      const before = await turns(tenantId).raw.countDocuments({ tenantId, sessionId: s.sessionId });
-      const deleteResult = await turns(tenantId).raw.deleteMany({ tenantId, sessionId: s.sessionId });
+      const before = await turns(tenantId).countDocuments({ sessionId: s.sessionId });
+      const deleteResult = await turns(tenantId).deleteMany({ sessionId: s.sessionId });
       let inserted = 0;
       for (const doc of s.turns) {
         const { tenantId: _t, ...rest } = doc;

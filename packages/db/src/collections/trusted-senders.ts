@@ -27,8 +27,8 @@ export async function recordApproval(tenantId: string, senderDomain: string): Pr
   const lastApprovedAt = new Date().toISOString();
 
   if (existing) {
-    await trustedSenders(tenantId).raw.updateOne(
-      { _id: existing._id, tenantId },
+    await trustedSenders(tenantId).updateOne(
+      { _id: existing._id },
       { $set: { approvalCount, autoApprove, lastApprovedAt } },
     );
     return { ...existing, approvalCount, autoApprove, lastApprovedAt };

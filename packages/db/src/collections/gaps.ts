@@ -19,15 +19,15 @@ export async function create(tenantId: string, doc: Omit<Gaps, "tenantId">): Pro
 
 /** Standing ask was fulfilled — moves one gap to `"received"`, optionally linking the source. */
 export async function markReceived(tenantId: string, gapId: string, sourceRef?: string): Promise<void> {
-  await gaps(tenantId).raw.updateOne(
-    { _id: gapId, tenantId },
+  await gaps(tenantId).updateOne(
+    { _id: gapId },
     { $set: { status: "received", ...(sourceRef ? { sourceRef } : {}) } },
   );
 }
 
 /** SLA blew past `dueAt` with no response — moves one gap to `"expired"`. */
 export async function markExpired(tenantId: string, gapId: string): Promise<void> {
-  await gaps(tenantId).raw.updateOne({ _id: gapId, tenantId }, { $set: { status: "expired" } });
+  await gaps(tenantId).updateOne({ _id: gapId }, { $set: { status: "expired" } });
 }
 
 /** Every still-open gap for a tenant (what a standing-ask escalation sweep reads). */

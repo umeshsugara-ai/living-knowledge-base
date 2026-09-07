@@ -24,8 +24,8 @@ export async function recordScore(
   id: string,
   update: { counsellorAnswer: EvalRuns["counsellorAnswer"]; score: EvalRuns["score"] },
 ): Promise<boolean> {
-  const result = await evalRuns(tenantId).raw.updateOne(
-    { _id: id, tenantId },
+  const result = await evalRuns(tenantId).updateOne(
+    { _id: id },
     { $set: { counsellorAnswer: update.counsellorAnswer, score: update.score } },
   );
   return result.matchedCount > 0;

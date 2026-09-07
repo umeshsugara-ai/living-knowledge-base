@@ -146,7 +146,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
       .replaceOne(treeIndexRootFilter(tenantId), rootDoc, { upsert: true });
   }
 
-  await sessionsColl(tenantId).raw.updateOne({ _id: sessionId, tenantId }, { $set: { "status.index": "done" } });
+  await sessionsColl(tenantId).updateOne({ _id: sessionId }, { $set: { "status.index": "done" } });
 }
 
 export type IndexSessionFn = typeof indexSession;
