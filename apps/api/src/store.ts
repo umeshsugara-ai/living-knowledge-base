@@ -16,7 +16,7 @@ import {
   listAll as listAllMeetingCandidates, createIfNew as createMeetingCandidateIfNew,
   decide as decideMeetingCandidate, get as getTrustedSender, recordApproval as recordSenderApproval,
 } from "@lkb/db";
-import type { ApiKeys, Jobs, TreeIndexNode } from "@lkb/core";
+import type { ApiKeys, Jobs, TreeIndexNode, TreeIndexRootDocument } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
 import { flattenTreeToGraph, treeIndexRootFilter, type Graph } from "@lkb/index";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
@@ -48,8 +48,9 @@ export function createMongoTreeStore(): TreeStore {
       // treeIndexRootFilter (ISS-063) is the single source of the `tenant:<id>` convention this
       // query used to hand-write -- that hand-written copy was the exact query that got the
       // node_id shape wrong once, live, on 2026-09-04, before this file matched what buildTree
-      // actually produces.
-      return getDb().collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
+      // actually produces. It now also matches on the real `tenantId` field (ISS-062) --
+      // TreeIndexRootDocument satisfies TreeStore's TreeIndexNode return type (it's a superset).
+      return getDb().collection<TreeIndexRootDocument>("tree_index").findOne(treeIndexRootFilter(tenantId));
     },
   };
 }
@@ -105,7 +106,7 @@ export function createMongoBrainReadDeps(): BrainReadDeps {
 export function createMongoGraphReadDeps(): GraphReadDeps {
   return {
     async loadGraph(tenantId): Promise<Graph | null> {
-      const root = await getDb().collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
+      const root = await getDb().collection<TreeIndexRootDocument>("tree_index").findOne(treeIndexRootFilter(tenantId));
       return root ? flattenTreeToGraph(root) : null;
     },
   };

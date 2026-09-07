@@ -81,7 +81,7 @@ a client of that API — with the long-range goal of beating top human counsello
 | speakers | _id, tenantId, personId, aliases, evidence | yes |
 | tenants | _id, name | no |
 | topics | _id, tenantId, name | no |
-| tree_index | node_id, title, level, summary, children | yes |
+| tree_index | tenantId | no |
 | trusted_senders | _id, tenantId, senderDomain, approvalCount, autoApprove | no |
 | turns | _id, tenantId, sessionId, speakerRef, tStart, tEnd, text | no |
 | watched_sources | _id, tenantId, url, reputationTier, checkIntervalHours, active | no |

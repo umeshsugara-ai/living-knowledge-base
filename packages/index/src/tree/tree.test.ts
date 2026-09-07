@@ -103,9 +103,16 @@ test("treeIndexRootFilter's node_id matches buildTree's own root node_id exactly
   assert.equal(root.level, filter.level);
 });
 
+// ISS-062: the filter also matches on the real tenantId field now, not just the node_id prefix.
+test("treeIndexRootFilter includes the real tenantId term, not just the node_id prefix", () => {
+  const filter = treeIndexRootFilter("toc");
+  assert.equal(filter.tenantId, "toc");
+});
+
 test("treeIndexRootFilter is stable and tenant-specific — no collision between two tenants", () => {
   const a = treeIndexRootFilter("tenant-a");
   const b = treeIndexRootFilter("tenant-b");
   assert.notEqual(a.node_id, b.node_id);
+  assert.notEqual(a.tenantId, b.tenantId);
   assert.equal(treeIndexRootFilter("tenant-a").node_id, a.node_id, "must be deterministic, not random per call");
 });

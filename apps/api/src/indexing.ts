@@ -17,7 +17,7 @@
 import { randomUUID } from "node:crypto";
 import type { Db } from "mongodb";
 import { getDb, scopedCollection } from "@lkb/db";
-import type { SessionPages, Claims, Sessions, TreeIndexNode, Turns } from "@lkb/core";
+import type { SessionPages, Claims, Sessions, TreeIndexRootDocument, Turns } from "@lkb/core";
 import { summarizeSession, extractClaims, buildTree, regenerate, treeIndexRootFilter, type SummarizeCompleteFn } from "@lkb/index";
 
 /** `schema/{session_pages,claims}.schema.json` both declare `evidence.minItems: 1`, which the
@@ -41,9 +41,12 @@ export interface IndexSessionDeps {
 
 /** `tree_index` is the one collection here that CANNOT go through `scopedCollection` — see
  * `treeIndexRootFilter`'s own doc comment (`@lkb/index`, ISS-063) for why, and why this file
- * imports it rather than re-deriving the `tenant:<id>` convention itself (as it briefly did). */
-async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promise<TreeIndexNode | null> {
-  return db.collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
+ * imports it rather than re-deriving the `tenant:<id>` convention itself (as it briefly did).
+ * The filter now also matches on the real `tenantId` field (ISS-062) — a pre-migration document
+ * that predates that field simply won't match here and falls through to the fresh-build branch
+ * below, which is always safe (worst case: a full rebuild instead of an incremental one). */
+async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promise<TreeIndexRootDocument | null> {
+  return db.collection<TreeIndexRootDocument>("tree_index").findOne(treeIndexRootFilter(tenantId));
 }
 
 /** Real summary + real evidence-checked claims + a real tree_index update for one already-
@@ -133,8 +136,14 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
     ? regenerate(existingRoot, [sessionId], allSessions, allPages)
     : buildTree(allSessions, allPages)[tenantId];
   if (newRoot) {
-    await db.collection<TreeIndexNode>("tree_index")
-      .replaceOne(treeIndexRootFilter(tenantId), newRoot, { upsert: true });
+    // Stamp/confirm the real tenantId regardless of which branch produced newRoot -- buildTree's
+    // fresh root never carries one (it isn't a persisted document until now), and regenerate only
+    // preserves whatever existingRoot already had (correct post-migration, absent pre-migration).
+    // Setting it here, once, at the write boundary, is what actually closes ISS-062: every root
+    // this function ever persists from this point on carries the field, migrated or not.
+    const rootDoc: TreeIndexRootDocument = { ...newRoot, tenantId };
+    await db.collection<TreeIndexRootDocument>("tree_index")
+      .replaceOne(treeIndexRootFilter(tenantId), rootDoc, { upsert: true });
   }
 
   await sessionsColl(tenantId).raw.updateOne({ _id: sessionId, tenantId }, { $set: { "status.index": "done" } });

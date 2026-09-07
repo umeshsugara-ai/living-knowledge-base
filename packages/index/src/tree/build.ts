@@ -32,19 +32,22 @@ export type Summarize = (session: Sessions, page: SessionPages | null) => string
 export type { ExtractTopicRefs };
 
 /**
- * `schema/tree_index.schema.json` declares no `tenantId` property at all — a tenant's whole tree
- * lives under one root node whose `node_id` is `tenant:<id>`, the convention this function
- * defines and every other reader must use verbatim (ISS-063: before this, `apps/api/src/
- * indexing.ts` and TWO call sites in `apps/api/src/store.ts` each hand-wrote the same filter;
- * `store.ts`'s copy had already been caught wrong once, live, on 2026-09-04). This is the ONE
- * place that convention is written; every reader imports it rather than re-deriving it.
- * Contract `ingest-indexing-pipeline.md` criterion 3a requires exactly this single-sourcing as
- * the condition under which `tree_index`'s missing `tenantId` field remains an acceptable interim
- * boundary rather than a schema defect (see ISS-062, tracked separately: adding a real `tenantId`
- * field is a migration, not a filter change, and is out of scope here).
+ * A tenant's whole tree lives under one root document whose `node_id` is `tenant:<id>`, the
+ * convention this function defines and every other reader must use verbatim (ISS-063: before
+ * this, `apps/api/src/indexing.ts` and TWO call sites in `apps/api/src/store.ts` each hand-wrote
+ * the same filter; `store.ts`'s copy had already been caught wrong once, live, on 2026-09-04).
+ * This is the ONE place that convention is written; every reader imports it rather than
+ * re-deriving it.
+ *
+ * Also returns a real `tenantId` term (ISS-062): `schema/tree_index.schema.json`'s root document
+ * now declares `tenantId` as a required field, so a tenant's tree is no longer separated ONLY by
+ * the `node_id` string prefix a query could theoretically match against a differently-tenanted
+ * row if the prefix convention were ever violated — the filter now matches on the real field too.
+ * `treeIndexMigration.mjs` (`migrations/`) backfills this field onto any document written before
+ * this change.
  */
-export function treeIndexRootFilter(tenantId: string): { node_id: string; level: "tenant" } {
-  return { node_id: `tenant:${tenantId}`, level: "tenant" };
+export function treeIndexRootFilter(tenantId: string): { node_id: string; level: "tenant"; tenantId: string } {
+  return { node_id: `tenant:${tenantId}`, level: "tenant", tenantId };
 }
 
 /** Lowercases, replaces runs of non-alphanumerics with "-", trims leading/trailing "-". */

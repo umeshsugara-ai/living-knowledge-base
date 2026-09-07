@@ -29,6 +29,12 @@ interface Call { coll: string; op: string; filter?: Record<string, unknown>; doc
 function fakeDb(opts: { existingSessionPage?: Record<string, unknown> | null } = {}): { db: Pick<Db, "collection">; calls: Call[] } {
   const calls: Call[] = [];
   const TURN = { _id: "t1", tenantId: "t", sessionId: "s1", speakerRef: "spk:0", tStart: 0, tEnd: 1, text: "A real sentence." };
+  // A real session, so buildTree(allSessions, allPages) actually produces a root for "t" and the
+  // tree_index replaceOne path is genuinely exercised — without this, buildTree([], []) returns
+  // {} (no root for any tenant) and replaceOne NEVER fires, so nothing about the tree_index write
+  // (including the ISS-062 tenantId-stamping fix) was ever really under test. Found by testing
+  // the fix's own mutation and getting a false green.
+  const SESSION = { _id: "s1", tenantId: "t", sourceId: "src1", title: "Test Session", date: "2026-09-07", status: { transcribe: "done", index: "pending" } };
   const db = {
     collection(name: string) {
       const rec = (op: string, extra?: { filter?: Record<string, unknown>; docs?: Record<string, unknown>[]; update?: Record<string, unknown> }) => {
@@ -38,13 +44,18 @@ function fakeDb(opts: { existingSessionPage?: Record<string, unknown> | null } =
         deleteMany: async (filter?: Record<string, unknown>) => { rec("deleteMany", { filter }); return { deletedCount: 0 }; },
         insertOne: async (doc?: Record<string, unknown>) => { rec("insertOne", { docs: doc ? [doc] : [] }); return {}; },
         insertMany: async (docs?: Record<string, unknown>[]) => { rec("insertMany", { docs: docs ?? [] }); return {}; },
-        replaceOne: async (filter?: Record<string, unknown>) => { rec("replaceOne", { filter }); return {}; },
+        replaceOne: async (filter?: Record<string, unknown>, doc?: Record<string, unknown>) => { rec("replaceOne", { filter, docs: doc ? [doc] : [] }); return {}; },
         findOne: async (filter?: Record<string, unknown>) => {
           rec("findOne", { filter });
           return name === "session_pages" ? (opts.existingSessionPage ?? null) : null;
         },
         find: (filter?: Record<string, unknown>) => ({
-          toArray: async () => { rec("find", { filter }); return name === "turns" ? [TURN] : []; },
+          toArray: async () => {
+            rec("find", { filter });
+            if (name === "turns") return [TURN];
+            if (name === "sessions") return [SESSION];
+            return [];
+          },
         }),
         updateOne: async (filter?: Record<string, unknown>, update?: Record<string, unknown>) => { rec("updateOne", { filter, update }); return {}; },
       };
@@ -130,10 +141,17 @@ function assertUpdateBodyConfined(call: Call, tenantId: string) {
 function assertAllCallsConfined(calls: Call[], tenantId: string) {
   for (const call of calls) {
     if (call.coll === "tree_index") {
-      // schema/tree_index.schema.json has no tenantId property — its rows are separated only by
-      // the `tenant:<id>` prefix inside node_id (contract criterion 3a). Asserted here precisely
-      // BECAUSE the compiler cannot assert it. tree_index never inserts (replaceOne/findOne only).
-      if (call.filter) assert.equal(call.filter.node_id, `tenant:${tenantId}`, `${call.coll}.${call.op} must target this tenant's root node`);
+      // ISS-062: tree_index's root document now carries a REAL tenantId field, so
+      // treeIndexRootFilter's returned filter — and the document indexing.ts writes via
+      // replaceOne — are both checked on tenantId too now, not just the node_id prefix
+      // (contract criterion 3a's convention, kept as defense-in-depth for pre-migration rows).
+      if (call.filter) {
+        assert.equal(call.filter.node_id, `tenant:${tenantId}`, `${call.coll}.${call.op} must target this tenant's root node`);
+        assert.equal(call.filter.tenantId, tenantId, `${call.coll}.${call.op}'s filter must match on the real tenantId field too (ISS-062)`);
+      }
+      for (const doc of call.docs ?? []) {
+        assert.equal(doc.tenantId, tenantId, `${call.coll}.${call.op} wrote a root document with no real tenantId field (ISS-062)`);
+      }
       continue;
     }
     if (call.filter) {
