@@ -47,5 +47,11 @@ jobs:
       - name: Structure budgets + dependency rules
         run: pnpm lint:structure
 
+      # ISS-058: catalogue-score --check only means something against COMMITTED state, so it
+      # runs here on the commit/CI path rather than inside lint:structure, which stays runnable
+      # at any moment during an in-flight unit.
+      - name: Catalogue score reproducibility
+        run: pnpm lint:score
+
       - name: Linter negative tests
         run: pnpm test:lint
