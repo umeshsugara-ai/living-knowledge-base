@@ -1,131 +1,110 @@
 # Verdict — scoped-collection-updateOne
 
-**Cycle checked:** 2
+**Cycle checked:** 3
 **Date:** 2026-09-07
-**Checker mode:** Mode A (fresh context, re-ran everything myself, no builder reasoning trusted,
-no context from the cycle-1 checker instance beyond reading its own written verdict as directed)
+**Checker mode:** Mode A (fresh context, re-ran everything myself, no builder reasoning trusted;
+read both prior verdicts — cycle 1's original content recovered via `git show 85c6ed9` since
+cycle 2 overwrote the file in place — to know exactly what each prior cycle found)
+
+This is fix cycle 3 of 3, the maximum. No fourth cycle is available; if anything held back a PASS
+here the unit would go to `STALLED`.
 
 ## What I re-ran myself
 
-1. Read `scripts/sync-real-turns.mjs` in full — confirmed zero references to `.raw` anywhere;
-   both lines 63-64 now call `turns(tenantId).countDocuments({...})` and `.deleteMany({...})`
-   through the real accessor.
-2. Read `packages/db/src/lib/tenantScope.ts` in full — confirmed a new tenant-merged
-   `countDocuments(filter)` was added (line 56), same shape as `deleteMany`/`updateOne`, and that
-   `raw` remains removed (not reintroduced).
-3. **TRUE repo-wide search, my own** — `grep -rn "\.raw\b" --include="*.ts" --include="*.tsx"
-   --include="*.js" --include="*.mjs" --include="*.cjs" .` from the repo root, excluding
-   `node_modules`/`.git`, covering `scripts/`, `sources/` (the whatsapp_msg submodule),
-   `workers/`, `migrations/`, everything — not scoped to `apps/`+`packages/` (the mistake that
-   caused cycle 1's own miss). Result: exactly two matches, both read myself and both genuinely
-   unrelated —
-   - `packages/ingest/src/sources/recording.test.ts:24` — the literal string `"call.raw"` inside
-     a test fixture object (`{ kind: "recording", path: "call.raw" }`), a filename string, not a
-     property access.
-   - `sources/whatsapp_msg/src/wa/sessionManager.ts:83,129,169` — a Baileys WhatsApp socket's own
-     `session.raw` field, in a separate git submodule with its own independent Lab Protocol
-     governance; this project's own CLAUDE.md says not to duplicate that governance here.
-   No other matches anywhere in the tree. Confirms the manifest's own disclosure exactly.
-4. **Reproduced the `countDocuments` mutation myself** (my own wording): edited
-   `packages/db/src/lib/tenantScope.ts`'s `countDocuments` from
-   `raw.countDocuments(withTenant<T>(tenantId, filter))` to `raw.countDocuments(filter)`, then ran
-   `pnpm --filter @lkb/db test`. **Result: 10/10 GREEN, unchanged — it did NOT redden.** Read
-   `tenantScope.test.ts` in full: its `fakeDb()` mock (lines 22-34) does not implement a
-   `countDocuments` method at all, and no test anywhere in the suite calls
-   `coll(...).countDocuments()`. `countDocuments`'s only caller in the entire workspace is
-   `scripts/sync-real-turns.mjs`, which sits outside `pnpm -r test` (it's a top-level script, not
-   a workspace package). Reverted the mutation, re-confirmed 10/10 clean. **This is a real,
-   reproducible gap, filed as ISS-069** (see Ledger) — see Judgment below for why it does not
-   invalidate the fix's correctness but does fail the specific verification this cycle's dispatch
-   asked for ("confirm it reddens").
-5. `node scripts/sync-real-turns.mjs --dry-run` — listed 23 real TOC sessions (data has grown
-   since cycle 1's 19; the count itself isn't a criterion), printed
-   `No Mongo connection attempted (--dry-run).`, and confirmed via reading the script's own
-   control flow that the dry-run branch returns before any Mongo import. Never connects.
-6. **Mongo access check**: `13.202.206.101` (from `.env`'s `MONGODB_URL`) — `ping -n 2` returned
-   100% packet loss, same outage disclosed in the parent `ingest-indexing-pipeline` contract. I
-   could not independently verify `countDocuments`/`deleteMany` against the real database on a
-   scratch tenant this cycle; this is an environmental block matching the contract's own disclosed
-   limitation, not treated as a failure of this unit. The manifest's own pasted live-proof
-   (insert → count=1 → deleteMany → count=0) is therefore trusted only as a claim, not
-   independently reproduced by me — noted, not penalized, since the same outage would have
-   blocked the maker identically.
-7. `pnpm -r test` (fresh) — 346 total (7+10+56+32+41+43+40+77+40), 0 fail across all 9
-   test-bearing projects. Confirmed with my own count aggregation, matching the manifest's claim
-   exactly.
-8. `pnpm -r typecheck` (fresh) — 10 of 11 workspace projects, all `Done`, exit 0 (11th has no
-   typecheck script, unchanged from cycle 1).
-9. `pnpm lint:structure` (fresh) — all six sub-checks OK/clean (`lint-loc`, `lint-dirsize`,
-   `lint-root`, `lint-dupes`, `lint-migrations`, `docs/SNAPSHOT.md` fresh-regeneration match), zero
-   dependency-cruiser violations.
-10. **No regression to the cycle-1-verified scope**: `git diff --stat` shows only
-    `tenantScope.ts` (+18/-2), `tenantScope.test.ts` (+18, no new countDocuments tests — see
-    finding), and `scripts/sync-real-turns.mjs` (+4/-2) changed since cycle 1's own diff; the
-    seven original call sites (`indexing.ts` + six `packages/db/collections/*.ts`) are
-    byte-identical to what cycle 1 already verified — confirmed via `grep -n "raw\."` across all
-    seven, zero hits, and via the diff-stat showing no further changes to those files this cycle.
-    The `updateOne` mutation-reproduction cycle 1 already performed is therefore still valid
-    (untouched code); re-running the full suite fresh (item 7) plus the zero-diff confirmation is
-    sufficient re-proof without repeating an identical mutation cycle 1 already did independently.
+1. **Read `packages/db/src/lib/tenantScope.ts` and `tenantScope.test.ts` in full.** `countDocuments`
+   (line 56) is present, tenant-merged, same construction as `deleteMany`/`updateOne`. The doc
+   comment on the accessor itself (fixed in cycle 1) still correctly says it never returns `raw`,
+   and `raw` is in fact gone from the returned object.
+2. **`tenantScope.test.ts` now has 13 tests (was 10)** — `fakeDb()`'s mock (line 32) now
+   implements `countDocuments`, and three new tests exist mirroring `updateOne`'s own coverage
+   exactly as the manifest claims: tenant-merge (line 87), override-resistance (line 96), and an
+   empty-filter case (line 102).
+3. **Ran `pnpm --filter @lkb/db test` fresh: 13/13 pass.**
+4. **Reproduced the `countDocuments` mutation myself** — edited line 56 from
+   `raw.countDocuments(withTenant<T>(tenantId, filter))` to `raw.countDocuments(filter)`, re-ran
+   `pnpm --filter @lkb/db test`. **Result: 10/13 pass, 3/13 FAIL** — the exact three new tests
+   (tenant-merge, override-resistance, empty-filter), confirmed by reading the failure output
+   (`AssertionError`, actual `{tenantId:'t2-victim'}`/`{}` vs expected `{tenantId:'t1'}`). This is
+   the non-zero redden cycle 2 found missing (ISS-069) — now fixed. Reverted; re-confirmed 13/13
+   clean, zero residual diff against the maker's own working-tree state.
+5. **Reproduced the `updateOne` mutation myself too** (no regression check) — edited line 61 to
+   drop the tenant merge, ran both `packages/db` (11/13 RED — the 2 `updateOne` tests) and
+   `apps/api` (RED: `a DEGRADED run's writes are tenant-scoped too — the guard must not be a
+   bypass`, asserting `undefined !== 't'` on `sessions.updateOne`). Both still redden exactly as
+   cycle 1 established. Reverted; both packages clean again.
+6. **TRUE repo-wide `.raw` search, my own** — Grep tool, pattern `\.raw\b`, glob
+   `*.{ts,tsx,js,mjs,cjs}` (respects `.gitignore`), whole repo root. Exactly the same two matches
+   as cycles 1 and 2, nothing new:
+   - `packages/ingest/src/sources/recording.test.ts:24` — literal string `"call.raw"` in a test
+     fixture, not a property access.
+   - `sources/whatsapp_msg/src/wa/sessionManager.ts:83,129,169` — a WhatsApp socket's own `raw`
+     field, in the separate git submodule this project's CLAUDE.md says not to govern here.
+7. **`grep -rn "raw\." packages/db/src/collections`** — zero matches. All six collection files
+   (`eval-runs.ts`, `gaps.ts`, `meeting-candidates.ts`, `trusted-senders.ts`,
+   `watched-sources.ts`, plus the one I spot-checked below) confirmed clean of `.raw` calls.
+8. **`node scripts/sync-real-turns.mjs --dry-run`** — listed 9 real TOC sessions, printed
+   `No Mongo connection attempted (--dry-run).`, exited 0. Read the script in full: both Mongo
+   calls (lines 63-64) go through `turns(tenantId).countDocuments(...)` /
+   `.deleteMany(...)` — the real accessor, zero `.raw` references anywhere in the file.
+9. **Spot-checked `packages/db/src/collections/gaps.ts`** against its real callers — `markReceived`
+   / `markExpired` both call `gaps(tenantId).updateOne(...)` through the accessor, no hand-carried
+   `tenantId`, matching the claimed migration pattern exactly. Also checked
+   `apps/api/src/indexing.ts:149` — `sessionsColl(tenantId).updateOne({_id: sessionId}, ...)`, no
+   `.raw` remaining, closing the ISS-065 gap the ledger already noted.
+10. **Mongo connectivity check**: `13.202.206.101` (from `.env`'s `MONGODB_URL`) — `ping -n 2`
+    returned 100% packet loss, same disclosed outage as cycles 1-2 and the parent
+    `ingest-indexing-pipeline` contract. Could not independently run the live scratch-tenant proof
+    this cycle either; this is an environmental block matching the contract's own disclosed
+    limitation, not treated as a failure of this unit. The manifest's pasted live-proof (cycle 1's
+    identical result, re-asserted as "identical" this cycle) is trusted only as a claim for the
+    Mongo-write half, same as cycle 2's treatment — nothing about that changes the fact that both
+    tenant-merge mutations reddened tests I ran myself, independent of Mongo being reachable.
+11. **`pnpm -r test` (fresh)**: `packages/core` 7, `packages/db` 13, `packages/ai` 56,
+    `packages/ingest` 41, `packages/index` 43, `packages/ask` 32, `packages/meeting-bot` 40,
+    `apps/api` 77, `apps/web` (vitest) 40. **Total: 349/349 pass, 0 fail** — exact match to the
+    manifest's claim.
+12. **`pnpm -r typecheck` (fresh)**: 10 of 11 workspace projects in scope, all `Done`, exit 0
+    (11th has no typecheck script, unchanged from prior cycles).
+13. **`pnpm lint:structure` (fresh)**: `lint-loc`, `lint-dirsize`, `lint-root`, `lint-dupes`,
+    `lint-migrations` all OK, `docs/SNAPSHOT.md` matches a fresh regeneration, dependency-cruiser
+    clean (242 modules, 712 dependencies, zero violations).
 
-## Judgment
-
-**Manifest's own "How to verify" steps (1-6):**
+## Judgment against the manifest's "How to verify" (1-7)
 
 1. TRUE repo-wide `.raw.` search, only the two disclosed false positives: **met**, reproduced
-   independently with a broader glob and directory scope than even the manifest used.
-2. Reproduce the `updateOne` mutation, reddens both `packages/db` and `apps/api`: **met** by
-   virtue of zero diff to the mutated code since cycle 1's own independent reproduction — nothing
-   changed that could have altered that result, confirmed via diff-stat.
-3. `scripts/sync-real-turns.mjs` no longer references `raw` at all, `--dry-run` still lists real
-   sessions and never connects: **met**, read the file and ran it myself.
-4. Verify `countDocuments` against the real database on a scratch tenant, or trust the pasted
-   proof after confirming the code path matches: **blocked by the same Mongo outage the parent
-   contract discloses** — could not independently reproduce; the code path itself (read at
-   `tenantScope.ts:56`) does match what `sync-real-turns.mjs` calls. Not held against this unit.
-5. Spot-check a migrated `collections/*.ts` file against its real caller: **unchanged since
-   cycle 1** (zero diff, per item 10 above) — cycle 1's spot-check (`gaps.ts`,
-   `meeting-candidates.ts`) still holds.
-6. `pnpm -r test` (346), `pnpm -r typecheck`, `pnpm lint:structure` clean: **met**, reproduced
+   independently, nothing new appeared.
+2. Reproduce both mutations, `countDocuments` reddening non-zero specifically: **met** — 3/13 RED
+   for `countDocuments` (the exact class of test cycle 2 found absent), `updateOne` still reddens
+   both packages with no regression.
+3. `sync-real-turns.mjs` no longer references `raw`, `--dry-run` still lists real sessions: **met**.
+4. Verify `countDocuments` against the real database on a scratch tenant if Mongo answers:
+   **blocked by the same outage as cycles 1-2** — not held against the unit; the code path is
+   confirmed correct by inspection and by the passing unit-test suite.
+5. Spot-check a migrated `collections/*.ts` file against its real caller: **met** (`gaps.ts`,
+   plus `indexing.ts`'s own `updateOne` call).
+6. `pnpm -r test` (349), `pnpm -r typecheck`, `pnpm lint:structure` clean: **met**, all reproduced
    fresh, exact counts match.
-
-**Dispatch item 3, explicit ask beyond the manifest's own steps** ("Confirm the new
-`countDocuments` ... is correctly tenant-merged ... mutate it yourself and confirm it reddens"):
-**not met.** The code IS correctly tenant-merged — read at `tenantScope.ts:56`, it is
-byte-for-byte the same construction as `deleteMany` (line 50) and `updateOne` (line 61), both of
-which are tested and proven correct. But my mutation of exactly that line did not redden a single
-test, because no test in the workspace exercises `countDocuments` at all — the `fakeDb()` mock
-used by `tenantScope.test.ts` doesn't even implement the method. This is a real, reproducible gap:
-`countDocuments` was added in this cycle with no accompanying test, unlike `updateOne` in cycle 1
-(which got two dedicated tests: tenant-merge + override-resistance) or `deleteMany` (tested
-originally for ISS-060). Filed as **ISS-069**.
-
-This does not mean the fix is wrong — it is functionally correct today. It means the fix for
-ISS-068 closed the live break but left the exact same class of latent risk ISS-060/065 exist to
-prevent: a tenant-merge on a write/read path with zero automated signal if a future refactor
-strips it. Given this contract's own repeated emphasis that the tenant boundary "is the one
-invariant in this codebase whose failure is unrecoverable" (the test file's own docstring), and
-given the dispatch specifically asked me to verify exactly this and it does not hold, I am not
-crediting this as a nitpick — it is a genuine, defensible (I reproduced it, reverted it, and it
-is 100% reproducible by anyone) gap in the safety net this whole unit exists to build.
+7. "If anything real is still wrong, say so plainly": nothing found. The specific gap cycle 2
+   filed (ISS-069 — zero coverage on `countDocuments`) is now closed with real, reproduced
+   coverage; no new gap of the same shape was found on this pass (I checked `deleteMany`,
+   `updateOne`, and `countDocuments` all have dedicated tenant-merge + override-resistance tests
+   now — the accessor's full write/count surface is covered).
 
 ## Ledger
 
-- **ISS-068** (issue this manifest set out to fix): genuinely fixed — `scripts/sync-real-turns.mjs`
-  no longer references `raw`, the script runs correctly in `--dry-run`, and the new
-  `countDocuments` accessor is functionally correct by code inspection and type-pattern match.
-  Moved `open → fixed`.
-- **ISS-069** (new, filed by this check): the `countDocuments` test-coverage gap described above.
-  Severity **medium** — not a live break (the code is correct today, unlike ISS-068), but a
-  genuine, reproduced, unpinned tenant-safety risk on a real accessor method, the same class of
-  defect this ledger exists to catch before it becomes the next ISS-060/068. Remedy: two tests
-  mirroring `updateOne`'s own, plus a `countDocuments` stub in `fakeDb()`.
+- **ISS-065**: re-confirmed fixed this cycle via my own mutation reproduction (no regression) —
+  moved `fixed → verified`.
+- **ISS-068**: re-confirmed fixed this cycle via my own repo-wide search + `--dry-run` run — moved
+  `fixed → verified`.
+- **ISS-069** (this cycle's target): genuinely fixed — three new tests added to
+  `tenantScope.test.ts`, `fakeDb()` gained a `countDocuments` stub, and my own mutation of the
+  exact line the fix depends on now reddens 3/13 tests (was 0/10 before this cycle). Moved
+  `open → fixed`.
 
 ```
-VERDICT: FAIL
-SCOREBOARD: 5/6 manifest verify steps met (1 environmentally blocked, not held against the unit), 1/1 dispatch-specific verification item (countDocuments mutation reddens) NOT met
-FAILURES:
-- [dispatch item 3 / contract 3a tenant-safety intent] sev: medium · the new countDocuments accessor is correctly tenant-merged by code but has zero automated regression coverage — my mutation stripping the tenant merge did not redden any test in pnpm -r test, because tenantScope.test.ts's fakeDb() mock doesn't implement countDocuments and no test calls it · add two tests mirroring updateOne's own (tenant-merge + override-resistance) and a countDocuments stub in fakeDb() · issue: ISS-069
-ISSUES-WRITTEN: ISS-069 (new, open, medium); ISS-068 (existing, moved open -> fixed)
-EXPLANATION: This cycle's fix for ISS-068 is genuinely correct — scripts/sync-real-turns.mjs is fully migrated off raw, the true repo-wide search (broader than even the manifest's own) confirms no other caller was missed, and the full suite/typecheck/structure lint are all clean with zero regression to the seven call sites cycle 1 already verified. But the new countDocuments accessor was added with no test of its own, unlike updateOne in cycle 1 — my mutation of the exact line the fix depends on produced zero test failures, which is precisely the blind spot that let ISS-060 and ISS-068 happen in the first place. The fix works; the safety net around it does not yet cover its own newest member.
+VERDICT: PASS
+SCOREBOARD: 6/6 manifest verify steps met (1 of 6 environmentally blocked by a disclosed, pre-existing outage — not held against the unit), 0/0 open failures
+FAILURES (if any): none
+ISSUES-WRITTEN: none new; ISS-069 moved open -> fixed; ISS-065 and ISS-068 moved fixed -> verified (all three re-derived by my own reproduction this cycle, not asserted)
+EXPLANATION: Cycle 3's fix closes exactly the gap cycle 2 found — countDocuments now has three dedicated tests (tenant-merge, override-resistance, empty-filter) and my own mutation of its tenant-merge line reddens 3/13 tests, where before this cycle the identical mutation reddened zero. I independently reproduced both mutations (countDocuments and updateOne), the true repo-wide .raw search (still only the two disclosed false positives), sync-real-turns.mjs --dry-run, a collections/*.ts spot-check, and the full suite/typecheck/lint (349 tests, 10 typecheck projects, lint:structure all clean, fresh runs). The only unverified item is the live scratch-tenant Mongo proof, blocked by the same disclosed, pre-existing host outage as cycles 1 and 2 — not a new or unit-specific gap. Nothing else was found wrong across three cycles of scrutiny; the unit earns PASS on its last chance.
 ```
