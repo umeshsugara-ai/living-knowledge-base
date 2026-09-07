@@ -1,220 +1,222 @@
 # Verdict — live-verify-protocol
 
-**VERDICT: FAIL**
-**Cycle checked: 1** (matches the manifest's `Fix cycle: 1 of max 3`)
+**VERDICT: PASS**
+**Cycle checked: 2** (matches the manifest's `Fix cycle: 2 of max 3`)
 **Date:** 2026-09-07
 **Checked by:** /checker, Mode A, fresh context — bound to `D:\KnowledgeBase`
 **Contract:** qa/contracts/developer-api.md (the routes exercised; the contract does not itself
 cover verification apparatus — judged, per the dispatch, on whether the apparatus is HONEST and
-REPRODUCIBLE)
+REPRODUCIBLE, same frame as cycle 1)
 **Manifest:** qa/manifests/live-verify-protocol.md
+**Supersedes:** the cycle-1 FAIL on this slug (commit `fbda37b`)
 
 ---
 
 ## SCOREBOARD
 
-5/6 dispatch criteria met, 0 blocking design defects, 1 honesty defect in the shipped artifact.
+**12/12 criteria met, 5/5 invariants hold.**
 
 | # | Claim under test | Result |
 |---|---|---|
-| 1 | Reproducibility — two runs, two fresh folders, same verdicts | **PASS** |
-| 2 | Never seeds or mutates application content | **PASS (design)** / **FAIL (disclosure)** |
-| 3 | Collection counts are true (11 populated / 13 empty, named) | **PASS** |
-| 4 | `DIRTY-TREE` cannot mask a real failure | **PASS** |
-| 5 | Self-caught bug: `sources:{internal,web}` + sessionRef resolution | **PASS** |
-| 6 | `pnpm lint:structure` exit 0 | **PASS** |
+| 1 | ISS-024 — jobs delta is MEASURED, and the measured number is what lands in `summary.md` | **PASS** |
+| 2 | ISS-024 — no `"one real jobs ledger row"` constant survives in the script or a fresh summary | **PASS** |
+| 3 | ISS-025 — vacuous citation PASS closed (reproduced against my own fake API) | **PASS** |
+| 4 | ISS-026 — a formerly-stubbed route returning 200 is PASS-with-note, not FAIL | **PASS** |
+| 5 | ISS-027 — `--skip-ask` on a dirty tree exits **4**, headline carries the caveat | **PASS** |
+| 6 | ISS-027 — `qa/evidence/` excluded; dirty count does not grow across runs | **PASS** |
+| 7 | ISS-028 — manifest LOC figures match `countLoc`, the metric `lint-loc` enforces | **PASS** |
+| 8 | LOC budget — `live-verify.mjs` 292 ≤ 300 after the fixes | **PASS** |
+| 9 | No regression — no seeding / tree rebuild / ingest; zero collection writes | **PASS** |
+| 10 | No regression — reproducible across two independent runs | **PASS** |
+| 11 | No regression — DIRTY-TREE still cannot mask a real failure | **PASS** |
+| 12 | `pnpm lint:structure` exit 0 | **PASS** |
+
+Invariants: read-only toward application content · remote Mongo reachable throughout (no
+INCONCLUSIVE warranted) · verdict vocabulary unchanged · exit-code ladder total and unambiguous ·
+every FAIL in my adversarial runs was reachable and correct.
 
 ---
 
 ## What I re-ran myself (nothing below is taken from the manifest)
 
-**Environment.** `apps/api` was already listening on :3300 (PID 43448) and `apps/web` on :5173
-(PID 43936) against the real remote Mongo. Nothing needed starting. Remote Mongo was reachable
-throughout — no INCONCLUSIVE was warranted on any check.
+**Environment.** `apps/api` on :3300 (401 without a key, 200 with one) and `apps/web` on :5173
+were already up against the real remote Mongo. I minted my own credential —
+`node scripts/mint-key.mjs` → `lv_74240e3c…21592c5d15bc`, accepted by `GET /sessions` (HTTP 200).
+Remote Mongo was reachable on every probe; no check was downgraded to INCONCLUSIVE.
 
-**1. Reproducibility — PASS.**
-Minted my own credential rather than reusing the maker's:
-```
-$ node scripts/mint-key.mjs --label checker-live-verify
-lv_690b4d28…f625455b2ae2e
-$ curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer lv_690b…" localhost:3300/sessions
-200
-$ curl -s -o /dev/null -w "%{http_code}" localhost:3300/sessions      # no key
-401
-```
-Then two full runs, back to back:
+### 1. ISS-024 — measured, not asserted — **FIXED (verified)**
 
-| | run 1 | run 2 |
-|---|---|---|
-| evidence folder | `qa/evidence/live-2026-09-07-01-38-36/` | `qa/evidence/live-2026-09-07-01-39-11/` |
-| exit code | 0 | 0 |
-| overall | PASS | PASS |
-| verdict lines | 18 | 18 |
-
-Every one of the 18 check lines carried an identical verdict across both runs (DIRTY-TREE ×1,
-PASS ×13, STUB ×2, MISSING ×1, plus the two /ask assertions). Two fresh dated folders appeared,
-each with `preflight.json`, `summary.md`, and 13 raw response bodies under `api/`. The only
-between-run difference was the dirty-file count (10 → 11), and that is the tool counting its own
-previous evidence folder — see ISS-027. **The reproducibility claim, which is this unit's entire
-reason to exist, holds.**
-
-**2. Never seeds or mutates — design PASS, disclosure FAIL.**
-Read `scripts/live-verify.mjs` line by line and grepped it for every write verb
-(`insert|update|delete|replace|drop|seed|createIndex|bulkWrite|buildTree|ingest|PUT|PATCH`):
-the only hits are in comments and in the `summary.md` string literals. Confirmed positively:
-- It does **not** import or invoke `seed-demo-server.mjs` (no reference of any kind).
-- It does **not** rebuild `tree_index` and does **not** ingest.
-- Its Mongo use is `connect()` + `countDocuments()` only (:103–110, :210).
-  `packages/db/src/client.ts` `connect()` is a bare `MongoClient.connect` — no migrations, no
-  index creation, no write on connect. Verified by reading the file.
-- HTTP surface is 12 GETs plus exactly one `POST /ask`. No write route is touched.
-
-Keeping key-minting in its own script is the right call and it is what made this check possible
-for me at all — I never had to run the seeder.
-
-**But the disclosed magnitude of the one permitted side effect is wrong, and the wrong number is
-written into every evidence artifact the tool emits.** `live-verify.mjs:236` writes into each
-`summary.md`: *"`POST /ask` exercised — appends one real `jobs` ledger row"*. I measured the real
-delta directly in Mongo, per run window:
+The fix is at `scripts/live-verify.mjs:217-223`: `countDocuments("jobs")` immediately before the
+`/ask` call, again after, and the delta recorded as its own check and interpolated into
+`summary.md:277`. I did not take the tool's word for the delta — I bracketed the whole run with
+my own independent Mongo count, via my own script, not the tool's:
 
 ```
-run1 (01:38:36–01:39:05)  jobs +20   {ask:2, ask.select_nodes:1, evaluator:8,  ask.score:8,  ask.answer:1}
-run2 (01:39:11–01:40:00)  jobs +26   {ask:2, ask.select_nodes:1, evaluator:11, ask.score:11, ask.answer:1}
+$ node --input-type=module <<< 'connect(); count jobs'      # BEFORE
+jobs=190
+$ LKB_API_KEY=lv_74240e3c… node scripts/live-verify.mjs
+[PASS] POST /ask side effect measured — appended 12 real `jobs` ledger row(s)
+overall: PASS (DIRTY-TREE — not attributable to fbda37b4)   EXIT=4
+$ node --input-type=module <<< 'connect(); count jobs'      # AFTER
+jobs=202
 ```
 
-20–26 rows, not one — and non-deterministic between runs. `jobs` is one of the 24 collections
-whose counts this same tool reports as headline evidence, so each run measurably contaminates a
-number it prints, by 20–26× what it discloses. In a unit built specifically so that claims are
-measured rather than asserted, an asserted constant that is off by an order of magnitude is the
-defect the unit exists to eliminate, shipped inside the unit itself. **This is the FAIL.**
-(ISS-024 — the fix is small and makes the tool better: measure `countDocuments('jobs')` either
-side of the /ask call and print the real delta.)
-
-**3. Collection counts — PASS, exactly.**
-Queried Mongo independently, with my own script against the `mongodb` driver directly (not the
-project's `packages/db` wrapper, not the maker's script), driving the collection list off
-`schema/*.schema.json` the same way:
+**202 − 190 = 12**, exactly the number the tool reported and exactly the number written into
+`qa/evidence/live-2026-09-07-01-51-33/summary.md`:
 
 ```
-TOTAL: 24
-POPULATED(11): api_keys=5 | claims=81 | eval_runs=4 | jobs=178 | meeting_candidates=13 |
-               session_pages=24 | sessions=26 | sources=26 | tree_index=1 |
-               trusted_senders=1 | turns=2118
-EMPTY(13):     chunks | consent_policies | decisions | features_event | gaps | graph_edges |
-               media | orgs | programs | speakers | tenants | topics | watched_sources
+- `POST /ask` exercised — appended 12 real `jobs` ledger row(s) this run (measured, not assumed)
 ```
 
-**Both lists match the manifest name-for-name.** 11 populated, 13 empty, 24 total. The headline
-finding — no vector layer (`chunks`), and no `topics`/`speakers`/`decisions`/`graph_edges`
-despite all four having schemas — is confirmed true. Absolute counts have moved since the
-manifest snapshot (`jobs` 108→178, `api_keys` 4→5) but that is expected drift plus my own two
-runs and my own minted key; the populated/empty partition is unchanged and correct.
+That is a fourth distinct value across four sessions (20, 26, 12, 12), which is itself the
+standing proof that no constant was ever right here.
 
-One honest nuance the tool handles gracefully rather than hides: `db.listCollections()` returns
-23 collections, and `features_event` and `gaps` do not physically exist yet. `countDocuments` on
-a non-existent collection returns 0, so they land in EMPTY, which is the truthful answer.
+**Constant elimination.** `grep -rn "one real"` over `scripts/`, `qa/evidence/`, `qa/manifests/`
+returns only: (a) `scripts/live-verify.mjs:213`, a comment *describing the historical defect*;
+(b) three cycle-1 evidence folders generated **before** the fix (`live-…01-35-54`, `01-38-36`,
+`01-39-11`), which are historical artifacts, not live output; (c) the manifest quoting itself;
+(d) an unrelated line in `seed-demo-server.mjs` about minting a key. No freshly generated
+`summary.md` — I generated four — contains the constant. The header block (lines 18-20) now
+states the measure-don't-assert rule instead of a figure.
 
-**4. `DIRTY-TREE` cannot mask a real failure — PASS.**
-Reasoned through the code rather than trusting the manifest's assurance. `DIRTY-TREE` is assigned
-at exactly one site (:86–92), the preflight attribution check, where it replaces that check's
-`PASS`. It is never assigned anywhere else and never consulted by any other check. `overall`
-(:223–227) is `FAIL` if **any** check is FAIL, else `INCONCLUSIVE` if any is INCONCLUSIVE, else
-`PASS`. A genuinely broken app therefore still produces FAILs at the route/reconcile/citation
-checks, and any single one of those drives `overall: FAIL` with exit 2, dirty tree or not.
-**No, a broken app cannot ride a dirty tree to PASS.** The design is sound and the manifest's
-reasoning for splitting DIRTY-TREE out of FAIL is correct — conflating "this evidence isn't
-attributable to a commit" with "the app is broken" would have been the worse bug.
+### 2. ISS-025 — vacuous PASS closed — **FIXED (verified)**
 
-Related but distinct, and filed rather than failed (ISS-027): DIRTY-TREE sits in neither ladder,
-so a run whose own summary says it is *"not valid as final acceptance evidence"* still prints
-`overall: PASS` and exits 0. That does not hide a failure, but it does hide a caveat from any
-machine consumer reading the exit code.
+I did not reuse the maker's fake. I stood up my own trivial `node:http` server on :3999 returning
+`sources:{internal:[{node_id:"a"},{node_id:"b"}],web:[]}` with **no** `evidence.sessionRef`, and
+pointed the real tool at it with an out-of-repo `--out`:
 
-**5. The self-caught bug — PASS, both halves, and the fabricated-citation case demonstrated.**
-Read the current code at :191–216 and confirmed it does both things claimed:
-- It asserts the real shape — `ask.sources?.internal ?? []` and `ask.sources?.web ?? []`, not a
-  flat array. I checked the raw body this run actually produced
-  (`api/POST_ask.json`): top-level keys `verdict, reason, scored, web_used,
-  insufficient_coverage, sources, answer, auditLog`, with `sources.internal` an array of
-  `{node_id, evidence:{sessionRef}}` and `sources.web: []`. So the manifest's account of the
-  false FAIL is accurate: a flat-array assertion would indeed have produced `0 citations` against
-  a perfectly good answer.
-- It resolves every cited ref in Mongo (:207–215).
-
-I did not take the resolution check's efficacy on faith — I ran its exact query myself against
-the live DB with the three real refs, and again with one substituted for a plausible-looking
-fabrication:
 ```
-real             3/3  PASS
-with-fabricated  2/3  FAIL    (id: 2026-09-01-totally-fabricated-session)
+$ LKB_API_KEY=fakekey node scripts/live-verify.mjs --api http://localhost:3999 --out <scratch>
+[PASS] POST /ask returns at least one citation — 2 internal + 0 web · verdict=correct
+[FAIL] POST /ask citations resolve to real sessions
+       — 2/2 cited source(s) carried no evidence.sessionRef — unverifiable
+overall: FAIL (DIRTY-TREE — not attributable to fbda37b4)   EXIT=2
 ```
-**A hallucinated citation id would be caught.** One residual gap, filed not failed (ISS-025):
-the comparison is `found === refs.length`, and `refs` is built with `.filter(Boolean)`, so if
-internal sources existed but none carried an `evidence.sessionRef`, `refs` would be `[]`,
-`found` would be `0`, and `0 === 0` records PASS vacuously.
 
-**6. `pnpm lint:structure` — PASS, exit 0.**
+Under the cycle-1 code this identical response produced `refs=[]`, `0 === 0`, **PASS**. The guard
+at `:249` (`unref === 0 && refs.length > 0 && found === refs.length`) closes it, and `:246`'s
+`found = refs.length === 0 ? -1 : …` removes the arithmetic that made the hole possible.
+
+### 3. ISS-026 — progress no longer penalised — **FIXED (verified)**
+
+Same self-built fake server, `GET /search` returning **200** where the suite recorded a 501 stub:
+
+```
+[PASS] GET /search (scope: search) — HTTP 200 — was 501, now implemented: promote this to a real check
+```
+
+`:169-175` now reads as a not-worse-than assertion (`expect !== 200 && res.ok` → PASS + note).
+`/citations/none` (still 501) stayed **STUB** and `/health` (still 404) stayed **MISSING** in the
+same run, so the relaxation is scoped to genuine improvement — it did not flatten the vocabulary.
+An unexpected non-ok status on a stub route still FAILs.
+
+### 4. ISS-027 — exit code + self-dirtying — **FIXED (verified, both halves)**
+
+```
+$ LKB_API_KEY=lv_74240e3c… node scripts/live-verify.mjs --skip-ask >/dev/null 2>&1; echo $?
+4
+```
+and the headline/summary carry the caveat (from that run's `summary.md`):
+```
+**Overall: PASS (DIRTY-TREE — not attributable to fbda37b4)** · DIRTY-TREE: 1 · PASS: 11 · STUB: 2 · MISSING: 1
+- `POST /ask` skipped (--skip-ask)
+```
+
+**Self-dirtying half.** `:73-76` filters `qa/evidence/` out of the dirty-file list. I ran the tool
+**three** times, each creating a new untracked evidence folder; the reported count was
+**9, 9, 9** — flat — while raw `git status --porcelain` grew to 17 lines. Under cycle-1 code the
+count grew 10 → 11 from the tool's own output. The tool no longer dirties the tree it measures.
+
+### 5. ISS-028 — LOC figures — **FIXED (verified)**
+
+Measured with `countLoc` from `scripts/lib/walk.mjs` (the exact function `lint-loc.mjs:20`
+calls), not `wc -l`:
+
+```
+live-verify.mjs  countLoc=292  countLines=311
+mint-key.mjs     countLoc=46   countLines=54
+demo-live.mjs    countLoc=67   countLines=75
+```
+
+Manifest says **292 / 46 / 67** — exact match on the enforced metric. Budget is
+`structure.config.json → loc.max = 300`, so **292/300 is within budget**; the fixes did not push
+it over. The manifest's own note that "the next addition should split, not stretch" is correct
+and I endorse it — 8 lines of headroom is one bug fix.
+
+### 6. No regression (cycle-1 properties re-established, not assumed)
+
+- **No seeding / tree rebuild / ingest.** `grep -n "insertOne|updateOne|updateMany|insertMany|
+  deleteMany|replaceOne|bulkWrite|drop("` over `scripts/live-verify.mjs` → **zero hits**. Every
+  Mongo touch is `countDocuments` or a `find`-side `countDocuments({_id:{$in:refs}})`. The only
+  write in the whole protocol is `mint-key.mjs`'s `api_keys` delete-by-label + insert — a
+  credential, not content, and it is deliberately kept out of `live-verify.mjs` (read the file;
+  its header states the reason and it does not import `seed-demo-server.mjs`).
+- **Reproducibility.** Two full runs (`live-2026-09-07-01-51-33`, `…-01-52-10`) produced two
+  fresh folders with **identical verdict lines** on all 19 checks, including the same measured
+  jobs delta of 12 and the same `api=26 mongo=26` reconcile.
+- **DIRTY-TREE cannot mask a failure.** Both adversarial fake-server runs printed DIRTY-TREE at
+  preflight *and still* ended `overall: FAIL` with **EXIT=2**. DIRTY-TREE is assigned at exactly
+  one check and sits outside the FAIL/INCONCLUSIVE ladder, so it can only ever *add* a caveat.
+- **Fabricated citation still caught.** Second fake server (:3998) returning one real sessionRef
+  (`2026-04-21-visa-blueprint-part2-italy-france-nz`) and one invented one
+  (`2026-99-99-totally-fabricated-session-id`):
+  `[FAIL] POST /ask citations resolve to real sessions — 1/2 cited sessionRef(s) exist in Mongo`.
+- **Reconcile check is real, not decorative:** against a fake returning one session it reported
+  `[FAIL] … api=1 mongo=26`, and against another returning none, `api=0 mongo=26`.
+
+### 7. `pnpm lint:structure` — **exit 0**
+
 ```
 lint-loc: OK (209 file(s) within budget)
 lint-dirsize: OK (74 dir(s) within budget)
 lint-root: OK (15 loose root file(s), 1 gitignored excluded)
 lint-dupes: OK (239 unique export(s), 24 unique schema $id(s))
-lint-migrations: OK (1080 file(s) scanned)
+lint-migrations: OK (1154 file(s) scanned)
 OK: docs/SNAPSHOT.md matches a fresh regeneration (115 lines, budget 200)
 ✔ no dependency violations found (239 modules, 702 dependencies cruised)
-EXIT=0
+LINT_EXIT=0
 ```
-I verified the three new scripts really are subject to the budget rather than silently exempt:
-`structure.config.json` has `roots` including `scripts` and `loc.extensions` including `.mjs`,
-`loc.max` 300 — so yes, covered, and yes, within budget. (Their stated LOC figures in the
-manifest are nonetheless wrong — ISS-028.)
 
 ---
 
-## FAILURES
+## Not failures — observations for whoever touches this next
 
-- **[honesty] sev: high** · `live-verify.mjs:18-19,236` discloses that `POST /ask` "appends one
-  real `jobs` ledger row"; measured reality is 20–26 rows per run and non-deterministic, and the
-  false figure is written into every generated `summary.md`. `jobs` is one of the 24 counts the
-  tool reports, so each run contaminates its own evidence by 20–26× the disclosed amount ·
-  Fix: measure `countDocuments('jobs')` before and after the /ask call and print the real delta —
-  a measured side effect instead of an asserted one, which is this unit's own principle ·
-  issue: ISS-024
+These are below the >80%-confidence FAIL bar and are recorded as questions, not charges:
 
-## Non-blocking findings (filed, not charged against this cycle)
-
-- **sev: medium** · citation-resolution passes vacuously when `refs` is empty · ISS-025
-- **sev: medium** · STUB/MISSING pinned to exact status codes — implementing `/health` or
-  `/search` would flip them to FAIL, so the suite penalises progress · ISS-026
-- **sev: medium** · DIRTY-TREE absent from the overall/exit-code ladder; also each run's own
-  evidence folder dirties the tree the next run measures · ISS-027
-- **sev: low** · manifest's LOC figures for all three scripts match neither total nor non-blank
-  lines · ISS-028
-
-**ISSUES-WRITTEN:** ISS-024, ISS-025, ISS-026, ISS-027, ISS-028
+1. **The dirty-file exclusion is a regex, not a path predicate.** `:76` tests
+   `/\s+qa\/evidence\//` against `" " + trimmedLine`. It would also exclude a rename whose
+   *destination* is under `qa/evidence/`, and a hypothetical `docs/qa/evidence/…` path. Neither
+   exists today; a `startsWith("qa/evidence/")` on the parsed path would be tighter if this file
+   is ever touched again.
+2. **The measured jobs delta is bracketed around the `/ask` call, not isolated to it.** Any other
+   writer against the same DB during the window would be attributed to `/ask`. That is inherent
+   to measuring a shared ledger and is strictly more honest than the constant it replaced; worth
+   one clause in `summary.md` if this ever runs concurrently with a worker.
+3. **292/300 LOC.** Repeating the manifest's own warning because it is load-bearing: the next
+   change to `live-verify.mjs` should extract, not append.
+4. **Pre-existing, unrelated to this unit:** `qa/issues.jsonl` line 17 is not valid JSON
+   (`Invalid \escape` at char 449) and breaks any strict JSONL consumer. I left the line
+   byte-intact rather than rewrite evidence text I did not author. Flagging it for a sweep; it
+   predates this unit and is not charged against it.
+5. The three pre-fix evidence folders (`…01-35-54`, `…01-38-36`, `…01-39-11`) still contain the
+   false "one real jobs ledger row" line. They are correct as *historical* records of what the
+   tool said at the time; if any of them is ever cited as current evidence, that line is stale.
 
 ---
 
-## Assessment
+## Ledger
 
-This is good, genuinely useful apparatus, and I want to be clear that the FAIL is narrow. The
-reproducibility claim — the thing the unit was built for — holds under an independent double run
-with my own credential. It does not seed, does not rebuild `tree_index`, does not ingest, and
-keeping key-minting in a separate script is exactly the right structural answer to the bypass
-that motivated this work; I could complete this entire check without ever touching the seeder,
-which is the proof that the separation works. The 11/13 collection split is true to the name.
-`DIRTY-TREE` genuinely cannot mask a failure. The self-caught false FAIL is real, correctly
-diagnosed, correctly fixed, and the hardening that followed it demonstrably catches a fabricated
-citation id — I reproduced that rather than trusting it.
+`ISS-024`, `ISS-025`, `ISS-026`, `ISS-027`, `ISS-028` → **verified** (2026-09-07). Each was
+independently reproduced-as-fixed above, not accepted on the manifest's word. No new issues
+opened by this check.
 
-It fails on one thing, and it is the thing this unit is *about*. The tool writes a specific
-quantitative claim about its own side effect into every piece of evidence it produces, and that
-claim is wrong by 20–26×, against a collection whose count the same document reports as a
-headline fact. A verification apparatus does not get graded leniently on the accuracy of its own
-disclosures; that is the whole product. The remedy is a few lines and leaves the unit strictly
-better — measure the delta instead of asserting it. Re-submit as cycle 2 with ISS-024 fixed
-(ISS-025–028 are worth folding in at the same time but are not what is blocking the PASS), and
-ideally re-run once the tree is clean so the next cycle's evidence is attributable to a commit.
+## Judgement
 
-Manifest's "Issues addressed: none pre-existing" — confirmed against the ledger; nothing in
-qa/issues.jsonl was claimed by this unit, so nothing was wrongly closed.
+The unit's premise is that a claim which cannot be regenerated by one command does not count. The
+cycle-1 FAIL was that the tool itself violated its own premise in one place. It no longer does:
+the side effect is measured and the measured number is what ships, the one path that could pass
+without evidence now fails loudly, the suite no longer punishes someone for implementing a stub,
+and the attribution caveat is finally legible to a machine. All four fixes reproduced under my own
+instruments against my own fake servers, and none of them cost a cycle-1 property.
+
+**PASS.**
