@@ -115,6 +115,25 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
   half — REMOVING a downgrade is not an upgrade relative to the derived verdict, so the
   one-directional upgrade guard has nothing to object to. ISS-041.)*
 
+### Added by /checker cycle 5 — effective from cycle 6 / the next unit that touches this scorer
+
+- **[I14] The trusted-input set is DERIVED, never hand-maintained.** I13 says *every* input that can
+  raise the score carries the trust check; a hand-written constant listing one path is not a way to
+  satisfy an invariant quantified over "every". The scorer must collect the repo-relative paths it
+  actually reads during a real `generate()` — by instrumenting the reads, or by having each scraper
+  return what it consumed — trust every one of them with `trustOf()`, and refuse in `--check` on any
+  that is not `committed`. This carries its own test in the I12 sense: assert that the set of
+  repo-relative paths read during a real `generate()` is a **subset** of the trusted set, so an input
+  added without trust fails a test rather than quietly inflating a number.
+  *(Measured cycle 5, the seventh layer: three of the four scoring signals never pass through
+  `SCORE_INPUTS`. `scrapeRoutes` reads every `apps/api/src/routes/*.ts`, `scrapePages` reads
+  `apps/web/src/App.tsx`, `reachablePackages` walks the package tree. One untracked route file
+  declaring 15 routes plus 13 `<Route path=…>` lines added to `App.tsx` — **nothing committed** —
+  moved the headline 20.2% → 30.7% (machine-derived 28.9% → 39.5%, **+10.5 points**) with `--check`
+  exit 0, `pnpm lint:structure` exit 0, 23/23 tests green and **no banner of any kind**. This is
+  strictly cheaper than the ceiling the unit disclosed, which assumed a fabrication had to be
+  committed. ISS-047.)*
+
 ## Honest limits of this instrument (disclosed, not defects)
 
 - **Probes are hand-authored**, so the catalogue can be wrong by omission: an under-specified probe
@@ -155,6 +174,12 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
     `git diff --quiet --` → a test must fail.
 16. *(I13, from cycle 5)* Repoint the probe-less rows in `.goal/catalogue.json` at a populated
     collection without committing → `--check` and `pnpm lint:structure` must refuse, not pass.
+17. *(I14, from cycle 6)* Add an **untracked** file under `apps/api/src/routes/` declaring routes a
+    probe looks for, and/or add `<Route path="…">` lines to `apps/web/src/App.tsx` without
+    committing → the score must not move silently: `--check` must refuse, or at minimum the doc must
+    carry the untrusted banner naming those files.
+18. *(I14, from cycle 6)* Neuter the `--check` line-ending normalisation and the CLI upgrade
+    refusal, one at a time → a test must fail for each (ISS-045, ISS-044).
 
 ## Amendment log
 
@@ -164,3 +189,4 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
 | 2026-09-07 | routine (tighten) | /checker ADOPTED I1–I8 unchanged; ADDED I9 (scoring scale pinned + self-describing) and I10 (collection evidence bounded + attributable), effective cycle 3 | Cycle-2 check found two inflation levers I1–I8 do not reach: `POINTS` tampering (+8.3 pts, all gates green, doc misstates its own scale — ISS-034) and evidence-file substitution (+19.3 pts, all gates green — ISS-035). Both measured by execution. Tightening only; nothing weakened. |
 | 2026-09-07 | routine (tighten) | ADDED I11 (committed means CONTENT not path; sha must be line-ending-normalised; each such gate carries a test), effective cycle 4 | Cycle-3 check confirmed I9 and I10 are met, and found the next layer in the same place the last two were: the new `tracked` gate admits evidence on a path query, so tampering with the already-committed `preflight.json` in place restores the full +19.3-point lever with `--check` and `lint:structure` both green (ISS-037). Also ISS-039 (CRLF flips the printed sha, `--check` STALE on a clean clone) and ISS-038 (that gate had no regression test). Measured by execution. Tightening only; nothing weakened. |
 | 2026-09-07 | routine (tighten) | ADDED I12 (gate pinned by BEHAVIOUR — spawn the CLI and assert the exit status; trust asserted against HEAD including the staged case) and I13 (every score-raising input carries the I11 trust check, `.goal/catalogue.json` above all), effective cycle 5 | Cycle-4 check confirmed I11's content-vs-HEAD trust and its line-ending-normalised sha, but its "each such gate carries its own regression test" clause is not met: `process.exit(2)` → `process.exit(0)` in the refusal branch survives 19/19 + 33/33 and restores the +19.3-point lever (ISS-038), and `git diff --quiet --` (index, not HEAD) survives the suite too (ISS-042). And the sixth layer of the same pattern was found one input over: `.goal/catalogue.json` has no trust check at all, worth **+42.1 points** with every gate green (ISS-041). Measured by execution. Tightening only; nothing weakened. |
+| 2026-09-07 | routine (tighten) | ADDED I14 (the trusted-input set is DERIVED, never hand-maintained; the read-set must be a subset of the trusted set, with its own test), effective cycle 6 | Cycle-5 check confirmed I12's behaviour-pinning for the three `--check` refusals and I13's catalogue gate — the exact `exit(2)`→`exit(0)` mutation that survived cycle 4 now reddens two tests, and the +42.1-point catalogue lever is closed at the mechanism. But I13 is quantified over EVERY score-raising input and the unit satisfied it with a hand-written list of one, which the maker disclosed and asked to have judged. It is already incomplete: the three code scrapers are untrusted, and purely uncommitted source edits move the headline +10.5 points with every gate green and no banner (ISS-047). Also ISS-044 (the CLI upgrade refusal has no behavioural test) and ISS-045 (the line-ending gate shipped this cycle is itself unpinned) — both the I12 class. Measured by execution. Tightening only; nothing weakened. |
