@@ -12,6 +12,7 @@ import { createAskRouter, type AskRouteDeps } from "./routes/ask.js";
 import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
 import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
+import { createCitationsRouter, type CitationsDeps } from "./routes/citations.js";
 import { createGraphRouter, type GraphReadDeps } from "./routes/graph.js";
 import { createCalendarRouter, type CalendarReadDeps } from "./routes/calendar.js";
 import { createMeetingCandidatesRouter, type MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
@@ -28,6 +29,7 @@ export interface ServerDeps {
   ask: AskRouteDeps;
   evalRuns: EvalRunStore;
   brain: BrainReadDeps;
+  citations: CitationsDeps;
   graph: GraphReadDeps;
   calendar: CalendarReadDeps;
   meetingCandidates: MeetingCandidatesDeps;
@@ -57,6 +59,7 @@ export function createServer(deps: ServerDeps): Express {
   app.use(createAskRouter(deps.ask));
   app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
   app.use(createBrainRouter(deps.brain));
+  app.use(createCitationsRouter(deps.citations));
   app.use(createGraphRouter(deps.graph));
   app.use(createCalendarRouter(deps.calendar));
   app.use(createMeetingCandidatesRouter(deps.meetingCandidates));

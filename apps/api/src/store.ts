@@ -23,6 +23,7 @@ import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
+import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { CalendarReadDeps } from "./routes/calendar.js";
@@ -96,6 +97,29 @@ export function createMongoBrainReadDeps(): BrainReadDeps {
     },
     async listGaps(tenantId) {
       return gapsColl(tenantId).find({}).toArray();
+    },
+  };
+}
+
+/** Real `CitationsDeps` (routes/citations.ts) — same composition-root pattern as the brain deps
+ * above. A claim's `evidence[]` is a small, bounded array (JSON Schema `@minItems 1`, never
+ * thousands of rows), so resolving each turn/session in parallel is the right shape — no batching
+ * layer needed at this scale. */
+export function createMongoCitationsDeps(): CitationsDeps {
+  return {
+    async getCitation(tenantId, claimId): Promise<Citation | null> {
+      const claim = await claimsColl(tenantId).findOne({ _id: claimId });
+      if (!claim) return null;
+      const evidence = await Promise.all(
+        claim.evidence.map(async (e): Promise<CitationEvidence> => {
+          const [turn, session] = await Promise.all([
+            turnsColl(tenantId).findOne({ _id: e.turnId }),
+            sessionsColl(tenantId).findOne({ _id: e.sessionId }),
+          ]);
+          return { turnId: e.turnId, sessionId: e.sessionId, turn: turn ?? null, session: session ?? null };
+        }),
+      );
+      return { claim, evidence };
     },
   };
 }

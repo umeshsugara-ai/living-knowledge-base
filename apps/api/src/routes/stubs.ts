@@ -1,12 +1,13 @@
 /**
- * apps/api/src/routes/stubs.ts — T-009 C4/C5. `/search` `/citations/:claimId`
- * `/webhooks/register` — honestly labeled 501s (no data-access layer built for any of them yet,
- * each is its own later unit per the contract's non-goals). The route's scope check still runs
- * first, so a caller can tell "authorized but not built" (501) apart from "not authorized" (403)
- * — the two are different information per the contract and must never collapse into one status
- * code. `/sources` and `/sessions` were un-stubbed (real routes now live in `routes/brain.ts`) —
- * `STUB_ROUTES` is exported so `routes/pages.ts`'s API-docs page renders directly from this
- * table instead of a hand-maintained copy that could drift from what's actually still a stub.
+ * apps/api/src/routes/stubs.ts — T-009 C4/C5. `/search` `/webhooks/register` — honestly labeled
+ * 501s (no data-access layer built for either yet, each is its own later unit per the contract's
+ * non-goals). The route's scope check still runs first, so a caller can tell "authorized but not
+ * built" (501) apart from "not authorized" (403) — the two are different information per the
+ * contract and must never collapse into one status code. `/sources`/`/sessions` (real routes in
+ * `routes/brain.ts`) and `/citations/:claimId` (plan §10 U0.8, real route in
+ * `routes/citations.ts`) were un-stubbed — `STUB_ROUTES` is exported so `routes/pages.ts`'s
+ * API-docs page renders directly from this table instead of a hand-maintained copy that could
+ * drift from what's actually still a stub.
  */
 import { Router, type Request, type Response } from "express";
 import { requireScope } from "../auth.js";
@@ -20,7 +21,6 @@ export interface StubRoute {
 
 export const STUB_ROUTES: StubRoute[] = [
   { method: "get", path: "/search", scope: "search", label: "GET /search" },
-  { method: "get", path: "/citations/:claimId", scope: "citations", label: "GET /citations/:claimId" },
   { method: "post", path: "/webhooks/register", scope: "webhooks", label: "POST /webhooks/register" },
 ];
 

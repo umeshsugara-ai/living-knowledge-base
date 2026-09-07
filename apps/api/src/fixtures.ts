@@ -11,6 +11,7 @@ import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
+import type { Citation, CitationsDeps } from "./routes/citations.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { CalendarReadDeps, UpcomingMeeting } from "./routes/calendar.js";
 import type { MeetingCandidate, MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
@@ -103,6 +104,24 @@ export function fakeBrainReadDeps(overrides: Partial<BrainReadDeps> = {}): Brain
     getSessionDetail: async (_tenantId, id) => (id === "session-1" ? fixtureDetail : null),
     listSources: async () => [],
     listGaps: async () => [],
+    ...overrides,
+  };
+}
+
+/** An in-memory `CitationsDeps` — tests never touch Mongo. Shares `claim-1`/`t1`/`session-1`
+ * with `fakeBrainReadDeps`' fixture so a test can cross-check the same ids resolve consistently
+ * from both routes. */
+export function fakeCitationsDeps(overrides: Partial<CitationsDeps> = {}): CitationsDeps {
+  const fixtureCitation: Citation = {
+    claim: { _id: "claim-1", tenantId: "tenant-1", text: "A fixture claim.", status: "verified", evidence: [{ turnId: "t1", sessionId: "session-1" }] },
+    evidence: [{
+      turnId: "t1", sessionId: "session-1",
+      turn: { _id: "t1", tenantId: "tenant-1", sessionId: "session-1", speakerRef: "spk:0", tStart: 0, tEnd: 5, text: "Hello." },
+      session: { _id: "session-1", tenantId: "tenant-1", sourceId: "source-1", title: "Fixture Session", date: "2026-01-15", status: { transcribe: "done", index: "done" } },
+    }],
+  };
+  return {
+    getCitation: async (_tenantId, claimId) => (claimId === "claim-1" ? fixtureCitation : null),
     ...overrides,
   };
 }
@@ -226,6 +245,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     ask: { tree: fakeTreeStore(), askDeps: fakeAskDeps() },
     evalRuns: fakeEvalRunStore(),
     brain: fakeBrainReadDeps(),
+    citations: fakeCitationsDeps(),
     graph: fakeGraphReadDeps(),
     calendar: fakeCalendarReadDeps(),
     meetingCandidates: fakeMeetingCandidatesDeps(),

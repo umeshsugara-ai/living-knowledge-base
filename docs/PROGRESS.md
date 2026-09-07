@@ -2,12 +2,26 @@
      Edit .goal/catalogue.json (probes / manual downgrades), then re-run. -->
 # Progress — what actually exists
 
-**20.2% of the 57-feature product catalogue.**
-Machine-derived alone: 28.9%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
+**21.9% of the 57-feature product catalogue.**
+Machine-derived alone: 30.7%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
 
 Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `9acec0d56307` —
 if that changes, a probe was edited and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
+
+> **UNCOMMITTED — `apps/api/src/routes/citations.ts` is not in git, so nobody else can reproduce this score**
+
+> **UNCOMMITTED — `apps/api/src/routes/citations.test.ts` is not in git, so nobody else can reproduce this score**
+
+> **EDITED SINCE COMMIT — `apps/api/src/fixtures.ts` no longer matches the version in git, so this score is not the one the repository supports**
+
+> **EDITED SINCE COMMIT — `apps/api/src/production.ts` no longer matches the version in git, so this score is not the one the repository supports**
+
+> **EDITED SINCE COMMIT — `apps/api/src/routes/stubs.ts` no longer matches the version in git, so this score is not the one the repository supports**
+
+> **EDITED SINCE COMMIT — `apps/api/src/server.ts` no longer matches the version in git, so this score is not the one the repository supports**
+
+> **EDITED SINCE COMMIT — `apps/api/src/store.ts` no longer matches the version in git, so this score is not the one the repository supports**
 
 Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (run 2026-09-07T01:58:41.367Z, content `78a2fc2b0743`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
@@ -17,7 +31,7 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 |---|---|---|---|---|---|---|
 | **A. LEARN — ingestion** | `██████░░░░░░░░░░░░░░` | 30.8% | 2 | 4 | 1 | 6 |
 | **B. REMEMBER — knowledge model** | `███████░░░░░░░░░░░░░` | 34.6% | 4 | 1 | 0 | 8 |
-| **C. REASON — ask & answer** | `█░░░░░░░░░░░░░░░░░░░` | 3.6% | 0 | 1 | 3 | 10 |
+| **C. REASON — ask & answer** | `██░░░░░░░░░░░░░░░░░░` | 10.7% | 1 | 1 | 2 | 10 |
 | **D. IMPROVE — the living loop** | `████░░░░░░░░░░░░░░░░` | 18.8% | 0 | 3 | 0 | 5 |
 | **E. PLATFORM — API & hosting** | `███░░░░░░░░░░░░░░░░░` | 14.3% | 0 | 2 | 0 | 5 |
 | **F. OPERATIONS automation** | `░░░░░░░░░░░░░░░░░░░░` | 0% | 0 | 0 | 0 | 2 |
@@ -55,7 +69,7 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 | C1 | POST /ask CRAG router (tree-search -> evaluator -> cited answer) | **PARTIAL** _(auto: REAL, lowered)_ | route POST /ask |
 | C2 | Ask AI UI (evidence mode, filters, history) | **MISSING** | page /ask (absent) |
 | C3 | Answer page (confidence, internal-vs-web sources, follow-ups) | **MISSING** | page /ask (absent) |
-| C4 | Evidence & Provenance Audit (claim -> turn -> recording) | **STUB** | route GET /citations/:claimId (501 stub) |
+| C4 | Evidence & Provenance Audit (claim -> turn -> recording) | **REAL** | route GET /citations/:claimId |
 | C5 | Answer Policy Builder (YAML + simulator + versions) | **MISSING** | no probe declared |
 | C6 | Conflicting Evidence Resolution | **MISSING** | no probe declared |
 | C7 | AI Answer Review Queue | **MISSING** | no probe declared |
@@ -76,7 +90,7 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 | D8 | Loss -> gap -> capture -> re-index -> re-run flywheel | **MISSING** | collection gaps (empty) |
 | E1 | Multi-tenant hosting | **MISSING** | collection tenants (empty) |
 | E2 | Auth, roles, permissions matrix, audit log | **PARTIAL** _(auto: REAL, lowered)_ | route GET /keys; page /settings |
-| E3 | Developer API + scoped keys + webhooks | **PARTIAL** | route POST /ask; route GET /sessions; route GET /sources |
+| E3 | Developer API + scoped keys + webhooks | **PARTIAL** | route POST /ask; route GET /sessions; route GET /sources; route GET /citations/:claimId |
 | E4 | Setup wizard | **MISSING** | no probe declared |
 | E5 | Enterprise Security & Compliance (SSO/MFA, residency, DLP) | **MISSING** | no probe declared |
 | E6 | Data retention / archive / exclusions / quotas | **MISSING** | collection media (empty) |
