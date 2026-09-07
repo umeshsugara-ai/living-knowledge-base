@@ -26,7 +26,8 @@ import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
-import type { HealthDeps, HealthReport } from "./routes/health.js";
+import type { HealthDeps } from "./routes/health.js";
+import { probeMongoHealth } from "./health-probe.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { CalendarReadDeps } from "./routes/calendar.js";
@@ -249,22 +250,21 @@ export function createMongoKeysDeps(): KeysDeps {
  * throwing — the route's whole job is to report an unhealthy backend, not crash reporting it. */
 export function createMongoHealthDeps(): HealthDeps {
   return {
-    async checkHealth(): Promise<HealthReport> {
-      const db = getDb();
-      try {
-        await db.command({ ping: 1 });
-      } catch {
-        return { db: "error", collections: {} };
-      }
-      const index = JSON.parse(readFileSync(SCHEMA_INDEX_PATH, "utf8")) as Record<string, unknown>;
-      const names = Object.keys(index).filter((k) => !k.startsWith("$"));
-      const collections: Record<string, number> = {};
-      await Promise.all(
-        names.map(async (name) => {
-          collections[name] = await db.collection(name).countDocuments();
-        }),
-      );
-      return { db: "ok", collections };
-    },
+    checkHealth: () =>
+      probeMongoHealth(
+        () => getDb().command({ ping: 1 }),
+        async () => {
+          const db = getDb();
+          const index = JSON.parse(readFileSync(SCHEMA_INDEX_PATH, "utf8")) as Record<string, unknown>;
+          const names = Object.keys(index).filter((k) => !k.startsWith("$"));
+          const collections: Record<string, number> = {};
+          await Promise.all(
+            names.map(async (name) => {
+              collections[name] = await db.collection(name).countDocuments();
+            }),
+          );
+          return collections;
+        },
+      ),
   };
 }
