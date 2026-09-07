@@ -1,182 +1,190 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-07, Mode B safety net)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-08, Mode B safety net)
 
-> Previous sweep stamp read `2026-09-07T17:41:28Z` (commit `dc88316`). Range verified by
-> `git log dc88316..HEAD`, not by trusting timestamps: **6 commits** confirmed —
-> `5a535c1`, `c2a5a9f`, `277c021`, `40f0666`, `b2d7618` (this sixth commit,
-> `catalogue-cli-clean-check`/ISS-064, landed concurrently WHILE this sweep was running — its
-> checker dispatch and this sweep were explicitly launched in parallel, same turn, per
-> `qa/.last-tick`'s final line; it is included below since it closed before this sweep's findings
-> were written).
+> Last sweep stamp read `2026-09-07T18:25:00Z` (commit `67ac5e1`). Range verified by
+> `git log 67ac5e1..HEAD`, not by trusting timestamps (this session's wall clock showed skew
+> all session): **5 commits** — `cb4aaf2`, `fb21a8d`, `3245b5c`, `7e30f44`, `fe5eb5e`. The
+> fifth (`fe5eb5e`, health-route) landed **while this sweep was running**, dispatched
+> concurrently per `qa/.last-tick`'s own note — re-read `git log` mid-sweep rather than
+> assuming it had or hadn't landed, per this sweep's brief, and it had by the time checks
+> below ran.
 
-## Terminal state: CLEAN
+## Terminal state: FINDINGS: 2
+
+One real ledger bug fixed in place, one new medium-severity finding filed (health-route
+robustness gap). No bypass, no goal-drift, no stale enforcement.
 
 ### 1 — Bypass detection + pair-state reconciliation
 
-**No bypass.** Five units landed in range, each a manifest + matching-cycle verdict, all re-read
-from disk (not trusted from any prior session's prose):
+**No bypass.** All 5 units in range have a matching-cycle manifest + verdict pair, re-read from
+disk:
 
 | commit | unit | manifest Fix cycle | verdict Cycle checked | Status |
 |---|---|---|---|---|
-| `5a535c1` | orphaned-scratch-tenant-cleanup | 1 | 1 | checked-PASS |
-| `c2a5a9f` | bom-and-unreadable-evidence | 1 | 1 | checked-PASS |
-| `277c021` | empty-manual-verdict-refusal | 1 | 1 | checked-PASS |
-| `40f0666` | tracker-audit-g1-gate | 1 | 1 | checked-PASS |
-| `b2d7618` | catalogue-cli-clean-check | 1 | 1 | checked-PASS |
+| `cb4aaf2` | contract-adoption-backfill (4 contracts) | — (checker-direct action) | — | reopen closed (ISS-006) |
+| `fb21a8d` | housekeeping pass (ISS-007/011/017/020/021/057) | — (checker-direct action) | — | 6 issues closed |
+| `3245b5c` | knowledge-graph-accessors | 1 | 1 | checked-PASS |
+| `7e30f44` | citations-route | 1 | 1 | checked-PASS |
+| `fe5eb5e` | health-route | 1 | 1 | checked-PASS |
 
-Full-repo scan of every manifest's Status line (`grep -riE "^(## )?Status:" qa/manifests/*.md`)
-found **zero** manifests stuck at `ready-for-check` — every one reads `checked-PASS` or
-`superseded-by`. `catalogue-cli-clean-check.md` (line 97: `**Status: checked-PASS**`) was the
-one genuinely in flight at sweep start — verified it landed with a real, independently-run
-verdict (`qa/verdicts/catalogue-cli-clean-check.md`: fresh mutation test performed by the
-checker itself — reverted `watchedInputsClean()` to the old two-path list, confirmed via `diff`
-against a backup that content genuinely changed, re-ran, got exactly 12/13 with the new
-regression test reddening, restored, 13/13 green again) — not raced, not double-checked.
-
-`qa/.last-tick`'s final line explicitly records dispatching the checker for this unit **and**
-this Mode B sweep in parallel, same turn — the correct call per "the maker's own dispatched
-subagent gets first claim," and this sweep did not attempt its own Mode A check on the same unit
-while that was live.
+Full-repo scan of every manifest's Status line found **zero** stuck at `ready-for-check`
+(`catalogue-input-integrity.md` false-positived on the literal string in its own prose at
+line 133 — its real Status line, 129, reads `checked-PASS`; confirmed by direct read, not
+just grep).
 
 ### 2 — Feedback-inbox fold-in
 
-`qa/feedback-inbox.md` — 4 entries, all 4 carry an explicit `— folded <date>` marker (grep count
-of "folded" = 4, matching the entry count). **No new entries since the last sweep, nothing
-unfolded.**
+One new entry since the last sweep (2026-09-08, PATTERN note on false-green regression tests
+that re-derive their own inline check instead of calling the production function). **Found
+already folded** (marked `— folded 2026-09-08`) in the working tree — but that edit sits
+**uncommitted**, bundled with the concurrently-running health-route unit's own uncommitted
+files (`apps/api/src/fixtures.ts`, `production.ts`, `server.ts`, `store.ts`,
+`docs/PROGRESS.md`, `.goal/goal.json`, `qa/.last-tick`, `qa/evidence/.../preflight.json`) —
+all now folded into `fe5eb5e` except `feedback-inbox.md` itself, which is still uncommitted at
+sweep time. Verified genuine and actionable (content is specific, cites 3 real ISS ids, states
+a concrete rule for future test-writing) — **not re-editing it** since it is already correctly
+folded; left for the unit that owns those uncommitted files to commit, to avoid this sweep
+bundling unrelated in-flight work into its own narrow commit.
 
-### 3 — Ledger integrity (`node scripts/tracker-audit.mjs`, full + `--gate g1`)
+### 3 — Ledger integrity
 
 ```
-$ node scripts/tracker-audit.mjs
+$ node scripts/tracker-audit.mjs   (before fix)
 tracker-audit: 2 finding(s)
-  G2 unverified: 13 issue(s) are "fixed" with no verified_date — ISS-036, ISS-053, ISS-054,
-  ISS-056, ISS-058, ISS-059, ISS-060, ISS-061, …
+  G2 unverified: 22 issue(s) are "fixed" with no verified_date
   G3 stale sweep: qa/.last-sweep predates HEAD by 0.0 day(s)
 
 $ node scripts/tracker-audit.mjs --gate g1
 tracker-audit: OK (gate G1)
 ```
 
-**G1 clean.** **G2 is the expected shape** — `fixed`-not-yet-`verified` rows per the ledger's own
-rule (`fixed → verified` only on a *later* re-check); own count (below) confirms 16 `fixed` total.
-**G3 is transient-expected** — resolves the moment this sweep's `.last-sweep` commit lands.
+**G1 clean, G2 expected shape, G3 transient** (resolves once this sweep's commit lands) — same
+as every prior sweep.
 
-**G1-gate refactor confirmed sound.** `scripts/tracker-audit.mjs` is now a 30-line thin CLI
-(`main()` → `parseGateArg` + `audit` + `filterByGate` from `scripts/lib/tracker-audit.mjs`, the
-110-line module holding the real G1/G2/G3 logic) — wired into `pnpm lint:structure` via
-`node scripts/tracker-audit.mjs --gate g1` (confirmed present at `package.json:16`) and it
-**passes** as part of a full green `pnpm lint:structure` run (lint-loc, lint-dirsize, lint-root,
-lint-dupes, lint-migrations, snapshot --check, tracker-audit gate G1, depcruise — all OK, 242
-modules / 712 deps cruised, zero violations). `--json` mode still supported for programmatic
-consumers.
+**Real ledger bug found and fixed.** `fb21a8d`'s housekeeping pass appended new `status` +
+`fixed_date` (+ `fixed_evidence`) fields to 3 rows (**ISS-017, ISS-020, ISS-021**) without
+removing the old `status: "open"` / `fixed_date: null` fields already on those lines —
+producing objects with **two `status` keys and two `fixed_date` keys each**. `JSON.parse`
+silently resolves this to the last value (so `tracker-audit.mjs` and every prior "0 invalid
+lines" claim were not lying — Node/Python's parsers both accept duplicate keys and keep the
+last), but it is genuinely malformed JSON (RFC 8259 §4 requires unique names) and a
+stricter consumer would trip on it. Confirmed via a direct Python scan of raw key occurrences
+per line (not just per-line `json.loads`, which hides the duplication) — 3 lines, all 3 in the
+same commit, same duplicated pair of keys each time.
 
-**Ledger status vocabulary re-confirmed consistent** across `scripts/lib/tracker-audit.mjs:73`
-(`if (r.status === "fixed" && !r.verified_date)`) and `.claude/hooks/mc-sessionstart.ps1:8`
-(`'"status":\s*"(open|Open)"'`) — unchanged, no conflation, no third consumer added.
+**Fixed directly** (this is the "real ledger bug" carve-out in this sweep's brief, not a
+routine content edit): re-parsed each of the 3 lines with `json.loads` (which correctly
+resolves to the final/intended values) and rewrote each line as clean, single-key JSON with
+the same resulting values — no data lost, no field content changed, only the duplicate keys
+collapsed. Re-validated: **0/70 invalid lines, 0 duplicate-key lines** across the whole ledger
+(both a per-line `json.loads` pass and a raw key-occurrence scan).
 
-**JSON-validity re-check (superseding a stale open finding):** re-parsed all 69 `issues.jsonl`
-lines with both `node`'s `JSON.parse` and `python3 json.loads` — **0 invalid lines**, including
-line 17 (ISS-017's row), which **ISS-020 claims is broken** ("an unescaped backslash... breaks
-strict JSON parsing"). Direct re-test of ISS-020's own cited evidence command
-(`python3 -c "import json; [json.loads(l) for l in open('qa/issues.jsonl')]"`) raised **no
-error** this sweep. ISS-020 appears to be a stale/false-positive finding as currently written —
-flagged for the next hygiene unit to verify and close, not closed unilaterally by this sweep
-(the sweep does not edit the ledger's own findings without a matching build/verify unit).
+**Spot-checked 2 of the 6 `fb21a8d` closures independently** (per this sweep's brief, not
+trusting the commit message):
+- **ISS-017** (verdict wording): `qa/verdicts/real-llm-scorer.md` read directly — line 3 now
+  reads `**VERDICT: PASS**` (was `**Result: PASS**` per the original finding). Fixed as
+  claimed.
+- **ISS-057** (missing Cycle-checked line): `qa/verdicts/regenerate-year-migration.md` read
+  directly — `**Cycle checked: 1**` present at line 4. Fixed as claimed. (Its verdict still
+  opens `**Result: PASS**`, not `VERDICT: PASS` — correct, that file was never in ISS-017/021's
+  wording-fix batch, only in ISS-057's separate cycle-line fix.)
+- **D-012** (`ISS-011`): `git log -p fb21a8d -- docs/DECISIONS.md` shows a pure append (no
+  earlier entry's lines touched) — genuinely written via `append_decision.ps1`'s pattern, no
+  `Approved-by` needed since it authorizes no enforcement-path or ARCHITECTURE.md change
+  (confirmed: "Changes-authorized: none" in the entry itself).
 
-**Own count, verified by direct scan:** 69 total — **11 open, 16 fixed, 42 verified.** Arithmetic
-checks out against last sweep's 16/11/42: exactly the 5 units this range closed (ISS-067, ISS-040,
-ISS-036, ISS-053, ISS-064) moved `open → fixed`, net effect −5 open / +5 fixed, verified count
-unchanged (none of the 16 `fixed` rows had a *later* re-check land in this range).
+**Own count:** 70 total (69 + this sweep's ISS-070) — **4 open, 24 fixed, 42 verified.**
 
 ### 4 — Enforcement liveness
 
-204 commits on HEAD (not zero-history). `.claude/settings.json` hooks present in `-File` form
-(D-010, 6 `.ps1` references) — unchanged since last sweep. `qa/loop.md` present with
-`Stop:`/`Human gate:` lines, uncontradicted by `qa/adapter.json` (absent — default coding
-adapter, unchanged). Loop-design triad: **can it spin** — no, this range's Stop signal was five
-real manifest close-outs, not busywork. **Can it Goodhart the verifier** — no; every unit this
-range was checked by the checker's own mutation-tested reproduction (see #1 and the
-catalogue-cli-clean-check verdict's independent mutation run), not a maker self-report. **Can it
-run a wrong answer to completion** — no; every `done_check` this range was at least as strong as
-its criterion (the ISS-064 fix specifically *closed* a done_check gap that had been weaker than
-its criterion). **Live.**
+210 commits at range start, 211 now (not zero-history). 6 `.ps1` hook references in
+`.claude/settings.json`, unchanged. `qa/loop.md` present, uncontradicted by `qa/adapter.json`
+(still absent — default coding adapter). Loop-design triad: **can it spin** — no, 5 real unit
+close-outs. **Can it Goodhart the verifier** — no; every unit this range was independently
+mutation-tested by the checker itself (citations 404-branch, knowledge-graph accessor pattern
+match + duplicate-accessor grep, health-route 503-branch), not a maker self-report. **Can it
+run a wrong answer to completion** — no; `done_check`s matched or exceeded their criteria.
+**D-012 append-only compliance** — confirmed above. **Live.**
 
 ### 5 — Goal coverage
 
-`.goal/goal.json`: 35 tasks / 26 done / 74% — unchanged from last sweep (the `updated` timestamp
-and `analytics.velocity_per_day`/`eta_days` moved as part of a routine deterministic recompute,
-`git diff .goal/goal.json` shows no task-row edits). All five units this range are ledger-driven
-with no goal task (each is a hygiene/robustness fix on a shared primitive, not a T-* closure) —
-confirmed still true. No new missing requirement surfaced; no `GRILL:` row.
+`.goal/goal.json`: 35 tasks, unchanged task-row set this range (only the routine deterministic
+recompute fields moved — `git diff .goal/goal.json` shows no task-row edits). **All 5 units
+this range are Phase-0-finish roadmap items with no T-* task** (`citations-route`,
+`knowledge-graph-accessors`, `health-route` all explicitly say "Goal task: none — plan §10
+U0.x" in their manifests), matching the pattern already established for hygiene/robustness
+units in prior ranges. **Gap, not a bug:** plan §10's U0.7–U0.10 roadmap items are tracked only
+in the plan document and this sweep's queue, never as `T-*` rows in `goal.json` — so
+`goal.json`'s 74%-done figure does not reflect Phase-0-finish progress at all. Not editing
+`goal.json` myself (not certain enough of the right task-ID scheme to invent one
+unilaterally) — flagging for a human or the next maker tick to decide whether U0.7–U0.10
+deserve `T-*` rows or stay plan-only.
 
 ### 6 — Goal-drift / re-grill
 
-`qa/.regrill-due` absent. No `qa/gates/` directory — no gate to have been answered off-disk.
-Reopen-power: no unit re-PASSed twice on the same evidence this range. No `STALLED`/`EXHAUSTED`
-tick since the last sweep — all ticks in range are `ADVANCED`. North star unchanged since the
-last contract amendment. **CLEAN.**
+`qa/.regrill-due` absent. No `qa/gates/` directory. No unit re-PASSed twice on the same
+evidence. All ticks in range `ADVANCED`, none `STALLED`/`EXHAUSTED`. North star unchanged.
+**CLEAN.**
 
 ### 7 — Silent-failure hunt
 
-Read the touched surface in range: `scripts/lib/evidence.mjs`, `scripts/lib/catalogue.mjs`,
-`scripts/lib/tracker-audit.mjs` (new file), `scripts/catalogue-cli.test.mjs`,
-`scripts/catalogue-score.mjs`, `scripts/catalogue.test.mjs`, `package.json`. **Zero hits.**
+Read the touched surface: `apps/api/src/routes/citations.ts`, `apps/api/src/routes/health.ts`,
+`apps/api/src/store.ts`'s `createMongoCitationsDeps()`/`createMongoHealthDeps()`,
+`packages/db/src/collections/{topics,speakers,decisions,orgs,graph-edges}.ts`.
 
-- `evidence.mjs`'s BOM-strip fix (ISS-040) pushes unreadable candidates into a returned
-  `unreadable[]` array that the caller renders as a warning line — the exact opposite of a
-  swallow (previously it silently `continue`d past unparseable files with no record at all).
-- `catalogue.mjs`'s guard fix (ISS-036) changed a truthy check (`f.manual?.verdict`) to a
-  key-presence check (`f.manual && "verdict" in f.manual`) so an empty-string verdict now hits
-  the same vocabulary-refusal path as any other bad value — closes a silent-bypass, doesn't add
-  one.
-- `tracker-audit.mjs`'s two `try {} catch { /* not a git checkout */ }` blocks are deliberate,
-  narrow control flow (falling back to a documented "unknown"/skip state, commented inline), not
-  error-swallowing of a failure the caller needed.
-- No lost-cause re-raise, no unawaited/untimed side effect introduced anywhere in this surface.
+- `citations.ts` / `createMongoCitationsDeps()`: clean. Per-evidence-item `?? null` is
+  disclosed, intentional partial-failure visibility (contract invariant), not a swallow.
+- The 5 new `packages/db` accessors: clean, 3-line pattern each, no error handling to get
+  wrong.
+- **`createMongoHealthDeps()` — one real finding, filed as `ISS-070` (medium).** The
+  `try/catch` in `checkHealth()` wraps only `db.command({ping:1})`. The subsequent
+  `Promise.all(names.map(name => db.collection(name).countDocuments()))` and the
+  `readFileSync(SCHEMA_INDEX_PATH)` call sit **outside** any try/catch, and
+  `apps/api/src/routes/health.ts`'s handler has no try/catch of its own. Repo-wide grep for
+  error-handling middleware/`asyncHandler` in `apps/api/src` found **zero matches** — this is
+  the repo's existing pattern everywhere (citations.ts and most other routes share it), so it
+  is not new-to-this-range recklessness. But `health.ts`'s own file-header comment specifically
+  claims "the route's whole job is to REPORT an unhealthy backend, never crash reporting it" —
+  a claim that is only true for the ping branch. A transient failure between a successful ping
+  and the count loop turns the one route ops depends on being answerable into an unhandled
+  promise rejection. Not blocking (health-route already shipped `checked-PASS` on its own
+  contract, which this doesn't violate), but real and worth a quick follow-up unit.
 
-Also specifically verified per this sweep's brief: the `orphaned-scratch-tenant-cleanup` unit's
-production Mongo delete. **Independently re-queried the live database** (read `.env` for
-`MONGODB_URL`, `db.collection("lkb").collection("tree_index")`, ran from `packages/db` so the
-`mongodb` driver resolved) rather than trusting the manifest:
+## Standing issues, unchanged this sweep
 
-```
-Total tree_index documents: 1
-{"_id":"6a9d7b9033ea455b49422cb8","tenantId":"toc"}
-Remaining chk060-A-* scratch docs: 0
-```
-
-Exactly 1 document (the real `toc` tenant), zero scratch-tenant documents remain — the manifest's
-claim holds under independent live re-verification, not just a re-read of its own evidence.
-
----
-
-## Standing issue, unchanged this sweep
-
-**ISS-006** (segregation of duties — high, open since prior sweeps): `ingest-indexing-pipeline.md`
-was formally adopted before this range began; `whatsapp-ingestion-first-slice.md`,
-`web-whatsapp-tab.md`, `post-review-fixes-2026-09-06.md` are still maker-drafted with no checker
-adoption recorded. Untouched this sweep — no commit in range touches these three contracts.
+ISS-050/051/052 (all low, `catalogue-progress-score`) — explicitly ruled "FILE, don't FIX"
+(sabotage-of-the-instrument class, zero measured payload) by prior checker rulings. Recorded,
+not chased.
 
 ---
 
 ## Top-3 recommended next units
 
-1. **`contract-adoption-backfill`** (closes **ISS-006**, high) — *checker work.* Adopt-or-amend
-   `whatsapp-ingestion-first-slice.md`, `web-whatsapp-tab.md`, `post-review-fixes-2026-09-06.md`
-   the same way `ingest-indexing-pipeline.md` was done. Highest severity in the open backlog and
-   the oldest standing item — untouched for multiple sweeps now.
-2. **`manifest-close-out-and-contract-shape-sweep`** (closes **ISS-017** + **ISS-055**, both
-   medium) — `real-llm-scorer.md`'s manifest close-out gap and four contracts still carrying no
-   append-only amendment log (blocks routine amendment/prune on any of them). Re-checked this
-   sweep: still open, still the next-highest severity after ISS-006.
-3. **`ledger-hygiene-pass`** (closes **ISS-020** + **ISS-057**, both low) — this sweep re-tested
-   ISS-020's own cited evidence command and got **no error**: `qa/issues.jsonl` parses clean end
-   to end on both `node` and `python3 json.loads` (0/69 invalid lines). Verify that finding is
-   genuinely stale (not just transiently fixed) and close it if so; separately,
-   `qa/verdicts/regenerate-year-migration.md` still carries no `Cycle checked: N` line (ISS-057).
-   Small, low-risk, clears two of the longest-standing low-severity rows.
+The QA meta-backlog is now effectively empty (4 open issues, 3 of them explicitly
+file-don't-fix, 1 brand new and small) — per this sweep's own brief, recommendations point
+back at the actual product roadmap (plan §10) rather than more ledger hygiene:
 
-Also queued, low, unchanged from last sweep: **ISS-007**, **ISS-011**, **ISS-021**, **ISS-050**,
-**ISS-051**, **ISS-052**.
+1. **`GET /search`** (closes the second half of **U0.7** — plan §10) — *maker work.* Lexical
+   retrieval over `turns`/`session_pages`, returning `/ask`'s citation shape. The plan
+   explicitly names this as unblocking the hybrid-merge scorer and the Ask/Search UI, and it's
+   the one piece of U0.7 this range's `health-route` unit deliberately left undone (manifest:
+   "this unit builds only the `/health` half"). Natural next pick — same `stubs.ts` pattern
+   `citations-route` and `health-route` just established twice.
+2. **U0.10 — Honest eval baseline** (plan §10) — *maker work, flagged explicitly critical in
+   the plan itself*: "redo T-021/T-022 against a real LLM... record the real recall@5 and judge
+   agreement **even if they fail the 0.85 target**... do not skip to save a week — without it
+   Phase 1 is unfalsifiable." Phase-0-finish is otherwise essentially done (U0.5–U0.9 all
+   closed this range and prior ones); this is the one remaining item standing between here and
+   Phase 1 (the vector layer), and skipping it is the exact mistake the plan calls out by name.
+3. **`health-route-error-hardening`** (closes **ISS-070**, medium) — *maker work, small.* Wrap
+   `createMongoHealthDeps()`'s post-ping `Promise.all`/`readFileSync` in its own try/catch
+   (fall back to `{db:"error", collections:{}}` matching the ping branch's own contract), or
+   wrap the route handler itself. Cheap, low-risk, closes the one real gap this sweep found in
+   an already-shipped unit before it causes a real ops incident.
 
-ISS-036, ISS-040, ISS-053, ISS-064, ISS-067 (last sweep's queue) are now closed/fixed by the five
-units this range covers — removed from the queue.
+Also worth a human decision (not queued as a unit): whether plan §10's U0.7–U0.10 roadmap items
+should get `T-*` rows in `goal.json` (see check 5) — currently plan-only, so `goal.json`'s 74%
+figure doesn't move as Phase-0-finish work lands.
+
+ISS-006, ISS-007, ISS-011, ISS-017, ISS-020, ISS-021, ISS-036, ISS-053, ISS-057, ISS-064,
+ISS-067 (recent-range fixes) removed from previous queues — closed/fixed, superseded by this
+sweep's own re-derivation above.
