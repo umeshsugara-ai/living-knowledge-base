@@ -89,6 +89,32 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
   untouched clone — ISS-039. And the `--check` refusal itself had no test: neutering it left all 29
   green — ISS-038.)*
 
+### Added by /checker cycle 4 — effective from cycle 5 / the next unit that touches this scorer
+
+- **[I12] A gate is pinned by its BEHAVIOUR, not by its source text.** Every refusal this scorer
+  relies on must have a test that **runs the thing** — for the CLI, spawn
+  `node scripts/catalogue-score.mjs --check` after a real tamper and assert the **exit status**;
+  for `trustOf`, assert the exact trust state against HEAD, including the **staged-but-uncommitted**
+  case. An `assert.match` over the source file does not count. *(Measured cycle 4: the ISS-038 test
+  is a source-text assertion, so changing only `process.exit(2)` → `process.exit(0)` in the refusal
+  branch left 19/19 + 33/33 green while restoring the full +19.3-point lever with `--check` exit 0
+  and `lint:structure` exit 0 — the regex `/process\.exit\(2\)/` still matched the two other exits
+  in the same file. Separately, rewriting `git diff --quiet HEAD --` to `git diff --quiet --` (index,
+  not HEAD) survived the whole suite, and with it a bare `git add` restores the lever with no banner.
+  ISS-038, ISS-042.)* No fixture repo is required for either: this repo is the fixture, and the
+  throwaway-git-repo helper already exists.
+- **[I13] EVERY input that can raise the score carries the I11 trust check — not just the evidence
+  file.** In particular `.goal/catalogue.json`, which defines all 57 probes and every human
+  downgrade, must have its trust state and content fingerprint printed in `docs/PROGRESS.md` and
+  must make `--check` refuse when it is not `committed`. A fingerprint printed into the document the
+  same run regenerates is visibility with no reviewer; only a refusal is a gate. *(Measured cycle 4,
+  the sixth layer and the largest lever in this chain: repointing the 19 probe-less rows at a
+  populated collection and nulling the 11 `manual` downgrades — no commit — moved the headline
+  20.2% → 62.3%, **+42.1 points**, with `--check` exit 0, `lint:structure` exit 0 and 19/19 tests
+  green. Halves: probes alone 53.5%, downgrade removal alone 28.9%. Note I2 cannot see the second
+  half — REMOVING a downgrade is not an upgrade relative to the derived verdict, so the
+  one-directional upgrade guard has nothing to object to. ISS-041.)*
+
 ## Honest limits of this instrument (disclosed, not defects)
 
 - **Probes are hand-authored**, so the catalogue can be wrong by omission: an under-specified probe
@@ -124,6 +150,11 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
 14. *(I11, from cycle 4)* `git checkout --` the evidence file on a CRLF-configured clone
     (`core.autocrlf=true`) → the sha printed in `docs/PROGRESS.md` must not change and `--check`
     must stay exit 0.
+15. *(I12, from cycle 5)* Change ONLY `process.exit(2)` to `process.exit(0)` inside the `--check`
+    trust-refusal branch → a test must fail. Likewise rewrite `git diff --quiet HEAD --` to
+    `git diff --quiet --` → a test must fail.
+16. *(I13, from cycle 5)* Repoint the probe-less rows in `.goal/catalogue.json` at a populated
+    collection without committing → `--check` and `pnpm lint:structure` must refuse, not pass.
 
 ## Amendment log
 
@@ -132,3 +163,4 @@ scoring) · `scripts/catalogue-score.mjs` (CLI + generated doc) · `docs/PROGRES
 | 2026-09-07 | START | Initial contract, I1–I8, drafted by the maker | No document stated this unit's acceptance criteria; cycle-1 checker had to re-derive them (cycle-1 verdict, commit `b5596e6`) |
 | 2026-09-07 | routine (tighten) | /checker ADOPTED I1–I8 unchanged; ADDED I9 (scoring scale pinned + self-describing) and I10 (collection evidence bounded + attributable), effective cycle 3 | Cycle-2 check found two inflation levers I1–I8 do not reach: `POINTS` tampering (+8.3 pts, all gates green, doc misstates its own scale — ISS-034) and evidence-file substitution (+19.3 pts, all gates green — ISS-035). Both measured by execution. Tightening only; nothing weakened. |
 | 2026-09-07 | routine (tighten) | ADDED I11 (committed means CONTENT not path; sha must be line-ending-normalised; each such gate carries a test), effective cycle 4 | Cycle-3 check confirmed I9 and I10 are met, and found the next layer in the same place the last two were: the new `tracked` gate admits evidence on a path query, so tampering with the already-committed `preflight.json` in place restores the full +19.3-point lever with `--check` and `lint:structure` both green (ISS-037). Also ISS-039 (CRLF flips the printed sha, `--check` STALE on a clean clone) and ISS-038 (that gate had no regression test). Measured by execution. Tightening only; nothing weakened. |
+| 2026-09-07 | routine (tighten) | ADDED I12 (gate pinned by BEHAVIOUR — spawn the CLI and assert the exit status; trust asserted against HEAD including the staged case) and I13 (every score-raising input carries the I11 trust check, `.goal/catalogue.json` above all), effective cycle 5 | Cycle-4 check confirmed I11's content-vs-HEAD trust and its line-ending-normalised sha, but its "each such gate carries its own regression test" clause is not met: `process.exit(2)` → `process.exit(0)` in the refusal branch survives 19/19 + 33/33 and restores the +19.3-point lever (ISS-038), and `git diff --quiet --` (index, not HEAD) survives the suite too (ISS-042). And the sixth layer of the same pattern was found one input over: `.goal/catalogue.json` has no trust check at all, worth **+42.1 points** with every gate green (ISS-041). Measured by execution. Tightening only; nothing weakened. |
