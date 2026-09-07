@@ -7,6 +7,11 @@ import { sessions } from "./sessions.js";
 import { sources } from "./sources.js";
 import { turns } from "./turns.js";
 import { gaps } from "./gaps.js";
+import { topics } from "./topics.js";
+import { speakers } from "./speakers.js";
+import { decisions } from "./decisions.js";
+import { orgs } from "./orgs.js";
+import { graphEdges } from "./graph-edges.js";
 
 // @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
 sources();
@@ -18,6 +23,16 @@ turns();
 claims();
 // @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
 gaps();
+// @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
+topics();
+// @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
+speakers();
+// @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
+decisions();
+// @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
+orgs();
+// @ts-expect-error — tenantId is required; calling coll() with no argument must not compile.
+graphEdges();
 
 // The valid form typechecks fine (proves the accessors work, not just that they reject).
 export const validCalls = () => {
@@ -26,4 +41,9 @@ export const validCalls = () => {
   turns("toc");
   claims("toc");
   gaps("toc");
+  topics("toc");
+  speakers("toc");
+  decisions("toc");
+  orgs("toc");
+  graphEdges("toc");
 };
