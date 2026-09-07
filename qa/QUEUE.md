@@ -1,151 +1,132 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-07T~15:35Z, Mode B safety net)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-07T~12:35Z UTC, Mode B safety net)
 
-> Previous sweep: `2026-09-04T15:10:00Z` — **2.8 days stale**, which is itself what G3 in the new
-> `scripts/tracker-audit.mjs` was reporting. This sweep clears G3. Run in the same dispatch as the
-> Mode A check of `tracker-honesty` (PASS, cycle 1), after that verdict was written and committed.
+> Previous sweep: `2026-09-07T15:35:00Z` (per the stamp — this session's wall clock showed skew all
+> session, so the range was verified by `git log`, not by trusting that timestamp). Six commits
+> confirmed since `555dcb4` by `git log 555dcb4..HEAD`: `de81b8a`, `3d0c442`, `b7be919`, `41accce`,
+> `0c52bfa`, `ab8168c`, `3c6407f` (`3c6407f` lands after `ab8168c`, so seven total — all listed
+> below).
 
-## Terminal state: FINDINGS: 6
+## Terminal state: FINDINGS: 3
 
 ### 1 — Bypass detection + pair-state reconciliation
 
-**No bypass.** 27 commits since the last sweep stamp. Every feature commit resolves to a manifest
-*and* a matching-cycle verdict on disk:
+**No bypass.** Every commit in the range resolves to a manifest *and* a matching-cycle verdict on
+disk, re-checked against the manifest's own `Fix cycle` field, not assumed:
 
-| commit | unit | verdict cycle |
-|---|---|---|
-| `34eb5cb` | derived-input-trust | 2 ✅ |
-| `c07d474` | catalogue-progress-score | 2 ✅ |
-| `21909a8` | live-verify-protocol | 2 ✅ |
-| `5382ca5` | whatsapp-chat-view-speaker-names | 1 ✅ |
-| `0edf042` | api-server-env-config-fix | 2 ✅ |
-| `9c6ff41` | post-review-fixes-2026-09-06 | 1 ✅ |
-| `3a998d3` | ingest-indexing-pipeline | 1 ✅ |
-| `d568daa` | web-whatsapp-tab | 1 ✅ |
-| `b549f37` | whatsapp-ingestion-first-slice | 1 ✅ |
+| commits | unit | manifest Fix cycle | verdict Cycle checked | Status |
+|---|---|---|---|---|
+| `de81b8a` (fix) / earlier `a51b9c8` PASS | tracker-honesty | 1 | 1 (commit `a51b9c8`) | checked-PASS |
+| `3d0c442` (PASS+amend) / `b7be919` (fix) | claims-degradation-honesty | 1 | 1 | checked-PASS |
+| `41accce` (PASS+amend) / `0c52bfa` (fix) | tenant-scoped-writes | 1 | 1 | checked-PASS |
+| `ab8168c` (PASS) / `3c6407f` (fix) | indexSession-insert-confinement | 1 | 1 | checked-PASS |
 
-`738b6df` / `f554dfa` are hook changes carrying their own Lab-Protocol authorisation (D-010, D-011);
-`7f1df0d`, `f51f490`, `5974533`, `527d8f7`, `5dd77e5`, `ce15a02`, `67217d9`, `b5596e6`, `f2e9927`,
-`fbda37b`, `cd9e320`, `d43f3ab`, `0f18dc9`, `b60353b` are qa/ledger/housekeeping.
+Every `qa/manifests/*.md` in the repo reads `checked-PASS` or `superseded-by` — **zero manifests
+pending check.** No `ready-for-check` orphan, no verdict lagging its manifest's cycle.
 
-**Handshake state:** every `qa/manifests/*.md` reads `checked-PASS` or `superseded-by`, except
-`tracker-honesty.md` at `ready-for-check` — whose PASS verdict was written minutes earlier in this
-same dispatch. **Close-out pending on that one unit only, and it is minutes old, not a gap.**
+**Ledger cross-check:** manifests' claimed `Issues addressed` (ISS-056, ISS-060, ISS-061) all carry
+a matching `fixed_date: 2026-09-07` and a `checker_verdict`/`fixed_evidence` note citing the actual
+Mode A re-derivation (mutation testing + a live two-tenant proof against the real database for
+ISS-056/ISS-060). None was closed on the maker's say-so.
 
-**Maker liveness — FINDING (high).** `qa/.last-tick` last stamped `2026-09-04T14:39:19Z`, three days
-old, backlog non-empty (9 pending tasks, 11 open issues), no `qa/.paused`. Real maker work *has*
-happened since — which makes this worse, not better: the maker is running and not stamping, so the
-one file liveness is supposed to be read from says dead. → **ISS-054**.
+**ISS-066 filed correctly.** The Mode A check of `indexSession-insert-confinement` (commit
+`ab8168c`) found and filed a new gap two commits before HEAD: `assertAllCallsConfined` doesn't
+inspect `$unset`, so a tenantId-stripping mutation via `$unset` (vs. reassignment via `$set`) would
+slip through undetected. Correctly scoped **medium** — the evidence itself says latent, not live
+(`indexSession`'s real code has no `$unset` call today).
 
-### 2 — Feedback-inbox fold-in
+### 2 — Feedback-inbox fold-in — one gap found and closed this sweep
 
-All four `qa/feedback-inbox.md` entries carry an explicit `— folded <date>` marker with the reason
-(three folded 2026-09-03 into `ingestion-source-seam` / `TASKS.md`, one recorded as reinforcing the
-existing D-008/T-019 provider-chain design with no amendment needed). **Nothing unfolded. CLEAN.**
+Three of four entries already carried an explicit `— folded <date>` marker. **The fourth (dated
+2026-09-07, maker, ISS-056-unit PATTERN note) did not**, despite the substance already being ruled
+on in `qa/contracts/catalogue-progress-score.md`'s amendment log (commit `3d0c442`, two commits
+before HEAD): I13/I14 upheld unchanged, the workflow-harm complaint sustained separately as
+**ISS-058** (open, medium — split `catalogue-score --check` out of `lint:structure` into its own
+commit/CI-gated `lint:score`). **Folded now** with the ruling cited and commit-pinned — this closes
+the fold-in gap without touching the ruling itself (routine documentation, not a contract change).
 
-### 3 — Contract staleness + shape
+### 3 — Ledger integrity (`scripts/tracker-audit.mjs`)
 
-No criterion found referencing a removed feature, and no contradiction against a newer amendment.
-But the *shape* check fails on four files: **`whatsapp-ingestion-first-slice`, `web-whatsapp-tab`,
-`ingest-indexing-pipeline`, `post-review-fixes-2026-09-06` carry no append-only amendment log at
-all** — so no adoption, amendment or prune has ever been recorded against them. → **ISS-055**.
+Ran it fresh (not trusted from a pasted result): **G1 clean** (trackers agree), **G2: 1 finding**
+— `ISS-056`, `ISS-060`, `ISS-061` are `fixed` with `verified_date: null`. This is the *expected*
+shape for issues closed by a Mode A PASS minutes-to-hours ago, not a defect: `verified_date` moves
+only on a **later, separate** re-check per the ledger's own rule (`fixed → verified` is not
+same-cycle). Not queued as an issue; flagged here so the next sweep knows to look for
+`verified_date` on these three rather than re-deriving them from scratch. **G3: was stale by the
+raw stamp comparison (this session's clock skew), cleared by re-stamping below** — the actual
+commit-range check (§1) is what settled bypass detection, not the G3 arithmetic.
 
-**And this exposed a live recurrence of a closed issue — see reopen-power below.**
+**Also corrected this sweep, off the ledger's own contradiction:** `ISS-054` ("maker asleep",
+filed by the prior sweep against a `.last-tick` stamped `2026-09-04`) was still `status: open`.
+`qa/.last-tick`'s live tail now reads through `2026-09-07T12:20:57Z` — 4 ticks, continuous, across
+exactly the units this sweep verified. The liveness problem the issue named is resolved; left it
+`fixed` (not `verified`) rather than silently dropping it, with the tick evidence quoted in the
+ledger row.
 
-### 4 — Enforcement liveness
+### 4 — Goal coverage
 
-Repo has commits (HEAD `a51b9c8`). Hooks registered and in the `-File` form D-010 mandates; D-006
-authorises the mc wiring with `Approved-by: Umesh`, so the approval question is settled and is not
-re-asked. `qa/loop.md` present, `Stop:` line at :41, `Human gate:` line at :50, no `qa/adapter.json`
-contradicting it. **Loop-design triad:** *can it spin* — no, the Stop line reads real progress
-signals (units closed, backlog empty). *Can it Goodhart the verifier* — materially reduced this
-week: `catalogue-progress-score` → `derived-input-trust` was a five-cycle campaign that ended with
-the score un-inflatable without a commit, and the honest number (20.2%) replacing 79%. *Can it run
-a wrong answer to completion* — the `done_check`-vs-criterion gap is exactly what the Mode A check
-in this dispatch found and fixed in T-021/T-022 (a PASS against a scoped-down contract had been
-closing a task whose own text named a stronger deliverable). **Live.**
+`.goal/goal.json`: 26/35 done, 74%, 9 pending (`T-007`, `T-008`, `T-011`, `T-013`–`T-015`, `T-021`,
+`T-022`, `T-028`). Nothing in this range changed goal-task shape — `tenant-scoped-writes` and
+`indexSession-insert-confinement` are ledger-driven units with no goal task (correctly, per their
+own manifests: "Goal task: none"). No new missing requirement; no `GRILL:` row.
 
-### 5 — Goal-coverage gap analysis
+### 5 — Goal-drift / re-grill (check 6)
 
-North star Phase-1 exit: *"POST /ask over the 23 TOC sessions returns speaker+timestamp-cited
-internal answers, with web-fallback for off-corpus questions."*
+`qa/.regrill-due` absent. No unit re-PASSed twice on the same evidence (reopen-power untouched this
+sweep — nothing met its bar). No `STALLED`/`EXHAUSTED` tick since the last sweep (all four ticks in
+range are `ADVANCED`), so no `qa/debug/` report is owed. `qa/gates/` still doesn't exist as a
+directory — no gate to have been answered off-disk. **CLEAN.**
 
-| requirement | status | evidence |
-|---|---|---|
-| 23 TOC sessions ingested | **covered** | independently counted this dispatch: 23/23 real, 0 placeholders |
-| `POST /ask` real endpoint | **covered** | `apps/api/src/routes/ask.ts:28`, T-009 PASS |
-| speaker + timestamp citations | **covered** | T-005/T-005b ask-router, whatsapp-chat-view-speaker-names |
-| web-fallback for off-corpus | **covered** | ask-web-fallback-tavily, commit `bedd090`, PASS cycle 1 |
-| **answers are actually good enough** | **partial** | T-021/T-022 were the measurement, and this dispatch correctly reverted both to not-done — the harnesses exist, the real-provider runs do not |
-| unstructured/vector search | **missing-by-plan** | T-008, sequenced, not orphaned |
+### 6 — Silent-failure hunt (check 7)
 
-No requirement is missing that no contract and no inbox entry can source. **No `GRILL:` row.**
+Read the 7 non-test/non-audit-script source files touched in range (`indexing.ts`, `claims.ts`,
+`tenantScope.ts`, plus their three test files and `tracker-audit.mjs`). **Zero new hits** — this
+range is itself the fix for the one silent-failure pattern found last sweep
+(`claims.ts:66-68`'s bare `catch { return []; }` is now a discriminated `{ claims, degraded }`
+result, `claims.ts:83-84`). No new empty catch, no new masking fallback, no new lost-cause
+re-raise, no new unawaited/untimed side effect in the touched surface.
 
-### 6 — Goal-drift / re-grill
+### 7 — Enforcement liveness
 
-`qa/.regrill-due` absent; north star unedited since `created: 2026-09-03` while contracts were
-amended after it (so the goal did not move out from under the contract); no unit re-PASSed twice on
-the same evidence; last tick was `BACKLOG_EMPTY`, not `STALLED`/`EXHAUSTED`, so no `qa/debug/` report
-is owed; `qa/gates/` is empty, so no gate was answered off-disk. **CLEAN.**
-
-### 7 — Silent-failure hunt
-
-Read the 18 non-test source files touched since the last sweep. One hit:
-
-**`packages/index/src/pipeline/claims.ts:66-68`** — `catch { return []; }` with no log, no marker,
-no signal. A session ingested during a provider-chain outage lands with zero claims and is
-indistinguishable on disk from one that genuinely has none; downstream claim counts and `/ask`
-citations silently understate. Its sibling `summarize.ts:80-88` degrades to a *clearly labelled*
-`"(fallback, LLM summary unavailable) …"` string, and the contract (line 19) *requires* that label
-for summarize while blessing no such unmarked result for claims. The asymmetry is a gap, not a
-design. → **ISS-056**.
-
-The other error paths checked (`ingest-store.ts:71`, `whatsapp-store.ts:169`,
-`routes/whatsapp.ts:62`, `routes/pages.ts:104/184/253`) all bind `catch (err)` and propagate or
-report. No empty catch, no lost cause, no unawaited side effect found.
+182 commits on HEAD (not zero-history). Hooks registered in `.claude/settings.json`, `-File` form
+(D-010). `qa/loop.md` present with `Stop:` (:41) and `Human gate:` (:50) lines, uncontradicted by
+`qa/adapter.json` (none present — default coding adapter). Loop-design triad re-asked: **can it
+spin** — no, Stop reads real signals (this sweep found zero pending manifests). **Can it Goodhart
+the verifier** — no new instance; this range's Mode A checks each ran mutation tests + one live
+two-tenant database proof, not a self-reported score. **Can it run a wrong answer to completion** —
+no; `indexSession-insert-confinement`'s own manifest records a prior checker dispatch that died
+without a verdict (API error) and states plainly that no cycle was consumed — correct handling, not
+a completion on a weak check. **Live.**
 
 ---
 
-## Reopen-power exercised — ISS-006 REOPENED (fixed → open, severity raised to high)
+## Standing issue, unchanged this sweep (not reopened, not touched)
 
-Segregation of duties on the ground truth. Since ISS-006 was closed, **four contracts were created
-and committed inside maker feature commits**:
-
-| contract | created in | +lines |
-|---|---|---|
-| `whatsapp-ingestion-first-slice.md` | `b549f37` (feat) | 160 |
-| `web-whatsapp-tab.md` | `d568daa` (feat) | 85 |
-| `ingest-indexing-pipeline.md` | `3a998d3` (feat) | 149 |
-| `post-review-fixes-2026-09-06.md` | `9c6ff41` (fix) | 147 |
-
-Three of the four invite adoption in their header — *"Drafted by the maker; /checker adopts or
-amends on first check"* — and **no checker adoption was ever recorded on any of them**. None carries
-an amendment log, so on disk the rules those units were judged against are still maker-authored,
-which is precisely what ISS-006 named. The project CLAUDE.md rule (`qa/contracts/` — *maker never
-edits it*) is being honoured in the recent checker commits (`5974533`, `527d8f7`, `5dd77e5`,
-`f2e9927`) but was not honoured for these four.
-
-**The counter-example is in this very dispatch and is the pattern to generalise:**
-`qa/manifests/tracker-honesty.md` declined to draft its own contract, said so in the manifest, and
-asked the checker to rule — which produced `qa/contracts/tracker-integrity.md`, checker-authored.
-
-Remedy (one unit): the checker reads each of the four and appends an adoption-or-amendment entry.
-Bounds respected — ISS-006 reopened once this sweep; no code, manifest or verdict touched.
+**ISS-006** (segregation of duties — high, open since prior sweep): of the four maker-authored
+contracts named in the last sweep, `qa/contracts/ingest-indexing-pipeline.md` has since been
+formally adopted (amendment-log entry, commit `527d8f7`, pre-dating this sweep's range). The other
+three — `whatsapp-ingestion-first-slice.md`, `web-whatsapp-tab.md`,
+`post-review-fixes-2026-09-06.md` — are still maker-drafted with no checker adoption recorded.
+Reopen-power was not exercised again this sweep (already open, not freshly reversed); it remains
+queued as-is.
 
 ---
 
 ## Top-3 recommended next units
 
-1. **`contract-adoption-backfill`** (closes reopened **ISS-006** high + **ISS-055** medium) —
-   *checker work, not maker work.* Read the four maker-authored contracts, adopt or amend each with
-   a dated amendment-log entry stating what was checked against the plan/approval it claims to rest
-   on. Until this lands, four units' ground truth has no independent owner.
-2. **`maker-tick-liveness`** (closes **ISS-054** high) — stamp `qa/.last-tick` at the end of every
-   `/maker continue` tick regardless of terminal state, including `ADVANCED` ticks that end in a
-   dispatch. Small. The current signal is unreliable in the dangerous direction: it reads "dead"
-   while the maker is working, which trains everyone to ignore it.
-3. **Phase-1 U0.10 — the real-provider `T-021`/`T-022` runs** (the work reverting those rows now
-   demands, and the only `partial` in the goal-coverage table). Recall@5 against the real
-   `selectNodes` chain vs the 0.85 target, and a genuinely hand-scored 30-pair calibration set.
+1. **`contract-adoption-backfill`** (closes the remaining two-thirds of **ISS-006** high) —
+   *checker work.* Adopt-or-amend `whatsapp-ingestion-first-slice.md`, `web-whatsapp-tab.md`,
+   `post-review-fixes-2026-09-06.md` the same way `ingest-indexing-pipeline.md` was done: read in
+   full, dated amendment-log entry, adopt-faithful-except-where-amended.
+2. **`lint-score-split`** (closes **ISS-058**, medium) — pull `catalogue-score --check` out of
+   `pnpm lint:structure` into its own `lint:score`, gated on the commit/CI path per the ruling in
+   `qa/contracts/catalogue-progress-score.md`'s amendment log. Composition fix only; I13/I14 stay
+   exactly as strong.
+3. **`assertAllCallsConfined-unset-coverage`** (closes **ISS-066**, medium, filed two commits ago)
+   — extend `apps/api/src/indexing.test.ts`'s confinement check to also flag `$unset` (and other
+   update operators) touching `tenantId`, not just `$set`/bare reassignment. Small, same family as
+   the `$set` gap this range just closed.
 
-Also queued, low: **ISS-056** (claims silent degradation), **ISS-053** (wire G1 into
-`lint:structure`), **ISS-057** (missing `Cycle checked:` line on `regenerate-year-migration.md`).
+Also queued, low/medium, unchanged from last sweep: **ISS-017**, **ISS-055** (amendment-log gap on
+the same three unadopted contracts as ISS-006 — closes alongside item 1), **ISS-059**, **ISS-062**,
+**ISS-063**, **ISS-007**, **ISS-011**, **ISS-020**, **ISS-021**, **ISS-036**, **ISS-040**,
+**ISS-050**–**ISS-053**, **ISS-057**, **ISS-064**, **ISS-065**.

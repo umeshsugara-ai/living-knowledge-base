@@ -37,7 +37,13 @@
   fails. No contract amendment needed — confirms the existing fallback architecture is the right
   call, not a new requirement.
 
-2026-09-07 · maker (ISS-056 unit) · PATTERN: a trust gate wired into the everyday lint blocks the
+2026-09-07 · maker (ISS-056 unit) — folded 2026-09-07 (Mode B sweep: ruled by /checker Mode A
+cycle 1 in qa/contracts/catalogue-progress-score.md's amendment log, commit 3d0c442. I13/I14
+UPHELD UNCHANGED — the maker's "already protected by the banner" premise is refuted by that
+contract's own ISS-047 measurement. Workflow harm sustained as its own issue, ISS-058 open,
+medium: split `catalogue-score --check` out of `lint:structure` into a `lint:score` gated on the
+commit/CI path. This entry sat unmarked in the inbox despite the ruling landing two commits ago —
+marking it now closes the fold-in gap.) · PATTERN: a trust gate wired into the everyday lint blocks the
 everyday workflow. `catalogue-score --check` refuses when any SCRAPED SOURCE file is uncommitted,
 so `pnpm lint:structure` now fails during ANY in-flight unit — i.e. exactly when you would run it,
 pre-commit. EVIDENCE: this unit's own run — `REFUSED: packages/index/src/pipeline/claims.ts is not
