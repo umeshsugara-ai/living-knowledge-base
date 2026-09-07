@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-07T07:26:01",
+  "updated": "2026-09-07T15:16:01",
   "progress": {
-    "total": 29,
-    "done": 23,
+    "total": 35,
+    "done": 26,
     "in_progress": 0,
     "blocked": 0,
-    "pending": 6,
+    "pending": 9,
     "current": "T-007",
-    "percent": 79
+    "percent": 74
   },
   "tasks": [
     {
@@ -44,7 +44,7 @@
       "deps": [
         "T-019"
       ],
-      "note": "ISS-015 resolved (key valid). Phase 1 (pipeline + 1/23 real session) checker-PASSed cycle 1, commit a7fb04e. Phase 1.5 (empty-result guard) checker-PASSed cycle 1, commit 99846a3. Phase 2 (scale-up) checker-PASSed cycle 1, commit e0fef9c, verdict qa/verdicts/toc-transcription-scale-up.md: 19/23 sessions now real diarized transcription, independently re-verified. Phase 3 (Mongo sync) checker-PASSed cycle 1, commit 9b5af46, verdict qa/verdicts/sync-real-turns-to-mongo.md: live lkb database's turns collection now genuinely reflects the 19/23 real state (1,689 total turns independently re-verified, all 4 placeholder sessions confirmed exhaustively uncontaminated). 4 sessions remain placeholder (2 structurally-blocked oversized files needing audio-chunking, 2 unexplained STOP-empty-text failures needing investigation) -- disclosed follow-up, not yet started. Not done until 23/23.",
+      "note": "23/23 TOC sessions genuinely transcribed. The 4 remaining placeholders were fixed by commit c07674d (real root cause of the chunking stalls); re-verified 2026-09-07 by counting real turns.json content across all 23 session dirs. This note previously still said 19/23 and \"Not done until 23/23\", which understated a completed task -- TASKS.md was right and this note was stale.",
       "criticality": "critical",
       "completed": "2026-09-04T19:56:06"
     },
@@ -133,7 +133,7 @@
       "deps": [
         "T-024"
       ],
-      "note": "needs Q4 consent decision",
+      "note": "Stays pending, and correctly so: this task is the FULL meeting bot (auto-join, consent, live capture). All three joiners (vexa/browser/system-audio) are explicit stubs and the package is imported by nothing -- confirmed 2026-09-07, and scored STUB by the catalogue (A10). TASKS.md row T-011 is a NARROWER deliverable (Phase-B browser-profile privacy slice) that genuinely PASSed; same id, different scope. Not drift in the trackers so much as one id doing two jobs.",
       "criticality": "low"
     },
     {
@@ -248,26 +248,26 @@
     {
       "id": "T-021",
       "title": "Golden set 50-100 Qs + recall@k report (target recall@5 >= 0.85)",
-      "status": "done",
+      "status": "pending",
       "base_criticality": "LOW",
       "deps": [
         "T-002"
       ],
       "criticality": "low",
       "completed": "2026-09-03T13:45:00",
-      "note": "checker-PASSed against a heuristic (non-LLM) retriever proxy, blocked on ISS-015 for the real selectNodes pipeline; 0.85 target deferred to a real-LLM re-run once ISS-015 is resolved (see qa/verdicts/golden-set-recall.md, commit 03fcf8d)"
+      "note": "REVERTED from done 2026-09-07 (plan §10 U0.6). The harness is real and checker-PASSed, but it was verified against a HEURISTIC (non-LLM) retriever: recall@5=1.000 is a property of the proxy, not evidence the real pipeline meets the 0.85 target. Not done until measured against the real provider chain."
     },
     {
       "id": "T-022",
       "title": "Evaluator calibration on 30 hand-scored pairs",
-      "status": "done",
+      "status": "pending",
       "base_criticality": "LOW",
       "deps": [
         "T-021"
       ],
       "criticality": "low",
       "completed": "2026-09-03T13:46:01",
-      "note": "checker-PASSed using a heuristic scorer + derived (not hand-scored) reference set, blocked on ISS-015 for the real GEMINI-backed calibration; mae=0.170 is directional evidence the harness works, not a calibration of the production LLM judge (see qa/verdicts/evaluator-calibration.md, commit 1d2ee71)"
+      "note": "REVERTED from done 2026-09-07 (plan §10 U0.6). Used a heuristic scorer and a DERIVED (not hand-scored) reference set, so the MAE-vs-human calibration this task exists to prove was never performed. Not done until run against the real LLM judge with a genuinely hand-scored set."
     },
     {
       "id": "T-023",
@@ -334,6 +334,65 @@
       ],
       "criticality": "low",
       "completed": "2026-09-03T09:30:49"
+    },
+    {
+      "id": "T-000",
+      "title": "Backfill interview",
+      "status": "done",
+      "deps": [],
+      "note": "Answered inline -- D-001.",
+      "base_criticality": "low"
+    },
+    {
+      "id": "T-004b",
+      "title": "Tree topic/org child nodes + incremental regen (real T-002 data)",
+      "status": "done",
+      "deps": [
+        "T-004"
+      ],
+      "note": "checker PASS 5/5, verdict 15e4ecf.",
+      "base_criticality": "low"
+    },
+    {
+      "id": "T-004c",
+      "title": "regenerate(): session year-migration cleanup + cross-year topic-evidence refresh",
+      "status": "done",
+      "deps": [
+        "T-004b"
+      ],
+      "note": "checker PASS 4/4, verdict qa/verdicts/regenerate-year-migration.md, commit 8ae94f4.",
+      "base_criticality": "low"
+    },
+    {
+      "id": "T-009b",
+      "title": "Async ScoreFn + real LLM-based scorer wired into /ask",
+      "status": "done",
+      "deps": [
+        "T-009"
+      ],
+      "note": "checker PASS 6/6, verdict 089d2b6. Replaces the heuristic keyword-overlap scorer.",
+      "base_criticality": "low"
+    },
+    {
+      "id": "T-028",
+      "title": "Counsellor user management/accounts",
+      "status": "pending",
+      "deps": [
+        "T-009"
+      ],
+      "note": "Explicitly deferred by Umesh (\"baad mein dekh lenge\").",
+      "base_criticality": "low",
+      "criticality": "low"
+    },
+    {
+      "id": "T-011a",
+      "title": "Phase-B browser-profile bot + live monitor — privacy/consent logic only",
+      "status": "done",
+      "deps": [
+        "T-024"
+      ],
+      "note": "Split out of T-011 on 2026-09-07: this narrower slice genuinely PASSed (qa/verdicts/browser-profile-privacy.md, commit 59dc2db), while T-011 (the full meeting bot) remains open. One id was doing two jobs and made the bot look done.",
+      "base_criticality": "low"
     }
   ],
   "decisions": [],
@@ -360,8 +419,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 5.23,
-    "eta_days": 1.1
+    "velocity_per_day": 4.38,
+    "eta_days": 2.1
   },
-  "last_deterministic_tick": "2026-09-07T07:26:01"
+  "last_deterministic_tick": "2026-09-07T15:16:01"
 }
