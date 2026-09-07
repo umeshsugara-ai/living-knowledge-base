@@ -36,3 +36,10 @@ reference/kb-deck-screens/*.png
 .goal/monitor_task.cmd
 .goal/monitor_task.vbs
 .goal/audits/
+
+# live-verify runs: the reconcilable facts (preflight.json + summary.md) ARE committed; the
+# bulk (page screenshots, raw response bodies) is regenerable by re-running
+# `LKB_API_KEY=... pnpm verify:live`, which is the whole point of the protocol -- committing
+# ~2MB of binaries per run would bloat the repo for evidence anyone can reproduce on demand.
+qa/evidence/live-*/pages/
+qa/evidence/live-*/api/
