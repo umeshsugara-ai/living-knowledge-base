@@ -61,6 +61,16 @@ test("an unknown verdict string cannot bypass the ordering check", () => {
   assert.match(s.upgrades[0], /not one of/);
 });
 
+test("an empty-string manual verdict is refused, not silently ignored (ISS-036)", () => {
+  // `manual.verdict` used to be tested for truthiness — `f.manual?.verdict` is falsy for "", so
+  // the whole vocabulary-check branch was skipped and an intended human downgrade could be
+  // deleted (edited to "") without the guard objecting, restoring the machine verdict silently.
+  const c = catalogueWith({ probes: { collections: ["chunks"] }, manual: { verdict: "", reason: "cleared" } });
+  const s = scoreCatalogue(c, SIGNALS);
+  assert.equal(s.rows[0].verdict, "MISSING", "an empty-string verdict must never reach the output as if valid");
+  assert.match(s.upgrades[0], /not one of/, "an empty string must be refused with the same message as any other bad value");
+});
+
 test("dropping a feature to shrink the denominator is refused", () => {
   // Regression for ISS-029: deleting the probe-less rows moved the real score 20.2% -> 30.3%
   // with every gate green. Guarding the numerator alone was not enough.

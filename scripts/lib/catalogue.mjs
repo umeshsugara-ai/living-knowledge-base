@@ -190,7 +190,10 @@ export function scoreCatalogue(catalogue, signals) {
   for (const f of catalogue.features) {
     const auto = evaluate(f, signals);
     let final = auto.verdict;
-    if (f.manual?.verdict) {
+    // Test for the KEY, not a truthy value — `manual: { verdict: "" }` is a falsy value that
+    // used to skip this whole branch, so an empty-string "verdict" slipped past the vocabulary
+    // check below instead of being refused like any other value outside VERDICTS (ISS-036).
+    if (f.manual && "verdict" in f.manual) {
       const m = f.manual.verdict;
       // Validate the vocabulary FIRST. An unknown value made `ORDER[m]` undefined, and
       // `undefined > n` is false, so the upgrade check silently passed and an upgraded verdict
