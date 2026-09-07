@@ -10,10 +10,11 @@
   "scripts": {
     "demo:live": "node scripts/demo-live.mjs",
     "gen:types": "node scripts/gen-types.mjs",
+    "progress": "node scripts/catalogue-score.mjs",
     "verify:live": "node scripts/live-verify.mjs",
-    "lint:structure": "node scripts/lint-loc.mjs && node scripts/lint-dirsize.mjs && node scripts/lint-root.mjs && node scripts/lint-dupes.mjs && node scripts/lint-migrations.mjs && node scripts/snapshot.mjs --check && depcruise --config .dependency-cruiser.cjs packages apps workers",
+    "lint:structure": "node scripts/lint-loc.mjs && node scripts/lint-dirsize.mjs && node scripts/lint-root.mjs && node scripts/lint-dupes.mjs && node scripts/lint-migrations.mjs && node scripts/snapshot.mjs --check && node scripts/catalogue-score.mjs --check && depcruise --config .dependency-cruiser.cjs packages apps workers",
     "test": "pnpm -r test",
-    "test:lint": "node --test scripts/lint.test.mjs scripts/snapshot.test.mjs",
+    "test:lint": "node --test scripts/lint.test.mjs scripts/snapshot.test.mjs scripts/catalogue.test.mjs",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
