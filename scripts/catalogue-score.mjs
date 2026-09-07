@@ -49,7 +49,7 @@ const OUT = join(ROOT, "docs", "PROGRESS.md");
 export function generate(root = ROOT) {
   const catalogue = JSON.parse(readFileSync(join(root, ".goal", "catalogue.json"), "utf8"));
   assertDenominator(catalogue); // dropping features is the cheapest way to inflate a percentage
-  const { counts, source, stamp, hash, trusted, warning, trust } = loadCollectionCounts(root);
+  const { counts, source, stamp, hash, trusted, warning, trust, unreadable } = loadCollectionCounts(root);
   // Read every source signal through a recorder, so the trust check below covers exactly what was
   // read rather than what someone remembered to list (ISS-047).
   const reader = createRecordingReader(root);
@@ -87,6 +87,7 @@ export function generate(root = ROOT) {
     `if that changes, a probe was edited and the score is not comparable to the previous run.`,
     `${s.probeless.length} feature(s) declare no probe and therefore score MISSING by default: ${s.probeless.join(", ")}.`,
     ...s.inputs.filter((i) => i.warning).map((i) => `\n> ${i.warning}`),
+    ...unreadable.map((u) => `\n> **UNREADABLE EVIDENCE — \`${u.rel}\` could not be parsed (${u.reason}) — it was skipped, not counted as absent. Fix or delete it.**`),
     "",
     counts
       ? `Collection counts from \`${source}\` (run ${stamp}, content \`${hash}\`)${warning ? ` — ${warning}` : ""}. Chosen by the timestamp inside the file, not by folder name. Re-run \`pnpm verify:live\` for fresher numbers.`

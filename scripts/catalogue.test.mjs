@@ -233,3 +233,36 @@ test("the chosen evidence is fingerprinted, so a swapped file is visible", () =>
     rmSync(b, { recursive: true, force: true });
   }
 });
+
+test("a BOM-prefixed preflight.json is parsed, not skipped (ISS-040)", () => {
+  // Windows PowerShell 5.1's `Out-File -Encoding utf8` writes a UTF-8 BOM (EF BB BF); before the
+  // fix this made JSON.parse throw and the run was silently dropped, falling back to stale evidence.
+  const root = mkdtempSync(join(tmpdir(), "lkb-cat-"));
+  const dir = join(root, "qa", "evidence", "live-bom");
+  mkdirSync(dir, { recursive: true });
+  const bom = Buffer.from([0xef, 0xbb, 0xbf]);
+  const body = Buffer.from(JSON.stringify({ stamp: "2026-09-07T02:00:00.000Z", collections: { chunks: 7 } }), "utf8");
+  writeFileSync(join(dir, "preflight.json"), Buffer.concat([bom, body]));
+  try {
+    const { counts, unreadable } = loadCollectionCounts(root, Date.parse("2026-09-08T00:00:00.000Z"));
+    assert.equal(counts.chunks, 7, "BOM must be stripped, not treated as a parse failure");
+    assert.deepEqual(unreadable, [], "a successfully-parsed BOM file must not be reported unreadable");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("a genuinely malformed preflight.json is reported, not silently skipped (ISS-040)", () => {
+  const root = mkdtempSync(join(tmpdir(), "lkb-cat-"));
+  const goodDir = join(root, "qa", "evidence", "live-good");
+  mkdirSync(goodDir, { recursive: true });
+  writeFileSync(join(goodDir, "preflight.json"), JSON.stringify({ stamp: "2026-01-01T00:00:00.000Z", collections: { chunks: 1 } }));
+  const badDir = join(root, "qa", "evidence", "live-bad");
+  mkdirSync(badDir, { recursive: true });
+  writeFileSync(join(badDir, "preflight.json"), "{ not valid json");
+  try {
+    const { counts, unreadable } = loadCollectionCounts(root, Date.parse("2026-09-08T00:00:00.000Z"));
+    assert.equal(counts.chunks, 1, "the readable run still scores — this is a warning, not a hard failure");
+    assert.equal(unreadable.length, 1, "the unparseable candidate must be named, not silently continued past");
+    assert.equal(unreadable[0].rel, "qa/evidence/live-bad/preflight.json");
+    assert.match(unreadable[0].reason, /JSON/i);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

@@ -135,20 +135,30 @@ export function fingerprint(pre) {
  */
 export function loadCollectionCounts(root, now = Date.now()) {
   const dir = join(root, "qa", "evidence");
-  if (!existsSync(dir)) return { counts: null, source: null };
+  if (!existsSync(dir)) return { counts: null, source: null, unreadable: [] };
 
   const runs = [];
+  const unreadable = [];
   for (const name of readdirSync(dir).filter((n) => n.startsWith("live-"))) {
     const rel = `qa/evidence/${name}/preflight.json`;
     const abs = join(dir, name, "preflight.json");
     if (!existsSync(abs)) continue;
     let pre;
-    try { pre = JSON.parse(readFileSync(abs, "utf8")); } catch { continue; }
+    try {
+      // Strip a leading UTF-8 BOM (bytes EF BB BF) before parsing — Windows PowerShell 5.1's
+      // `Out-File -Encoding utf8` writes one, and JSON.parse throws on it (ISS-040). Failing to
+      // read a candidate must never look the same as that candidate not existing.
+      const BOM = String.fromCharCode(0xfeff);
+      pre = JSON.parse(readFileSync(abs, "utf8").replace(new RegExp(`^${BOM}`), ""));
+    } catch (err) {
+      unreadable.push({ rel, reason: err.message });
+      continue;
+    }
     if (!pre.collections || Object.keys(pre.collections).length === 0) continue;
     const at = Date.parse(pre.stamp ?? "");
     runs.push({ name, rel, pre, at: Number.isNaN(at) ? 0 : at });
   }
-  if (runs.length === 0) return { counts: null, source: null };
+  if (runs.length === 0) return { counts: null, source: null, unreadable };
 
   runs.sort((a, b) => b.at - a.at);
   const chosen = runs[0];
@@ -166,5 +176,6 @@ export function loadCollectionCounts(root, now = Date.now()) {
     trust,
     trusted: isTrustworthy(trust),
     warning: trustWarning(trust, chosen.rel),
+    unreadable,
   };
 }
