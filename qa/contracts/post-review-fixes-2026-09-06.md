@@ -145,3 +145,19 @@ verified live, with no mocks.
 8. Read `CalendarPage.tsx`'s `handleDecision` — confirm the `.catch` is present.
 9. If `whatsapp_msg`'s Mongo is reachable, independently re-run the idempotency verification
    yourself (real data, no mocks) — strongest possible check.
+
+## Amendment log
+- 2026-09-07 · routine · Contract ADOPTED unchanged by /checker on the contract-adoption-backfill
+  sweep (ISS-006/ISS-055 remedy). Governs the unit checker-PASSed cycle 1
+  (`qa/verdicts/post-review-fixes-2026-09-06.md`, commit `9c6ff41`). Re-read in full: each of the
+  5 findings-fixed criteria cites a real file:line and a real severity from the three review
+  agents named in the header (data-engineer, ai-engineer, senior-software-engineer), and the
+  verdict independently reproduced live evidence for the two most severe (Block, Critical)
+  findings rather than trusting the manifest's transcript. Cross-checked this contract's own
+  findings against the sibling `whatsapp-ingestion-first-slice.md` contract (amended this same
+  sweep): this unit is in fact the one that fixed the idempotency and cross-owner-exposure defects
+  that contract's ORIGINAL criteria had failed to require or had actively required the insecure
+  shape of — confirming this contract's findings are genuine, not overstated, and giving the
+  concrete reason the sibling contract needed tightening rather than a bare adoption. Nothing
+  vague or self-serving found: the "explicitly NOT fixed" list is disclosed with named follow-up
+  issues, not buried. Adopted as-is.

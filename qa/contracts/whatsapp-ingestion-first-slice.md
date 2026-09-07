@@ -53,10 +53,28 @@ something this unit does or needs to wait for.
    already-real `GET /sessions/:id` view (no second viewer built) — same shape `ingest-store.ts`
    already does for URLs.
 3. **`apps/api/src/routes/whatsapp.ts`** (new) — `GET /whatsapp/groups` (real trackable-group
-   list), `POST /whatsapp/ingest` (`{groupJid, ownerUserId}` → real ingest, 201 + real result; a
-   real fetch/adapter failure is 502 with the real message, never a silent 500; a malformed body
-   is 400). Both `requireScope("whatsapp")`. New `"whatsapp"` scope added to
-   `scripts/seed-demo-server.mjs` and `apps/api/src/routes/pages.ts`'s `REAL_ROUTES`.
+   list), `POST /whatsapp/ingest` (body **`{groupJid}` only — `ownerUserId` MUST NOT be accepted
+   from the client**; `ingestGroup` resolves the owner itself from the live `listTrackableGroups()`
+   result, keyed only by the caller-supplied `groupJid`, so no caller can ingest on behalf of an
+   owner identity it did not independently discover) → real ingest, 201 + real result; a real
+   fetch/adapter failure is 502 with the real message, never a silent 500; a malformed body is 400.
+   Both `requireScope("whatsapp")`. New `"whatsapp"` scope added to `scripts/seed-demo-server.mjs`
+   and `apps/api/src/routes/pages.ts`'s `REAL_ROUTES`. *(Amended 2026-09-07 by /checker — see
+   amendment log. The superseded text required the route to accept `ownerUserId` from the client;
+   that was the exact shape of a real High-severity cross-owner exposure bug, since fixed.)*
+3a. **Idempotency.** `source._id` (and the derived `sessionId`) are stable per
+   `(groupJid, ownerUserId)`, never derived from message count or position; every write to
+   `sources`/`sessions`/`turns` is an upsert (`replaceOne`/`bulkWrite` with `upsert: true`, never a
+   bare `insertOne`/`insertMany`); each turn's `_id` is derived from the real, upstream-unique
+   WhatsApp `messageId`. A re-ingest of an unchanged group leaves the corpus byte-identical; a
+   re-ingest with N new messages adds exactly N new turns, never a duplicate-key failure and never
+   a full-history duplication. *(Added 2026-09-07 by /checker — see amendment log. This invariant
+   was absent from the original contract and its absence is exactly how a Critical-severity
+   non-idempotent-ingest bug shipped inside a "checked" unit.)*
+3b. **Speaker attribution.** Each turn carries a real `speakerLabel` (the resolved WhatsApp
+   display name) whenever the fetcher returns one, alongside `speakerRef` (the raw `personId`) —
+   a turn is never left showing only an opaque id when a real name was available.
+   *(Added 2026-09-07 by /checker — see amendment log.)*
 4. **No regression.** `pnpm --filter @lkb/ingest typecheck`, `pnpm --filter @lkb/api typecheck`,
    `pnpm -r test`, `pnpm lint:structure` all exit 0.
 5. **Real unit-test coverage** (fixtures/fakes for HTTP-route tests, since the main app Mongo is
@@ -158,3 +176,23 @@ Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)
    recovered by check time, a full live `curl -X POST http://localhost:3300/whatsapp/ingest` is a
    bonus, not required — the disclosed limitation above already explains why it couldn't be done
    at manifest time.
+
+## Amendment log
+- 2026-09-07 · significant · Contract ADOPTED-WITH-AMENDMENT by /checker on the
+  contract-adoption-backfill sweep (ISS-006/ISS-055 remedy). Governs the unit checker-PASSed
+  cycle 1 (`qa/verdicts/whatsapp-ingestion-first-slice.md`, commit `b549f37`). Read the contract
+  in full against the CURRENT `packages/ingest/src/sources/whatsapp.ts`,
+  `apps/api/src/whatsapp-store.ts` and `apps/api/src/routes/whatsapp.ts` (all since patched by the
+  later `post-review-fixes-2026-09-06` unit) rather than against the code as it stood at
+  cycle-1-check time. Found the contract had drifted from the now-correct implementation in two
+  ways worth fixing, not rubber-stamping: **(1)** criterion 3 literally required `POST
+  /whatsapp/ingest` to accept `{groupJid, ownerUserId}` from the client — that is the exact shape
+  of the High-severity cross-owner-exposure bug `post-review-fixes-2026-09-06` fixed (Finding 3);
+  amended so the ground truth no longer mandates the insecure shape. **(2)** the original contract
+  named no idempotency invariant at all, which is exactly how a Critical-severity non-idempotent
+  re-ingest bug (Finding 2 of the same later unit) shipped inside a unit this contract had already
+  called checked; added criterion 3a codifying the now-fixed stable-id/upsert/messageId-keyed
+  behaviour so a regression here is contract-visible next time. Also added 3b for the
+  `speakerLabel` attribution fix (Finding 6/live-observed, lower severity, disclosed rather than
+  silently dropped). Adopted otherwise as faithful to D-008 (`docs/DECISIONS.md` D-008,
+  provided-first capture mode) and to plan T-007's first-slice scope note.

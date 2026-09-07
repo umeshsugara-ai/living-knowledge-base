@@ -83,3 +83,18 @@ honest `"failed to load WhatsApp groups"` error state (not a blank/broken page).
 5. Real browser: visit `/whatsapp` — confirm the nav tab and page render (against fixtures/dev
    server; a real backend round-trip is a bonus if the checker's environment has main Mongo
    reachable and `apps/api` running — not required, per the disclosed limitation above).
+
+## Amendment log
+- 2026-09-07 · routine · Contract ADOPTED unchanged by /checker on the contract-adoption-backfill
+  sweep (ISS-006/ISS-055 remedy). Governs the unit checker-PASSed cycle 1
+  (`qa/verdicts/web-whatsapp-tab.md`, commit `d568daa`). Re-read in full against the current
+  `apps/web/src/api/whatsapp.ts`, `WhatsAppPage.tsx` and `NavSidebar.tsx`: criteria remain
+  faithful to what was actually built and to the disclosed-scope precedent it cites (the Gmail
+  meeting-candidate split). Checked specifically for the same class of drift found in the sibling
+  backend contract (`whatsapp-ingestion-first-slice.md`, amended same sweep for a request-body
+  shape that had since become insecure) — none found here: this contract never specified the
+  `POST /whatsapp/ingest` body shape, and the shipped `api/whatsapp.ts` already omits
+  `ownerUserId` with an inline comment explaining why, so there is nothing to correct. Criteria
+  are genuinely machine-checkable (named files, named test count, named typecheck/test/lint
+  commands) and the disclosed Mongo-outage limitation matches what both the manifest and verdict
+  independently reproduced. No amendment needed — adopted as-is.
