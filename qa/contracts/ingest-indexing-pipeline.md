@@ -18,13 +18,37 @@
    not in the transcript. Never throws: a rejected `complete()` or an unparseable/empty-summary
    response degrades to a clearly-labeled fallback (`"(fallback, LLM summary unavailable) <first
    500 chars of the real transcript>"`), never blocking the caller.
+1a. **The labelled fallback is for a session that has no good summary yet — it may not overwrite
+   one that does.** On a re-index where `summarizeSession` degraded, an existing `session_pages`
+   doc for that session is left as it is; the fallback is written only when there is no existing
+   page. *(Added 2026-09-07 by /checker, ruling on the maker's own disclosure that `summarize.ts`
+   has the same shape as the ISS-056 claims bug and was left unchanged "because the contract
+   explicitly requires that fallback". The maker was right not to change it unilaterally and
+   right that it is the same shape. The contract required the fallback to EXIST; it never
+   required it to REPLACE a good page. This clause removes the ambiguity the maker correctly
+   refused to resolve on its own. Not in scope for the claims-degradation-honesty unit — see
+   ISS-059.)*
 2. **`packages/index/src/pipeline/claims.ts`** (new) — `extractClaims(turns, complete)`: real LLM
    call (`jobKind: "claims"`), asks for claims cited to real turn ids. **The hard guarantee**:
    every returned claim's `evidenceTurnIds` is cross-checked against the real input `turns` — a
    cited id that isn't real is dropped, and a claim left with zero real evidence is dropped
    entirely (never shipped with fabricated or empty evidence, matching `claims.schema.json`'s
-   `evidence.minItems: 1`). Never throws: a rejected `complete()` or a non-array response yields
-   `[]`, an honest "nothing extracted yet", never a crash.
+   `evidence.minItems: 1`). **Never throws** — but a failure is never reported as an empty
+   extraction. `extractClaims` returns a discriminated result `{ claims, degraded }`:
+   `degraded` carries a reason for a rejected `complete()` and for a non-array response, and is
+   `null` whenever extraction genuinely ran — **including when the transcript yields nothing and
+   when every candidate claim was dropped by the evidence check**, both of which are successful
+   extractions that must remain able to clear stale claims. *(Amended 2026-09-07 by /checker —
+   see amendment log. The superseded text blessed a bare `[]` as "an honest 'nothing extracted
+   yet'". It was not honest and it was not safe: the caller deleted before inserting, so an
+   indistinguishable `[]` destroyed real data. Proven live, not argued — see C2a.)*
+2a. **`apps/api/src/indexing.ts` must not replace data it could not recompute.** When
+   `extractClaims` reports `degraded`, the session's existing `claims` are left exactly as they
+   are — no `deleteMany`, no `insertMany` — and the reason is logged. The delete and the insert
+   are governed by the **same** condition; a conditional insert paired with an unconditional
+   delete is the defect this criterion exists to forbid. A non-degraded extraction still replaces
+   the session's claims (delete-then-insert), including with an empty set, so stale claims always
+   remain clearable.
 3. **`apps/api/src/indexing.ts`** (new) — `indexSession(tenantId, sessionId, {complete})`: reads
    the session's real turns, calls both pipeline functions, writes a real `session_pages` doc
    (delete-then-insert, so re-indexing never duplicates) and real `claims` docs (`status:
@@ -147,3 +171,11 @@ Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)
    /whatsapp/ingest` round-trip (confirming `session_pages`/`claims`/`tree_index` actually get
    written and `status.index` flips to `"done"`) is a welcome bonus, not required — the disclosed
    limitation above already explains why it couldn't be done at manifest time.
+
+## Amendment log (append-only)
+
+| Date | Kind | What | Why |
+|---|---|---|---|
+| 2026-09-07 | adoption | /checker **adopts** this contract, which was drafted and committed by the maker in `3a998d3` and has carried no amendment log until now. Content re-read in full against `summarize.ts`, `claims.ts`, `indexing.ts` and the ingest composition roots. | Closes the `ingest-indexing-pipeline` share of the reopened **ISS-006** (maker-authored ground truth never adopted) and of **ISS-055** (no amendment log). The file invited adoption — "Drafted by the maker; /checker adopts or amends on first check" — and no checker had recorded one. Adopted as faithful **except** criteria 1 and 2, amended below in the same pass; adopting text I was simultaneously overturning would have been a rubber stamp. |
+| 2026-09-07 | routine (tighten) | **AMENDED criterion 2** — a failed `complete()` may no longer be reported as an empty extraction; `extractClaims` returns `{claims, degraded}`, with `degraded: null` reserved for extractions that genuinely ran (including genuinely-empty and all-dropped-by-evidence-check). **ADDED criterion 2a** — the caller's claims delete and insert must be governed by the same condition. | The superseded wording called a bare `[]` "an honest 'nothing extracted yet'". It was neither honest nor safe, and this is measured, not argued: driving the pre-fix code path against the real database (checker-authored script, scratch tenant, 2026-09-07) took a session's claims from **1 → 0**, destroying a claim carrying human review status `"verified"`, and wrote nothing back. The unconditional `deleteMany` paired with a conditional `insertMany` made any transient provider outage during a re-index a silent data-loss event. **Tightening only — a data-safety invariant is added, none weakened**, so this is a routine amendment under the criticality gate rather than a human-gated one. Decided on the pre-fix evidence, independently of the pending verdict: the rule was wrong before this unit existed. Raised by the maker (`qa/manifests/claims-degradation-honesty.md`), which flagged the contradiction and pointedly did **not** edit this file — the ISS-006 behaviour to generalise. ISS-056. |
+| 2026-09-07 | routine (tighten) | **ADDED criterion 1a** — a degraded `summarizeSession` may not overwrite an existing good `session_pages` doc; the labelled fallback is for sessions that have no page yet. | Same shape as the ISS-056 defect, one file over, and disclosed by the maker rather than quietly left: a degraded re-index replaces a real summary with a 500-char transcript slice. The maker declined to act because "the contract explicitly requires that fallback" — correct reading, and the correct escalation. But the contract required the fallback to **exist**, never to **replace**. Lower severity than the claims defect (it is labelled, carries no human-curated state, and is regenerable from turns), hence a filed unit rather than a verdict failure. Tightening only. ISS-059. |
