@@ -36,3 +36,16 @@
   to the `jobs` ledger, only throws `AllProvidersFailedError` if every provider in the chain
   fails. No contract amendment needed — confirms the existing fallback architecture is the right
   call, not a new requirement.
+
+2026-09-07 · maker (ISS-056 unit) · PATTERN: a trust gate wired into the everyday lint blocks the
+everyday workflow. `catalogue-score --check` refuses when any SCRAPED SOURCE file is uncommitted,
+so `pnpm lint:structure` now fails during ANY in-flight unit — i.e. exactly when you would run it,
+pre-commit. EVIDENCE: this unit's own run — `REFUSED: packages/index/src/pipeline/claims.ts is not
+what the repository holds (modified)`, while every other structure check passed and the score was
+unchanged at 20.2%. The refusal is contract I13/I14 and correct for the EVIDENCE and CATALOGUE
+inputs (they can inflate the number). For scraped SOURCE the protection is arguably already the
+doc's EDITED-SINCE-COMMIT banner plus the staleness check, and a source edit that changes no
+verdict still blocks the lint. APPLIES NEXT: any gate that can be red for legitimate reasons during
+normal work — the earlier ruling "a gate that blocks every commit until someone else acts is a gate
+people delete" applies to this one too. Not changed unilaterally: I13/I14 are checker-owned, and
+the last sweep reopened ISS-006 precisely because makers edited their own ground truth.

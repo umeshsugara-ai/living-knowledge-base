@@ -15,8 +15,9 @@
  * ones are written, so re-running never duplicates.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, sessions as sessionsColl, sessionPages as sessionPagesColl, turns as turnsColl } from "@lkb/db";
-import type { SessionPages, Claims, Sessions, TreeIndexNode } from "@lkb/core";
+import type { Db } from "mongodb";
+import { getDb, scopedCollection } from "@lkb/db";
+import type { SessionPages, Claims, Sessions, TreeIndexNode, Turns } from "@lkb/core";
 import { summarizeSession, extractClaims, buildTree, regenerate, type SummarizeCompleteFn } from "@lkb/index";
 
 /** `schema/{session_pages,claims}.schema.json` both declare `evidence.minItems: 1`, which the
@@ -31,10 +32,15 @@ function toEvidenceTuple<T>(items: T[]): [T, ...T[]] {
 
 export interface IndexSessionDeps {
   complete: SummarizeCompleteFn;
+  /** Injectable so this function's WRITE decisions are testable without a live Mongo. Added for
+   * ISS-056: the fix (don't delete a session's claims when extraction degraded) sat behind a
+   * module-singleton `getDb()`, so reverting it left every test green — the same untested-guard
+   * failure this project has now hit four times. Defaults to the real db; callers pass nothing. */
+  db?: Pick<Db, "collection">;
 }
 
-async function loadTreeRoot(tenantId: string): Promise<TreeIndexNode | null> {
-  return getDb().collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
+async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promise<TreeIndexNode | null> {
+  return db.collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
 }
 
 /** Real summary + real evidence-checked claims + a real tree_index update for one already-
@@ -42,19 +48,27 @@ async function loadTreeRoot(tenantId: string): Promise<TreeIndexNode | null> {
  * `extractClaims` already degrade honestly on their own (a labeled fallback summary, an empty
  * claims list) rather than blocking the pipeline. */
 export async function indexSession(tenantId: string, sessionId: string, deps: IndexSessionDeps): Promise<void> {
+  const db = deps.db ?? getDb();
+  // Tenant-scoped through the SAME injected handle: `scopedCollection` still forces a tenantId at
+  // every call site (its whole purpose), it just no longer reaches past the injection to getDb().
+  const turnsColl = scopedCollection<Turns>(db as never, "turns");
+  const sessionsColl = scopedCollection<Sessions>(db as never, "sessions");
+  const sessionPagesColl = scopedCollection<SessionPages>(db as never, "session_pages");
+
   const turns = await turnsColl(tenantId).find({ sessionId }).toArray();
 
-  const [summary, extractedClaims] = await Promise.all([
+  const [summary, claimsResult] = await Promise.all([
     summarizeSession(turns, deps.complete),
     extractClaims(turns, deps.complete),
   ]);
+  const { claims: extractedClaims, degraded: claimsDegraded } = claimsResult;
 
   // schema/session_pages.schema.json requires evidence.minItems: 1 -- a session with zero turns
   // (nothing was actually ingested) has nothing real to cite, so it gets no session_page rather
   // than one with fabricated/empty evidence. tree_index/status update below still run, so the
   // session isn't stuck "pending" forever over an edge case that shouldn't occur for a real
   // ingest in the first place.
-  await getDb().collection<SessionPages>("session_pages").deleteMany({ tenantId, sessionId });
+  await db.collection<SessionPages>("session_pages").deleteMany({ tenantId, sessionId });
   if (turns.length > 0) {
     const page: SessionPages = {
       _id: randomUUID(),
@@ -66,11 +80,20 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
       actionItems: summary.actionItems,
       evidence: toEvidenceTuple(turns.map((t) => ({ turnId: t._id, sessionId }))),
     };
-    await getDb().collection<SessionPages>("session_pages").insertOne(page);
+    await db.collection<SessionPages>("session_pages").insertOne(page);
   }
 
-  await getDb().collection<Claims>("claims").deleteMany({ tenantId, "evidence.sessionId": sessionId });
-  if (extractedClaims.length > 0) {
+  // Replace the session's claims ONLY when extraction actually ran. The delete used to be
+  // unconditional, so a failed provider call -- which returned an empty array indistinguishable
+  // from "no claims found" -- deleted every previously-extracted real claim for this session and
+  // inserted nothing back. A transient outage during a re-index silently destroyed good data
+  // (ISS-056). On degradation the prior claims are left exactly as they were.
+  if (claimsDegraded) {
+    console.warn(`indexSession(${tenantId}/${sessionId}): claims left unchanged — ${claimsDegraded.reason}`);
+  } else {
+    await db.collection<Claims>("claims").deleteMany({ tenantId, "evidence.sessionId": sessionId });
+  }
+  if (!claimsDegraded && extractedClaims.length > 0) {
     const claimDocs: Claims[] = extractedClaims.map((c) => ({
       _id: randomUUID(),
       tenantId,
@@ -81,19 +104,19 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
       status: "needs-review",
       evidence: toEvidenceTuple(c.evidenceTurnIds.map((turnId) => ({ turnId, sessionId }))),
     }));
-    await getDb().collection<Claims>("claims").insertMany(claimDocs);
+    await db.collection<Claims>("claims").insertMany(claimDocs);
   }
 
   const [allSessions, allPages, existingRoot] = await Promise.all([
     sessionsColl(tenantId).find({}).toArray() as Promise<Sessions[]>,
     sessionPagesColl(tenantId).find({}).toArray() as Promise<SessionPages[]>,
-    loadTreeRoot(tenantId),
+    loadTreeRoot(tenantId, db),
   ]);
   const newRoot = existingRoot
     ? regenerate(existingRoot, [sessionId], allSessions, allPages)
     : buildTree(allSessions, allPages)[tenantId];
   if (newRoot) {
-    await getDb().collection<TreeIndexNode>("tree_index")
+    await db.collection<TreeIndexNode>("tree_index")
       .replaceOne({ node_id: `tenant:${tenantId}`, level: "tenant" }, newRoot, { upsert: true });
   }
 

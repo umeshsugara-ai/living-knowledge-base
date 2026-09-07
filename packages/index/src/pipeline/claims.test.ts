@@ -20,7 +20,7 @@ function completion(text: string, json?: unknown): CompleteResult {
 
 test("extractClaims returns [] for an empty turn list, never calls complete", async () => {
   const complete: ClaimsCompleteFn = async () => { throw new Error("must not be called"); };
-  const result = await extractClaims([], complete);
+  const { claims: result, degraded } = await extractClaims([], complete);
   assert.deepEqual(result, []);
 });
 
@@ -31,7 +31,7 @@ test("extractClaims keeps a claim whose cited turnId is real", async () => {
     assert.match(job.messages[1]!.content, /\[id:t1\]/);
     return completion("", [{ text: "NZ requires 8 IELTS bands.", turnIds: ["t1"] }]);
   };
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.equal(result.length, 1);
   assert.equal(result[0]!.text, "NZ requires 8 IELTS bands.");
   assert.deepEqual(result[0]!.evidenceTurnIds, ["t1"]);
@@ -40,14 +40,14 @@ test("extractClaims keeps a claim whose cited turnId is real", async () => {
 test("extractClaims drops a claim whose ONLY cited turnId is fabricated (not in the real transcript)", async () => {
   const turns = [turn("t1", "spk:0", "Real content.")];
   const complete: ClaimsCompleteFn = async () => completion("", [{ text: "Invented fact.", turnIds: ["t999-does-not-exist"] }]);
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.deepEqual(result, []);
 });
 
 test("extractClaims keeps only the real turnIds out of a mixed real+fabricated set", async () => {
   const turns = [turn("t1", "spk:0", "Real content one."), turn("t2", "spk:1", "Real content two.")];
   const complete: ClaimsCompleteFn = async () => completion("", [{ text: "Mixed claim.", turnIds: ["t1", "t999-fake"] }]);
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.equal(result.length, 1);
   assert.deepEqual(result[0]!.evidenceTurnIds, ["t1"]);
 });
@@ -59,29 +59,55 @@ test("extractClaims drops a claim with no text, and one with a non-array turnIds
     { text: "claim", turnIds: "t1" }, // turnIds not an array
     { text: "good claim", turnIds: ["t1"] },
   ]);
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.equal(result.length, 1);
   assert.equal(result[0]!.text, "good claim");
 });
 
-test("extractClaims returns [] when complete() rejects, never throws into the caller", async () => {
+test("extractClaims returns [] when complete() rejects, never throws into the caller — and says it DEGRADED", async () => {
+  // ISS-056: an empty array meant both "no claims in this transcript" and "the provider fell
+  // over", and the caller deletes a session's claims before re-inserting — so a transient outage
+  // silently destroyed real claims. The reason must survive to the caller.
   const turns = [turn("t1", "spk:0", "Content.")];
   const complete: ClaimsCompleteFn = async () => { throw new Error("provider down"); };
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.deepEqual(result, []);
+  assert.ok(degraded, "a failed provider call must be reported as degraded, not as 'no claims'");
+  assert.match(degraded.reason, /provider down/);
 });
 
-test("extractClaims returns [] when the response is not a JSON array", async () => {
+test("extractClaims returns [] when the response is not a JSON array — also DEGRADED", async () => {
   const turns = [turn("t1", "spk:0", "Content.")];
   const complete: ClaimsCompleteFn = async () => completion("not an array");
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.deepEqual(result, []);
+  assert.ok(degraded, "an unparseable response is an unknown, not an empty result");
+});
+
+test("a transcript with genuinely nothing citable is NOT degraded — empty means empty", async () => {
+  // The other half: if degradation were reported for every empty result, the caller could never
+  // replace a session's claims with a legitimately empty set, and stale claims would live forever.
+  const turns = [turn("t1", "spk:0", "Content.")];
+  const complete: ClaimsCompleteFn = async () => completion("[]");
+  const { claims: result, degraded } = await extractClaims(turns, complete);
+  assert.deepEqual(result, []);
+  assert.equal(degraded, null, "an honest empty extraction must not look like a failure");
+});
+
+test("claims dropped for fabricated evidence leave a NON-degraded empty result", async () => {
+  // Every claim being dropped by the evidence check is a real, successful extraction that found
+  // nothing citable — not a provider failure. Conflating them would block legitimate replacement.
+  const turns = [turn("t1", "spk:0", "Content.")];
+  const complete: ClaimsCompleteFn = async () => completion(JSON.stringify([{ text: "Made up.", turnIds: ["nope"] }]));
+  const { claims: result, degraded } = await extractClaims(turns, complete);
+  assert.deepEqual(result, []);
+  assert.equal(degraded, null);
 });
 
 test("extractClaims prefers completion.json over re-parsing completion.text", async () => {
   const turns = [turn("t1", "spk:0", "Content.")];
   const complete: ClaimsCompleteFn = async () => completion("garbage text ignored", [{ text: "from json", turnIds: ["t1"] }]);
-  const result = await extractClaims(turns, complete);
+  const { claims: result, degraded } = await extractClaims(turns, complete);
   assert.equal(result.length, 1);
   assert.equal(result[0]!.text, "from json");
 });

@@ -48,8 +48,24 @@ interface RawClaim {
  * extracted yet", never a fabricated one). Every returned claim's `evidenceTurnIds` is a
  * verified-real subset of the input `turns`' ids; a claim with zero surviving real ids is
  * dropped entirely rather than shipped with empty evidence. */
-export async function extractClaims(turns: Turns[], complete: ClaimsCompleteFn): Promise<ExtractedClaim[]> {
-  if (turns.length === 0) return [];
+/**
+ * The result of an extraction attempt.
+ *
+ * `claims: []` used to be returned for BOTH "the transcript genuinely contains no citable claims"
+ * and "the provider call failed" — indistinguishable to the caller. That mattered more than it
+ * looked: `indexSession` deletes a session's existing claims before inserting the new set, so a
+ * transient provider outage during a re-index silently DESTROYED previously-extracted real claims
+ * and wrote nothing back (ISS-056, checker sweep 2026-09-07). `degraded` is how the caller can
+ * tell the difference and decline to replace good data with an unknown.
+ */
+export interface ClaimsResult {
+  claims: ExtractedClaim[];
+  /** `null` when extraction genuinely ran; a reason when `claims` means "unknown", not "none". */
+  degraded: { reason: string } | null;
+}
+
+export async function extractClaims(turns: Turns[], complete: ClaimsCompleteFn): Promise<ClaimsResult> {
+  if (turns.length === 0) return { claims: [], degraded: null };
 
   const validTurnIds = new Set(turns.map((t) => t._id));
   const transcript = buildCitableTranscript(turns);
@@ -64,11 +80,13 @@ export async function extractClaims(turns: Turns[], complete: ClaimsCompleteFn):
       ],
     });
     raw = completion.json ?? parseJsonLoose(completion.text);
-  } catch {
-    return [];
+  } catch (err) {
+    return { claims: [], degraded: { reason: `claims provider call failed: ${err instanceof Error ? err.message : String(err)}` } };
   }
 
-  if (!Array.isArray(raw)) return [];
+  if (!Array.isArray(raw)) {
+    return { claims: [], degraded: { reason: "claims response was not a JSON array" } };
+  }
 
   const claims: ExtractedClaim[] = [];
   for (const entry of raw as RawClaim[]) {
@@ -80,5 +98,5 @@ export async function extractClaims(turns: Turns[], complete: ClaimsCompleteFn):
     if (evidenceTurnIds.length === 0) continue; // no fabricated/empty-evidence claims ship
     claims.push({ text, evidenceTurnIds });
   }
-  return claims;
+  return { claims, degraded: null };
 }
