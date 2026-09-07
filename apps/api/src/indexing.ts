@@ -39,8 +39,18 @@ export interface IndexSessionDeps {
   db?: Pick<Db, "collection">;
 }
 
+/** The one collection here that CANNOT go through `scopedCollection`: `schema/
+ * tree_index.schema.json` declares no `tenantId` property at all, so the type does not satisfy
+ * `T extends {tenantId: string}` and a `{tenantId}` filter would match nothing. A tenant's tree
+ * is separated only by the `tenant:<id>` prefix inside `node_id` — a string convention, not a
+ * field, and therefore not something the compiler can enforce. Both callers below are pinned by
+ * `indexing.test.ts` instead. Raised in the ISS-060 manifest for the checker to rule on. */
+function treeIndexRootFilter(tenantId: string) {
+  return { node_id: `tenant:${tenantId}`, level: "tenant" as const };
+}
+
 async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promise<TreeIndexNode | null> {
-  return db.collection<TreeIndexNode>("tree_index").findOne({ node_id: `tenant:${tenantId}`, level: "tenant" });
+  return db.collection<TreeIndexNode>("tree_index").findOne(treeIndexRootFilter(tenantId));
 }
 
 /** Real summary + real evidence-checked claims + a real tree_index update for one already-
@@ -54,6 +64,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   const turnsColl = scopedCollection<Turns>(db as never, "turns");
   const sessionsColl = scopedCollection<Sessions>(db as never, "sessions");
   const sessionPagesColl = scopedCollection<SessionPages>(db as never, "session_pages");
+  const claimsColl = scopedCollection<Claims>(db as never, "claims");
 
   const turns = await turnsColl(tenantId).find({ sessionId }).toArray();
 
@@ -68,7 +79,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   // than one with fabricated/empty evidence. tree_index/status update below still run, so the
   // session isn't stuck "pending" forever over an edge case that shouldn't occur for a real
   // ingest in the first place.
-  await db.collection<SessionPages>("session_pages").deleteMany({ tenantId, sessionId });
+  await sessionPagesColl(tenantId).deleteMany({ sessionId });
   if (turns.length > 0) {
     const page: SessionPages = {
       _id: randomUUID(),
@@ -80,7 +91,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
       actionItems: summary.actionItems,
       evidence: toEvidenceTuple(turns.map((t) => ({ turnId: t._id, sessionId }))),
     };
-    await db.collection<SessionPages>("session_pages").insertOne(page);
+    await sessionPagesColl(tenantId).insertOne(page);
   }
 
   // Replace the session's claims ONLY when extraction actually ran. The delete used to be
@@ -91,7 +102,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   if (claimsDegraded) {
     console.warn(`indexSession(${tenantId}/${sessionId}): claims left unchanged — ${claimsDegraded.reason}`);
   } else {
-    await db.collection<Claims>("claims").deleteMany({ tenantId, "evidence.sessionId": sessionId });
+    await claimsColl(tenantId).deleteMany({ "evidence.sessionId": sessionId } as never);
   }
   if (!claimsDegraded && extractedClaims.length > 0) {
     const claimDocs: Claims[] = extractedClaims.map((c) => ({
@@ -104,7 +115,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
       status: "needs-review",
       evidence: toEvidenceTuple(c.evidenceTurnIds.map((turnId) => ({ turnId, sessionId }))),
     }));
-    await db.collection<Claims>("claims").insertMany(claimDocs);
+    await claimsColl(tenantId).insertMany(claimDocs);
   }
 
   const [allSessions, allPages, existingRoot] = await Promise.all([
@@ -117,7 +128,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
     : buildTree(allSessions, allPages)[tenantId];
   if (newRoot) {
     await db.collection<TreeIndexNode>("tree_index")
-      .replaceOne({ node_id: `tenant:${tenantId}`, level: "tenant" }, newRoot, { upsert: true });
+      .replaceOne(treeIndexRootFilter(tenantId), newRoot, { upsert: true });
   }
 
   await sessionsColl(tenantId).raw.updateOne({ _id: sessionId, tenantId }, { $set: { "status.index": "done" } });

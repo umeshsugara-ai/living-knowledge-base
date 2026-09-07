@@ -16,7 +16,7 @@ import assert from "node:assert/strict";
 import type { Db } from "mongodb";
 import { indexSession } from "./indexing.js";
 
-interface Call { coll: string; op: string }
+interface Call { coll: string; op: string; filter?: Record<string, unknown> }
 
 /**
  * Records every collection operation. `turns` MUST return a real row: with zero turns
@@ -29,15 +29,17 @@ function fakeDb(): { db: Pick<Db, "collection">; calls: Call[] } {
   const TURN = { _id: "t1", tenantId: "t", sessionId: "s1", speakerRef: "spk:0", tStart: 0, tEnd: 1, text: "A real sentence." };
   const db = {
     collection(name: string) {
-      const rec = (op: string) => { calls.push({ coll: name, op }); };
+      const rec = (op: string, filter?: Record<string, unknown>) => { calls.push({ coll: name, op, filter }); };
       return {
-        deleteMany: async () => { rec("deleteMany"); return { deletedCount: 0 }; },
+        deleteMany: async (filter?: Record<string, unknown>) => { rec("deleteMany", filter); return { deletedCount: 0 }; },
         insertOne: async () => { rec("insertOne"); return {}; },
         insertMany: async () => { rec("insertMany"); return {}; },
-        replaceOne: async () => { rec("replaceOne"); return {}; },
-        findOne: async () => { rec("findOne"); return null; },
-        find: () => ({ toArray: async () => { rec("find"); return name === "turns" ? [TURN] : []; } }),
-        updateOne: async () => { rec("updateOne"); return {}; },
+        replaceOne: async (filter?: Record<string, unknown>) => { rec("replaceOne", filter); return {}; },
+        findOne: async (filter?: Record<string, unknown>) => { rec("findOne", filter); return null; },
+        find: (filter?: Record<string, unknown>) => ({
+          toArray: async () => { rec("find", filter); return name === "turns" ? [TURN] : []; },
+        }),
+        updateOne: async (filter?: Record<string, unknown>) => { rec("updateOne", filter); return {}; },
       };
     },
   } as unknown as Pick<Db, "collection">;
@@ -77,6 +79,42 @@ test("a SUCCESSFUL extraction still replaces the session's claims (delete then i
   const ops = claimOps(calls);
   assert.ok(ops.includes("deleteMany"), "a real extraction must replace the prior claims");
   assert.equal(ops[0], "deleteMany", "delete must precede insert so re-indexing never duplicates");
+});
+
+test("EVERY query indexSession issues is confined to its own tenant (ISS-060)", async () => {
+  // The checker's unlisted mutation: drop `tenantId` from the claims deleteMany. It survived the
+  // whole suite and typecheck, and live it took TWO scratch tenants from 1 -> 0 — one of them a
+  // tenant that had nothing to do with the re-index. Op names alone could never catch it; the
+  // filter is the thing that has to be asserted, so this fake records filters too.
+  //
+  // tree_index is the deliberate exception: schema/tree_index.schema.json has no tenantId
+  // property at all, so its rows are separated only by the `tenant:<id>` prefix in node_id.
+  // That convention is asserted below precisely BECAUSE the compiler cannot assert it.
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, db });
+
+  const writes = calls.filter((c) => ["deleteMany", "insertMany", "insertOne", "replaceOne", "updateOne"].includes(c.op));
+  assert.ok(writes.length >= 4, `expected the real write set, got ${writes.length}`);
+
+  for (const call of calls) {
+    if (call.filter === undefined) continue; // inserts carry documents, covered by tenantScope.test.ts
+    if (call.coll === "tree_index") {
+      assert.equal(call.filter.node_id, "tenant:t", `${call.coll}.${call.op} must target this tenant's root node`);
+      continue;
+    }
+    assert.equal(call.filter.tenantId, "t", `${call.coll}.${call.op} issued a query with no tenantId — it can reach another tenant's rows`);
+  }
+});
+
+test("a DEGRADED run's writes are tenant-scoped too — the guard must not be a bypass", async () => {
+  // The degraded path takes a different branch through the same function; scoping it only on the
+  // healthy path would leave the exact conditions of the ISS-056 outage unprotected.
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith({ claimsFails: true }) as never, db });
+  for (const call of calls) {
+    if (call.filter === undefined || call.coll === "tree_index") continue;
+    assert.equal(call.filter.tenantId, "t", `${call.coll}.${call.op} lost its tenantId on the degraded path`);
+  }
 });
 
 test("session_pages are still written on a degraded CLAIMS run — the two paths are independent", async () => {

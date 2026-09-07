@@ -36,6 +36,14 @@ export function scopedCollection<T extends { tenantId: string; _id: string }>(
       findOne: (filter: Filter<T> = {}) => raw.findOne(withTenant<T>(tenantId, filter)),
       insertOne: (doc: Omit<T, "tenantId">) =>
         raw.insertOne({ ...doc, tenantId } as OptionalUnlessRequiredId<T>),
+      insertMany: (docs: Omit<T, "tenantId">[]) =>
+        raw.insertMany(docs.map((doc) => ({ ...doc, tenantId })) as OptionalUnlessRequiredId<T>[]),
+      /** Tenant-merged delete. Added for ISS-060: `indexSession` reached `claims` and
+       * `session_pages` through the RAW handle for its delete/insert half and carried the
+       * tenantId by hand, so removing it from the filter compiled, passed every test, and
+       * live destroyed a second tenant's claims. A write that can erase another tenant's rows
+       * must not be the one operation this accessor makes people go around it for. */
+      deleteMany: (filter: Filter<T> = {}) => raw.deleteMany(withTenant<T>(tenantId, filter)),
       raw,
     };
   };
