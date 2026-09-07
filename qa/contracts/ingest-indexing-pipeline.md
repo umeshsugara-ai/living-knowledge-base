@@ -57,6 +57,28 @@
    tenant's first indexed session — and finally flips `sessions.status.index` to `"done"`. A
    session with zero turns gets no `session_pages` doc (nothing real to cite) but still gets its
    `tree_index`/status step, so it's never stuck `"pending"` forever over that edge case.
+3a. **Every query `indexSession` issues is confined to one tenant.** Criterion 3 describes the
+   writes without requiring them to be tenant-confined, which is exactly why ISS-060 could exist
+   while this contract read as satisfied: the claims `deleteMany` reached the raw
+   `db.collection()` handle, carried its `tenantId` by hand, and stripping it compiled, passed the
+   whole suite, and live destroyed a second tenant's claims. Therefore: `turns`, `sessions`,
+   `session_pages` and `claims` are reached through `scopedCollection` — which merges the
+   `tenantId` itself, so a caller cannot omit one — and never through the raw handle. **The
+   `tenantId` merged by the accessor always wins over any caller-supplied one** (`withTenant`
+   spreads it last). **`tree_index` is the one disclosed exception**: `schema/
+   tree_index.schema.json` declares no `tenantId` property, so its rows are separated only by the
+   `tenant:<id>` prefix inside `node_id` — a convention the compiler cannot enforce. That
+   exception is permitted here as an interim boundary **only** while (i) every `tree_index` access
+   goes through a single shared filter definition, and (ii) no destructive multi-document
+   operation (`deleteMany`) is ever issued against `tree_index`. Whether the schema should gain a
+   real `tenantId` field is tracked as ISS-062, not settled by this criterion.
+   *(Added 2026-09-07 by /checker, ruling on the maker's explicit request in
+   `qa/manifests/tenant-scoped-writes.md`: "no criterion currently covers tenant scoping in
+   `indexSession` … I have NOT added one (contracts are checker-owned)." That was the correct
+   call, and the gap is real — a contract that never required the boundary is what let a
+   cross-tenant delete sit inside a passing unit. Tightening only, no criterion weakened, so
+   routine under the criticality gate. Satisfied by the unit under check, verified by mutation +
+   a checker-authored live two-tenant run.)*
 4. **`apps/api/src/ingest-store.ts`, `whatsapp-store.ts`** — both `createMongoIngestDeps`/
    `createMongoWhatsAppDeps` take an optional bound indexer, called right after turns are
    written. A rejected indexing call is logged and swallowed — the ingest itself already
@@ -178,4 +200,5 @@ Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)
 |---|---|---|---|
 | 2026-09-07 | adoption | /checker **adopts** this contract, which was drafted and committed by the maker in `3a998d3` and has carried no amendment log until now. Content re-read in full against `summarize.ts`, `claims.ts`, `indexing.ts` and the ingest composition roots. | Closes the `ingest-indexing-pipeline` share of the reopened **ISS-006** (maker-authored ground truth never adopted) and of **ISS-055** (no amendment log). The file invited adoption — "Drafted by the maker; /checker adopts or amends on first check" — and no checker had recorded one. Adopted as faithful **except** criteria 1 and 2, amended below in the same pass; adopting text I was simultaneously overturning would have been a rubber stamp. |
 | 2026-09-07 | routine (tighten) | **AMENDED criterion 2** — a failed `complete()` may no longer be reported as an empty extraction; `extractClaims` returns `{claims, degraded}`, with `degraded: null` reserved for extractions that genuinely ran (including genuinely-empty and all-dropped-by-evidence-check). **ADDED criterion 2a** — the caller's claims delete and insert must be governed by the same condition. | The superseded wording called a bare `[]` "an honest 'nothing extracted yet'". It was neither honest nor safe, and this is measured, not argued: driving the pre-fix code path against the real database (checker-authored script, scratch tenant, 2026-09-07) took a session's claims from **1 → 0**, destroying a claim carrying human review status `"verified"`, and wrote nothing back. The unconditional `deleteMany` paired with a conditional `insertMany` made any transient provider outage during a re-index a silent data-loss event. **Tightening only — a data-safety invariant is added, none weakened**, so this is a routine amendment under the criticality gate rather than a human-gated one. Decided on the pre-fix evidence, independently of the pending verdict: the rule was wrong before this unit existed. Raised by the maker (`qa/manifests/claims-degradation-honesty.md`), which flagged the contradiction and pointedly did **not** edit this file — the ISS-006 behaviour to generalise. ISS-056. |
+| 2026-09-07 | routine (tighten) | **ADDED criterion 3a** — every query `indexSession` issues must be tenant-confined, via `scopedCollection` rather than the raw handle, with the accessor's `tenantId` winning over any caller-supplied one; `tree_index` is a disclosed, conditional interim exception. | The contract described `indexSession`'s writes but never required them to stay inside a tenant, so ISS-060 — a cross-tenant `deleteMany` that survived the entire suite and `tsc` and live destroyed a second tenant's claims — was a defect the contract could not have caught. Raised by the maker, which flagged the gap and pointedly did **not** add the criterion itself ("contracts are checker-owned") — the ISS-006 behaviour, correctly generalised for the second time. Verified before adoption, not asserted: I re-ran the manifest's four mutations myself with occurrence counts asserted 1→0 (api 70/71, db 7/8, db 5/8 + api 69/71, db 7/8 — all matching), and wrote my OWN live two-tenant script against the real database (`lkb`, scratch tenants `chk060-*`), which took tenant B's human-`verified` claim 1→0 under the mutation and left it intact on the fixed code. Tightening only — a data-safety invariant added, none weakened. ISS-060. |
 | 2026-09-07 | routine (tighten) | **ADDED criterion 1a** — a degraded `summarizeSession` may not overwrite an existing good `session_pages` doc; the labelled fallback is for sessions that have no page yet. | Same shape as the ISS-056 defect, one file over, and disclosed by the maker rather than quietly left: a degraded re-index replaces a real summary with a 500-char transcript slice. The maker declined to act because "the contract explicitly requires that fallback" — correct reading, and the correct escalation. But the contract required the fallback to **exist**, never to **replace**. Lower severity than the claims defect (it is labelled, carries no human-curated state, and is regenerable from turns), hence a filed unit rather than a verdict failure. Tightening only. ISS-059. |
