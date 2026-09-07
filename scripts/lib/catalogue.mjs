@@ -12,8 +12,28 @@
  * loudly rather than silently honoured — otherwise the score becomes self-congratulation again.
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
+
+/**
+ * A reader that REMEMBERS what it read.
+ *
+ * The scorer's inputs used to be a hand-maintained list of one path, which was already wrong by
+ * three surfaces: the route/page/package scrapers read source code as text with no trust check, so
+ * uncommitted source edits bought +10.5 points with every gate green (ISS-047). "Which files did
+ * this program read" is a fact the program already knows — so it is now recorded rather than
+ * declared, and the trust check is applied to whatever comes back.
+ */
+export function createRecordingReader(root) {
+  const files = new Set();
+  return {
+    files,
+    read(abs) {
+      files.add(relative(root, abs).replace(/\\/g, "/"));
+      return readFileSync(abs, "utf8");
+    },
+  };
+}
 
 /**
  * Fingerprint of every feature's probes. Weakening or repointing a probe silently inflates the
@@ -27,8 +47,18 @@ export function hashProbes(catalogue) {
 }
 
 const ORDER = { MISSING: 0, STUB: 1, PARTIAL: 2, REAL: 3 };
-const POINTS = { MISSING: 0, STUB: 0, PARTIAL: 0.5, REAL: 1 };
+export const POINTS = { MISSING: 0, STUB: 0, PARTIAL: 0.5, REAL: 1 };
 export const VERDICTS = Object.keys(ORDER);
+
+/**
+ * The scale, rendered from POINTS rather than restated. The generated doc used to hardcode
+ * "REAL=1, PARTIAL=0.5, STUB/MISSING=0" as a string, so rewriting POINTS moved the headline
+ * +8.3 points while the doc kept asserting the old scale — a generated document that misstates
+ * its own scale is worse than no document (ISS-034, checker, 2026-09-07).
+ */
+export function scaleDescription() {
+  return VERDICTS.slice().reverse().map((v) => `${v}=${POINTS[v]}`).join(", ");
+}
 
 /**
  * The canonical denominator, pinned to plan §4c. Guarding only the numerator was not enough:
@@ -67,12 +97,12 @@ export const GROUP_NAMES = {
 };
 
 /** Routes the API really serves, and which of them are deliberate 501 stubs. */
-export function scrapeRoutes(root) {
+export function scrapeRoutes(root, read = (a) => readFileSync(a, "utf8")) {
   const dir = join(root, "apps", "api", "src", "routes");
   const live = new Set();
   const stubs = new Set();
   for (const f of readdirSync(dir).filter((n) => n.endsWith(".ts") && !n.endsWith(".test.ts"))) {
-    const src = readFileSync(join(dir, f), "utf8");
+    const src = read(join(dir, f));
     // `router.get("/x", …)` / `.post("/x/:id", …)` — the shape every route file uses.
     for (const m of src.matchAll(/\.(get|post|put|delete)\(\s*"([^"]+)"/g)) {
       live.add(`${m[1].toUpperCase()} ${m[2]}`);
@@ -87,30 +117,14 @@ export function scrapeRoutes(root) {
   return { live, stubs };
 }
 
-/** Real collection counts, reused from the newest live-verify evidence folder. */
-export function loadCollectionCounts(root) {
-  const dir = join(root, "qa", "evidence");
-  if (!existsSync(dir)) return { counts: null, source: null };
-  const runs = readdirSync(dir).filter((n) => n.startsWith("live-")).sort();
-  for (const run of runs.reverse()) {
-    const p = join(dir, run, "preflight.json");
-    if (!existsSync(p)) continue;
-    const pre = JSON.parse(readFileSync(p, "utf8"));
-    if (pre.collections && Object.keys(pre.collections).length > 0) {
-      return { counts: pre.collections, source: `qa/evidence/${run}/preflight.json` };
-    }
-  }
-  return { counts: null, source: null };
-}
-
 /** SPA routes that really exist. */
-export function scrapePages(root) {
-  const src = readFileSync(join(root, "apps", "web", "src", "App.tsx"), "utf8");
+export function scrapePages(root, read = (a) => readFileSync(a, "utf8")) {
+  const src = read(join(root, "apps", "web", "src", "App.tsx"));
   return new Set([...src.matchAll(/path="([^"]+)"/g)].map((m) => m[1]));
 }
 
 /** A package is "reachable" only if something OUTSIDE it imports it — dead code is not a feature. */
-export function reachablePackages(root) {
+export function reachablePackages(root, read = (a) => readFileSync(a, "utf8")) {
   const reachable = new Set();
   const scan = (dir, ownerPkg) => {
     if (!existsSync(dir)) return;
@@ -119,7 +133,7 @@ export function reachablePackages(root) {
       const p = join(dir, e.name);
       if (e.isDirectory()) scan(p, ownerPkg);
       else if (/\.(ts|tsx|mjs)$/.test(e.name)) {
-        for (const m of readFileSync(p, "utf8").matchAll(/from\s+"(@lkb\/[\w-]+)"/g)) {
+        for (const m of read(p).matchAll(/from\s+"(@lkb\/[\w-]+)"/g)) {
           if (m[1] !== ownerPkg) reachable.add(m[1]);
         }
       }

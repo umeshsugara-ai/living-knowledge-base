@@ -21,9 +21,27 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
-  scrapeRoutes, loadCollectionCounts, scrapePages, reachablePackages, scoreCatalogue, GROUP_NAMES,
-  assertDenominator,
+  scrapeRoutes, scrapePages, reachablePackages, scoreCatalogue, GROUP_NAMES, createRecordingReader,
+  assertDenominator, scaleDescription,
 } from "./lib/catalogue.mjs";
+import { loadCollectionCounts, trustOf, isTrustworthy, trustWarning, untrustedAmong } from "./lib/evidence.mjs";
+
+/**
+ * Every score-raising INPUT gets the same trust check.
+ *
+ * This was a hand-maintained list of one path, and the checker's answer was correct: that is not
+ * acceptable, because "which files did this program read" is a fact the program already knows —
+ * and the list was already wrong by three surfaces. The route/page/package scrapers read source
+ * code as text with no trust check, so uncommitted source edits bought +10.5 points with every
+ * gate green and no banner (ISS-047). Worse than an attack, it was a live hazard: anyone on a
+ * feature branch running `pnpm progress` would commit a score measuring their working tree rather
+ * than the repository.
+ *
+ * So the set is now DERIVED — the scrapers read through a recording reader, and whatever they
+ * actually touched gets trust-checked. Only `.goal/catalogue.json` is named explicitly, because it
+ * is parsed rather than read through a scraper.
+ */
+const EXPLICIT_INPUTS = [".goal/catalogue.json"];
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "docs", "PROGRESS.md");
@@ -31,14 +49,30 @@ const OUT = join(ROOT, "docs", "PROGRESS.md");
 export function generate(root = ROOT) {
   const catalogue = JSON.parse(readFileSync(join(root, ".goal", "catalogue.json"), "utf8"));
   assertDenominator(catalogue); // dropping features is the cheapest way to inflate a percentage
-  const { counts, source } = loadCollectionCounts(root);
+  const { counts, source, stamp, hash, trusted, warning, trust } = loadCollectionCounts(root);
+  // Read every source signal through a recorder, so the trust check below covers exactly what was
+  // read rather than what someone remembered to list (ISS-047).
+  const reader = createRecordingReader(root);
   const signals = {
-    routes: scrapeRoutes(root),
+    routes: scrapeRoutes(root, reader.read),
     counts,
-    pages: scrapePages(root),
-    packages: reachablePackages(root),
+    pages: scrapePages(root, reader.read),
+    packages: reachablePackages(root, reader.read),
   };
   const s = scoreCatalogue(catalogue, signals);
+  s.evidence = counts ? { source, stamp, hash, trusted, warning, trust } : null;
+  s.inputs = EXPLICIT_INPUTS.map((rel) => {
+    const t = trustOf(root, rel);
+    return { source: rel, trust: t, trusted: isTrustworthy(t), warning: trustWarning(t, rel) };
+  });
+  // …plus every file the scrapers actually read. One `git status` call answers for all of them;
+  // per-path `git diff` would be hundreds of processes.
+  const scraped = [...reader.files];
+  s.scrapedCount = scraped.length;
+  s.scrapedFiles = scraped; // exposed so a test can assert the trusted set covers what was read
+  for (const [rel, t] of untrustedAmong(root, scraped)) {
+    s.inputs.push({ source: rel, trust: t, trusted: false, warning: trustWarning(t, rel) });
+  }
 
   const bar = (pct) => "█".repeat(Math.round(pct / 5)).padEnd(20, "░");
   const L = [
@@ -47,14 +81,15 @@ export function generate(root = ROOT) {
     "# Progress — what actually exists",
     "",
     `**${s.adjustedPercent}% of the ${s.total}-feature product catalogue.**`,
-    `Machine-derived alone: ${s.autoPercent}%. Scoring: REAL=1, PARTIAL=0.5, STUB/MISSING=0.`,
+    `Machine-derived alone: ${s.autoPercent}%. Scoring: ${scaleDescription()}.`,
     "",
     `Denominator pinned to plan §4c (${s.total} features; dropping one fails the run). Probe fingerprint \`${s.probeHash}\` —`,
     `if that changes, a probe was edited and the score is not comparable to the previous run.`,
     `${s.probeless.length} feature(s) declare no probe and therefore score MISSING by default: ${s.probeless.join(", ")}.`,
+    ...s.inputs.filter((i) => i.warning).map((i) => `\n> ${i.warning}`),
     "",
     counts
-      ? `Collection counts read from \`${source}\`. Re-run \`pnpm verify:live\` first for fresher numbers.`
+      ? `Collection counts from \`${source}\` (run ${stamp}, content \`${hash}\`)${warning ? ` — ${warning}` : ""}. Chosen by the timestamp inside the file, not by folder name. Re-run \`pnpm verify:live\` for fresher numbers.`
       : "> **No live-verify evidence found** — every collection probe is unresolved, so this score is a floor, not a measurement. Run `pnpm verify:live`.",
     "",
     "## By group",
@@ -108,8 +143,27 @@ function main(argv) {
     process.exit(2);
   }
   if (argv.includes("--check")) {
+    // `--check` is the gate in `pnpm lint:structure`, so it holds the stricter line: a score
+    // computed from evidence nobody else has is not a shared fact. Write mode still allows
+    // uncommitted evidence (with the loud banner) so local iteration is not blocked — but the
+    // gate everyone trusts cannot pass on a file that exists only on one machine (ISS-035).
+    const untrusted = [
+      ...(score.evidence && !score.evidence.trusted ? [score.evidence] : []),
+      ...score.inputs.filter((i) => !i.trusted),
+    ];
+    if (untrusted.length > 0) {
+      for (const u of untrusted) {
+        console.error(`REFUSED: ${u.source} is not what the repository holds (${u.trust}). Commit it, or restore it, so the score is reproducible by someone else.`);
+      }
+      process.exit(2);
+    }
+    // Compare line-ending-insensitively: under `core.autocrlf=true` the committed file
+    // materialises with CRLF while generation emits LF, which sent `--check` STALE on an
+    // untouched clone — a staleness gate that cries wolf on a fresh checkout gets ignored,
+    // and then catches nothing (ISS-043).
+    const lf = (t) => t.replace(/\r\n/g, "\n");
     const committed = existsSync(OUT) ? readFileSync(OUT, "utf8") : "";
-    if (committed !== text) {
+    if (lf(committed) !== lf(text)) {
       console.error("STALE: docs/PROGRESS.md differs from a fresh regeneration. Run: node scripts/catalogue-score.mjs");
       process.exit(1);
     }

@@ -3,13 +3,13 @@
 # Progress — what actually exists
 
 **20.2% of the 57-feature product catalogue.**
-Machine-derived alone: 28.9%. Scoring: REAL=1, PARTIAL=0.5, STUB/MISSING=0.
+Machine-derived alone: 28.9%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
 
 Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `9acec0d56307` —
 if that changes, a probe was edited and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
 
-Collection counts read from `qa/evidence/live-2026-09-07-01-58-41/preflight.json`. Re-run `pnpm verify:live` first for fresher numbers.
+Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (run 2026-09-07T01:58:41.367Z, content `78a2fc2b0743`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
 ## By group
 
