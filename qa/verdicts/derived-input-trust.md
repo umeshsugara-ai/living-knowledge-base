@@ -2,242 +2,269 @@
 
 **Unit:** qa/manifests/derived-input-trust.md
 **Contract:** qa/contracts/catalogue-progress-score.md (judged against **I14**; I1–I13 must not regress)
-**Cycle checked: 1**
+**Cycle checked: 2**
 **Date:** 2026-09-07
 **Checker:** /checker Mode A, fresh context, bound to `D:/KnowledgeBase`
-**Mode:** Mode A unit check. Two prior dispatches died on network errors without writing a verdict;
-this is still Fix cycle 1.
+**Mode:** Mode A unit check. Supersedes the cycle-1 FAIL verdict (commit `ce15a02`) at this path.
 
 ```
-VERDICT: FAIL
-SCOREBOARD: 13/14 invariants hold (I1–I13 all re-verified; I14 half-met)
-FAILURES:
-- [I14] sev: medium · The mechanism is real and works, but I14's own test clause — "assert that
-  the set of repo-relative paths read during a real generate() is a SUBSET of the trusted set" —
-  is not implemented, and a one-token mutation proves the consequence: changing
-  `reachablePackages(root, reader.read)` to `reachablePackages(root)` in
-  scripts/catalogue-score.mjs:60 survives the ENTIRE gate set (44/44 tests, `pnpm lint:structure`
-  exit 0) while silently dropping ~460 of the 472 scraped files from the trust check — with the
-  mutation applied, a modified `packages/ai/src/index.ts` gives `--check` exit 0 and no banner.
-  That is the ISS-047 hazard reopened, one scraper over, by a plausible refactor.
-  · fix: add the subset test ISS-047's own fix_direction prescribed — assert the recorded read set
-  ⊆ the trusted set — and/or one behavioural test that tampers a `packages/**`-only file and
-  asserts `--check` exit 2. ~10–15 lines. · issue: ISS-048
-ISSUES-WRITTEN: ISS-048 (new, medium) · ISS-049 (new, low) · ISS-050 (new, low) ·
-  ISS-044 → fixed · ISS-045 → fixed · ISS-046 → fixed · ISS-047 → fixed
-EXPLANATION: Everything the manifest claims, I reproduced independently — the ISS-047 attack, the
-gitignore blind spot and its fix, all five listed mutations plus the ls-files one, the ISS-046
-throw-mid-tamper restore, the ISS-045 CRLF case, I1–I13 with no regression, 44 tests, exit-0
-lint:structure and the five LOC figures to the digit. The maker's proportionality proposal is
-CORRECT and I endorse stopping — see §Proportionality. This FAIL is deliberately narrow and is not
-another hardening layer: it is the missing pin on the layer just shipped, explicitly demanded by
-I14 and by ISS-047's own fix_direction, and it is the only reason this is not a PASS. Fix it, do
-not hunt for anything else on this instrument, and move to §10 U0.6.
+VERDICT: PASS
+SCOREBOARD: 14/14 invariants hold (I1–I13 re-verified with no regression; I14 now fully met,
+            test clause included)
+FAILURES: none
+ISSUES-WRITTEN: ISS-051 (new, low, open) · ISS-052 (new, low, open) ·
+  ISS-048 → verified (fixed and independently confirmed) · ISS-050 re-checked, stays open
+EXPLANATION: The single cycle-1 FAIL is genuinely closed. My exact M7 mutation —
+`reachablePackages(root, reader.read)` → `reachablePackages(root)` — is now RED with a message
+that names the territory it dropped, where last cycle it survived 44/44 plus lint:structure. The
+maker's two "these mutations survive and that is CORRECT" claims are true, and I proved them
+behaviourally rather than accepting the argument: with the recorder dropped from scrapeRoutes and
+from scrapePages in turn, a modified route file, a modified App.tsx and an untracked route file are
+each still REFUSED at exit 2, because reachablePackages independently re-reads all of them. The
+corrected 228 / 22-43-21-142 breakdown is exact. Residual: the shipped test is a territory+floor
+PROXY for I14's literal subset clause, and two deliberate partial mutations of the scorer's own
+source slip past it — filed as ISS-051 (low) under the FILE-don't-FIX rule, because both require
+editing the instrument itself and neither moves the adjusted headline at all. Stopping here is
+still the right call and I am restating that recommendation unchanged.
 ```
 
 ---
 
-## What I re-ran (all commands executed by me, in `D:/KnowledgeBase`, nothing pasted)
+## What I re-ran (every command executed by me in `D:/KnowledgeBase`; nothing pasted)
 
-### 1. ISS-047 — untracked route file + uncommitted App.tsx edits  ✅ confirmed
+Baseline: `pnpm test:lint` 45/45, `pnpm lint:structure` exit 0, `--check` exit 0 at 20.2%,
+`docs/PROGRESS.md` md5 `84f0c37124e4a4fd18457f71660e3cc4`.
 
-Created untracked `apps/api/src/routes/smuggled.ts` (POST /gmail/scan, POST /webhooks/register,
-GET /citations/:claimId) and added 5 `<Route path=…>` lines to `apps/web/src/App.tsx` (10 → 15
-route lines):
+### 1. ISS-048 — the decisive test  ✅ FIXED
 
-```
-$ node scripts/catalogue-score.mjs --check
-REFUSED: apps/api/src/routes/smuggled.ts is not what the repository holds (untracked). …
-REFUSED: apps/web/src/App.tsx is not what the repository holds (modified). …
-rc=2                                                     <- both files NAMED
-
-$ node scripts/catalogue-score.mjs
-wrote docs/PROGRESS.md — 28.9% adjusted / 37.7% machine-derived, 57 features
-docs/PROGRESS.md:12  > **UNCOMMITTED — `apps/api/src/routes/smuggled.ts` …**
-docs/PROGRESS.md:14  > **EDITED SINCE COMMIT — `apps/web/src/App.tsx` …**
-```
-
-Restored byte-identically: `md5 docs/PROGRESS.md 84f0c37124e4a4fd18457f71660e3cc4`,
-`md5 App.tsx 9b5fa249dd1f55143c0d5c8abeb7c0f8` — both equal to the pre-attack hashes;
-`--check` back to exit 0 at 20.2%.
-
-### 2. The gitignore blind spot  ✅ fix confirmed · ⚠️ the maker's claim audited and partly understated
-
-**Fix verified.** Appended two paths to `.gitignore`, created gitignored
-`apps/api/src/routes/ghost.ts` (GET /search, GET /citations/:claimId, POST /webhooks/register,
-POST /gmail/scan) and gitignored `apps/web/src/ghostmod.ts` (`import … from "@lkb/meeting-bot"`):
+My cycle-1 mutation, re-applied with proof of application (occurrence counts, not `git diff`, since
+`scripts/lib/evidence.mjs` is untracked and `catalogue-score.mjs` is uncommitted-modified):
 
 ```
-$ git status --porcelain --untracked-files=all -- <both ghost paths>   -> 0 lines   (invisible)
-$ git status --porcelain -- .gitignore                                 ->  M        (and .gitignore is not itself an input)
-$ node scripts/catalogue-score.mjs --check
-REFUSED: apps/api/src/routes/ghost.ts is not what the repository holds (untracked).
-REFUSED: apps/web/src/ghostmod.ts is not what the repository holds (untracked).
-rc=2
+recorded form `reachablePackages(root, reader.read)`  1 -> 0
+mutated  form `reachablePackages(root)`               0 -> 1
+
+$ node --test scripts/catalogue.test.mjs scripts/catalogue-cli.test.mjs
+  tests 31 · pass 30 · fail 1
+✖ EVERY scraper reads through the recorder — dropping one from generate() must fail
+  AssertionError: package scraper (packages/) did not read through the recorder — its files are untrusted
 ```
 
-**Then I attacked the maker's key claim** ("not convertible into points today"), by neutering the
-new membership check to reproduce the pre-fix world — `if (!tracked.has(rel))` →
-`if (false && !tracked.has(rel))`, proof of application: occurrence count of the neutered form = 1
-— and re-running with the same ghost payload:
+**RED, and the failure message names the exact territory that was dropped.** Last cycle this same
+edit was green at 44/44 + `lint:structure` exit 0. Restored; md5 of `scripts/catalogue-score.mjs`
+back to `4883b2a102409e094f1e7ca59bc86451`.
+
+### 2. Trying to defeat the new test another way  ⚠️ two survivors, both filed as ISS-051
+
+The dispatch asked whether trust coverage for `packages/` can be dropped while the test stays green.
+It can — but only by editing the scorer's own source in ways no refactor produces.
+
+| # | mutation | proof applied | suite | exploit |
+|---|---|---|---|---|
+| **M8** | keep `scrapedFiles` complete, filter `packages/` out of the TRUST call only: `untrustedAmong(root, scraped)` → `untrustedAmong(root, scraped.filter((f) => !f.startsWith("packages/")))` | target 1→0, filter form 0→1 | **31/31 GREEN** | modified tracked `packages/ai/src/index.ts` → `--check` **exit 0**, no refusal, no banner; `lint:structure` exit 0 |
+| **M11** | `reachablePackages` scans only apps/api: `for (const app of ["api", "web"])` → `["api"]` | target 1→0, mutated 0→1 | **31/31 GREEN** (recorded set falls 228 → 186, still above the 150 floor; the `apps/web/src/App.tsx` territory is still satisfied by `scrapePages`) | untracked `apps/web/src/ghostmod.ts` importing `@lkb/meeting-bot` goes untrusted-but-unreported, `--check` exit 0 — **but the score does not move at all: 20.2% / 28.9%, both unchanged** |
+
+**Why this is ISS-051 (low) and not a FAIL.** The cycle-1 FAIL was a *plausible unintentional
+refactor* (dropping an argument) that silently deleted the mechanism; that is now caught. M8 and M11
+are deliberate edits to the scorer's own source, which no self-check can reach — the instrument can
+always be rewritten to lie, and neither the contract nor the unit ever claimed otherwise. Both
+require a commit to affect anyone else, which is precisely the "hazard, not attack" line this
+project adopted last cycle. Measured payload: **0 points on the adjusted headline**, and M11 moved
+the machine-derived number not at all. The honest statement is that the shipped test is a
+territory+floor **proxy** for I14's literal "read set ⊆ trusted set" clause; the proxy catches the
+realistic failure mode and misses partial-coverage sabotage.
+
+### 3. The two mutations the manifest says SURVIVE and should  ✅ the reasoning holds — verified behaviourally
+
+I did not accept the argument; I applied each mutation and then attacked.
 
 ```
-$ node scripts/catalogue-score.mjs
-wrote docs/PROGRESS.md — 20.2% adjusted / 29.8% machine-derived, 57 features
-$ grep -c 'UNCOMMITTED|EDITED SINCE'  -> 0 banners
-$ node scripts/catalogue-score.mjs --check   -> OK: docs/PROGRESS.md is current (20.2%)  rc=0
+M9  scrapeRoutes(root, reader.read) -> scrapeRoutes(root)      target 1->0, mutated 0->1
+    recorded set still 228 (22 route files intact — reachablePackages re-reads them)
+    $ printf '\n// checker tamper M9\n' >> apps/api/src/routes/ask.ts
+    $ node scripts/catalogue-score.mjs --check
+      REFUSED: apps/api/src/routes/ask.ts is not what the repository holds (modified).   rc=2
+
+M10 scrapePages(root, reader.read)  -> scrapePages(root)       target 1->0, mutated 0->1
+    $ modified apps/web/src/App.tsx (10 -> 11 <Route path=> lines)
+      REFUSED: apps/web/src/App.tsx is not what the repository holds (modified).         rc=2
+    $ untracked apps/api/src/routes/smuggled.ts (GET /topics, GET /speakers)
+      REFUSED: apps/api/src/routes/smuggled.ts is not what the repository holds (untracked). rc=2
 ```
 
-**Result of the audit — the maker is right on the headline and understated on the second number.**
+**I could NOT make a route file or App.tsx untrusted-but-unreported through either mutation.** The
+maker's stated reason is the true one, and I confirmed the mechanism rather than the conclusion:
+`reachablePackages` scans `apps/api`, `apps/web` and `packages/*` (`scripts/lib/catalogue.mjs:143–147`),
+so it re-reads every file the other two scrapers touch. Only `packages/` is exclusive territory —
+which is exactly why M7 was the mutation that mattered and why these two are correctly green. The
+maker checked rather than assuming in either direction, and was right.
 
-- **Adjusted headline 20.2%: immovable.** I searched the whole payload space, not just the
-  maker's. Every route probe reachable by a new route file is either already live
-  (`GET /calendar/upcoming`, `POST /gmail/scan` — A7 is *already* auto REAL) or in the 501 stub
-  list (`GET /search`, `GET /citations/:claimId`, `POST /webhooks/register` — stubs.ts:22–24),
-  and `evaluate()` checks `stubs` before `live`, so a stub cannot be un-stubbed by declaring it.
-  `scrapePages` reads only the tracked `App.tsx`. The one package probe (`@lkb/meeting-bot`, A10)
-  is manually capped at STUB. So the maker's conclusion — blind spot, not a live inflation path —
-  **holds for the number the project reports as "how much of the product exists".**
-- **Machine-derived headline: it does move, +0.9 points (28.9% → 29.8%), silently.** A10's auto
-  verdict goes PARTIAL → REAL on the ghost import; the manual STUB caps `adjusted` but not `auto`,
-  and `Machine-derived alone: 29.8%.` is printed as a headline line in the generated doc with
-  `--check` exit 0 and no banner. The manifest's phrasing ("A10's package-reachability gain is
-  manually downgraded anyway") skips that the auto number is still published.
-  Filed as **ISS-049 (low, fixed)** for the record, not as a failure: the magnitude is 0.9 points
-  against levers of +42.1 / +19.3 / +10.5, and the hole is closed. The maker's *decision* — fix it
-  anyway because "not exploitable" is a luck-dependent defence — was correct, and the reasoning it
-  used to get there was 90% right.
+### 4. The corrected numbers  ✅ 228 confirmed exactly, breakdown to the digit
 
-Everything restored: `.gitignore`, `scripts/lib/evidence.mjs` and `docs/PROGRESS.md` all back to
-their pre-test md5s; ghost files deleted; `--check` exit 0.
-
-### 3. A file the scrapers do NOT read must not trip the gate  ✅ confirmed (both directions)
+Read from `generate(REPO).score.scrapedFiles` directly, not from the manifest:
 
 ```
-untracked new file at repo root (README.md)          -> --check rc=0
-modified TRACKED ARCHITECTURE.md (" M ARCHITECTURE.md") -> --check rc=0
+TOTAL = 228          (duplicates: 0; unclassified: 0)
+  routes  apps/api/src/routes/   22
+          apps/web/              43
+  other   apps/api/              21
+          packages/             142
+                          22+43+21+142 = 228 ✓
 ```
-The gate is selective, not a blanket dirty-tree check.
 
-### 4. A file only `reachablePackages` reads  ✅ confirmed caught
+The manifest's corrected figure and every component of its breakdown are exact, and the old "472"
+was indeed wrong. The measurement is recorded in the test's own comment, which is the right place.
 
-```
-modified tracked packages/ai/src/index.ts   -> REFUSED: packages/ai/src/index.ts … (modified)  rc=2
-new untracked packages/core/src/checkerprobe.ts -> REFUSED: … (untracked)               rc=2
-```
-This is the variant the manifest called "the least exercised" — the shipped code handles it. It is
-also the exact variant with **no test**, which is finding ISS-048 below.
+**Is the `>150` floor set sensibly, and would it catch a scraper going silent?** Partly, and the
+manifest slightly over-claims what the floor does:
 
-### 5. Mutation tests — 6 listed + 1 of mine. Each edit PROVEN applied before the result was read.
+- `reachablePackages` going silent entirely: 228 → 22. Caught twice over (floor **and** the
+  `packages/` territory assertion). This is the failure mode that mattered — confirmed in §1.
+- The recorder going dead altogether (M4): caught.
+- `scrapeRoutes` or `scrapePages` going silent: count stays 228, no assertion fires — and that is
+  **correct**, per §3: nothing becomes untrusted.
+- **Partial** degradation of `reachablePackages` (M11): 186 survives the floor, and every territory
+  still has a representative. So the floor's 34% headroom is generous for total collapse and blind
+  to partial collapse.
 
-Suite = `node --test scripts/catalogue.test.mjs scripts/catalogue-cli.test.mjs` (30 tests).
+Net: the floor is set from a real measurement with sensible headroom for the thing it is aimed at,
+and it does catch a scraper going silent. It does not catch a scraper going *quiet*. That is the
+ISS-051 residual, not a defect in the threshold choice.
 
-| # | mutation | proof the edit applied | result |
+### 5. Mutation set M1–M6 — no regression, all six still CAUGHT
+
+Each edit proven applied by occurrence count before the result was read. (M5's target is LF on disk,
+not CRLF — `git ls-files --eol` reports `w/lf` for `catalogue-score.mjs` and `w/crlf` for
+`lib/catalogue.mjs`; my first M5 attempt reported "target not found" and I fixed the pattern rather
+than recording a survivor. The manifest's methodology warning is correct and bit me again.)
+
+| # | mutation | ISS | result |
 |---|---|---|---|
-| M1 | upgrade refusal `if (score.upgrades.length > 0)` → `if (false)` | `if (false)` count 0→1; old pattern count 1→0 | **CAUGHT** 29/30, 1 fail |
-| M2 | `lf()` normalisation → identity | `const lf = (t) => t;` count 0→1; `replace(/\r\n/g` count 1→0 | **CAUGHT** 29/30, 1 fail |
-| M3 | scraped-source trust check removed (`untrustedAmong(root, scraped)` → `[]`) | `of [])` count 0→1; old call count 1→0 | **CAUGHT** 28/30, 2 fail |
-| M4 | the recorder stops recording (`files.add(…)` deleted) | `files.add(` count 1→0; marker count 0→1 | **CAUGHT** 28/30, 2 fail |
-| M5 | the gate's own `process.exit(2)` → `exit(0)` in the trust-refusal branch | `exit(2)` 3→2, `exit(0)` 0→1, target line 157 printed | **CAUGHT** 26/30, 4 fail |
-| M6 | `ls-files` membership check neutered | neutered form count 0→1 | **CAUGHT** 29/30, 1 fail |
-| **M7 (mine)** | `reachablePackages(root, reader.read)` → `reachablePackages(root)` | unrecorded form 0→1, recorded form 1→0 | **SURVIVED — 30/30, and 44/44 on `pnpm test:lint`, `lint:structure` exit 0** |
+| M1 | `if (score.upgrades.length > 0)` → `if (false)` | ISS-044 | **CAUGHT** 30/31 — *`--check` EXITS 2 on a manual UPGRADE* |
+| M2 | `lf()` → identity | ISS-045 | **CAUGHT** 30/31 — *tolerates CRLF in the committed doc* |
+| M3 | `untrustedAmong(root, scraped)` → `[]` | ISS-047 | **CAUGHT** 29/31 — scraped-source + gitignored |
+| M4 | recorder stops recording (`files.add(…)` removed) | ISS-047 | **CAUGHT** 28/31 — incl. the new I14 test |
+| M5 | trust-refusal `process.exit(2)` → `exit(0)` | ISS-038 | **CAUGHT** 27/31 — all four trust refusals |
+| M6 | `ls-files` membership check neutered | gitignore | **CAUGHT** 30/31 — *GITIGNORED scraped file* |
+| **M7** | `reachablePackages(root, reader.read)` → `(root)` | **ISS-048** | **CAUGHT 30/31 — was GREEN last cycle** |
 
-**The manifest's methodology warning bit me too, and its own way.** My first M4 attempt used
-`perl` and reported GREEN at 30/30 — but the occurrence count showed `files.add(` still at 1: the
-edit never landed, because `scripts/lib/catalogue.mjs` is CRLF on disk (`git ls-files --eol` →
-`w/crlf`) and my pattern was anchored to `$`. A second attempt with a Python literal replace also
-failed to match for the same reason. Only a line-index replacement applied it, printing the target
-line (`32: '      files.add(relative(root, abs).replace(/\\\\/g, "/"));\r'`) — and then it came
-back **RED**. Two GREENs that meant nothing. The manifest is right that a mutation without proof of
-application is not evidence; on this repo the trap is line endings, and the occurrence-count
-discipline is what caught it both times.
+### 6. Cycle-1 wins re-verified live
 
-**M7 in detail (the FAIL).** With the mutation applied I then tampered a real file:
+**ISS-047 attack**, rebuilt from scratch (untracked `apps/api/src/routes/smuggled.ts` with
+`GET /topics` + `GET /citations/:claimId`, plus 2 added `<Route path=…>` lines in `App.tsx`):
 
 ```
-$ printf '\n// tamper\n' >> packages/ai/src/index.ts
-$ git status --porcelain -- packages/ai/src/index.ts   ->  M packages/ai/src/index.ts
 $ node scripts/catalogue-score.mjs --check
-OK: docs/PROGRESS.md is current (20.2% of 57 features)     rc=0     <- no refusal, no banner
+  REFUSED: apps/api/src/routes/smuggled.ts is not what the repository holds (untracked).
+  REFUSED: apps/web/src/App.tsx is not what the repository holds (modified).          rc=2
+$ node scripts/catalogue-score.mjs
+  wrote docs/PROGRESS.md — 24.6% adjusted / 33.3% machine-derived     # the lever, still refused
+  banners in the doc: 2
 ```
+Restored: `md5sum -c` OK on both `docs/PROGRESS.md` and `apps/web/src/App.tsx`.
 
-`reachablePackages` is the scraper that reads ~460 of the 472 recorded files (the whole
-`apps/**` + `packages/**` tree); `scrapeRoutes` and `scrapePages` between them cover ~12. The two
-behavioural tests that exist cover `App.tsx` (scrapePages) and a route file (scrapeRoutes) — so
-the largest of the three scrapers can be silently un-recorded with every gate green. `grep` for
-`reader`, `createRecordingReader`, `scrapedCount`, `subset` or `inputs` across both test files
-returns **zero** matches: nothing tests the derived-input mechanism as a mechanism.
+**Gitignore blind spot:** `.gitignore` + gitignored `apps/api/src/routes/ghost.ts` (`GET /search`,
+`GET /topics`) → `git status --porcelain --untracked-files=all` prints **0 lines** for it, and
+`--check` → `REFUSED: apps/api/src/routes/ghost.ts … (untracked)` rc=2. Fix holds.
 
-I14 asks for exactly this and names it: *"This carries its own test in the I12 sense: assert that
-the set of repo-relative paths read during a real `generate()` is a **subset** of the trusted set,
-so an input added without trust fails a test rather than quietly inflating a number."*
-ISS-047's `fix_direction` says the same thing in the same words. It was not done. Practical
-exploit ceiling today is the same +0.9 on the machine-derived number (A10 is the only probe
-`reachablePackages` feeds), so this is **medium**, not high — but the point of I14 is not the
-current point value, it is that the mechanism cannot silently disappear.
+**ISS-046** — induced a throw *mid-tamper* (the scraped-source test's `assert.equal(status, 2, …)`
+→ `assert.equal(status, 999, "CHECKER-INDUCED THROW mid-tamper")`, marker count 1). Suite went
+11 pass / 1 fail with the AssertionError raised inside `whileTampered`; afterwards `md5sum -c`
+reported **App.tsx: OK** and **PROGRESS.md: OK**, `--check` exit 0. The `finally` restores both.
 
-### 6. ISS-046 — a test throwing mid-tamper  ✅ confirmed
+**ISS-045** — rewrote `docs/PROGRESS.md` with 103 CRLF pairs (counted 0 → 103), byte-for-byte what
+`core.autocrlf=true` produces: `--check` → **exit 0**. Restored, md5 unchanged.
 
-Changed the scraped-source test's assertion to `assert.equal(status, 999, "CHECKER-INDUCED THROW
-mid-tamper")` (proof: marker count 1) and ran the CLI suite: 10 pass / **1 fail** with the induced
-AssertionError raised *inside* `whileTampered`, i.e. while `App.tsx` was corrupted. Afterwards:
+**ISS-044** — live: `B6 manual.verdict="REAL"` → `REFUSED: … tries to UPGRADE a derived verdict:
+B6: manual "REAL" > auto "MISSING"` rc=2 **with the doc byte-unchanged** (no write).
 
-```
-apps/web/src/App.tsx: OK   docs/PROGRESS.md: OK      (md5 -c against pre-run hashes)
-$ node scripts/catalogue-score.mjs --check  -> OK … 20.2%   rc=0
-```
-The `finally` restores both the tampered input and the generated doc. ISS-046 closed.
+### 7. No regression on I1–I13
 
-### 7. ISS-045 — CRLF materialisation of docs/PROGRESS.md  ✅ confirmed
-
-Rewrote the doc with 103 CRLF pairs (0 → 103, verified by counting), byte-for-byte what a
-`core.autocrlf=true` checkout produces (`git config core.autocrlf` = true):
-`node scripts/catalogue-score.mjs --check` → **exit 0**. M2 above proves the `lf()` that makes it
-work is now pinned. Restored to the LF original (md5 unchanged).
-
-### 8. No regression on I1–I13, verdicts re-verified, score unchanged
-
-| invariant | how I re-verified | result |
+| inv | how I re-verified (live, not from the suite) | result |
 |---|---|---|
-| I1 | regenerate; delete + regenerate | md5 `84f0c37124e4a4fd18457f71660e3cc4` all three times |
-| I2 | live: set B6 `manual.verdict=REAL` | `REFUSED: … tries to UPGRADE …` rc=2, doc byte-unchanged (no write) |
-| I3 | live: set B6 `manual.verdict=EXCELLENT` | `… "EXCELLENT" is not one of MISSING/STUB/PARTIAL/REAL` rc=2 |
-| I4 | suite test "dropped feature" + "unknown/duplicated id" | green |
-| I5 | fingerprint test | green |
-| I6 | source: `/search` in stubs.ts (1 hit); `@lkb/meeting-bot` imported by 0 files outside its own package | C8/C9/C4 STUB, A10 STUB — correct |
-| I7 | `--check` present in `lint:structure`; staleness test exits 1 | green, `lint:structure` rc=0 |
-| I8–I9 | POINTS/scale tests | green; doc renders `REAL=1, PARTIAL=0.5, STUB=0, MISSING=0` from POINTS |
+| I1 | regenerate ×2, then delete + regenerate | md5 `84f0c37124e4a4fd18457f71660e3cc4` all three times |
+| I2 | live `B6 manual.verdict=REAL` | rc=2, **no file write** (doc md5 unchanged) |
+| I3 | live `B6 manual.verdict=EXCELLENT` | `… is not one of MISSING/STUB/PARTIAL/REAL` rc=2 |
+| I4 | live `features.pop()` | `denominator drifted … dropped feature(s): F2` rc=2 |
+| I5 | fingerprint printed in the doc | `Probe fingerprint \`9acec0d56307\`` present |
+| I6 | source: `/search` at `apps/api/src/routes/stubs.ts:22`; `@lkb/meeting-bot` imported by **0** files outside its own package | C8 STUB, A10 STUB — correct |
+| I7 | `catalogue-score.mjs --check` present in `package.json:15` `lint:structure` | wired; `lint:structure` rc=0 |
+| I8/I9 | doc renders the scale from `POINTS` | `Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.` |
 | I10 | live: dropped `qa/evidence/live-2099-01-01-00-00-00/preflight.json` with 4242 counts | `REFUSED: evidence run … is dated in the future` rc=2 |
-| I11 | live: rewrote every zero count to 4242 **inside the already-committed** preflight.json | `REFUSED: … (modified)` rc=2; restored, `git diff --quiet HEAD` rc=0 |
-| I12 | M1/M2/M5 above (behaviour, not source text) | all RED |
-| I13 | suite test "`--check` EXITS 2 when the CATALOGUE is tampered" | green |
+| I11 | live: rewrote every zero count to 4242 **inside the already-committed** preflight.json | `REFUSED: … (modified)` rc=2 |
+| I12 | M1/M2/M5 above — behaviour, not source text | all RED |
+| I13 | live: repointed all probe-less rows + nulled every `manual` (the +42.1 lever) | write mode shows **62.3%**; `--check` → `REFUSED: .goal/catalogue.json is not what the repository holds (modified)` rc=2 |
 
-**Feature verdicts re-verified independently against reality (7, ≥3 required)** — read from
-`preflight.json` and from source, not from the doc: A2 REAL (sessions 26, turns 2118) · B6 MISSING
-(chunks 0) · B3/B10 MISSING (speakers 0) · B5 REAL (`router.get("/graph"` present, tree_index 1) ·
-C8 STUB (`/search` in the 501 list) · A10 STUB (`@lkb/meeting-bot` imported by nothing outside
-itself) · A3 MISSING (`/transcript-review` absent from App.tsx). All match the generated table.
+**Feature verdicts re-verified against reality (6, ≥3 required)** — read from `preflight.json` and
+from source, never from the generated table:
 
-**Score: 20.2% adjusted / 28.9% machine-derived — unchanged. No verdict row moved.**
+| id | doc says | reality I read |
+|---|---|---|
+| A2 | REAL | `sessions = 26`, `turns = 2118` |
+| A3 | MISSING | `grep -c transcript-review apps/web/src/App.tsx` = **0** |
+| A10 | STUB *(auto PARTIAL, lowered)* | `@lkb/meeting-bot` imported by 0 files outside `packages/meeting-bot` |
+| B5 | REAL | `apps/api/src/routes/graph.ts:25 router.get("/graph"…)`; `tree_index = 1` |
+| B6 | MISSING | `chunks = 0` |
+| C8 | STUB | `apps/api/src/routes/stubs.ts:22` `{ path: "/search", … }` (501 list) |
 
-### 9. Suite, lint, LOC  ✅ every number matches to the digit
+All six match. **Score 20.2% adjusted / 28.9% machine-derived — unchanged. No verdict row moved.**
+
+### 8. Suite, lint, LOC, cleanliness  ⚠️ two LOC figures in the manifest are stale
 
 ```
-$ pnpm test:lint        -> tests 44, pass 44, fail 0
-$ pnpm lint:structure   -> exit 0  (…snapshot OK; "OK: docs/PROGRESS.md is current (20.2% of 57 features)"; depcruise 239 modules, 0 violations)
-non-blank LOC:  catalogue-score 172 · lib/catalogue 213 · lib/evidence 160 ·
-                catalogue.test 209 · catalogue-cli.test 168      (claimed 172/213/160/209/168 — exact)
-$ git status --porcelain --untracked-files=all  -> byte-identical to session start, before and after the suite
+$ pnpm test:lint        -> tests 45 · pass 45 · fail 0
+$ pnpm lint:structure   -> exit 0
+$ git status --porcelain --untracked-files=all  -> byte-identical to session start, after everything
+$ md5sum docs/PROGRESS.md -> 84f0c37124e4a4fd18457f71660e3cc4  (unchanged)
 ```
+
+LOC measured with the **project's own** `countLoc` (`scripts/lib/walk.mjs:68-70`), not my own count:
+
+| file | manifest claims | measured | budget |
+|---|---|---|---|
+| scripts/catalogue-score.mjs | 172 | **173** | 300 ✓ |
+| scripts/lib/catalogue.mjs | 213 | 213 ✓ | 300 ✓ |
+| scripts/lib/evidence.mjs | 160 | 160 ✓ | 300 ✓ |
+| scripts/catalogue.test.mjs | 209 | 209 ✓ | 300 ✓ |
+| scripts/catalogue-cli.test.mjs | 168 | **194** | 300 ✓ |
+
+Both discrepancies are in the direction of "the block was pasted from a run made **before** the
+ISS-048 fix was added" — the new test is ~26 lines (168 + 26 = 194) and `s.scrapedFiles` is the +1
+in the scorer. The manifest's `How to verify` §7 likewise still says "44" where its own evidence
+block correctly says 45. **Nothing material is wrong** — all five files are far under the 300 budget
+and the acceptance criterion holds — but this is the **fifth** hand-carried number mis-stated on
+this instrument, after the `jobs` constant, the earlier LOC figures, "13 probe-less features" and
+"472". Filed as ISS-052 (low). Not a FAIL: I produced every number in this verdict myself, so no
+criterion rests on the manifest's paste.
+
+### 9. ISS-050 — asked directly: can it fire today?  ✅ NO, and structurally not just incidentally
+
+I checked **all 228 scraped paths**, comparing what `git status --porcelain --untracked-files=all`
+says against what `git diff --quiet HEAD --` says, path by path:
+
+```
+scraped files: 228
+DISAGREEMENTS:  0
+evidence file (qa/evidence/live-2026-09-07-01-58-41/preflight.json):
+  status entry " M"  |  diff HEAD: clean          <- the ISS-050 condition, still present
+```
+
+The stronger answer the maker's reservation deserves: the two instruments **cover disjoint path
+sets by construction**. `trustOf()` (diff-vs-HEAD) judges the evidence file and
+`.goal/catalogue.json`; `untrustedAmong()` (status porcelain) judges the 228 scraped paths; the
+scraped set contains nothing outside `apps/` and `packages/` (unclassified = 0). So the two can
+never answer differently *about the same file* today, and the one path where the disagreement is
+live is judged by only one of them. The maker's reservation — that if it ever fires on a scraped
+file it becomes an ISS-043-class false refusal on a fresh clone — is correct as a future condition
+and wrong as a present one. **ISS-050 stays open, low, FILE-don't-FIX, unchanged.**
 
 ---
 
-## Proportionality — the answer, plainly
+## Proportionality — restated plainly, as asked
 
-**Yes. Stop. The maker is right, and I am not going to manufacture a reason to keep going.**
+**Stop. My cycle-1 recommendation stands unchanged, and this cycle strengthens it.**
 
-The argument is quantitative, not a mood. The measured value of each successive layer on this
-instrument:
+The measured decay of the largest lever per cycle:
 
 | cycle | largest lever found | cost to the attacker |
 |---|---|---|
@@ -245,60 +272,54 @@ instrument:
 | 3 | +19.3 pts (edit the committed evidence in place) | none |
 | 4 | +42.1 pts (catalogue.json untrusted) | none |
 | 5 | +10.5 pts (three code scrapers untrusted) | none |
-| **6 (this one)** | **+0.9 pts, and only on the SECONDARY number** | none |
+| 6 | +0.9 pts, secondary number only | none |
+| **7 (this one)** | **0.0 pts** — nothing without editing the scorer's own source | **a commit** |
 
-That is a decay from 42.1 to 0.9 points, and — this is the part that matters — I could not find
-**any** payload that moves the 20.2% adjusted headline without a commit, with the shipped code in
-place. I attacked routes, pages, packages, gitignored files, staged files, future-dated evidence,
-in-place evidence edits and the catalogue, and every one now lands on a refusal that names the
-file. The "attack vs hazard" line the maker proposes is the right line, and it is now the true
-boundary of this instrument rather than an aspiration: everything left genuinely requires
-committing a fabrication to a reviewed history.
+I attacked routes, pages, packages, gitignored files, the catalogue, future-dated evidence and
+in-place evidence edits, plus three fresh mutations of my own, and **found no payload that moves
+either published number without a commit**. That is the first cycle where the answer is zero. The
+boundary the maker proposed is now the instrument's real boundary, not an aspiration.
 
-So, adopting the maker's proposal with one bounded exception:
+**Recommendation, for the maker to act on:**
 
-1. **Fix ISS-048 (the M7 pin) in cycle 2 and nothing else.** ~10–15 lines: assert the recorded
-   read set ⊆ the trusted set, or tamper a `packages/**`-only file and assert `--check` exit 2.
-   This is not layer nine — it is the pin on layer eight, demanded verbatim by I14 and by
-   ISS-047's own fix_direction, and without it the entire derived-input mechanism can be deleted
-   by a refactor with 44/44 green. Cost: minutes.
-2. **Then STOP hardening the scorer.** Next unit: **plan §10 U0.6 — tracker honesty**, then
-   `/health` + `/search`, the five db accessors, and the honest LLM eval baseline.
-3. **From here, FILE don't FIX**, exactly as proposed: any further inflation path gets a ledger
-   issue with its measured point value and stays open — *unless* it is exploitable without a
-   commit, which is the only thing that earns an immediate cycle. ISS-036, ISS-040, ISS-049 and
-   ISS-050 are already sitting there correctly under that rule.
-4. **I am amending nothing in the contract this cycle.** I14 as written already demands the test
-   that is missing; adding I15 would be goalpost-moving, and the seven-layer chain of tightenings
-   has reached the point where the instrument is ahead of the product it measures.
+1. **ISS-048 is closed. Do not open a new hardening thread on this instrument.** ISS-051 is
+   deliberately filed-not-fixed: it is only reachable by editing the scorer's own source, which no
+   self-check can defend against and which requires a commit to a reviewed history. Fixing it would
+   be layer nine on a measurement tool for a product that is 20.2% built.
+2. **Next: plan §10 U0.6 — tracker honesty.** Then `/health` + `/search`, the five db accessors,
+   and the honest LLM eval baseline.
+3. **FILE don't FIX holds.** Any further inflation path gets a ledger issue with its measured point
+   value and stays open — *unless* it is exploitable without a commit. ISS-036, ISS-040, ISS-050,
+   ISS-051 and ISS-052 all sit correctly under that rule.
+4. **No contract amendment this cycle.** I14 as written is now met; ISS-051 is a known, bounded,
+   recorded residual, not a new invariant. Adding I15 for it would be goalpost-moving and would
+   restart exactly the chain this verdict is closing.
 
-A note on the meta-question the maker actually asked ("tell me if I'm wrong"): the maker was not
-wrong to follow the chain — every layer was real and each was found by an adversary, not invented.
-It is right to stop now, and it would have been wrong to stop three cycles ago at +42.1.
+One process note for the maker, offered not charged: the LOC block in §8 shows the evidence section
+was assembled before the final edit landed. Regenerating the numbers as the last action before
+flipping Status is a cheap habit that would have caught four of the five mis-statements this
+instrument has now accumulated.
 
 ## Ledger
 
-- **ISS-044 → fixed** (M1 reddens a test; live upgrade refusal rc=2 with no write)
-- **ISS-045 → fixed** (M2 reddens a test; CRLF materialisation keeps `--check` exit 0)
-- **ISS-046 → fixed** (induced throw mid-tamper leaves App.tsx and docs/PROGRESS.md byte-clean)
-- **ISS-047 → fixed** (attack independently re-executed: both files named, exit 2, banners in
-  write mode; the mechanism is derived, not declared). Its second half — the subset test — is
-  refiled as ISS-048.
-- **ISS-048 (new, medium, open)** — I14's subset test is missing; `reachablePackages(root)`
-  survives 44/44 + lint:structure and reopens the ISS-047 hazard for `packages/**`.
-- **ISS-049 (new, low, fixed)** — the gitignore blind spot was worth +0.9 pts on the published
-  machine-derived headline pre-fix (A10 package reachability), which the manifest's "not
-  convertible into points" account did not cover; the adjusted headline was indeed immovable.
-- **ISS-050 (new, low, open)** — `git status --porcelain` and `git diff --quiet HEAD` disagree on
-  `qa/evidence/live-2026-09-07-01-58-41/preflight.json` in this working tree right now (status
-  reports ` M`, diff reports clean, `ls-files --eol` reports `i/lf w/lf`). The two trust
-  instruments can therefore differ; the direction is over-refusal, so it fails safe, and it is not
-  firing on any scraped path today (`--check` exit 0). Raised as a "cries wolf" hazard of the
-  ISS-039/ISS-043 class, not as a defect of this unit.
+- **ISS-048 → verified** — the M7 mutation is RED with a territory-naming message; the mechanism is
+  pinned. Independently confirmed, not accepted from the manifest.
+- **ISS-044 / ISS-045 / ISS-046 / ISS-047 / ISS-049** — re-verified this cycle, no regression.
+- **ISS-050 → stays open (low)** — cannot fire today; proven across all 228 scraped paths and
+  structurally by the disjoint coverage of the two trust instruments.
+- **ISS-051 (new, low, open)** — the shipped I14 test is a territory+floor proxy for the literal
+  subset clause; M8 and M11 survive it while creating untrusted-but-unreported regions. Payload 0
+  on the adjusted headline; both require editing the scorer's own source. FILE-don't-FIX.
+- **ISS-052 (new, low, open)** — the manifest's LOC evidence block is stale (claims 172 / 168;
+  measured 173 / 194 by the project's own `countLoc`), and §7 still says 44 tests where the run is
+  45. No gate affected; recorded because it is the fifth mis-stated hand-carried number here.
 
 ## Environment
 
-Mongo was never contacted — the scorer is offline by design and reads only files, so no
-INCONCLUSIVE applies. Every command above ran to completion; nothing in this verdict rests on a
-pasted or remembered result. Working tree returned to exactly its session-start state (verified by
-`git status --porcelain --untracked-files=all` and by md5 on every file I touched).
+Mongo was never contacted — the scorer is offline by construction and reads only files, so no
+INCONCLUSIVE applies. Every command in this verdict ran to completion in this session; nothing
+rests on a pasted or remembered result. Working tree returned to exactly its session-start state,
+verified by `git status --porcelain --untracked-files=all` and by md5 on every file I touched
+(`docs/PROGRESS.md`, `apps/web/src/App.tsx`, `.goal/catalogue.json`, `.gitignore`,
+`scripts/catalogue-score.mjs`, `scripts/lib/catalogue.mjs`, `scripts/lib/evidence.mjs`,
+`scripts/catalogue-cli.test.mjs`, the evidence `preflight.json`).
