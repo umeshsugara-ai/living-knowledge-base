@@ -123,4 +123,4 @@ strengthening is monitoring that count, which is its own unit.
 One optional parameter with a default preserving current behaviour, plus tests. Production path
 unchanged and verified live. Read-only against the database. Reversible by `git revert`.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/search-store-injectable-handle.md` (Cycle checked: 1, matching Fix cycle 1), committed `ebceae2`. The checker found a fifth bypass (5A, tenant assertion missing from the object-level test) plus four more it had predicted; filed ISS-078..082, none blocking. Closed out 2026-09-08.
