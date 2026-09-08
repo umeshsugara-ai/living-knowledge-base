@@ -175,4 +175,4 @@ Pure additive instrumentation plus one regenerated data artifact
 Mongo. `recall.ts` and the golden set are unmodified — this unit only adds the controls that
 make their output readable. Reversible by `git revert`.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/eval-baseline-control.md` (Cycle checked: 1, matching Fix cycle 1), committed `fcc2863`. Closed out on the 2026-09-08 reconcile tick.

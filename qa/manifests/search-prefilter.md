@@ -153,4 +153,4 @@ ranking are provably unchanged (parity verified live on 6 queries). Reversible b
 The one behavioural edge: a query whose tokens are all stripped now returns `[]` from the store
 instead of scanning everything and returning `[]` anyway — same output, less work.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/search-prefilter.md` (Cycle checked: 1, matching Fix cycle 1), committed `8d0734c`. Closed out on the 2026-09-08 reconcile tick.

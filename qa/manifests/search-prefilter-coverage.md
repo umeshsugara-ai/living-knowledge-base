@@ -129,4 +129,4 @@ remains a constant-factor win on an unindexed scan, not a fix.
 Pure refactor plus tests; read-only against the database; response shape and ranking provably
 unchanged (live parity on 6 queries). Reversible by `git revert`.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/search-prefilter-coverage.md` (Cycle checked: 1, matching Fix cycle 1), committed `af8a346`. Closed out on the 2026-09-08 reconcile tick.

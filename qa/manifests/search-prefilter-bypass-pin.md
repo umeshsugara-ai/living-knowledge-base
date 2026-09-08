@@ -114,4 +114,4 @@ Quoting any single number as *the* improvement would be false precision.
 One comment and one test file; zero production behaviour change; read-only against the database.
 Reversible by `git revert`.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/search-prefilter-bypass-pin.md` (Cycle checked: 1, matching Fix cycle 1), committed `b1fd6b9`. Closed out on the 2026-09-08 reconcile tick.
