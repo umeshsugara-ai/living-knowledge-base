@@ -4,7 +4,7 @@
 verdict bound to this unit)
 **Goal task:** **U1.3** (plan §10 Phase 1)
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** none — roadmap work. Closes contract **C8**'s write-side half.
 
@@ -106,5 +106,115 @@ on every single PASS is one people learn to clear reflexively rather than read.
 One optional dep, one guarded block, one config-conditional wiring. No existing stage's behaviour
 changes when `embed` is absent, which is every current deployment until a chain is configured.
 `git revert` is clean.
+
+**Status: checked-PASS** — PASS from `qa/verdicts/embed-on-index.md` (Cycle checked: 1), committed
+`6577a8b`. **8/8 criteria, 4/4 invariants.** Goal task **U1.3 closed (61%)**. C8's row-side stays
+**OPEN** and is now a ledger row (**ISS-113**) rather than a promise in prose.
+
+**It built a 12-turn fixture specifically to avoid inheriting my blind spot.** My own refusal tests
+had used a single-turn fixture — a bug I caught and disclosed — so it used 12 real chunks and ran
+**nine** attack shapes: throw, reject, `undefined`, a malformed object with no `vectors` key,
+2-for-1, 1-for-12, `dims: 99` matching nothing, an empty vector at index 1, and ragged vectors
+**where index 0 matches `dims`**. That last one is the shape a `vectors[0]`-derived check would
+miss. `chunks` saw **zero operations in all nine**, claims written in all nine.
+
+Its structural point is better than my defence of it: *"the delete sits positionally inside the
+success branch, so the ISS-056 shape is structurally impossible, not merely remembered."*
+
+**Tenant scoping verified by mutation, not by reading** — swapping `chunksColl(tenantId)` for the
+raw handle reddens exactly one test. It also noticed that the general "every write is
+tenant-confined" test survives that mutation because it runs *without* `embed`: coverage is
+complete via the dedicated test, but **that test's name over-promises**. Recorded.
+
+### ISS-112 (medium) — my guarantee contradicts my own code placement
+
+> *"The C8 assertions throw **outside** the try/catch … so P4–P9 skip chunks correctly **and** skip
+> `tree_index` and the `status.index` flip … leaving the session permanently `pending` and absent
+> from the Brain tree. That is precisely the trade the code comment and manifest say they refuse."*
+
+Accepted without qualification. My comment says rethrowing *"would turn 'no vectors this run' into
+'no summary, no claims, no tree'"* — and then I placed the assertions where they do exactly that.
+The `try` wraps only `deps.embed(...)`; the assertions sit after it. **A guarantee stated in a
+comment and contradicted by the line numbering is worse than no comment**, because it stops the
+next reader from checking.
+
+**Medium rather than high because the checker chased reachability rather than assuming it:**
+`gemini.ts` and `ollama.ts` already refuse wrong-count, empty and ragged batches *inside*
+`deps.embed`, where the catch handles them — so with today's `embedding: [gemini, ollama]` chain
+the path is not live-reachable. It becomes reachable the moment a provider without those guards
+joins the chain, which is precisely what an optional-`embed` seam invites.
+
+**Fix is one line of scope** — move the assertions inside the same `try`. Pulled as the next unit
+rather than folded into this close-out, since the maker cannot certify its own fix.
+
+### ISS-113 (medium, tracking) — C8's row side survives as a row
+
+It did not trust the ping: real driver, `serverSelectionTimeoutMS: 8000`, `Server selection timed
+out`. So (a) 26-session non-emptiness, (b) `vector.length === dims` **as rows**, and (c) `turnRefs`
+resolution are unverified — and it noted **(c) is not asserted at write time at all**, which I had
+not spotted. Filing it as a ledger row is the right move: it makes the deferral survive this
+close-out instead of living in a manifest nobody re-reads.
+
+**Noted, not filed:** there is no timeout on the `embed` call, so a hang stalls `indexSession`
+forever — the same shape as `complete()` one screen up, and therefore a transport-layer unit's
+problem rather than this one's.
+
+---
+
+# Fix cycle 2 — ISS-112, folded back into this unit
+
+The cycle-1 verdict PASSed and filed **ISS-112 (medium)**. I am fixing it here rather than as a
+separate unit because it is the *same file, same guarantee* — and because the guarantee is
+currently **stated and false**, which is the part that matters more than its reachability.
+
+> *"The C8 assertions throw **outside** the try/catch … so P4–P9 skip chunks correctly **and** skip
+> `tree_index` and the `status.index` flip … That is precisely the trade the code comment and
+> manifest say they refuse."*
+
+**What changed:** the assertions moved **inside** the same `try` that wraps `deps.embed(...)`, and
+the `catch` comment now says explicitly that it covers them. So a contradictory batch is handled
+identically to a provider outage: chunks left unchanged, everything else completes.
+
+**Why I did not leave it as a medium for a later unit.** The severity gate says medium is verified
+inside the next unit touching the same file — but nothing else is scheduled to touch
+`indexing.ts`, and the defect is a comment that *contradicts its own line numbering*. A future
+reader who checks the guarantee against the code would have found it false; one who trusted the
+comment would have shipped a provider without in-adapter guards straight into the failure. The
+checker was right that it is not live-reachable today; it is reachable the moment the chain gains a
+member without `gemini.ts`/`ollama.ts`'s own refusals — which is exactly what an *optional* `embed`
+seam invites.
+
+**The tests changed shape, deliberately.** Both refusal tests previously asserted
+`assert.rejects(...)` — they were pinning the *throw*, which is the behaviour ISS-112 says is
+wrong. They now assert the **guarantee**: zero chunk operations, **and** `tree_index` still
+written, **and** the `status.index` flip still applied. Pinning a throw that should not happen is
+how a defect gets a regression test protecting it.
+
+## Cycle-2 evidence — by exit code
+
+| gate | result |
+|---|---|
+| `pnpm -r typecheck` | **EXIT 0** |
+| `pnpm -r test` | **EXIT 0** — `@lkb/api` **117**, unchanged count, two rewritten |
+| `pnpm lint:structure` | **EXIT 0** |
+| `python schema/validate.py` | **EXIT 0** |
+
+## Still open, unchanged by this cycle
+
+**ISS-113** — C8's row-level half (26-session non-emptiness, `vector.length === dims` as rows,
+`turnRefs` resolution) remains **UNVERIFIED**; Mongo has now been unreachable for five ticks. The
+checker also noted **`turnRefs` resolution is not asserted at write time at all**, which I had not
+spotted and which no fake-db test can cover.
+
+## How to verify (cycle 2)
+
+1. **Re-run your nine attack shapes** — all must now leave `chunks` untouched **and** complete
+   `tree_index` + the status flip. Previously P4–P9 skipped both.
+2. Confirm the assertions are inside the `try` and that the `catch` genuinely catches them —
+   the one-line-of-scope claim.
+3. Confirm the two rewritten tests would **fail** if the assertions were moved back out. That is
+   what makes them a regression test rather than documentation.
+4. All four gates by exit code.
+5. `ISSUES-WRITTEN: none` is a complete check.
 
 **Status: ready-for-check**

@@ -303,26 +303,31 @@ test("chunk rows carry a real vector, a matching dims, and turnRefs — never an
   }
 });
 
-test("REFUSES a vector whose length contradicts the batch's dims — the correlation JSON Schema cannot express", async () => {
+test("REFUSES to write a vector whose length contradicts dims, and still finishes indexing (ISS-112)", async () => {
   // The U1.2 verdict's finding: `vector` and `dims` are independently optional in the schema, so
   // {vector: [3 items], dims: 99} validates cleanly. The write is the only place that sees both.
-  const { db } = fakeDb();
-  // One chunk is enough: a vector of 2 numbers against a batch claiming 3 dims is the exact
-  // {vector: [...], dims: N} contradiction the schema accepts.
+  //
+  // ISS-112 is the other half: this assertion used to throw PAST the catch, so a contradictory
+  // batch skipped `tree_index` and the status flip too — the exact "no vectors this run becomes no
+  // summary, no claims, no tree" trade the code says it refuses. Both halves are asserted here.
+  const { db, calls } = fakeDb();
   const raggedEmbed = async (job: { texts: string[] }) => ({
-    vectors: job.texts.map(() => [0.1, 0.2]),
+    vectors: job.texts.map(() => [0.1, 0.2]),   // 2 numbers against a batch claiming 3 dims
     dims: 3,
     provider: "fake",
     model: "fake-embed",
   });
-  await assert.rejects(
-    indexSession("t", "s1", { complete: completeWith() as never, embed: raggedEmbed as never, db }),
-    /dims, batch reports/,
+  await indexSession("t", "s1", { complete: completeWith() as never, embed: raggedEmbed as never, db });
+  assert.deepEqual(chunkOps(calls), [], "an inconsistent batch must reach no chunk write at all");
+  assert.ok(calls.some((c) => c.coll === "tree_index"), "the tree must still be updated (ISS-112)");
+  assert.ok(
+    calls.some((c) => c.coll === "sessions" && c.op === "updateOne"),
+    "the status.index flip must still happen, or the session is stuck pending forever (ISS-112)",
   );
 });
 
-test("REFUSES a batch that returns the wrong NUMBER of vectors, rather than pairing by index", async () => {
-  const { db } = fakeDb();
+test("REFUSES a batch with the wrong NUMBER of vectors, rather than pairing by index (ISS-112)", async () => {
+  const { db, calls } = fakeDb();
   // Two vectors for one chunk — the count guard must fire rather than silently taking the first.
   const shortEmbed = async () => ({
     vectors: [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
@@ -330,10 +335,9 @@ test("REFUSES a batch that returns the wrong NUMBER of vectors, rather than pair
     provider: "fake",
     model: "fake-embed",
   });
-  await assert.rejects(
-    indexSession("t", "s1", { complete: completeWith() as never, embed: shortEmbed as never, db }),
-    /vector\(s\) for/,
-  );
+  await indexSession("t", "s1", { complete: completeWith() as never, embed: shortEmbed as never, db });
+  assert.deepEqual(chunkOps(calls), [], "a wrong-count batch must reach no chunk write at all");
+  assert.ok(calls.some((c) => c.coll === "tree_index"), "the tree must still be updated (ISS-112)");
 });
 
 test("every chunk write is tenant-scoped — the same guard the claims path needed", async () => {

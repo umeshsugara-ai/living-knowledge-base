@@ -93,7 +93,7 @@ Meeting-Bot pages (apps/web) are open follow-up work, not yet started.
 | U0.10 | open | Honest eval baseline against a real LLM (redo T-021/T-022) | UNBLOCKED 2026-09-08: the gate is ANSWERED (Option C). An earlier note here claimed it needed the human gate answered first - that was written from a stale read and is false. This unit is the Option C regeneration; see T-021 for the binding acceptance conditions. NOTE for U1.4/U1.5: gate condition 4 says their delta-vs-baseline and >=0.85 exit criteria may not be re-pointed at the new set until conditions 2-3 hold, and until then must not be cited as passed. |
 | U1.1 | done | embed() on the Provider seam (Gemini + Ollama over existing Transport) | plan §10 Phase 1. packages/ai/src/provider.ts exists; zero embed references today. |
 | U1.2 | done | Chunking + real chunks rows (schema needs vector:number[] + dims) | embeddingRef is a string pointer; cosine needs the numbers in the doc |
-| U1.3 | open | Embed on index (apps/api/src/indexing.ts, delete-then-insert) |  |
+| U1.3 | done | Embed on index (apps/api/src/indexing.ts, delete-then-insert) |  |
 | U1.4 | open | Brute-force cosine retriever behind vectorSearchFn | D-a: Atlas Vector Search unavailable (self-hosted Mongo, no +srv). Its recall delta claim additionally needs U0.10. |
 | U1.5 | open | Hybrid merge (tree + vector + lexical, RRF) into askV2 | do NOT rewrite router.ts — ask() already takes candidates via a thunk |
 | U2.1 | open | Promote topics + orgs from the tree deterministically (no LLM) | cheapest real Phase 2 win; also backfills claims.topicRefs, which nothing has ever written |
