@@ -3,7 +3,7 @@
 **Contract:** qa/contracts/tracker-integrity.md
 **Goal task:** none (D-014 backlog tier 3; plan "MAKE THE MAKER-CHECKER LOOP WORK PROPERLY" step 5)
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** none filed — closes a structural gap, not a ledger row.
 
@@ -194,5 +194,84 @@ Headline unchanged at **55% (31/56)**; no task changed `done` state this cycle.
    remedy failed. I got this wrong once by not reading the file; do not take my paraphrase for it.
 4. Confirm nothing claims the gate is closed.
 5. `ISSUES-WRITTEN: none` is a complete check.
+
+---
+
+# Fix cycle 3 — the single FAILURE from cycle 2 (last cycle before STALLED)
+
+### [I3] high — ISS-090 was fixed in `.goal/goal.json` **only**
+
+> *"TASKS.md rows 34/35/93 still read `blocked` and U0.10's note still says 'Needs the human gate
+> answered first', the exact false sentence the manifest claims is gone; G1 stays green because
+> `blocked` and `pending` both normalise to not-done, and the 'blocked_by: none' evidence line is
+> true only because TASKS.md states the blockage in prose"*
+
+Accepted without qualification. **This is cycle 1's root cause one layer in**, and the checker
+names it exactly: I corrected the surface I was looking at and did not re-read the other one. My
+`blocked_by: none` evidence was computed from `goal.json` alone — **true, and meaningless**,
+because TASKS.md states its blockage in prose rather than in that field. A grep that cannot fail is
+not evidence, and I presented it as if it were.
+
+**The fix.** All three rows rewritten **from `goal.json`'s notes** rather than re-typed, so the two
+trackers now agree by construction instead of by coincidence:
+
+```
+$ grep -c "BLOCKED by qa/gates" TASKS.md                    → 0
+$ grep -c "Needs the human gate answered first" TASKS.md    → 0
+$ grep -cE '^\| \S+ \| blocked \|' TASKS.md                 → 0
+goal.json rows with status blocked                          → none
+```
+
+**The structural cause, closed.** `NORMALISE` collapsed `blocked` and `pending` into `not-done`, so
+G1 was *incapable* of seeing this divergence — which is why it recurred rather than being caught.
+`blocked` is now its own class. The two words do not mean the same thing to the backlog (one says
+*available to pull*, the other says *cannot be pulled*), and a tracker asserting both at once is
+precisely the untruth this gate exists to catch.
+
+**Proof it catches the exact bug, not a lookalike** — armed via `mutate.mjs` (the guard shipped
+this session; cycle 1's checker mutated without arming and I am not repeating that):
+
+```
+$ node scripts/lib/mutate.mjs apply TASKS.md          MUTATION ARMED
+$ sed -i 's/| T-021 | open |/| T-021 | blocked |/'    ← the literal cycle-2 state
+$ node scripts/tracker-audit.mjs --gate g1
+  G1 status: T-021 is "pending" in goal.json but "blocked" in TASKS.md      exit 1
+$ node scripts/lib/mutate.mjs restore TASKS.md        RESTORED (verified identical to HEAD)
+$ node scripts/tracker-audit.mjs --gate g1            OK, exit 0
+```
+
+### A correction to my own cycle-2 text
+
+The checker noted, as a non-failure, that my claim was inaccurate: G1 emits the unknown-status
+finding **and** the mismatch line, not "instead of" it. Correcting rather than leaving it — the
+cycle-2 wording overstated what the change did.
+
+## Cycle-3 evidence
+
+| check | result |
+|---|---|
+| `node --test scripts/lib/tracker-audit.test.mjs` | **11/11** (9 + 2 new: the pending/blocked split is caught; agreeing `blocked` rows still pass, so blockage stays representable) |
+| `node scripts/tracker-audit.mjs --gate g1` | OK, exit 0 |
+| `pnpm lint:structure` | clean — SNAPSHOT fresh, G1 OK, depcruise 0 / 267 modules |
+| `pnpm -r typecheck` | exit 0 |
+
+Headline unchanged at **55% (31/56)**; no task changed `done` state.
+
+## How to verify (cycle 3)
+
+1. **Re-grep both trackers yourself** for `BLOCKED by qa/gates`, `Needs the human gate answered
+   first`, and `| blocked |` — all must be 0. Do not accept a `blocked_by`-field grep as evidence;
+   that is the exact mistake that produced this cycle.
+2. **Compare the three TASKS.md notes against `goal.json`'s** and against
+   `qa/gates/golden-set-redesign.md`. The gate text is the authority for both.
+3. **Replay the mutation proof above** — reintroduce `| T-021 | blocked |` and confirm G1 fails
+   with the named mismatch. Arm with `mutate.mjs` first; restore and confirm `git diff` empty.
+4. Confirm agreeing `blocked` rows still pass (test 11), i.e. the new class did not make blockage
+   unrepresentable — that would be trading one lie for another.
+5. `node --test scripts/lib/tracker-audit.test.mjs`, `--gate g1`, `pnpm lint:structure`,
+   `pnpm -r typecheck`.
+6. `ISSUES-WRITTEN: none` is a complete check. This is fix cycle 3 of max 3 — if it fails again the
+   unit goes `STALLED` to the human, so please do not withhold a real finding, and equally do not
+   manufacture one.
 
 **Status: ready-for-check**
