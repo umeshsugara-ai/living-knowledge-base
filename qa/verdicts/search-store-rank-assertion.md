@@ -214,3 +214,65 @@ nothing removed. Consistent with the amendment log's own standard from the previ
 - The unindexed-scan ceiling stands: full corpus fetch measured **375ms** this cycle (vs 341ms in
   the dispatch's note), consistent with prior measurements and still network-dominated. Unchanged
   judgment: no headline latency figure belongs in the contract; ISS-081 holds the follow-on.
+
+---
+
+# INDEPENDENT CONCURRENT CHECK
+
+**Date:** 2026-09-08 · **Mode:** A · **Cycle checked: 1** (matches the manifest's `Fix cycle: 1 of max 3`)
+**Bound to:** `D:/KnowledgeBase`. Dispatched separately from the verdict above; the section above was
+found already on disk and committed (80e9ba7) and is left byte-intact. **No disagreement** — this
+check reached the same verdict from its own evidence.
+
+```
+VERDICT: PASS
+SCOREBOARD: 15/15 criteria met, 7/7 invariants hold
+FAILURES: none
+ISSUES-WRITTEN: none
+EXPLANATION: Re-ran everything myself: 109/109 @lkb/api, 59/59 @lkb/index, `pnpm -r typecheck`
+exit 0 (10 projects), `pnpm lint:structure` clean (0 violations / 267 modules). Replayed both
+mutations against apps/api/src/search-store.ts from a byte backup — `score: 0.5` reddens exactly
+the ISS-083 test (108/109), the coordinated one-position rotation reddens exactly the ISS-084 test
+(108/109) while the older ISS-080 self-consistency test stays green; restored to an empty
+`git diff` and re-confirmed 109/109. Read both tests: each compares against a separately computed
+`lexicalSearchTurns(q, OWN, OWN.length)` and resolves sessionId through a map built from the corpus
+constant, not the store's own `turnById`/`sessionById`, so a value copied from itself cannot pass.
+I also ran my own read-only live probe against the real `toc` corpus (2118 turns, 3 queries):
+0 (turnId, sessionId) pair mismatches and scores varying per hit, consistent with the section above.
+Per this repo's "Backlog priority override" verdict rule, ISSUES-WRITTEN is `none` — the two notes
+below are observations, deliberately not filed and not units.
+```
+
+**What I re-ran (my own numbers):**
+
+| check | measured |
+|---|---|
+| `pnpm --filter @lkb/api test` | 109 tests / 109 pass / 0 fail |
+| `pnpm --filter @lkb/index test` | 59 / 59 |
+| `pnpm -r typecheck` | exit 0, 10 projects |
+| `pnpm lint:structure` | OK; SNAPSHOT fresh (116 lines / 200), tracker-audit G1 OK, **0 violations / 267 modules / 805 deps** |
+| mutation A (`score: 0.5`) | 108/109 — exactly the ISS-083 test red |
+| mutation B (rotate turnId/sessionId/turn/session by one, keep position's score) | 108/109 — exactly the ISS-084 test red; ISS-080 stayed **green** |
+| restore | `git diff apps/api/src/search-store.ts` empty; 109/109 |
+| live probe (read-only) | `live turns(toc): 2118`; `visa student university funding` 10 hits, `2026 intake` 10 hits, `counselling` 2 hits — **mismatchedPairs=0** on all three, scores non-constant (1.0000/0.7500, 1.0000/0.5000) |
+
+Probe script kept as evidence: `qa/evidence/live-rank-probe-2026-09-08.mjs` (read-only; connects,
+fetches `{tenantId:"toc"}` turns, recomputes `lexicalSearchTurns` independently, compares pairs).
+
+**Notes (below the >80% failure bar — recorded, not filed as ledger issues):**
+
+1. **The unit's artifact is uncommitted.** `git log -- apps/api/src/search-store.test.ts` ends at
+   `ca18b79` (the *previous* round); the +31 lines carrying both new tests exist only in the working
+   tree, yet the manifest is already `checked-PASS` and the close-out commit `1653390` landed. The
+   PASS above is still correct on evidence — I verified the tests as they exist — but a `git clean`
+   or worktree teardown would erase the thing that was certified. This is the same untracked-artifact
+   failure mode the checker skill records for verdict files, applied to the code. It belongs with the
+   already-open `qa/gates/concurrent-maker-sessions.md` HUMAN_GATE (a99d2aa) rather than a new unit,
+   and it corroborates that gate: `1653390`'s own message records the ISS-083 mutation being
+   re-applied to production source *after* a checker verified its restore — two loops in one tree.
+2. `apps/api/src/_temp-verify.mjs` was present untracked in the tree at dispatch time — maker scratch
+   left behind. Cosmetic; noted only.
+
+**Round cap:** this seam has now PASSed twice. Per `.claude/CLAUDE.md` "Round cap" it is **CLOSED**;
+I opened no round eight and filed nothing. ISS-085 (from the section above) stands as
+`file-don't-fix`, to be folded into whatever unit next touches this file — not chased.
