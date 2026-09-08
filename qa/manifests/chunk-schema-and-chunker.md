@@ -210,4 +210,40 @@ close-out path, not to this unit.
 5. Confirm `TASKS.md` and `goal.json` now agree on U1.1.
 6. `ISSUES-WRITTEN: none` is a complete check.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/chunk-schema-and-chunker.md` (Cycle checked: 2),
+committed `a114168`. **8/8 criteria, 5/5 invariants, `ISSUES-WRITTEN: none`.** ISS-096/098/099/100
+all flipped to `verified`; goal task **U1.2 closed (59%)**.
+
+**It rebuilt its fuzz from the contract rather than reusing mine** — 24 hand-built corpora × 8
+option sets + 3000 randomized = **3192 shapes, 22872 chunks, 9079 multi-turn**, 13 properties:
+`ceilingBreaches=0 worst=0 duplicates=0`. Cycle 1 had 1172/3024 shapes with duplicates and
+22885/61352 chunks over the ceiling. Both now **zero**, with the cycle-1 minimal repros
+(`[700,500]`, `[900,900,900]`, `[5,5,5000,5,5]`) in its set and clean.
+
+**It refused to read my counter.** For the separator bug it measured `p.text.length` — the real
+emitted string — not the internal `chars`, which is the only way to check that fix honestly.
+0/22872 violations, including the `{targetChars: 900, maxChars: 800}` set that hid it.
+
+**On the ISS-099 tradeoff it quantified rather than assumed**, which changed the picture: on
+transcript-shaped input (turns 20–300 chars) **0 of 74156 seams** lose their shared turn, and at
+the default `overlapTurns: 1` **0 of 66176 drops were avoidable** — every one was forced. The
+alarming-looking 34%/93% rates occur only where a neighbour is a single over-ceiling turn, where
+overlap was *never expressible* and the loss is inherent to the "over-long turn ships alone" rule
+rather than introduced by this fix. So it is not "silently disabling overlap on a third of
+boundaries", which was the right thing to check.
+
+**A reservation it recorded and deliberately did not file** (below its 80% bar, breaks no
+documented guarantee): the overlap drop is **all-or-nothing**, so at `overlapTurns > 1` about **4%**
+of seams lose a whole overlap where a 1-turn overlap would have fit. Degrading 3→2→1 instead of
+dropping to 0 would recover those. No caller sets `> 1` today. **Carried forward to U1.3 as a
+tuning note**, since that is where the first real caller chooses the value.
+
+**ISS-100 verified the way it should have been the first time:** by exit code. `lint:structure` 0,
+`typecheck` 0, `-r test` 0, `schema/validate.py` 0 — and critically **depcruise actually ran**
+("275 modules, 836 dependencies cruised"), where in cycle 1 the `&&` chain short-circuited before
+it. `TASKS.md` and `goal.json` both read U1.1 `done`; G1 green.
+
+**Mongo unreachable for a third consecutive tick** (`Server selection timed out`). The `chunks`
+collection stays **UNVERIFIED** — not converted into a verdict either way. It does not block the
+PASS because nothing in this unit writes a row, and contract **C8** remains open against U1.3,
+which is where rows first exist.
