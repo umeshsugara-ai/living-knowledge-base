@@ -84,7 +84,7 @@ export function generate(root = ROOT) {
     `Machine-derived alone: ${s.autoPercent}%. Scoring: ${scaleDescription()}.`,
     "",
     `Denominator pinned to plan §4c (${s.total} features; dropping one fails the run). Probe fingerprint \`${s.probeHash}\` —`,
-    `if that changes, a probe was edited and the score is not comparable to the previous run.`,
+    `if that changes, a probe or a human downgrade was edited (the hash covers both) and the score is not comparable to the previous run.`,
     `${s.probeless.length} feature(s) declare no probe and therefore score MISSING by default: ${s.probeless.join(", ")}.`,
     ...s.inputs.filter((i) => i.warning).map((i) => `\n> ${i.warning}`),
     ...unreadable.map((u) => `\n> **UNREADABLE EVIDENCE — \`${u.rel}\` could not be parsed (${u.reason}) — it was skipped, not counted as absent. Fix or delete it.**`),

@@ -2,12 +2,14 @@
      Edit .goal/catalogue.json (probes / manual downgrades), then re-run. -->
 # Progress — what actually exists
 
-**24.6% of the 57-feature product catalogue.**
-Machine-derived alone: 33.3%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
+**26.3% of the 57-feature product catalogue.**
+Machine-derived alone: 36.8%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
 
-Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `9acec0d56307` —
-if that changes, a probe was edited and the score is not comparable to the previous run.
+Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `45c2c000a68c` —
+if that changes, a probe or a human downgrade was edited (the hash covers both) and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
+
+> **EDITED SINCE COMMIT — `.goal/catalogue.json` no longer matches the version in git, so this score is not the one the repository supports**
 
 Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (run 2026-09-07T01:58:41.367Z, content `78a2fc2b0743`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
@@ -17,7 +19,7 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 |---|---|---|---|---|---|---|
 | **A. LEARN — ingestion** | `██████░░░░░░░░░░░░░░` | 30.8% | 2 | 4 | 1 | 6 |
 | **B. REMEMBER — knowledge model** | `███████░░░░░░░░░░░░░` | 34.6% | 4 | 1 | 0 | 8 |
-| **C. REASON — ask & answer** | `████░░░░░░░░░░░░░░░░` | 21.4% | 2 | 2 | 0 | 10 |
+| **C. REASON — ask & answer** | `██████░░░░░░░░░░░░░░` | 28.6% | 2 | 4 | 0 | 8 |
 | **D. IMPROVE — the living loop** | `████░░░░░░░░░░░░░░░░` | 18.8% | 0 | 3 | 0 | 5 |
 | **E. PLATFORM — API & hosting** | `███░░░░░░░░░░░░░░░░░` | 14.3% | 0 | 2 | 0 | 5 |
 | **F. OPERATIONS automation** | `░░░░░░░░░░░░░░░░░░░░` | 0% | 0 | 0 | 0 | 2 |
@@ -53,8 +55,8 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 | B12 | Collections builder (curated sets + answer scope) | **MISSING** | no probe declared |
 | B13 | Program & resource directories | **MISSING** | collection programs (empty) |
 | C1 | POST /ask CRAG router (tree-search -> evaluator -> cited answer) | **PARTIAL** _(auto: REAL, lowered)_ | route POST /ask |
-| C2 | Ask AI UI (evidence mode, filters, history) | **MISSING** | page /ask (absent) |
-| C3 | Answer page (confidence, internal-vs-web sources, follow-ups) | **MISSING** | page /ask (absent) |
+| C2 | Ask AI UI (evidence mode, filters, history) | **PARTIAL** _(auto: REAL, lowered)_ | page /ask |
+| C3 | Answer page (confidence, internal-vs-web sources, follow-ups) | **PARTIAL** _(auto: REAL, lowered)_ | page /ask |
 | C4 | Evidence & Provenance Audit (claim -> turn -> recording) | **REAL** | route GET /citations/:claimId |
 | C5 | Answer Policy Builder (YAML + simulator + versions) | **MISSING** | no probe declared |
 | C6 | Conflicting Evidence Resolution | **MISSING** | no probe declared |
@@ -93,6 +95,8 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 - **A10** PARTIAL → STUB — All three joiners (vexa/browser/system-audio) are explicit stubs and the package is dead code imported by nothing. The page honestly self-labels as not live. Plan §10 U4.2.
 - **B8** REAL → PARTIAL — The Brain graph renders real tree_index nodes, but there is no year->month->session drill-down explorer and no overview/topics/speakers/orgs tabs.
 - **C1** REAL → PARTIAL — Works end-to-end and citations resolve to real sessions, but retrieval is tree-only -- there is no vector layer, so the 'two indexes' hypothesis H1 is half-built. Plan §10 U1.5.
+- **C2** REAL → PARTIAL — The /ask page exists and drives a real question->answer flow, but this feature's own scope is not built: there is no evidence mode, no filters, no suggested questions and no history -- the page is a single stateless query box. The probe credits it REAL purely because a /ask page is present. Downgraded 2026-09-08 by the same session that shipped the page. Plan §10 U3.1 (its Playwright gate is also still unmet).
+- **C3** REAL → PARTIAL — Internal-vs-web source separation IS real and mutation-tested (contract qa/contracts/web-ask-page.md C4). The rest of this feature is absent: no retrieval-confidence display, no coverage verdict beyond a raw insufficient_coverage flag, no evidence excerpts, no follow-ups, no feedback control. One of three parts shipped. Downgraded 2026-09-08 by the session that shipped the page.
 - **D1** REAL → PARTIAL — Real stat tiles + recent sessions, but no coverage %, no internal-vs-web answer ratio, no knowledge-health score.
 - **D7** REAL → PARTIAL — compete routes + eval_runs are real, but T-021/T-022 were PASSed against a HEURISTIC proxy, not a real LLM -- the recall@5 >= 0.85 target and real judge calibration have never actually been met. Plan §10 U0.10.
 - **E2** REAL → PARTIAL — Scoped API keys are real (hashed, revocable, per-tenant). There are no users, no roles, no permissions matrix and no audit log.

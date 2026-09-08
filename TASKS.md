@@ -42,6 +42,12 @@
 | T-024 | done | **FIRST DEMO SHIPPED (grill Q9/Q10):** paste-a-link capture CLI `lkb capture <url>` → platform adapter (Vexa: Meet/Teams · browser-profile join: Zoom/others · system-audio fallback) → record → diarize → `sources/sessions/turns` w/ `captureMode`+`platform`+`joinStrategy`; provided-first soft gate warns before silent join; private vault | D-002/D-004/D-008; depends T-018 (bot fields), T-019 (STT), T-020 (recording adapter) |
 | T-025 | done | Google Calendar connect + auto-join | checker PASS 6/6, verdict `qa/verdicts/calendar-auto-join.md`, commit `cfe3025`. Interface (`CalendarClient`) + pure decision layer (`selectEventsToAutoJoin`) only — no real Google Calendar credentials/implementation exist yet, not wired to production. |
 
+## Phase 3 — Surface it
+
+| ID | Status | Task | Notes |
+|---|---|---|---|
+| U3.1 | partial | Ask page (`apps/web/src/pages/AskPage.tsx`) | Shipped + checker PASS 8/8 (`qa/verdicts/web-ask-page.md`, commit `a7641bf`) against the contract the checker authored. **NOT done against plan §10's own exit criterion** — "Playwright asks a real question, >=1 citation renders and links to a real session page." Verified only by component tests with the `ask` API module spied; never run against a live tenant. Catalogue C2/C3 downgraded REAL->PARTIAL on 2026-09-08 for the same reason (no evidence mode / filters / history; no confidence, excerpts, follow-ups or feedback). Two items carried forward from the verdict: C5's no-`sessionRef` branch is correct but untested, and a once-observed C4 flake (test measured at 1277ms against `waitFor`'s 1000ms default -- fix with an explicit timeout, never a retry). |
+
 ## Later (unchanged)
 
 | ID | Status | Task | Notes |
