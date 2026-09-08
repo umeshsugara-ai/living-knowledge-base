@@ -32,14 +32,19 @@ capitalised words* (`PHRASE_RE = /\b[A-Z][A-Za-z0-9&'.]*(?:\s+[A-Z]...){0,3}\b/g
 name is a run of capitalised words. The heuristic **cannot** distinguish "New Zealand" from
 "Anju Jayraj" by construction — this is not a tuning problem.
 
-### Why not running it is the right call, not the timid one
+### Why not running it is the right call — ⚠️ MY ORIGINAL REASONING HERE WAS WRONG (see cycle 2)
 
-Plan §10's own trap list says: *"Do not chase `media`, `programs`, `tenants` … to non-empty.
-Filling collections to raise the catalogue score is metric-gaming, which is the disease §9 exists
-to cure."* Writing 137 rows of which ~95% are single-session noise and several are misfiled people
-would raise B9/B10/B12's score while making the `topics` collection actively misleading — and
-`topics` is user-facing (the Brain explorer, topic pages, and eventually the counsellor's own
-sense of what it knows about).
+> **RETRACTED, cycle 2.** The two arguments below were both checked and both fail. The trap list
+> names six *other* collections and U2.1 explicitly says "Write the rows"; and `topics` is **not**
+> a user-facing surface — `/graph` already exposes all 137 slugs off the tree while nothing reads
+> the `topics` collection at all. The deferral stands, but on the different ground given in the
+> cycle-2 section. Left visible rather than rewritten, because a manifest that quietly swaps its
+> reasoning teaches nothing.
+
+~~Plan §10's own trap list says: *"Do not chase `media`, `programs`, `tenants` … to non-empty.
+Filling collections to raise the catalogue score is metric-gaming."* Writing 137 rows of which
+~95% are single-session noise and several are misfiled people would raise B9/B10/B12's score while
+making the `topics` collection actively misleading — and `topics` is user-facing.~~
 
 The promotion code is **faithful**: every row is derived from a node that survived the tree build,
 nothing is invented. That is exactly the problem — faithfully promoting bad input produces bad
@@ -62,7 +67,8 @@ already has a seam waiting. This unit is its plumbing.
 - `scripts/backfill.mjs` — **renamed from `backfill-chunks.mjs` via `git mv`** and given
   `chunks` / `entities` subcommands. `scripts/` is at its D-018 cap of 32, and that entry records
   that a third raise must **consolidate rather than widen**; these two jobs are the same job.
-- 10 new tests, including one that drives the **real `buildTree`** so a change to node shape fails
+- 10 new tests on the PURE function, including one that drives the **real `buildTree`** (the
+  WRITER had none until cycle 2 — ISS-126) so a change to node shape fails
   here instead of silently producing zero rows.
 
 ## Two real defects found by running it
@@ -105,10 +111,9 @@ topics collection           : 0 rows (unchanged, deliberately)
 
 ## Disclosed — the checker should press on these
 
-1. **The central judgement is mine and is contestable:** shipping the mechanism while refusing to
-   run it. The opposite case is real — populated-but-noisy beats empty, and a human could filter
-   later. I think that is wrong because `topics` is user-facing and a misfiled person is worse than
-   a blank page, but **this is the thing to overrule me on if you disagree.**
+1. ~~**The central judgement is mine and is contestable**… `topics` is user-facing and a misfiled
+   person is worse than a blank page.~~ **OVERRULED IN CYCLE 1 AND I WAS WRONG.** The action was
+   upheld; the reasoning was not. `topics` is not user-facing. See the cycle-2 section.
 2. **The catalogue must NOT be upgraded on this unit.** B9/B10/B12 stay MISSING; `topics` is still
    empty. If a future run promotes rows, the score should only move once the *content* is
    defensible.
