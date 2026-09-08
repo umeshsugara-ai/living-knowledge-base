@@ -199,3 +199,220 @@ Nothing else in this unit needs to change. The verification discipline on displa
 mutation table with a control, an invalidated control reported rather than hidden, `cmp` against a
 byte backup, an explicit refusal to soften C2 in cycle 1 — is the standard, and this FAIL is about
 coverage, not craft.
+
+---
+
+# Verdict — speaker-verbatim-token-boundary (cycle 2)
+
+**Date:** 2026-09-08
+**Cycle checked:** 2
+**Commit checked:** `ff8ef8d`
+**Worktree:** `D:\KnowledgeBase-lanes\a-speakers` (branch `lane/a-speakers`)
+**Contract:** `qa/contracts/speaker-resolution-llm.md` (unamended by this verdict)
+**Mode:** A
+
+```
+VERDICT: FAIL
+SCOREBOARD: 12/14 criteria met, 4/4 invariants hold
+FAILURES:
+- [C2b] sev: critical · The naming-cue rule does not close the criterion — 20 of 20 fabricated-person
+  attacks ship. One capitalised non-name adjacent to any cue is enough: "Welcome Everyone to the
+  session." yields person:everyone, "Thanks All for being here." yields person:all, "Hi Guys" yields
+  person:guys, "Welcome To the annual conference." yields person:to. C2b names pronouns explicitly and
+  "Everyone"/"All" are indefinite pronouns. · Fix: the cue is in the wrong slot — it evidences that the
+  TURN names someone, never that the CANDIDATE is a name; add a candidate-level discourse rejection
+  ALONGSIDE it, do not extend the cue list. · issue: ISS-093
+- [C1] sev: high · The cue rule refuses the greeting / handover / third-party-mention evidence class
+  this contract exists to admit. "Good morning Prasanti, please go ahead.", "Prasanti, what do you
+  think about this?" (the contract's own cited probe A3) and "Our next presenter is Nilesh Gotecha."
+  are all refused, with no C2a/C2b ground for the drop. · Fix: widen the cue list once ISS-093's
+  candidate-level guard carries the anti-fabrication load; then re-derive the corpus figure per C13.
+  · issue: ISS-094
+ISSUES-WRITTEN: ISS-093, ISS-094 (ISS-091, ISS-092 -> fixed)
+EXPLANATION: I reproduced everything the manifest asserts — 99/99, typecheck exit 0, lint:structure
+green, the full mutation table including the no-op control, the empty speakers.ts diff, and both
+cycle-1 attacks now genuinely refused. The three re-fixtured tests are clean: prose only, not one
+assertion loosened or deleted. It fails because the fix is narrower than the finding. ISS-091's
+literal reproductions are closed, but its defect class — a human being invented out of discourse
+text — is wider open than before I could measure it: every attack I aimed at the cue rule landed.
+```
+
+## What I re-ran (nothing below is the maker's pasted output)
+
+| command | my result | manifest claim | verdict |
+|---|---|---|---|
+| `pnpm --filter '@lkb/index' test` | `tests 99 · pass 99 · fail 0` | 99/99 | matches |
+| `pnpm -r typecheck` | all 7 packages Done, exit 0 | exit 0 | matches |
+| `pnpm lint:structure` | lint-root OK · lint-dupes OK (265 exports) · lint-migrations OK (860 files) · SNAPSHOT fresh · tracker-audit OK (G1) · depcruise **271 modules / 0 violations** | green | matches |
+
+### Mutation table — re-run from scratch, control included
+
+`cp` byte backup before each mutation, `cp` restore + `cmp` after each, `git status --short` empty
+at the end. Baseline 99/0.
+
+| mutation | my result | manifest claim |
+|---|---|---|
+| cue rule -> plain containment | **94 / 5** | 93 / 5 (fails match) |
+| remove name-shape guard | **95 / 4** | 95 / 3 (arithmetic) |
+| remove the 4-token cap | **98 / 1** | 98 / 1 (matches) |
+| empty `NAME_JOINERS` | **98 / 1** | 97 / 1 (arithmetic) |
+| **no-op control** | **99 / 0** | 99 / 0 (matches) |
+
+**Judgement on the maker's claim that all four guards are independently pinned: upheld.** Each
+mutation moves the suite from green, and the control does not. The four tests added this cycle are
+doing real work — I confirmed the shape guard and the cap are reachable only through a cued fixture,
+which is exactly what the maker's own first cycle-2 table exposed and then closed.
+
+Two rows do not sum to the 99-test baseline (95+3, 97+1 = 98), i.e. they were carried over from the
+98-test run rather than re-measured after the four tests were added. Cosmetic; the failure counts
+that matter are right and the conclusion is unaffected. Say 99 next time.
+
+### The three re-fixtured tests — audited line by line
+
+`git diff 57f4e99 ff8ef8d -- packages/index/src/pipeline/speakers-llm.test.ts`. The maker flagged
+this itself as the move that can disguise a weakened test. It did not.
+
+| test | fixture change | assertions | still proves |
+|---|---|---|---|
+| partial survival | `"Ruby again here."` -> `"This is Ruby again."` | **byte-identical** | yes — `t404` still fabricated, still dropped, speaker still retained on `t1`+`t2` |
+| contradiction unresolved | `"Actually Rahul Mehta."` -> `"Actually, my name is Rahul Mehta."` | **byte-identical** | yes — and strictly *more*: under the cue rule the old fixture would have been filtered before reaching the contradiction guard, so the test would have passed vacuously |
+| offsets at both edges | `"That would be Ruby"` -> `"Over to Ruby"` | **byte-identical** | yes — name still terminal in the string, offset arithmetic at the end edge unchanged; `"Ruby speaking."` (start edge) untouched |
+
+No assertion was loosened, weakened, or deleted; no `assert` line appears in the diff at all. Nothing
+was converted to a `skip`, a `todo`, or a looser matcher. The middle row is a small improvement.
+
+### ISS-091 / ISS-092 — verified individually
+
+| probe | result |
+|---|---|
+| `"Ruby"` in `"My name is Rubykumar Shah."` | refused |
+| `"Ruby"` in `"My name is Ruby-Anne Smith."` | refused |
+| `"Anne"` in `"My name is Ruby-Anne Smith."` | refused |
+| `"Ruby-Anne Smith"` claimed whole | **shipped** `person:ruby-anne-smith` (correct) |
+| `"Welcome"` / `"Thanks"` / `"Okay"` / `"I"` standalone | all refused |
+| `"Good morning"` | refused |
+
+**ISS-092 is genuinely closed** and I have marked it `fixed`. Sharing `NAME_JOINERS` broke no
+legitimate case I could find: `"My name is Ruby."`, `"J. Smith"`, `"D'Souza"`, `"O'Brien"` (curly
+apostrophe) and `"Over to Ruby. Next slide please."` all still resolve.
+
+**ISS-091 is marked `fixed` only for its literal reproductions.** Its defect class is not closed —
+that is ISS-093 below, and it is why this cycle FAILs.
+
+### ISS-093 — the cue rule, attacked (20 attacks, 20 shipped)
+
+Single turn, injected `complete` returning `{speakerRef:"spk:0", displayName:N, turnIds:["t1"]}`.
+
+| transcript text | displayName | result |
+|---|---|---|
+| `Welcome Everyone to the session.` | `Everyone` | **shipped** `person:everyone` |
+| `Hello Everyone, thanks for joining.` | `Everyone` | **shipped** `person:everyone` |
+| `Hey Everyone welcome aboard.` | `Everyone` | **shipped** `person:everyone` |
+| `Thanks All for being here.` | `All` | **shipped** `person:all` |
+| `Hi Guys, let us start.` | `Guys` | **shipped** `person:guys` |
+| `Hi There, can you hear me?` | `There` | **shipped** `person:there` |
+| `Welcome Back to the second session.` | `Back` | **shipped** `person:back` |
+| `Welcome To the annual conference.` | `To` | **shipped** `person:to` |
+| `Thank you So much everyone.` | `So` | **shipped** `person:so` |
+| `I'm Sorry about the delay.` | `Sorry` | **shipped** `person:sorry` |
+| `I am Not sure about that.` | `Not` | **shipped** `person:not` |
+| `That's Great news for us.` | `Great` | **shipped** `person:great` |
+| `This is Important for all of you.` | `Important` | **shipped** `person:important` |
+| `Thank you Monday for the slot.` | `Monday` | **shipped** `person:monday` |
+| `Monday with us marks the deadline.` | `Monday` | **shipped** `person:monday` |
+| `Welcome Diwali celebrations this week.` | `Diwali` | **shipped** `person:diwali` |
+| `This is India speaking on the panel.` | `India` | **shipped** `person:india` |
+| `Coming up next, Mumbai from the west zone.` | `Mumbai` | **shipped** `person:mumbai` |
+| `Google here has an announcement.` | `Google` | **shipped** `person:google` |
+| `English speaking students may apply.` | `English` | **shipped** `person:english` |
+
+Three things make this a critical rather than a curiosity:
+
+1. **`"Welcome Everyone to the session."` is the archetypal opening line of this corpus** — a webinar
+   greeting, not a contrived string. `person:everyone` is precisely "a human being invented out of a
+   greeting", the sentence the manifest gives as this unit's whole purpose.
+2. **C2b names pronouns explicitly.** `"Everyone"`, `"All"` are indefinite pronouns; `"There"` is an
+   expletive pronoun. The criterion enumerates the exact category that ships.
+3. **The maker's own new shape-guard test is one capital letter from being defeated.** It asserts that
+   `"Welcome back to another session."` / `"back"` is refused. Capitalise it — `"Welcome Back to the
+   second session."` / `"Back"` — and it ships. The test pins the guard against lowercase prose, which
+   the manifest itself argues is not the case that matters in a transcript.
+
+**Why it happened, for cycle 3.** The cue was put in the wrong slot. `citesNameAsAnIntroduction`
+*replaced* `containsNameVerbatim` at `speakers-llm.ts:243`, so the cue became the sole gate on the
+containment side. But a naming cue is evidence about the **turn** ("this sentence introduces or
+addresses someone"); it is not, and cannot be, evidence about the **candidate** ("this string is a
+name"). The maker's reasoning for preferring a cue over a stopword list — that a stopword list is
+unbounded and language-specific — is sound as far as it goes, but it argues for cue *in addition to*,
+not *instead of*, a candidate-level rejection. The cue supplies the missing half of the evidence; it
+does not supply the half `looksLikeAName` was already failing to supply.
+
+**Extending the cue list will not fix this and cycle 3 should not try.** The bypass needs one
+capitalised token adjacent to one cue; a longer list is a longer attack surface. Add the
+candidate-level discourse rejection that ISS-091's `fix_direction` listed as option 1 — greetings,
+interjections, acknowledgements, pronouns (`everyone`, `all`, `guys`, `there`), particles and
+prepositions (`to`, `so`, `back`, `not`), weekday and month names — and keep the cue. Then pin it
+with the table above; every row is a ready-made test.
+
+### ISS-094 — the recall side, which I own a share of
+
+I proposed the naming cue in ISS-091's `fix_direction`, so I state plainly that this finding is
+partly a cost of my own suggestion. It is still a finding: these refuse, and no criterion authorises
+the drop.
+
+| transcript text | displayName | result |
+|---|---|---|
+| `Good morning Prasanti, please go ahead.` | `Prasanti` | **refused** |
+| `Prasanti, what do you think about this?` | `Prasanti` | **refused** |
+| `Our next presenter is Nilesh Gotecha.` | `Nilesh Gotecha` | **refused** |
+| `Prasanti said the deadline is Friday.` | `Prasanti` | **refused** |
+
+The middle two matter most. The contract's "Why this is a separate contract" section justifies this
+file's existence on the ground that the LLM path *deliberately admits* greeting and handover
+evidence, and cites `"Prasanti, what do you think?"` by name as the probe that proved it. C12 then
+makes that admission the reason the verbatim rule is load-bearing. The cue rule has quietly reverted
+this path toward the deterministic C6 posture it was written to differ from — `"hi"`/`"hello"`/`"hey"`
+are cues but `"good morning"` is not, and a vocative comma is not a cue at all. The manifest declares
+a general recall cost honestly; it does not say the contract's three headline evidence classes are
+among the losses. Fix it together with ISS-093 — once a candidate-level guard carries the
+anti-fabrication load, the cue list can widen safely.
+
+### Criteria and invariants
+
+12/14 met. **C1** fails on ISS-094 (a verbatim, whole-word, name-shaped `displayName` with no C2a/C2b
+ground for a drop is not kept). **C2b** fails on ISS-093. C2, C2a, C3–C13 met and re-derived. **I1**
+(no throw), **I2** (`speakers.ts` diff is 0 lines against `57f4e99`; last touched at `1983c82`),
+**I3**, **I4** (99/99, no pre-existing test lost) all hold.
+
+### Notes, not failures
+
+- `"J"` against `"My name is J. Smith."` **ships** as `person:j` — a fragment of a longer name, the
+  ISS-092 class, surviving because `.` is deliberately excluded from `NAME_JOINERS`. The exclusion is
+  well-reasoned (including it would refuse `"My name is Ruby."`) and C2a enumerates hyphen, apostrophe
+  and letter boundaries but not the period, so I am not charging it. Worth a comment in the code
+  naming the residue, and reconsidering if the apply unit ever meets initials.
+- `"Ruby"` in `"Ruby's slides are next, welcome all."` is refused — the possessive is a cue-less
+  occurrence, so this is ISS-094's shape, not a separate defect.
+- Non-Latin names (Devanagari, Han) are refused wholesale by `looksLikeAName`'s `\p{Lu}` anchor, since
+  those scripts have no case. The maker states this correctly as a fail-closed recall limit in the
+  cycle-2 notes. Not a criterion violation — no criterion requires non-Latin recall — but it should be
+  a named open question on the apply unit, not only a manifest paragraph.
+- The five-token name `"Maria Del Carmen Garcia Lopez"` is refused by the 4-token cap, as the maker's
+  known gap 3 predicts. Consistent with the stated design.
+- Prose in the manifest is accurate throughout, and the four cycle-1 notes I raised (the "11/11"
+  phrasing, the overstated red-before-green claim, the stale docstring, understated gap 2) were each
+  corrected rather than argued away.
+
+### Ledger
+
+- **ISS-091** -> `fixed` (literal reproductions closed; class continues as ISS-093)
+- **ISS-092** -> `fixed` (closed outright, boundary joiners now shared)
+- **ISS-093** (critical, open) — the cue rule does not close C2b; 20/20 attacks ship
+- **ISS-094** (high, open) — the cue rule refuses the evidence class this contract admits
+
+No contract amendment this cycle. C2a and C2b as written are exactly the criteria that caught this;
+neither needs changing, and neither may be softened because the artifact fails one.
+
+**Fix cycle 2 of max 3.** If cycle 3 lands a candidate-level discourse rejection alongside the cue,
+widens the cue list to cover greeting/vocative/handover, and pins both with the two tables above,
+this passes.
