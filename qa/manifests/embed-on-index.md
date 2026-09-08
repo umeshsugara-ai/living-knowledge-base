@@ -217,4 +217,25 @@ spotted and which no fake-db test can cover.
 4. All four gates by exit code.
 5. `ISSUES-WRITTEN: none` is a complete check.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/embed-on-index.md` (Cycle checked: 2), committed
+`0b8ad7b`. **8/8 criteria, 5/5 invariants, `ISSUES-WRITTEN: none`.** ISS-112 → `fixed`.
+**C8 and ISS-113 stay OPEN** — Mongo down a sixth consecutive tick.
+
+**It proved the rewritten tests are a guard, not documentation** — the check I most wanted. It armed
+`mutate.mjs`, reintroduced ISS-112 *minimally* (re-narrowing the `catch` so assertion errors escape
+while provider failures stay caught), and got **15 pass / 2 fail — and the two failures are exactly
+the two rewritten tests**, nothing else in the file. Restored byte-identical. That is the
+difference between a test that describes behaviour and one that defends it.
+
+**On the fold it ruled correct, and drew the general line** rather than just answering this case:
+folding is legitimate on *same file, same guarantee, new numbered cycle, fresh checker* — and
+illegitimate if used to slip **new scope** into an already-PASSed unit. It noted the evidence bar
+*rose* rather than fell, since cycle 1 had passed on tests that pinned the defective behaviour. Its
+closing point is the one to remember: **deferring a medium to "the next unit touching this file"
+when no such unit is scheduled is how a medium becomes permanent.**
+
+**It corrected an error of its own from cycle 1**, unprompted: both its cycle-1 verdict and
+ISS-112's evidence say the 12-turn fixture yields "12 chunks" — it yields **3**, because
+`buildChunks` packs them. Its own cycle-2 probe failed on that bad assertion before it caught it.
+Conclusions unaffected (3 chunks still make every index-1 shape reachable), and the verdict now
+says so wherever the figure appears.
