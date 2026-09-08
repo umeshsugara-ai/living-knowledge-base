@@ -194,3 +194,28 @@ test("embed: canEmbed() distinguishes providers that support embeddings from tho
   assert.equal(canEmbed(new OllamaProvider(fakeTransport(), {})), true);
   assert.equal(canEmbed(new AnthropicProvider(fakeTransport(), { mode: "oauth" })), false);
   });
+
+test("embed: REFUSES all-empty vectors — the degenerate case relative guards miss (ISS-096)", async () => {
+  // The count guard passes (2 vectors for 2 texts) and the ragged guard passes (both length 0),
+  // because both are RELATIVE and neither has a floor. A zero-length embedding has no direction,
+  // so cosine against it is 0/0: the row looks populated and matches nothing, forever.
+  const t = fakeTransport({ status: 200, body: { embeddings: [{ values: [] }, { values: [] }] } });
+  const p = new GeminiProvider(t, { apiKey: "k" });
+  await assert.rejects(p.embed!({ kind: "embedding", texts: ["a", "b"] }), /empty vector\(s\)/);
+});
+
+test("embed: ollama applies the same empty-vector floor (ISS-096)", async () => {
+  const t = fakeTransport({ status: 200, body: { embeddings: [[], []] } });
+  const p = new OllamaProvider(t, {});
+  await assert.rejects(p.embed!({ kind: "embedding", texts: ["a", "b"] }), /empty vector\(s\)/);
+});
+
+test("embed: an EMPTY BATCH still returns dims 0 without throwing — no texts, nothing to embed", async () => {
+  // The floor must not fire here: zero texts legitimately yields zero vectors, and throwing would
+  // make a no-op batch an error.
+  const t = fakeTransport({ status: 200, body: {} });
+  const p = new GeminiProvider(t, { apiKey: "k" });
+  const r = await p.embed!({ kind: "embedding", texts: [] });
+  assert.equal(r.dims, 0);
+  assert.equal(t.calls.length, 0);
+});

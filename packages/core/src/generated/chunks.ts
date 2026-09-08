@@ -5,7 +5,7 @@
  */
 
 /**
- * H1 unstructured vector index. Chunks reference turns by id only — text is derived from turns at embed time, never duplicated (ADR-0001).
+ * H1 unstructured vector index. Chunks reference turns by id only — text is derived from turns at embed time, never duplicated (ADR-0001). The embedding VECTOR is stored inline because brute-force cosine (D-a) must read the numbers; `embeddingRef`, a string pointer, could never be compared and is retired. Storing the vector is not a text duplication: it is a derived numeric artifact, not a second copy of the source.
  */
 export interface Chunks {
   _id: string;
@@ -15,7 +15,23 @@ export interface Chunks {
    * @minItems 1
    */
   turnRefs: [string, ...string[]];
-  embeddingRef?: string;
+  /**
+   * Position of this chunk within its session, so a re-index can be verified complete and ordered without re-deriving text.
+   */
+  chunkIndex: number;
+  /**
+   * The embedding itself. minItems 1 because a zero-length vector has no direction: cosine against it is 0/0, so it would silently match nothing while the row looks populated (ISS-096).
+   *
+   * @minItems 1
+   */
+  vector?: [number, ...number[]];
+  /**
+   * Length of `vector`. Stored rather than inferred so a mixed-model corpus is detectable by query instead of by a failed cosine — gemini-embedding-001 returns 3072, nomic-embed-text 768.
+   */
+  dims?: number;
+  /**
+   * Which model produced `vector`. Vectors from different models are not comparable, so this is what makes a mixed corpus diagnosable.
+   */
   embeddingModel?: string;
   [k: string]: unknown;
 }

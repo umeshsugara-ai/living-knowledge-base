@@ -60,7 +60,7 @@ a client of that API — with the long-range goal of beating top human counsello
 | Collection | Required fields | Evidence/provenance field |
 |---|---|---|
 | api_keys | _id, tenantId, keyHash, createdAt | no |
-| chunks | _id, tenantId, sourceRef, turnRefs | no |
+| chunks | _id, tenantId, sourceRef, turnRefs, chunkIndex | no |
 | claims | _id, tenantId, text, status, evidence | yes |
 | consent_policies | _id, tenantId, mode | no |
 | decisions | _id, tenantId, text, status, evidence | yes |

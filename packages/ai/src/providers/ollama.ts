@@ -102,6 +102,13 @@ export class OllamaProvider implements Provider {
       );
     }
     const dims = vectors[0]?.length ?? 0;
+    if (dims === 0) {
+      throw new Error(
+        `ollama embed returned ${vectors.length} empty vector(s) — a zero-length embedding has ` +
+          "no direction, so cosine against it is 0/0 and it would silently match nothing while " +
+          "the row looks populated (ISS-096)",
+      );
+    }
     const ragged = vectors.findIndex((v) => v.length !== dims);
     if (ragged !== -1) {
       throw new Error(

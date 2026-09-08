@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "kb://chunks",
   "title": "chunks",
-  "description": "H1 unstructured vector index. Chunks reference turns by id only — text is derived from turns at embed time, never duplicated (ADR-0001).",
+  "description": "H1 unstructured vector index. Chunks reference turns by id only — text is derived from turns at embed time, never duplicated (ADR-0001). The embedding VECTOR is stored inline because brute-force cosine (D-a) must read the numbers; `embeddingRef`, a string pointer, could never be compared and is retired. Storing the vector is not a text duplication: it is a derived numeric artifact, not a second copy of the source.",
   "type": "object",
-  "required": ["_id", "tenantId", "sourceRef", "turnRefs"],
+  "required": ["_id", "tenantId", "sourceRef", "turnRefs", "chunkIndex"],
   "properties": {
     "_id": { "type": "string" },
     "tenantId": { "type": "string", "minLength": 1 },
@@ -14,8 +14,26 @@
       "minItems": 1,
       "items": { "type": "string" }
     },
-    "embeddingRef": { "type": "string" },
-    "embeddingModel": { "type": "string" }
+    "chunkIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Position of this chunk within its session, so a re-index can be verified complete and ordered without re-deriving text."
+    },
+    "vector": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 1,
+      "description": "The embedding itself. minItems 1 because a zero-length vector has no direction: cosine against it is 0/0, so it would silently match nothing while the row looks populated (ISS-096)."
+    },
+    "dims": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Length of `vector`. Stored rather than inferred so a mixed-model corpus is detectable by query instead of by a failed cosine — gemini-embedding-001 returns 3072, nomic-embed-text 768."
+    },
+    "embeddingModel": {
+      "type": "string",
+      "description": "Which model produced `vector`. Vectors from different models are not comparable, so this is what makes a mixed corpus diagnosable."
+    }
   },
   "additionalProperties": true
 }
