@@ -134,3 +134,50 @@ test("G1 still catches a genuine U-unit mismatch — the widened regex did not w
   assert.match(findings[0], /U1\.1/);
   rmSync(root, { recursive: true, force: true });
 });
+
+test("G1 catches a DUPLICATE TASKS.md row — a Map keeps only the last, so a conflict can hide (ISS-089)", () => {
+  // Found in the wild: a roadmap import added a second U3.1 row while a richer one already existed.
+  // G1 stayed GREEN because `mdRows.set` let the later row win, so the two rows' disagreement was
+  // invisible to the only gate that reads them. The row-set check cannot see this by construction —
+  // it compares key SETS, and a duplicate key is still one key.
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-dup-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({ tasks: [{ id: "U3.1", status: "in_progress" }], progress: { total: 1, done: 0, percent: 0 } }),
+  );
+  writeFileSync(
+    join(root, "TASKS.md"),
+    "| ID | Status |\n|---|---|\n| U3.1 | done | first |\n| U3.1 | in_progress | second |\n",
+  );
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.equal(findings.length, 1, `expected the duplicate to be reported, got: ${findings.join(" | ")}`);
+  assert.match(findings[0], /duplicate/i);
+  assert.match(findings[0], /U3\.1×2/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("G1 names an unknown status word instead of emitting a confusing mismatch", () => {
+  // `partial` was in real use in TASKS.md and is in NORMALISE for neither tracker, so it mapped to
+  // `undefined` — which compares unequal to everything and would have produced
+  // `is "in_progress" but "partial"` rather than saying the vocabulary is wrong.
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-vocab-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({ tasks: [{ id: "U3.1", status: "in_progress" }], progress: { total: 1, done: 0, percent: 0 } }),
+  );
+  writeFileSync(join(root, "TASKS.md"), "| ID | Status |\n|---|---|\n| U3.1 | partial | x |\n");
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.ok(
+    findings.some((f) => /unknown status "partial"/.test(f)),
+    `expected the unknown status to be named, got: ${findings.join(" | ")}`,
+  );
+  rmSync(root, { recursive: true, force: true });
+});

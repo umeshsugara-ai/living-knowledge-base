@@ -44,7 +44,19 @@ export function audit(root = ROOT) {
   // §10 roadmap units imported 2026-09-08. Before that import the U-units lived ONLY in the plan
   // file, so the maker's roadmap backlog tier could not see them and fell through to
   // self-generated QA work — 84 of 85 ledger issues were filed by the loop about itself.
-  for (const m of md.matchAll(/^\|\s*(T-[0-9]+[a-z]?|U[0-9]+\.[0-9]+)\s*\|\s*([a-z_]+)\s*\|/gim)) mdRows.set(m[1], m[2]);
+  // A Map silently keeps the LAST row for a duplicated id, so a second U3.1 row hid a real
+  // conflict and G1 stayed green (ISS-089). Count occurrences before the Map collapses them.
+  const mdSeen = new Map();
+  for (const m of md.matchAll(/^\|\s*(T-[0-9]+[a-z]?|U[0-9]+\.[0-9]+)\s*\|\s*([a-z_]+)\s*\|/gim)) {
+    mdSeen.set(m[1], (mdSeen.get(m[1]) ?? 0) + 1);
+    // An unknown status word normalises to `undefined`, which compares unequal to everything and
+    // produces a confusing "is X but Y" finding instead of naming the real problem (`partial` was
+    // in use and in NORMALISE for neither tracker). Flag the vocabulary itself.
+    if (!(m[2] in NORMALISE)) findings.push(`G1 status: ${m[1]} uses unknown status "${m[2]}" in TASKS.md — known: ${Object.keys(NORMALISE).join(", ")}`);
+    mdRows.set(m[1], m[2]);
+  }
+  const dupes = [...mdSeen].filter(([, n]) => n > 1).map(([id, n]) => `${id}×${n}`);
+  if (dupes.length) findings.push(`G1 duplicate rows in TASKS.md — ${dupes.join(", ")} (a Map keeps only the last, so a conflicting row can hide)`);
   const goalRows = new Map(goal.tasks.map((t) => [t.id, t.status]));
 
   const onlyMd = [...mdRows.keys()].filter((id) => !goalRows.has(id));

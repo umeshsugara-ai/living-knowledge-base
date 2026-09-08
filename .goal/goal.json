@@ -4,7 +4,7 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T12:56:02",
+  "updated": "2026-09-08T13:06:02",
   "progress": {
     "total": 56,
     "done": 31,
@@ -244,28 +244,26 @@
     {
       "id": "T-021",
       "title": "Golden set 50-100 Qs + recall@k report (target recall@5 >= 0.85)",
-      "status": "blocked",
+      "status": "pending",
       "base_criticality": "LOW",
       "deps": [
         "T-002"
       ],
       "criticality": "low",
       "completed": "2026-09-03T13:45:00",
-      "note": "REVERTED from done 2026-09-07 (plan §10 U0.6). The harness is real and checker-PASSed, but it was verified against a HEURISTIC (non-LLM) retriever: recall@5=1.000 is a property of the proxy, not evidence the real pipeline meets the 0.85 target. Not done until measured against the real provider chain. BLOCKED 2026-09-08: the recall@5 metric is saturated (1.000, zero misses), so this task cannot be honestly completed until qa/gates/golden-set-redesign.md is answered. Previously advertised as READY because deps were met, which is how the roadmap tier would have pulled unfailable work.",
-      "blocked_by": "qa/gates/golden-set-redesign.md"
+      "note": "UNBLOCKED 2026-09-08: qa/gates/golden-set-redesign.md is ANSWERED - Option C, regenerate the golden set from raw transcripts (data/toc-migrated/<sessionId>/turns.json), by a different model+prompt than the summarizer, phrased as real student questions, with near-neighbour distractors. This task IS that unit. Binding acceptance conditions from the gate: cite the question-blind control (0.217) beside every score; PASS = recall@5 STRICTLY between 0.217 and 1.000 with a non-zero miss count - 1.000 is a FAILURE of the remedy and escalates to Option B; re-run the verbatim-overlap and single-unique-token-pin diagnostics (pin rate must fall well below 63%). The gate is answered but NOT closed - it closes when this unit satisfies those conditions."
     },
     {
       "id": "T-022",
       "title": "Evaluator calibration on 30 hand-scored pairs",
-      "status": "blocked",
+      "status": "pending",
       "base_criticality": "LOW",
       "deps": [
         "T-021"
       ],
       "criticality": "low",
       "completed": "2026-09-03T13:46:01",
-      "note": "REVERTED from done 2026-09-07 (plan §10 U0.6). Used a heuristic scorer and a DERIVED (not hand-scored) reference set, so the MAE-vs-human calibration this task exists to prove was never performed. Not done until run against the real LLM judge with a genuinely hand-scored set. BLOCKED 2026-09-08: the recall@5 metric is saturated (1.000, zero misses), so this task cannot be honestly completed until qa/gates/golden-set-redesign.md is answered. Previously advertised as READY because deps were met, which is how the roadmap tier would have pulled unfailable work.",
-      "blocked_by": "qa/gates/golden-set-redesign.md"
+      "note": "depends T-021. NOT gate-blocked - the gate file says so explicitly. Blocked only by its dependency: calibration needs a non-saturated golden set to calibrate against."
     },
     {
       "id": "T-023",
@@ -440,11 +438,11 @@
     {
       "id": "U0.10",
       "title": "Honest eval baseline against a real LLM (redo T-021/T-022)",
-      "status": "blocked",
+      "status": "pending",
       "base_criticality": "MEDIUM",
       "deps": [],
-      "criticality": "medium",
-      "note": "BLOCKED by qa/gates/golden-set-redesign.md — the recall@5 metric is saturated at 1.000, so a real-LLM rerun would produce a second unfalsifiable number. Needs the human gate answered first."
+      "criticality": "low",
+      "note": "UNBLOCKED 2026-09-08: the gate is ANSWERED (Option C). An earlier note here claimed it needed the human gate answered first - that was written from a stale read and is false. This unit is the Option C regeneration; see T-021 for the binding acceptance conditions. NOTE for U1.4/U1.5: gate condition 4 says their delta-vs-baseline and >=0.85 exit criteria may not be re-pointed at the new set until conditions 2-3 hold, and until then must not be cited as passed."
     },
     {
       "id": "U1.1",
@@ -452,7 +450,7 @@
       "status": "pending",
       "base_criticality": "MEDIUM",
       "deps": [],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "plan §10 Phase 1. packages/ai/src/provider.ts exists; zero embed references today."
     },
     {
@@ -463,7 +461,7 @@
       "deps": [
         "U1.1"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "embeddingRef is a string pointer; cosine needs the numbers in the doc"
     },
     {
@@ -474,7 +472,7 @@
       "deps": [
         "U1.2"
       ],
-      "criticality": "medium"
+      "criticality": "critical"
     },
     {
       "id": "U1.4",
@@ -484,7 +482,7 @@
       "deps": [
         "U1.3"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "D-a: Atlas Vector Search unavailable (self-hosted Mongo, no +srv). Its recall delta claim additionally needs U0.10."
     },
     {
@@ -495,7 +493,7 @@
       "deps": [
         "U1.4"
       ],
-      "criticality": "medium",
+      "criticality": "critical",
       "note": "do NOT rewrite router.ts — ask() already takes candidates via a thunk"
     },
     {
@@ -504,7 +502,7 @@
       "status": "pending",
       "base_criticality": "MEDIUM",
       "deps": [],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "cheapest real Phase 2 win; also backfills claims.topicRefs, which nothing has ever written"
     },
     {
@@ -515,7 +513,7 @@
       "deps": [
         "U2.1"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "metrics incl. hallucination rate = cited id absent from turns"
     },
     {
@@ -526,7 +524,7 @@
       "deps": [
         "U2.2"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "keep the regex heuristic as degradation fallback"
     },
     {
@@ -537,7 +535,7 @@
       "deps": [
         "U2.2"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "leave low-confidence speakers UNRESOLVED rather than guessing"
     },
     {
@@ -548,7 +546,7 @@
       "deps": [
         "U2.2"
       ],
-      "criticality": "medium"
+      "criticality": "low"
     },
     {
       "id": "U2.6",
@@ -558,7 +556,7 @@
       "deps": [
         "U2.1"
       ],
-      "criticality": "medium",
+      "criticality": "critical",
       "note": "do NOT reshape flatten-graph.ts — map in routes/graph.ts"
     },
     {
@@ -567,7 +565,7 @@
       "status": "in_progress",
       "base_criticality": "MEDIUM",
       "deps": [],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "IN FLIGHT in a concurrent maker session: apps/web/src/pages/AskPage.tsx + api/ask.ts exist"
     },
     {
@@ -578,7 +576,7 @@
       "deps": [
         "U3.1"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "builds on U0.7 + U1.5"
     },
     {
@@ -587,7 +585,7 @@
       "status": "pending",
       "base_criticality": "MEDIUM",
       "deps": [],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "workers/transcribe is a 3-line placeholder; packages/ingest recording adapter is real but unwired"
     },
     {
@@ -598,7 +596,7 @@
       "deps": [
         "U4.1"
       ],
-      "criticality": "medium",
+      "criticality": "low",
       "note": "three stubs + a package imported by nothing is negative-value inventory"
     }
   ],
@@ -618,6 +616,27 @@
       "message": "T-003 is CRITICAL — human required",
       "task_id": "T-003",
       "acked": false
+    },
+    {
+      "ts": "2026-09-08T13:01:02",
+      "level": "critical",
+      "message": "U1.3 is CRITICAL — human required",
+      "task_id": "U1.3",
+      "acked": false
+    },
+    {
+      "ts": "2026-09-08T13:01:02",
+      "level": "critical",
+      "message": "U1.5 is CRITICAL — human required",
+      "task_id": "U1.5",
+      "acked": false
+    },
+    {
+      "ts": "2026-09-08T13:01:02",
+      "level": "critical",
+      "message": "U2.6 is CRITICAL — human required",
+      "task_id": "U2.6",
+      "acked": false
     }
   ],
   "preferences": {
@@ -627,7 +646,7 @@
   },
   "analytics": {
     "velocity_per_day": 3.62,
-    "eta_days": 2.5
+    "eta_days": 6.9
   },
-  "last_deterministic_tick": "2026-09-08T12:56:02"
+  "last_deterministic_tick": "2026-09-08T13:06:02"
 }

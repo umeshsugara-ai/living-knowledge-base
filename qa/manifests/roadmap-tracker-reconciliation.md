@@ -3,7 +3,7 @@
 **Contract:** qa/contracts/tracker-integrity.md
 **Goal task:** none (D-014 backlog tier 3; plan "MAKE THE MAKER-CHECKER LOOP WORK PROPERLY" step 5)
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** none filed — closes a structural gap, not a ledger row.
 
@@ -106,5 +106,93 @@ without pre-empting the decision.
 
 Tracker rows, one regex, two tests. No product code touched — `apps/`, `packages/` unchanged except
 `scripts/lib`. Fully reversible by `git revert`.
+
+---
+
+# Fix cycle 2 — both FAILURES from `qa/verdicts/roadmap-tracker-reconciliation.md` (cycle 1)
+
+Quoting each, then what changed. The cycle-1 verdict was **FAIL, 7/7 criteria, 4/6 invariants**.
+
+### [I2] high — ISS-089: duplicate `U3.1` row in TASKS.md
+
+> *"TASKS.md carries two U3.1 rows (one pre-existing `partial`, one added by this unit as
+> `in_progress`); G1 stays green only because Map-set lets the later row win"*
+
+Accepted in full. My import added a second `U3.1` row without checking whether one existed — a
+richer row was already there from the concurrent session, describing the *shipped* Ask page with
+its checker verdict. **The two rows disagreed and G1 could not see it**, because `mdRows.set()`
+keeps the last write and a duplicate key is still one key, so the row-set comparison is blind to it
+by construction.
+
+- Removed **my** thin row; kept the pre-existing richer one.
+- That row's status was `partial` — a word in `NORMALISE` for **neither** tracker, so it mapped to
+  `undefined`, which compares unequal to everything. A second latent hole, found while fixing the
+  first. Changed to `in_progress`, which both trackers understand, preserving the note verbatim.
+- **Closed the class, per the checker's own suggestion:** G1 now counts row occurrences *before*
+  the Map collapses them and reports duplicates, and separately names an unknown status word
+  instead of emitting a confusing `is "X" but "Y"` mismatch.
+
+### [I3] high — ISS-090: marked `blocked` against an ANSWERED gate
+
+> *"T-021/T-022/U0.10 set `blocked` against qa/gates/golden-set-redesign.md, which was ANSWERED
+> (Option C, Umesh) at 12:17, 42 min before this 12:59 commit; U0.10's note … is false and T-022's
+> blocked_by contradicts the gate's own 'NOT blocked: T-022' line"*
+
+Accepted, and it is the more embarrassing of the two: the whole point of this unit was that the
+tracker should stop asserting things that are not true, and I introduced a fresh false assertion
+by inferring blockage from stale task notes instead of reading the gate file — the one source that
+would have settled it. The checker's own report on my status table makes the contrast exact: the
+six rows I *tabulated* were verified against real files and all six held; the three I did **not**
+tabulate are the three that were wrong.
+
+All three now `pending`, `blocked_by` removed, and the notes rewritten **from the gate file**:
+
+- **T-021** carries the gate's four binding acceptance conditions verbatim in substance —
+  regenerate from `data/toc-migrated/<sessionId>/turns.json` (not `session_page.json`, whose
+  `keyInsights` leak is the whole 1.000), a different model+prompt than the summarizer, real
+  student questions, near-neighbour distractors; cite the **0.217** question-blind control beside
+  every score; and **PASS = recall@5 strictly between 0.217 and 1.000 with a non-zero miss count —
+  1.000 is a FAILURE of the remedy and escalates to Option B.**
+- **T-022** — not gate-blocked (the gate says so explicitly); blocked only by its `T-021` dep.
+- **U0.10** — the false sentence is gone; it now records gate condition 4, that U1.4/U1.5's exit
+  criteria may not be re-pointed at the new set until conditions 2–3 hold and must not be cited as
+  passed before then.
+
+**The gate is answered but NOT closed.** It closes when a unit satisfies conditions 1–4, or
+escalates to Option B if condition 2 fails. Nothing here claims otherwise.
+
+### On the checker's ruling I asked for
+
+It ruled the restraint **correct** — a tick writing a `done_check` is the literally prohibited act
+and a sweep recommendation confers no allowlist authority — while noting my *second* reason was
+stale. That is right, and the conclusion survives for a reason I had not seen: the gate explicitly
+defers the ≥0.85 threshold re-set, which is exactly what re-expressing the criterion would have
+pre-empted.
+
+## Cycle-2 evidence
+
+| check | result |
+|---|---|
+| `node --test scripts/lib/tracker-audit.test.mjs` | **9/9** (7 + 2 new: duplicate-row detection, unknown-status naming) |
+| `node scripts/tracker-audit.mjs --gate g1` | OK, exit 0 |
+| `pnpm lint:structure` | clean — SNAPSHOT fresh, G1 OK, depcruise 0 violations / 267 modules |
+| `pnpm -r typecheck` | exit 0 |
+
+Duplicate `U3.1` rows: **0** (`grep -oE '^\| (T-…|U…) \|' TASKS.md \| sort \| uniq -d` empty).
+Rows carrying `blocked_by`: **none**. Readiness now offers **T-021 and U0.10** — the two units the
+answered gate actually authorizes — alongside U1.1, U2.1, U4.1.
+
+Headline unchanged at **55% (31/56)**; no task changed `done` state this cycle.
+
+## How to verify (cycle 2)
+
+1. Re-run the four checks above. Confirm `uniq -d` on the id column is empty.
+2. **Confirm the new G1 checks are load-bearing**: add a second `U3.1` row → G1 must fail naming
+   `U3.1×2`; set a row's status to `partial` → G1 must name the unknown word. Restore.
+3. **Read `qa/gates/golden-set-redesign.md` yourself** and confirm the three rewritten notes match
+   it — especially that PASS is *strictly between* 0.217 and 1.000, since a 1.000 here means the
+   remedy failed. I got this wrong once by not reading the file; do not take my paraphrase for it.
+4. Confirm nothing claims the gate is closed.
+5. `ISSUES-WRITTEN: none` is a complete check.
 
 **Status: ready-for-check**

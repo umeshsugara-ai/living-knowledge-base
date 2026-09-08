@@ -46,7 +46,7 @@
 
 | ID | Status | Task | Notes |
 |---|---|---|---|
-| U3.1 | partial | Ask page (`apps/web/src/pages/AskPage.tsx`) | Shipped + checker PASS 8/8 (`qa/verdicts/web-ask-page.md`, commit `a7641bf`) against the contract the checker authored. **NOT done against plan §10's own exit criterion** — "Playwright asks a real question, >=1 citation renders and links to a real session page." Verified only by component tests with the `ask` API module spied; never run against a live tenant. Catalogue C2/C3 downgraded REAL->PARTIAL on 2026-09-08 for the same reason (no evidence mode / filters / history; no confidence, excerpts, follow-ups or feedback). Two items carried forward from the verdict: C5's no-`sessionRef` branch is correct but untested, and a once-observed C4 flake (test measured at 1277ms against `waitFor`'s 1000ms default -- fix with an explicit timeout, never a retry). |
+| U3.1 | in_progress | Ask page (`apps/web/src/pages/AskPage.tsx`) | Shipped + checker PASS 8/8 (`qa/verdicts/web-ask-page.md`, commit `a7641bf`) against the contract the checker authored. **NOT done against plan §10's own exit criterion** — "Playwright asks a real question, >=1 citation renders and links to a real session page." Verified only by component tests with the `ask` API module spied; never run against a live tenant. Catalogue C2/C3 downgraded REAL->PARTIAL on 2026-09-08 for the same reason (no evidence mode / filters / history; no confidence, excerpts, follow-ups or feedback). Two items carried forward from the verdict: C5's no-`sessionRef` branch is correct but untested, and a once-observed C4 flake (test measured at 1277ms against `waitFor`'s 1000ms default -- fix with an explicit timeout, never a retry). |
 
 ## Later (unchanged)
 
@@ -102,7 +102,6 @@ Meeting-Bot pages (apps/web) are open follow-up work, not yet started.
 | U2.4 | open | Speaker resolution (TOC turns are literally spk:0) | leave low-confidence speakers UNRESOLVED rather than guessing |
 | U2.5 | open | Decisions extraction (claims.ts template, different prompt) |  |
 | U2.6 | open | Real graph_edges rows + merge at the route boundary | do NOT reshape flatten-graph.ts — map in routes/graph.ts |
-| U3.1 | in_progress | Ask page in apps/web (POST /ask is unreachable from the UI today) | IN FLIGHT in a concurrent maker session: apps/web/src/pages/AskPage.tsx + api/ask.ts exist |
 | U3.2 | open | Search page / global search bar | builds on U0.7 + U1.5 |
 | U4.1 | open | Recording/file upload wired to a real transcribe worker | workers/transcribe is a 3-line placeholder; packages/ingest recording adapter is real but unwired |
 | U4.2 | open | ONE real meeting-bot joiner (browser/Meet); quarantine the other two | three stubs + a package imported by nothing is negative-value inventory |
