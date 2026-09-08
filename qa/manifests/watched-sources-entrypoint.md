@@ -6,7 +6,7 @@
 **Fix cycle:** 1 of max 3
 **Dual check:** no
 **Issues addressed:** none — new feature work.
-**Status:** ready-for-check
+**Status:** checked-PASS (cycle 1 — `qa/verdicts/watched-sources-entrypoint.md`, commit `ff4c550`)
 **Branch:** `lane/c-unrun-writers`
 **Ledger:** per D-019 this lane files to `qa/issues.c-unrun-writers.jsonl` with `ISS-C-UNRUN-WRITERS-NNN` ids.
 
@@ -91,3 +91,52 @@ and a stored URL is a future outbound request. Try to get a non-http(s) target p
 rule on gap 2: I claim A13 deserves PARTIAL not REAL even once rows exist, because nothing re-fetches
 anything. If you think shipping the entrypoint without the scheduler is the wrong unit boundary, say
 so. `ISSUES-WRITTEN: none` is creditable.
+
+
+---
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 1** — 8/8 criteria, 5/5 invariants. Four issues filed, none a defect of this unit.
+The D-019 lane ledger worked as intended: ids came from `qa/issues.c-unrun-writers.jsonl` starting
+at 001, with no collision against the other loop's sequence.
+
+All four gates reproduced exactly, and the mutation table has a real control: disabling the URL
+check, hardcoding the tenant argument, removing the interval check and removing the scope guard each
+cost **exactly one test**, while the no-op control held at 131/131. The seven new tests are
+load-bearing rather than decorative.
+
+### The one defect I own — ISS-C-UNRUN-WRITERS-001 (medium)
+
+The route validates a **parsed** URL and stores the **raw** string, so the value approved and the
+value stored can differ under a different parser. One line closes it (`new URL(body.url).href`).
+Fixed in the follow-up unit rather than here, since this manifest already carries a PASS.
+
+### The ruling worth keeping — ISS-C-UNRUN-WRITERS-002 (high)
+
+I asked whether an internal-address block (cloud metadata, localhost) belonged in this route. The
+checker said no, and the reasoning is better than my question: **a store-time hostname check cannot
+survive DNS rebinding between registration and fetch**, so blocking a literal `169.254.169.254`
+here buys nothing against anyone who can spell a domain name — while making the real control feel
+optional later. The sound place is the fetcher, on the **resolved IP after DNS**, with redirects
+re-checked per hop. It is now contract invariant `[I3]` and a filed high-severity issue, queued
+*before* the fetcher unit is built rather than discovered after.
+
+No scheme bypass was found. Uppercase `HTTPS://` passes correctly (WHATWG lowercases the scheme) and
+`http:/\/\evil.com` normalises to `http://evil.com` — neither is a bypass.
+
+### Rulings on my two tracker corrections — both upheld
+
+`partial` → `in_progress` was required. The cross-lane `U1.0` reconciliation was verified rather
+than assumed: **deleting the row makes `tracker-audit --gate G1` exit 1**, which would block this
+unit's own acceptance evidence. Judged legitimate because it touched a tracker row (not another
+lane's code, manifest or verdict) and derived only from committed artifacts.
+
+Two notes I accept: it is a near-certain `TASKS.md` merge conflict when the lanes converge — **take
+the other lane's authored row** — and a one-line ledger note would have been the cleaner form of
+"reconcile *and* report".
+
+### A13 status
+
+Still **MISSING**, not PARTIAL — no write has occurred yet. When rows exist it becomes PARTIAL, not
+REAL: rows prove intent to watch, not that anything was ever watched. Same error caught on B3/B10.
