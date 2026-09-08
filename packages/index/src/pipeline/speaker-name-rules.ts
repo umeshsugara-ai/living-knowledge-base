@@ -189,7 +189,23 @@ function hasNamingCue(text: string, name: string, at: number): boolean {
 
   const rawAfter = text.slice(at + name.length, at + name.length + 28);
   const after = rawAfter.toLowerCase().replace(/^[\s,:;."'\u2019()\u2014-]+/u, "");
-  if (NAMING_CUES_AFTER.some((cue) => after.startsWith(cue))) return true;
+  if (NAMING_CUES_AFTER.some((cue) => cue !== "speaking" && after.startsWith(cue))) return true;
+  // `speaking` is the self-identification idiom -- "Ruby speaking." -- but it is also a plain
+  // participial modifier: "English speaking students may apply." ships person:english otherwise.
+  // ISS-097. The distinction is syntactic and candidate-independent ("Prasanti speaking students
+  // may apply." is not a naming construction either), so it is decided on what FOLLOWS `speaking`:
+  // end of clause, or a preposition, but never a noun it is modifying.
+  // `speaking` is the self-identification idiom -- "Ruby speaking." -- but it is also a plain
+  // participial modifier: "English speaking students may apply." would otherwise ship
+  // person:english (ISS-097). The distinction is syntactic and candidate-independent:
+  // "Prasanti speaking students may apply." is not a naming construction either. So it is
+  // decided on what FOLLOWS `speaking` -- end of clause, or a preposition, never a noun it is
+  // modifying. Matched in one pass over the raw tail rather than by slicing, so no separate
+  // strip step can disagree about where the word starts.
+  const SPEAKING_NAMES = /^[\s,:;.'"()\u2019-]*speaking(?:\s*$|\s*[.,!?;:]|\s+(?:from|on|at|for|with|to|in|of|about)\b)/iu;
+  const SPEAKING_ANY = /^[\s,:;.'"()\u2019-]*speaking\b/iu;
+  if (SPEAKING_NAMES.test(rawAfter)) return true;
+  if (SPEAKING_ANY.test(rawAfter)) return false;
 
   // Direct address takes a comma the greeting-of-an-object form does not: "Good morning Prasanti,"
   // is an address; "Welcome Diwali celebrations" is not. The comma is doing real work here.

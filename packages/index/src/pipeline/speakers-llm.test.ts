@@ -368,7 +368,13 @@ test("ISS-093: a demonstrative alone does not name a SINGLE-token candidate", as
  * separates a city or a company from a person -- that needs a gazetteer, and the model, not this
  * module, is the layer that should decline to propose them. They are carried to the apply unit.
  *
- * Current standing: ISS-093: 16/20 refused, 4 open (all gazetteer-class).
+ * Current standing: ISS-093: 17/20 refused, 3 open (all gazetteer-class).
+ *
+ * "English" was in that residue set until the cycle-1 checker showed it was NOT gazetteer-bound:
+ * in "English speaking students may apply." the `speaking` cue is a participial modifier, not the
+ * self-identification idiom, and the distinction is candidate-independent ("Prasanti speaking
+ * students may apply." is not a naming construction either). ISS-097. Writing it off as
+ * unreachable was my error, and pinning it as expected-shipping entrenched it.
  */
 const ISS_093_CORPUS: [string, string][] = [
   ["Hello Everyone, thanks for joining.", "Everyone"],
@@ -394,7 +400,7 @@ const ISS_093_CORPUS: [string, string][] = [
 ];
 
 /** The four ISS-093 cases that remain open by design -- proper nouns, not discourse words. */
-const ISS_093_GAZETTEER = new Set(["India", "Mumbai", "Google", "English"]);
+const ISS_093_GAZETTEER = new Set(["India", "Mumbai", "Google"]);
 
 for (const [text, name] of ISS_093_CORPUS) {
   const expectedRefusal = !ISS_093_GAZETTEER.has(name);
