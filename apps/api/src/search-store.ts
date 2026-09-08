@@ -5,15 +5,9 @@
  * rather than a new one.
  */
 import { turns as turnsColl, sessions as sessionsColl } from "@lkb/db";
-import { lexicalSearchTurns, lexicalQueryTokens } from "@lkb/index";
+import { lexicalSearchTurns } from "@lkb/index";
+import { buildTurnPrefilter } from "./search-prefilter.js";
 import type { SearchDeps, SearchHit } from "./routes/search.js";
-
-/** Escapes regex metacharacters so a query like "c++" or "what?" builds a literal match rather
- * than a broken or unintended pattern. Mongo compiles `$regex` as a real expression, so an
- * unescaped user token is both a correctness and a denial-of-service surface. */
-function escapeRegex(literal: string): string {
-  return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 /**
  * Pre-filters candidates in Mongo, scores them with `@lkb/index`'s pure `lexicalSearchTurns`,
@@ -45,14 +39,11 @@ function escapeRegex(literal: string): string {
 export function createMongoSearchDeps(): SearchDeps {
   return {
     async search(tenantId, query, k): Promise<SearchHit[]> {
-      const tokens = lexicalQueryTokens(query);
-      // No tokens means no turn can score above zero — `lexicalSearchTurns` returns [] for an
-      // empty query too, so this short-circuit matches the scorer's own contract rather than
-      // inventing one, and avoids emitting `$or: []`, which Mongo rejects.
-      if (tokens.length === 0) return [];
-      const turns = await turnsColl(tenantId)
-        .find({ $or: tokens.map((t) => ({ text: { $regex: escapeRegex(t), $options: "i" } })) } as never)
-        .toArray();
+      // buildTurnPrefilter owns the superset invariant and is pinned by search-prefilter.test.ts
+      // (ISS-072: this construction previously lived inline here, where no test could fail on it).
+      const prefilter = buildTurnPrefilter(query);
+      if (prefilter === null) return [];
+      const turns = await turnsColl(tenantId).find(prefilter as never).toArray();
       const scored = lexicalSearchTurns(
         query,
         turns.map((t) => ({ _id: t._id, sessionId: t.sessionId, text: t.text })),
