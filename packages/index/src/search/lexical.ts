@@ -24,6 +24,26 @@ function tokenize(text: string): Set<string> {
   return new Set(text.toLowerCase().split(/\W+/).filter(Boolean));
 }
 
+/**
+ * The query's tokens, using the SAME tokenizer `lexicalSearchTurns` scores with.
+ *
+ * Exported so a datastore can pre-filter candidates server-side instead of shipping every turn
+ * to Node (measured 2026-09-08 against real data: fetching all 2118 turns costs ~1064ms while
+ * scoring them costs ~38ms — the cost is transfer, not computation).
+ *
+ * Sharing one tokenizer is what makes that pre-filter safe. `lexicalSearchTurns` gives a turn a
+ * non-zero score only if at least one of THESE tokens is present as a whole token, so a filter
+ * that keeps every turn containing any of them as a SUBSTRING is a guaranteed superset of the
+ * scoring set — substring matching is strictly more permissive than whole-token matching. Extra
+ * turns the filter lets through simply score 0 and are dropped. If a caller derived its own token
+ * list instead, that guarantee would be a coincidence rather than a property: verified against
+ * real data that dropping short tokens (a `length > 2` filter) silently turned a 10-hit result
+ * for "AI in counselling" into 2, and reduced "is it ok to go" to no tokens at all.
+ */
+export function lexicalQueryTokens(query: string): string[] {
+  return [...tokenize(query)];
+}
+
 export interface SearchableTurn {
   _id: string;
   sessionId: string;

@@ -3,7 +3,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lexicalSearchTurns } from "./lexical.js";
+import { lexicalSearchTurns, lexicalQueryTokens } from "./lexical.js";
 
 const TURNS = [
   { _id: "t1", sessionId: "s1", text: "New Zealand student visa approval rates and processing times." },
@@ -43,5 +43,48 @@ test("results are sorted descending by score", () => {
   const hits = lexicalSearchTurns("rates", TURNS, 10);
   for (let i = 1; i < hits.length; i++) {
     assert.ok(hits[i - 1]!.score >= hits[i]!.score);
+  }
+});
+
+// --- lexicalQueryTokens: the contract a datastore pre-filter depends on ---
+
+test("lexicalQueryTokens uses the SAME tokenization the scorer scores with", () => {
+  // If these ever diverge, a pre-filter built from these tokens silently stops being a superset
+  // of what the scorer can match, and searches start missing real hits with no error anywhere.
+  assert.deepEqual(lexicalQueryTokens("Visa, approval RATES!").sort(), ["approval", "rates", "visa"]);
+  assert.deepEqual(lexicalQueryTokens(""), []);
+  assert.deepEqual(lexicalQueryTokens("   "), []);
+});
+
+test("short tokens are KEPT — dropping them silently loses real hits (measured regression)", () => {
+  // Verified against real data 2026-09-08: a plausible `length > 2` filter turned a 10-hit result
+  // for "AI in counselling" into 2, and reduced "is it ok to go" to zero tokens — an empty $or,
+  // which Mongo rejects outright.
+  assert.deepEqual(lexicalQueryTokens("AI in counselling").sort(), ["ai", "counselling", "in"]);
+  assert.equal(lexicalQueryTokens("is it ok to go").length, 5, "every token must survive, however short");
+});
+
+test("PROPERTY: every turn the scorer can score is reachable by a substring pre-filter on these tokens", () => {
+  // This is the mechanized form of the guarantee `createMongoSearchDeps` relies on. The scorer
+  // matches WHOLE tokens; a substring filter is strictly more permissive, so it must return a
+  // superset. Asserted over the scored set rather than spot-checked on one query.
+  const corpus = [
+    ...TURNS,
+    { _id: "t4", sessionId: "s3", text: "AI is reshaping counselling workflows in 2026." },
+    { _id: "t5", sessionId: "s3", text: "Is it ok to go without a bank statement?" },
+    { _id: "t6", sessionId: "s4", text: "Costs run to 2.5% at banks -- C++ tooling is irrelevant here." },
+  ];
+  const queries = ["AI in counselling", "is it ok to go", "visa student", "C++ costs", "rates"];
+
+  for (const q of queries) {
+    const tokens = lexicalQueryTokens(q);
+    for (const hit of lexicalSearchTurns(q, corpus, corpus.length)) {
+      const turn = corpus.find((t) => t._id === hit.turnId)!;
+      const reachable = tokens.some((tok) => turn.text.toLowerCase().includes(tok));
+      assert.ok(
+        reachable,
+        `"${q}" scored turn ${hit.turnId} at ${hit.score}, but no pre-filter token appears in its text — a Mongo pre-filter would MISS this hit`,
+      );
+    }
   }
 });

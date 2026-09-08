@@ -11,7 +11,7 @@ export { computeRecallAtK, type GoldenQuestion, type RetrieveFn, type RecallResu
 export { createHeuristicRetriever } from "./eval/heuristic-retriever.js";
 export { createNullRetriever, assessBaseline, type BaselineAssessment, type BaselineVerdict } from "./eval/baseline.js";
 
-export { lexicalSearchTurns, type LexicalHit, type SearchableTurn } from "./search/lexical.js";
+export { lexicalSearchTurns, lexicalQueryTokens, type LexicalHit, type SearchableTurn } from "./search/lexical.js";
 
 export { summarizeSession, type SessionSummaryResult, type SummarizeResult, type SummarizeCompleteFn } from "./pipeline/summarize.js";
 export { extractClaims, type ExtractedClaim, type ClaimsCompleteFn } from "./pipeline/claims.js";

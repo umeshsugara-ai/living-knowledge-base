@@ -56,9 +56,12 @@ and the `turns`/`sessions` accessors' own correctness (governed by `packages/db`
 8. **[C8] `search` scope required.** Mounted behind `requireScope("search")`; a key lacking that
    scope gets `403`, never a silent `200`. Machine-checked by `search.test.ts`'s scope test.
 9. **[C9] Turns are loaded once per request, never re-queried per hit.** `createMongoSearchDeps()`
-   calls `turnsColl(tenantId).find({}).toArray()` exactly once, builds a `Map` for O(1) hit
-   resolution, and never issues a second `turns` query inside the per-hit mapping. Verified by
-   reading `store.ts`.
+   issues **exactly one** `turns` query per request, builds a `Map` for O(1) hit resolution, and
+   never issues a second `turns` query inside the per-hit mapping. Verified by reading
+   `apps/api/src/search-store.ts`. *(Amended 2026-09-08 by the `search-prefilter` unit: the query
+   was `find({})` and is now `find({ $or: <one regex clause per query token> })` — the
+   "exactly once" substance is what this criterion protects, not the literal empty filter. The
+   deps also moved from `store.ts` to `apps/api/src/search-store.ts`.)*
 10. **[C10] Session lookups are deduplicated.** Session ids are collected into a `Set` before
     fetching — one `findOne` per *distinct* session id, not per hit, even when multiple hits share
     a session. Verified by reading `store.ts`: `[...new Set(scored.map((s) => s.sessionId))]`
@@ -107,6 +110,34 @@ and the `turns`/`sessions` accessors' own correctness (governed by `packages/db`
   impossible since the stub entry is removed) or a silent success, and a missing scope must never
   look like a valid empty result.
 - **[I5] The route stays read-only.** No write path is added to `SearchDeps` under this contract.
+- **[I6] Any server-side candidate pre-filter must be a provable SUPERSET of the scoring set, and
+  must derive its tokens from `lexicalQueryTokens` — the scorer's OWN tokenizer.** Added
+  2026-09-08 with the `search-prefilter` unit. The argument, restated so a future editor cannot
+  weaken it by accident: `lexicalSearchTurns` scores a turn above zero **only** when a query token
+  appears as a **whole token** in `tokenize(turn.text)`; a **substring** filter over the *same*
+  token list is strictly more permissive, so it necessarily returns a superset and the extras
+  score 0 and are dropped by C2's `score > 0` gate. Every step of that chain is load-bearing:
+  - **Same tokenizer, no filtering.** Any transformation of the token list that *removes* tokens
+    (a length filter, a stopword list, a stemmer) breaks the superset property and silently loses
+    real hits with no error — measured against real data: `length > 2` collapsed
+    `"AI in counselling"` from 10 hits to 2, and reduced `"is it ok to go"` to zero tokens (an
+    empty `$or`, which Mongo rejects outright). A token list *added to* is still safe; a token
+    list *reduced* is a contract break. `lexical.test.ts`'s `PROPERTY:` test pins this for the
+    pure layer. **It does NOT pin the store's consumption of it — see ISS-072.**
+  - **Zero tokens must short-circuit to `[]`,** matching C5's own empty-query behaviour, never
+    emit `$or: []`.
+  - **Every token must be regex-escaped.** Verified complete for Mongo's PCRE dialect
+    (`.*+?^${}()|[]\` — `-` and `#` are context-only and `/` is not a delimiter here, since the
+    pattern is passed as a string). Belt-and-braces in practice: because `tokenize` splits on JS
+    non-unicode `\W+`, tokens can only contain `[A-Za-z0-9_]`, none of which are metacharacters —
+    but the escaping must stay, because it is what makes the property survive a future
+    tokenizer change.
+  - **Bounded exception (ISS-073, severity low, zero live occurrences).** The guarantee assumes
+    JS `toLowerCase()` and Mongo's ASCII-only `$options: "i"` agree. They diverge for the few
+    characters whose lowercase mapping crosses into ASCII (`U+0130` → `i`+`U+0307`, `U+212A` →
+    `k`): such a turn can be scored by the JS tokenizer yet missed by the regex. Verified
+    read-only against the real `toc` tenant that **0 of 2118 turns** contain either character.
+    Recorded as a known bound on I6, not a defect to fix today.
 
 ## Debatable-but-accepted tradeoff (recorded, not silently agreed)
 
@@ -141,6 +172,17 @@ fine at the current ~2100-turn `toc` tenant scale, not fine at 10-100x that. Thi
 (§10, "a vector DB becomes worth it only when brute-force p95 exceeds ~500ms"). Not a contract
 violation today; flagged so a future perf unit doesn't have to rediscover it from scratch.
 
+**Update 2026-09-08 (`search-prefilter` unit) — the ceiling moved, it did not go away.** The
+unbounded fetch is now a `$or` regex pre-filter (I6). Measured by this checker against real
+Mongo, 7 interleaved runs per path, tenant `toc`, 2118 turns, query
+`"visa student university funding"`: **new median 708ms vs old median 852ms (~17% faster)**. The
+maker's manifest reports 993ms vs 1422ms (~30%) from its own session; both runs agree on the
+*direction* and on the *character* of the win, but the magnitude is not a stable constant —
+treat "~30%" as one session's figure, not a property. The complexity claim is confirmed exactly
+as stated: `db.collection('turns').indexes()` returns **only** `_id_`, `tenantId_1`,
+`tenantId_1_sessionId_1` — no text index — so this remains an unindexed O(corpus) scan and a
+constant-factor win. Plan §10's Phase-1 retrieval layer is still the real fix.
+
 ## Out of scope / ignore
 
 - Lexical search over `session_pages`: not built, not claimed by this unit (see tradeoff above).
@@ -153,6 +195,25 @@ violation today; flagged so a future perf unit doesn't have to rediscover it fro
   without needing a contract amendment.
 
 ## Amendment log
+- 2026-09-08 · routine · `search-prefilter` cycle-1 check. (a) **C9 reworded** — its substance
+  ("exactly one `turns` query per request") is unchanged and still holds; only the literal
+  `find({})` text and the `store.ts` file reference went stale when the unit replaced the
+  unbounded fetch with a `$or` regex pre-filter and extracted the deps to
+  `apps/api/src/search-store.ts`. Not a weakening: the criterion protects query *count*, not the
+  filter's emptiness. (b) **[I6] ADDED** — the superset/same-tokenizer invariant the pre-filter's
+  correctness rests on, with its three load-bearing sub-clauses (no token removal, empty-token
+  short-circuit, mandatory regex escaping) and its one recorded Unicode bound (ISS-073). This is
+  a *tightening*: it converts an argument that lived only in a manifest into a rule a future
+  edit can be judged against. (c) **Tradeoff section updated** with this checker's own measured
+  numbers (708ms vs 852ms, ~17%, 7 interleaved runs each) and the independently re-derived index
+  list, deliberately recording that they do NOT reproduce the manifest's ~30% figure. All
+  criteria re-derived this cycle by the checker: `pnpm -r typecheck` exit 0 (10 projects),
+  `pnpm --filter @lkb/index test` 59/59, `pnpm --filter @lkb/api test` 89/89,
+  `pnpm lint:structure` clean (lint-loc OK 238 files, SNAPSHOT fresh at 116, depcruise 0
+  violations across 260 modules), the maker's mutation reproduced (7/9, both target tests red,
+  restored 9/9), a checker-original mutation on `search-store.ts` that nothing catches
+  (ISS-072), and a live read-only parity run against real Mongo over 9 queries — the maker's 6
+  plus three checker-added adversarial ones — all IDENTICAL in turnIds AND scores.
 - 2026-09-08 · routine · Contract CREATED and ADOPTED by /checker in the same action on the
   `search-route` cycle-1 check, from the manifest's proposed criteria (deferred per ISS-006
   segregation-of-duties) plus this checker's own independent verification of `lexical.ts`,

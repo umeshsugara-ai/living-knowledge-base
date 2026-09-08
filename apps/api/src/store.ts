@@ -20,7 +20,7 @@ import {
 } from "@lkb/db";
 import type { ApiKeys, Jobs, TreeIndexNode, TreeIndexRootDocument } from "@lkb/core";
 import type { WriteJobFn } from "@lkb/ai";
-import { flattenTreeToGraph, treeIndexRootFilter, lexicalSearchTurns, type Graph } from "@lkb/index";
+import { flattenTreeToGraph, treeIndexRootFilter, type Graph } from "@lkb/index";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
@@ -28,7 +28,6 @@ import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
 import type { HealthDeps } from "./routes/health.js";
 import { probeMongoHealth } from "./health-probe.js";
-import type { SearchDeps, SearchHit } from "./routes/search.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { ApiKeySummary, KeysDeps } from "./routes/keys.js";
 import type { CalendarReadDeps } from "./routes/calendar.js";
@@ -267,29 +266,5 @@ export function createMongoHealthDeps(): HealthDeps {
           return collections;
         },
       ),
-  };
-}
-
-/** Real `SearchDeps` (routes/search.ts) — loads a tenant's turns once, scores them with
- * `@lkb/index`'s pure `lexicalSearchTurns`, then resolves each hit's own turn doc (already in
- * hand from the initial load — no second turn query) plus its session (deduped: multiple hits
- * can share a session, fetched once each via a Set of distinct ids, not once per hit). */
-export function createMongoSearchDeps(): SearchDeps {
-  return {
-    async search(tenantId, query, k): Promise<SearchHit[]> {
-      const turns = await turnsColl(tenantId).find({}).toArray();
-      const scored = lexicalSearchTurns(query, turns.map((t) => ({ _id: t._id, sessionId: t.sessionId, text: t.text })), k);
-      const turnById = new Map(turns.map((t) => [t._id, t]));
-      const sessionIds = [...new Set(scored.map((s) => s.sessionId))];
-      const sessions = await Promise.all(sessionIds.map((id) => sessionsColl(tenantId).findOne({ _id: id })));
-      const sessionById = new Map(sessionIds.map((id, i) => [id, sessions[i] ?? null]));
-      return scored.map((hit) => ({
-        turnId: hit.turnId,
-        sessionId: hit.sessionId,
-        score: hit.score,
-        turn: turnById.get(hit.turnId) ?? null,
-        session: sessionById.get(hit.sessionId) ?? null,
-      }));
-    },
   };
 }
