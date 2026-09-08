@@ -47,3 +47,24 @@ export const validCalls = () => {
   orgs("toc");
   graphEdges("toc");
 };
+
+/**
+ * ISS-102/ISS-103. `scripts/sync-speakers.mjs` hands `speakers(tenantId)` to
+ * `writeSpeakerDocs`, whose `SpeakerWriteTarget` interface lives in `@lkb/index`. That package
+ * does not depend on this one, and the `.mjs` entrypoint is outside every typecheck scope, so
+ * nothing would catch this accessor dropping a method the write relies on — which is exactly how
+ * `replaceOne` got shipped on a path that could never run, the third recurrence of one shape
+ * (ISS-060, ISS-065, ISS-068).
+ *
+ * This pins the surface in the package that OWNS it: remove or rename any of these three and
+ * `pnpm -r typecheck` fails here, at the source of the drift rather than at 3am on a live run.
+ */
+export const speakerWriteSurface = () => {
+  const coll = speakers("toc");
+  const _count: (filter?: object) => Promise<number> = coll.countDocuments;
+  const _delete: (filter: object) => Promise<{ deletedCount: number }> = coll.deleteMany;
+  const _insert = coll.insertOne;
+  void _count;
+  void _delete;
+  void _insert;
+};

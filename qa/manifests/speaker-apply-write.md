@@ -5,10 +5,10 @@
 items to.
 **Goal task:** U2.4 / catalogue **B3** + **B10**.
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** none directly. Carries the deferred items listed below.
-**Status:** ready-for-check
+**Status:** ready-for-check (cycle 2)
 **Branch:** `lane/a-speakers`
 
 ## Why this unit is different in kind
@@ -103,3 +103,79 @@ defensible and I may have it backwards — if merging is the worse error, FAIL i
 **Second**, the D-016/D-017 correction: judge whether the scoped override is genuinely better than
 consolidation, or whether I should have consolidated the scripts and taken no budget change at all.
 `ISSUES-WRITTEN: none` is creditable.
+
+---
+
+# Fix cycle 2 — responding to the cycle-1 FAIL (ISS-102, ISS-103)
+
+FAILed 11/12. The three rulings I asked for all came back in my favour — merge rule correct, the
+D-016→D-017 correction genuine and the mechanism the checker would itself have required, B10's
+downgrade the right call. **The unit failed on the one thing it shipped but never exercised.**
+
+## ISS-102 (high) — the live write could not run at all
+
+`scripts/sync-speakers.mjs` called `speakers(TENANT).replaceOne(...)`. The tenant-scoped accessor
+has no `replaceOne` — `raw` was removed under ISS-065 — so the "separately approved step" would
+have thrown `TypeError` on its first document. I wrote a gate for a path that was already broken.
+
+Worse, the obvious repair is a trap the checker named: a bare `replaceOne` passthrough, combined
+with the `const { tenantId: _t, ...rest }` strip, would persist **tenant-less** documents —
+violating `speakers.schema.json`'s `required: ["tenantId"]` and defeating tenant isolation. That is
+the ISS-060 shape. I copied the precedent's idiom without copying its method.
+
+## ISS-103 (medium) — and it is the third recurrence of one shape
+
+`scripts/*.mjs` sits outside every typecheck **and** every test: each `tsconfig.json` is
+`include: ["src/**/*.ts"]`. So an entrypoint can call an accessor method that does not exist and
+nothing objects until runtime. ISS-060, ISS-065, ISS-068 and now ISS-102 are all that same shape.
+
+**Patching the line would have left the mechanism intact.** So the fix is structural, in two parts:
+
+1. **The write logic moved into typechecked source** — `writeSpeakerDocs()` in `speaker-docs.ts`,
+   behind a `SpeakerWriteTarget` interface naming exactly the three accessor methods it may use.
+   The entrypoint now only wires it up. It uses `deleteMany` + `insertOne`, the precedent pair,
+   which is what makes the `tenantId` strip safe: the scoped `insertOne` re-attaches the tenant.
+2. **The accessor surface is pinned where it is owned** — `packages/db`'s existing
+   `tenantScope.typecheck-test.ts` now asserts `countDocuments`, `deleteMany` and `insertOne`
+   exist with the right shapes. `packages/index` does not depend on `@lkb/db`, so the cross-package
+   check has to live on the db side.
+
+ISS-103's acceptance was explicit: *"reintroducing ISS-102's exact line must redden a command that
+runs in CI, not merely fail when a human triggers a live write."* Both directions now do:
+
+```
+# reintroduce replaceOne in the write helper
+src/pipeline/speaker-docs.ts(145,18): error TS2339:
+  Property 'replaceOne' does not exist on type 'SpeakerWriteTarget'.
+
+# drop deleteMany from the accessor
+src/collections/tenantScope.typecheck-test.ts(65,79): error TS2339:
+  Property 'deleteMany' does not exist on type '{ find: ...; insertOne: ...; }'.
+```
+
+## Evidence
+
+```
+$ pnpm --filter '@lkb/index' test   tests 178   pass 178   fail 0   (174 + 4 new write tests)
+$ pnpm -r test                      @lkb/db, @lkb/index, @lkb/meeting-bot 40/40, apps/api 109/109 — all green
+$ pnpm -r typecheck                 exit 0
+$ pnpm lint:structure               green; depcruise 277 modules / 0 violations
+$ node scripts/sync-speakers.mjs --dry-run   unchanged: 2 docs, no collisions, 78/494 (15.8%)
+```
+
+The four new tests use a fake that mirrors the **real** accessor surface, so accessor drift shows
+up as a test failure rather than on a live run. One of them asserts the stored document carries its
+`tenantId` — the specific thing a bare replace would have dropped.
+
+## Still true, unchanged
+
+No live write has been performed. B3/B10 have not flipped. The script remains deterministic-only,
+capped at 78/494 (15.8%) and two speakers.
+
+## Not done this cycle, deliberately
+
+The checker's low note — persist a `contested` marker on documents born of a cross-session merge —
+is **not** implemented. No collision exists in the corpus today and `--allow-collisions` has never
+been passed, so adding an unexercised field would be the same mistake as the `replaceOne` path:
+shipping code no test and no run has touched. It belongs with the first real collision. Recorded
+rather than silently skipped.

@@ -85,20 +85,17 @@ async function main() {
   console.log("\nConnecting to Mongo for a live write (no --dry-run flag given)...");
   const { connect, close } = await import("../packages/db/src/client.js");
   const { speakers } = await import("../packages/db/src/collections/speakers.js");
+  const { writeSpeakerDocs } = await import("../packages/index/src/pipeline/speaker-docs.js");
 
   const url = process.env.MONGODB_URL || "mongodb://localhost:27017";
   const dbName = process.env.MONGODB_DB || "lkb";
   await connect(url, dbName);
   try {
-    const before = await speakers(TENANT).countDocuments({});
-    let written = 0;
-    for (const doc of docs) {
-      const { tenantId: _t, ...rest } = doc;
-      await speakers(TENANT).replaceOne({ _id: doc._id }, rest, { upsert: true });
-      written++;
-    }
-    const after = await speakers(TENANT).countDocuments({});
-    console.log(`speakers: before=${before} upserted=${written} after=${after}`);
+    // The write itself lives in typechecked source (ISS-102/ISS-103). This entrypoint only wires
+    // it up, so a call to an accessor method that does not exist is a compile error rather than a
+    // TypeError discovered on a live run.
+    const { before, written, after } = await writeSpeakerDocs(speakers(TENANT), docs);
+    console.log(`speakers: before=${before} written=${written} after=${after}`);
   } finally {
     await close();
   }

@@ -109,3 +109,72 @@ test("every doc carries the tenant it was built for", () => {
 test("no input produces no documents and no collisions", () => {
   assert.deepEqual(buildSpeakerDocs("toc", []), { docs: [], collisions: [] });
 });
+
+/**
+ * The WRITE half. ISS-102: the first version of this lived in `scripts/sync-speakers.mjs` and
+ * called `speakers(tenant).replaceOne(...)` — a method the tenant-scoped accessor does not expose,
+ * so the live write threw `TypeError` on its first document and the "separately approved step"
+ * could not execute at all.
+ *
+ * It was invisible because every `tsconfig.json` is `include: ["src/**\/*.ts"]`, so a `.mjs`
+ * entrypoint is outside `pnpm -r typecheck` entirely, and nothing exercised the non-dry-run branch.
+ * That is the THIRD recurrence of the same shape (ISS-060, ISS-065, ISS-068).
+ *
+ * The fix is structural, not a patch: the write logic moved HERE, into typechecked source, behind
+ * a `SpeakerWriteTarget` interface that names exactly the accessor methods it may use. Reaching
+ * for `replaceOne` again is now a compile error, and the fake below mirrors the real surface so a
+ * drift in `scopedCollection` shows up as a test failure rather than at 3am on a live run.
+ */
+import { writeSpeakerDocs, type SpeakerWriteTarget } from "./speaker-docs.js";
+
+/** Mirrors the REAL `scopedCollection` surface: find/findOne/insertOne/insertMany/deleteMany/countDocuments/updateOne. */
+function fakeTarget() {
+  const stored: Record<string, unknown>[] = [];
+  const calls: string[] = [];
+  const target: SpeakerWriteTarget = {
+    countDocuments: async () => { calls.push("countDocuments"); return stored.length; },
+    deleteMany: async (filter) => {
+      calls.push("deleteMany");
+      const before = stored.length;
+      for (let i = stored.length - 1; i >= 0; i--) {
+        if (Object.entries(filter).every(([k, v]) => (stored[i] as Record<string, unknown>)[k] === v)) stored.splice(i, 1);
+      }
+      return { deletedCount: before - stored.length };
+    },
+    insertOne: async (doc) => { calls.push("insertOne"); stored.push({ ...doc, tenantId: "toc" }); return { acknowledged: true }; },
+  };
+  return { target, stored, calls };
+}
+
+const doc = (personId: string) => ({
+  _id: `toc-${personId}`, tenantId: "toc", personId, aliases: ["X"] as [string, ...string[]],
+  confidence: 0.9, evidence: [{ turnId: "t1", sessionId: "s1" }] as [{ turnId: string; sessionId: string }],
+});
+
+test("writeSpeakerDocs replaces by personId using only accessor methods that exist", async () => {
+  const { target, stored, calls } = fakeTarget();
+  const result = await writeSpeakerDocs(target, [doc("person:ruby")]);
+  assert.equal(result.written, 1);
+  assert.equal(stored.length, 1);
+  assert.deepEqual([...new Set(calls)].sort(), ["countDocuments", "deleteMany", "insertOne"]);
+});
+
+test("the stored document carries its tenantId -- a bare replace would have dropped it", async () => {
+  const { target, stored } = fakeTarget();
+  await writeSpeakerDocs(target, [doc("person:ruby")]);
+  assert.equal(stored[0]?.tenantId, "toc", "speakers.schema.json requires tenantId");
+});
+
+test("re-running is idempotent: one document per personId, not a duplicate", async () => {
+  const { target, stored } = fakeTarget();
+  await writeSpeakerDocs(target, [doc("person:ruby")]);
+  await writeSpeakerDocs(target, [doc("person:ruby")]);
+  assert.equal(stored.length, 1, "the delete-then-insert pair must not accumulate");
+});
+
+test("writing nothing touches nothing", async () => {
+  const { target, calls } = fakeTarget();
+  const result = await writeSpeakerDocs(target, []);
+  assert.equal(result.written, 0);
+  assert.ok(!calls.includes("deleteMany"), "an empty write must not delete anything");
+});
