@@ -2,23 +2,23 @@
      Edit .goal/catalogue.json (probes / manual downgrades), then re-run. -->
 # Progress — what actually exists
 
-**26.3% of the 57-feature product catalogue.**
-Machine-derived alone: 36.8%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
+**28.1% of the 57-feature product catalogue.**
+Machine-derived alone: 39.5%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
 
-Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `45c2c000a68c` —
+Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `9d285be83601` —
 if that changes, a probe or a human downgrade was edited (the hash covers both) and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
 
 > **EDITED SINCE COMMIT — `.goal/catalogue.json` no longer matches the version in git, so this score is not the one the repository supports**
 
-Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (run 2026-09-07T01:58:41.367Z, content `78a2fc2b0743`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
+Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (run 2026-09-08T11:06:33.153Z, content `37031dce7956`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
 ## By group
 
 | group | | score | REAL | PARTIAL | STUB | MISSING |
 |---|---|---|---|---|---|---|
 | **A. LEARN — ingestion** | `██████░░░░░░░░░░░░░░` | 30.8% | 2 | 4 | 1 | 6 |
-| **B. REMEMBER — knowledge model** | `███████░░░░░░░░░░░░░` | 34.6% | 4 | 1 | 0 | 8 |
+| **B. REMEMBER — knowledge model** | `████████░░░░░░░░░░░░` | 42.3% | 4 | 3 | 0 | 6 |
 | **C. REASON — ask & answer** | `██████░░░░░░░░░░░░░░` | 28.6% | 2 | 4 | 0 | 8 |
 | **D. IMPROVE — the living loop** | `████░░░░░░░░░░░░░░░░` | 18.8% | 0 | 3 | 0 | 5 |
 | **E. PLATFORM — API & hosting** | `███░░░░░░░░░░░░░░░░░` | 14.3% | 0 | 2 | 0 | 5 |
@@ -43,14 +43,14 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 | A13 | Watched Sources (bookmark + change-tracking + re-ingest) | **MISSING** | collection watched_sources (empty) |
 | B1 | Mongo schema + deterministic validators | **REAL** | collection sessions (26 docs); collection sources (26 docs); collection turns (2118 docs) |
 | B2 | Migrate TOC sessions with turn-level citations | **REAL** | collection sessions (26 docs); collection turns (2118 docs); collection session_pages (24 docs) |
-| B3 | Speaker identity resolution (aliases, orgs, roles, confidence) | **MISSING** | collection speakers (empty) |
+| B3 | Speaker identity resolution (aliases, orgs, roles, confidence) | **PARTIAL** _(auto: REAL, lowered)_ | collection speakers (2 docs) |
 | B4 | Claim extraction with evidence[] | **REAL** | collection claims (81 docs) |
 | B5 | Vectorless tree index generator + incremental regeneration | **REAL** | route GET /graph; collection tree_index (1 docs) |
 | B6 | Vector index for unstructured (hybrid semantic + keyword) | **MISSING** | collection chunks (empty) |
 | B7 | Knowledge Graph (graph_edges) with confidence filter | **MISSING** | collection graph_edges (empty) |
 | B8 | Knowledge Explorer tree UI (year->month->session) | **PARTIAL** _(auto: REAL, lowered)_ | page /brain |
 | B9 | Topic pages (coverage, risks, decisions, timeline) | **MISSING** | collection topics (empty) |
-| B10 | Speaker Intelligence profiles | **MISSING** | collection speakers (empty) |
+| B10 | Speaker Intelligence profiles | **PARTIAL** | collection speakers (2 docs) |
 | B11 | Decisions & Action Tracker | **MISSING** | collection decisions (empty) |
 | B12 | Collections builder (curated sets + answer scope) | **MISSING** | no probe declared |
 | B13 | Program & resource directories | **MISSING** | collection programs (empty) |
@@ -93,6 +93,7 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 - **A6** REAL → PARTIAL — Document adapter is real and sources are populated, but there is no page-level evidence highlight, no detected-topics/orgs panel, no source quality score.
 - **A7** REAL → PARTIAL — Only Google Calendar + Gmail, via the gws CLI. No Drive, Zoom, Teams or Sheets connector, and no per-source ingestion rules.
 - **A10** PARTIAL → STUB — All three joiners (vexa/browser/system-audio) are explicit stubs and the package is dead code imported by nothing. The page honestly self-labels as not live. Plan §10 U4.2.
+- **B3** REAL → PARTIAL — The speakers collection is real and non-empty as of 2026-09-08 (2 documents, written by scripts/sync-speakers.mjs from real transcripts, each citing a real turn that contains the name verbatim). But this feature's own name is 'aliases, orgs, roles, confidence' and only aliases and confidence are emitted -- no org and no role is extracted at all. Coverage is also thin: 2 speakers against 88 distinct name strings in the corpus, resolving 78 of 494 positional turns (15.8%). The probe flips REAL on a non-empty collection alone, which over-credits exactly as the C2/C3 /ask-page probe did. Downgraded 2026-09-08 by the session that wrote the rows. Plan §10 U2.4.
 - **B8** REAL → PARTIAL — The Brain graph renders real tree_index nodes, but there is no year->month->session drill-down explorer and no overview/topics/speakers/orgs tabs.
 - **C1** REAL → PARTIAL — Works end-to-end and citations resolve to real sessions, but retrieval is tree-only -- there is no vector layer, so the 'two indexes' hypothesis H1 is half-built. Plan §10 U1.5.
 - **C2** REAL → PARTIAL — The /ask page exists and drives a real question->answer flow, but this feature's own scope is not built: there is no evidence mode, no filters, no suggested questions and no history -- the page is a single stateless query box. The probe credits it REAL purely because a /ask page is present. Downgraded 2026-09-08 by the same session that shipped the page. Plan §10 U3.1 (its Playwright gate is also still unmet).
@@ -103,5 +104,5 @@ Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (ru
 
 ## Notes (context that does NOT change a verdict)
 
-- **B3** (MISSING) — WhatsApp turns do carry a real speakerLabel, but that is an INPUT to this feature, not the feature: the speakers collection (aliases/org/role/confidence) is empty and TOC turns are still spk:0. Scored MISSING deliberately — an earlier draft tried to call this PARTIAL and the scorer refused the upgrade. Plan §10 U2.4.
+- **B3** (PARTIAL) — Superseded 2026-09-08. The old note read 'the speakers collection is empty and TOC turns are still spk:0' -- the first half is now false (2 real documents) and the second is still true (no turn's speakerRef has been rewritten; the documents carry the mapping instead). WhatsApp turns do carry a real speakerLabel, but that remains an INPUT to this feature, not the feature. See the B3 downgrade above for the current verdict and its reason.
 - **E1** (MISSING) — Every collection carries tenantId and every accessor is tenant-scoped — real groundwork — but the tenants collection is empty and exactly one tenant ('toc') exists, so multi-tenant HOSTING is not a thing that exists yet. Scored MISSING deliberately; the scorer refused an earlier PARTIAL as an upgrade.

@@ -216,8 +216,11 @@
           "speakers"
         ]
       },
-      "manual": null,
-      "note": "WhatsApp turns do carry a real speakerLabel, but that is an INPUT to this feature, not the feature: the speakers collection (aliases/org/role/confidence) is empty and TOC turns are still spk:0. Scored MISSING deliberately — an earlier draft tried to call this PARTIAL and the scorer refused the upgrade. Plan §10 U2.4."
+      "manual": {
+        "verdict": "PARTIAL",
+        "reason": "The speakers collection is real and non-empty as of 2026-09-08 (2 documents, written by scripts/sync-speakers.mjs from real transcripts, each citing a real turn that contains the name verbatim). But this feature's own name is 'aliases, orgs, roles, confidence' and only aliases and confidence are emitted -- no org and no role is extracted at all. Coverage is also thin: 2 speakers against 88 distinct name strings in the corpus, resolving 78 of 494 positional turns (15.8%). The probe flips REAL on a non-empty collection alone, which over-credits exactly as the C2/C3 /ask-page probe did. Downgraded 2026-09-08 by the session that wrote the rows. Plan §10 U2.4."
+      },
+      "note": "Superseded 2026-09-08. The old note read 'the speakers collection is empty and TOC turns are still spk:0' -- the first half is now false (2 real documents) and the second is still true (no turn's speakerRef has been rewritten; the documents carry the mapping instead). WhatsApp turns do carry a real speakerLabel, but that remains an INPUT to this feature, not the feature. See the B3 downgrade above for the current verdict and its reason."
     },
     {
       "id": "B4",
@@ -306,7 +309,10 @@
           "/speakers"
         ]
       },
-      "manual": null
+      "manual": {
+        "verdict": "PARTIAL",
+        "reason": "Speaker Intelligence PROFILES. The identity documents now exist, which is the input to a profile rather than the profile: no org, no role, no per-speaker topic or session rollup, no page. Recorded explicitly so the PARTIAL is a judged verdict with a reason rather than an artefact of whatever the probe happened to return. Downgraded 2026-09-08 by the session that wrote the rows."
+      }
     },
     {
       "id": "B11",
