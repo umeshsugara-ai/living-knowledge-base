@@ -4,7 +4,7 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T18:46:08",
+  "updated": "2026-09-08T22:56:02",
   "progress": {
     "total": 60,
     "done": 39,
@@ -551,11 +551,12 @@
     {
       "id": "U2.1",
       "title": "Promote topics + orgs from the tree deterministically (no LLM)",
-      "status": "pending",
+      "status": "in_progress",
       "base_criticality": "MEDIUM",
       "deps": [],
       "criticality": "low",
-      "note": "cheapest real Phase 2 win; also backfills claims.topicRefs, which nothing has ever written"
+      "note": "cheapest real Phase 2 win; also backfills claims.topicRefs, which nothing has ever written",
+      "evidence": "ready-for-check. Mechanism built+tested; backfill DELIBERATELY NOT RUN - 131 of 137 topic slugs are single-session and several are person names (extract-topics matches capitalised word runs). Catalogue must NOT be upgraded."
     },
     {
       "id": "U2.2",
@@ -711,8 +712,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 4.01,
-    "eta_days": 5.2
+    "velocity_per_day": 3.89,
+    "eta_days": 5.4
   },
-  "last_deterministic_tick": "2026-09-08T18:46:08"
+  "last_deterministic_tick": "2026-09-08T22:56:02"
 }
