@@ -91,4 +91,17 @@ their loop is actively cycling on it, and grabbing it is the collision this gate
 The recovery is enough to re-arm them: with the row open and critical again, their next tick's
 tier-2 priority pulls it ahead of everything else.
 
-**Answered:** _(pending)_
+**Answered:** 2026-09-08 — **per-lane ledgers with namespaced ids** (the "no collisions by
+construction" option) — recorded as **D-019** in `docs/DECISIONS.md`, `status: ACTIVE`,
+`**Approved-by:** Umesh`, committed `05b93cc`. A lane working in a git worktree writes to
+`qa/issues.<lane>.jsonl` and allocates `ISS-<LANE>-NNN`; `qa/issues.jsonl` keeps its meaning and
+numbering for the main tree; every reader treats the union as the ledger; lane ids are never
+renumbered on merge.
+
+_Scribed onto this gate by the Mode B sweep of 2026-09-08T17:46Z, not by the answering session._
+The decision was taken off-disk and D-019's `Links` field names this file, but no `Answered:` line
+was ever written here — the D-006 failure mode (approval in chat, gate still reading pending, sweep
+re-flagging, maker re-asking). Filed as **ISS-131**. Two follow-ons are NOT closed by this line and
+are tracked separately: **ISS-129** (no reader actually globs the shards, so D-019's union is
+declared but not implemented) and **ISS-130** (only 1 of 3 lanes has adopted a shard, so the
+collision this gate describes is still possible in `a-speakers` and `b-golden-set`).

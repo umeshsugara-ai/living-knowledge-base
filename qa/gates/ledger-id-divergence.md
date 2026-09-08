@@ -60,3 +60,30 @@ the trail is followable in the meantime.
 
 **Related:** `qa/gates/concurrent-maker-sessions.md` (the file-level half of this problem, already
 open).
+
+---
+
+**Answered:** 2026-09-08 — **option 2, "per-lane ledgers, merged on land"** — recorded as **D-019**
+in `docs/DECISIONS.md`, `status: ACTIVE`, `**Approved-by:** Umesh`, committed `05b93cc`. Ids are
+namespaced per worktree (`qa/issues.<lane>.jsonl`, `ISS-<LANE>-NNN`), readers take the union, and
+**no existing row is renumbered** — D-019 states explicitly that "the divergence already recorded in
+`qa/gates/ledger-id-divergence.md` stays as it is, with its mapping table, as the historical record
+of what the shared counter cost."
+
+_Scribed onto this gate by the Mode B sweep of 2026-09-08T17:46Z, not by the answering session_ —
+this file had no `Answered:` line at all while D-019 named it in `Links`. Filed as **ISS-131**.
+
+**⚠ The mapping table above is no longer accurate, and this sweep did not correct it** (correcting
+the historical record is not a checker's call to make unilaterally). Re-derived from
+`qa/issues.jsonl` on 2026-09-08 — see **ISS-132**:
+
+- `ISS-097 → ISS-108 / ISS-111` is **wrong**: `ISS-108` is the gazetteer-reachability residue, an
+  unrelated finding. The mapping is `ISS-097 → ISS-111` alone.
+- `ISS-101` and `ISS-111` carry **byte-identical titles** — they are duplicate canonical rows for
+  one finding. `ISS-101` is the row *this gate's own row 1* created as the remedy for the ISS-100
+  collision, so that remedy silently left a duplicate behind.
+- `ISS-095 → ISS-106` **confirmed** (ISS-106's title opens "ISS-093 residue: … `Not` … NEVER_A_PERSON").
+- `ISS-098 → ISS-109` **confirmed** (ISS-109's title opens "The ISS-097 `speaking` gate over-refuses:
+  ten legitimate self-introductions").
+- `ISS-093 → ISS-104` **unconfirmed**: ISS-104 is about a cycle-2 naming-cue rule failing to close
+  C2b, not the 20-case fabrication corpus described here.
