@@ -139,10 +139,64 @@ test("ISS-126(4): tagClaims writes the session's REAL topicRefs onto each of its
 test("ISS-126(4): a session whose tree surfaced NO topics clears topicRefs rather than leaving them stale", async () => {
   // Writing [] is correct here and is a different case from the bug above: it removes a tagging
   // from a previous build whose topic no longer exists in the tree.
-  const { db, calls } = fakeDb({ claims: [{ _id: "c1", tenantId: "t", evidence: [{ turnId: "t1", sessionId: "other" }] }] });
+  // The claim is seeded on s1 — the session being indexed. The first version of this test seeded
+  // it on "other" and still expected it visited, which ENCODED UNSCOPED BEHAVIOUR AS EXPECTED
+  // (ISS-C-CLAIMS-TARGETING-001): it would have passed just as happily against a `.find({})`.
+  const { db, calls } = fakeDb({ claims: [{ _id: "c1", tenantId: "t", evidence: [{ turnId: "t1", sessionId: "s1" }] }] });
   const root = node("tenant:t", "t", "root"); // no topic nodes at all
   await promoteAndPersistEntities("t", "s1", root, db);
   const w = calls.find((c) => c.coll === "claims" && c.op === "updateOne");
   assert.ok(w, "the claim is still visited");
   assert.deepEqual((w!.update as Record<string, Record<string, unknown>>).$set!.topicRefs, []);
+});
+
+/* ── ISS-C-CLAIMS-TARGETING-001: assert what the writes are AIMED AT, not just what they carry ──
+ * Nine writer tests asserted the update BODY and the call COUNT and never the FILTER, so both
+ * `.find({"evidence.sessionId": id})` -> `.find({})` and `.updateOne({_id})` -> `.updateOne({})`
+ * survived at 139/139. `fakeDb` had recorded the filters all along; nothing read them.
+ *
+ * This is the third guard in this unit that looked like a guard and defended nothing. The pattern
+ * is consistent enough to name: I assert the value a write CARRIES and forget the predicate that
+ * decides WHICH ROWS it reaches — and the second one is where tenancy and scoping live.
+ */
+test("ISS-C-TARGETING: the claims read is scoped to THIS session, not the whole collection", async () => {
+  const { db, calls } = fakeDb({
+    claims: [
+      { _id: "mine", tenantId: "t", evidence: [{ turnId: "t1", sessionId: "s1" }] },
+      { _id: "other-session", tenantId: "t", evidence: [{ turnId: "t9", sessionId: "s-other" }] },
+    ],
+  });
+  const res = await promoteAndPersistEntities("t", "s1", treeRoot(), db);
+
+  const find = calls.find((c) => c.coll === "claims" && c.op === "find");
+  assert.ok(find, "a claims read must happen");
+  assert.deepEqual(find!.filter?.["evidence.sessionId"], "s1",
+    "widening this to {} would re-tag every session's claims on every single-session index");
+  assert.equal(res.claimsTagged, 1, "only this session's claim may be tagged");
+  const writes = calls.filter((c) => c.coll === "claims" && c.op === "updateOne");
+  assert.deepEqual(writes.map((w) => w.filter?._id), ["mine"], "the other session's claim must be untouched");
+});
+
+test("ISS-C-TARGETING: each claim update targets ONE claim by _id, never an open filter", async () => {
+  const { db, calls } = fakeDb({
+    claims: [
+      { _id: "c1", tenantId: "t", evidence: [{ turnId: "t1", sessionId: "s1" }] },
+      { _id: "c2", tenantId: "t", evidence: [{ turnId: "t2", sessionId: "s1" }] },
+    ],
+  });
+  await promoteAndPersistEntities("t", "s1", treeRoot(), db);
+  const writes = calls.filter((c) => c.coll === "claims" && c.op === "updateOne");
+  assert.equal(writes.length, 2);
+  for (const w of writes) {
+    assert.ok(w.filter && typeof w.filter._id === "string" && w.filter._id.length > 0,
+      "updateOne({}) would overwrite an arbitrary claim's topicRefs instead of the intended one");
+  }
+  assert.deepEqual(writes.map((w) => w.filter!._id).sort(), ["c1", "c2"]);
+});
+
+test("ISS-C-TARGETING: topic and org upserts target their own _id, not an open filter", async () => {
+  const { db, calls } = fakeDb();
+  await promoteAndPersistEntities("t", "s1", treeRoot(), db);
+  assert.equal((writes(calls, "topics")[0]!.filter as Record<string, unknown>)._id, "visa-rules");
+  assert.equal((writes(calls, "orgs")[0]!.filter as Record<string, unknown>)._id, "acme");
 });

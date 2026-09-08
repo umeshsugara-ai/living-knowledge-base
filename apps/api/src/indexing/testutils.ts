@@ -67,7 +67,20 @@ export function fakeDb(
             rec("find", { filter });
             if (name === "turns") return [TURN];
             if (name === "sessions") return [SESSION];
-            if (name === "claims") return opts.claims ?? [];
+            if (name === "claims") {
+              // HONOURS THE FILTER (ISS-C-CLAIMS-TARGETING-001). It previously ignored it and
+              // returned every seeded row, which made a scoping regression STRUCTURALLY
+              // INVISIBLE: widening `.find({"evidence.sessionId": id})` to `.find({})` returned
+              // the same rows, so the mutation survived a full green suite. A fake that answers
+              // the same regardless of what it was asked cannot test what it was asked.
+              const want = (filter ?? {})["evidence.sessionId"];
+              const rows = opts.claims ?? [];
+              if (want === undefined) return rows;
+              return rows.filter((c) => {
+                const ev = (c.evidence ?? []) as { sessionId?: string }[];
+                return Array.isArray(ev) && ev.some((e) => e.sessionId === want);
+              });
+            }
             return [];
           },
         }),
