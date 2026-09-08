@@ -434,3 +434,232 @@ side was measured against a recorded corpus and the recall side against fourteen
 picked. One fix closes both halves — make the `speaking` branch fall through instead of vetoing,
 test for a following noun instead of allowlisting what may follow, and add a recall test that the
 gate-revert mutation reddens, so the mutation asks both questions.
+
+---
+
+# Verdict — speaker-denylist-ledger-corpus (cycle 3)
+
+**Date:** 2026-09-08
+**Bound to:** `D:\KnowledgeBase-lanes\a-speakers` (branch `lane/a-speakers`, worktree)
+**Contract:** `qa/contracts/speaker-resolution-llm.md`
+**Manifest:** `qa/manifests/speaker-denylist-ledger-corpus.md` (cycle-3 section)
+**Commit checked:** `0eedf2d`
+**Cycle checked:** 3
+**Dual check:** no
+
+```
+VERDICT: PASS
+SCOREBOARD: 13/13 criteria met, 4/4 invariants hold
+FAILURES: none
+ISSUES-WRITTEN: ISS-099 (medium, non-blocking), ISS-100 (low, non-blocking)
+EXPLANATION: Both RECORDED corpora were re-run by me against the real module, not against
+the maker's transcription: ISS-093 is 17/20 refused with exactly the three named gazetteer
+residues and `English` still refused, so the recall fix reopened no refusal; ISS-098 is
+10/10 restored, and the test file's ten strings are byte-faithful to the ledger's own
+evidence field. My own mutation table reproduces the maker's on both sides including the
+no-op control, the duplicated comment block is genuinely gone, and a byte scan finds zero
+control characters. The two issues I filed are residuals I authored ALONGSIDE the recorded
+sets and neither is blocking: the discriminator is still an inverted-default function-word
+allowlist rather than the following-noun test the manifest describes, and the test that
+claims to pin the fall-through cannot detect its removal.
+```
+
+## What I re-ran myself
+
+All commands run by me in the bound worktree; no pasted output trusted.
+
+```
+$ pnpm --filter '@lkb/index' test
+  tests 153   pass 153   fail 0
+
+$ pnpm -r typecheck
+  packages/core, packages/ai, packages/index, packages/meeting-bot, apps/api — Done; exit 0
+
+$ pnpm lint:structure
+  lint-root: OK (15 loose root files)
+  lint-dupes: OK (266 unique exports, 24 unique schema $ids)
+  lint-migrations: OK (864 files)
+  docs/SNAPSHOT.md matches a fresh regeneration (113 lines, budget 200)
+  tracker-audit: OK (gate G1)
+  depcruise: no dependency violations (273 modules, 828 dependencies)
+```
+
+Matches the manifest's claimed figures exactly (153/153, exit 0, 273 modules).
+
+## 1. Are the ten ISS-098 recall cases genuinely restored?
+
+**Yes — 10/10, verified against the ledger's own strings, not the test file's.**
+
+Method: a Python extractor parsed `ISS-098.evidence` straight out of `qa/issues.jsonl`, split the
+ten recorded strings and dumped them to JSON. A temporary probe test file (placed in
+`packages/index/src/pipeline/`, since removed — `git diff HEAD` now empty) imported the **real**
+`extractSpeakers`, not a replica, and ran those ledger-derived strings with the same injected
+`complete` shape the issue used.
+
+```
+== ISS-098 (ledger strings, recall expected) ==
+RESOLVES "Ruby speaking here."
+RESOLVES "Ruby speaking and I lead admissions."
+RESOLVES "Ruby speaking today from Pune."
+RESOLVES "Ruby speaking again."
+RESOLVES "Ruby speaking now."
+RESOLVES "Ruby speaking -- good to be here."
+RESOLVES "Ruby speaking as the panel chair."
+RESOLVES "Ruby speaking (admissions)."
+RESOLVES "Ruby speaking… thanks all."
+RESOLVES "Ruby speaking over Zoom."
+ISS-098: 10/10 resolve
+```
+
+**Faithfulness diff of the test file against the ledger evidence field:** ten strings compared
+pairwise, ten matches. The single apparent difference is an artefact of the ledger storing the
+ellipsis as the literal text `\u2026` inside its evidence string; the test file carries the
+`"\u2026"` escape, i.e. the real U+2026 character, which is the faithful reading — confirmed by
+running the probe on the ledger string with the escape resolved.
+
+Same method applied to ISS-093: all 20 `"text"/"name"->person:id` triples parsed out of the
+evidence field and diffed against `ISS_093_CORPUS` — **20/20 byte-identical, in the same order**.
+The maker paraphrased neither corpus.
+
+## 2. Is ISS-093 still 17/20 with the same three residues?
+
+**Yes. No refusal was reopened by the recall fix.**
+
+```
+== ISS-093 (ledger strings, refusal expected) ==
+REFUSED Everyone ×3 · All · Guys · There · Back · To · So · Sorry · Not · Great ·
+        Important · Monday ×2 · Diwali · English
+SHIPS   "India"  :: "This is India speaking on the panel."
+SHIPS   "Mumbai" :: "Coming up next, Mumbai from the west zone."
+SHIPS   "Google" :: "Google here has an announcement."
+ISS-093: 17/20 refused
+```
+
+The residue set is exactly the three named. Critically, **`English` is still refused** — the
+ISS-097 fix survived the ISS-098 recall repair. That is the trade this seam got wrong in opposite
+directions across cycles 1 and 2 and the thing I watched hardest; it is right this time. The three
+remaining are proper nouns with person-valid twins of identical syntax, and I re-affirm the
+cycle-2 finding that they are honestly scoped rather than written off.
+
+## 3. Attacking the new discriminator
+
+Checker-authored probes, filed **alongside** the recorded corpora per D-013/D-014/D-015. None is a
+recorded case and none is used to move a recorded count.
+
+| probe | result | judgement |
+|---|---|---|
+| `"English speaking students may apply."` / English | REFUSED | correct |
+| `"Prasanti speaking students may apply."` / Prasanti | REFUSED | correct — candidate-independent, as claimed |
+| `"Hindi speaking counsellors available."` / Hindi | REFUSED | correct |
+| `"Ruby speaking engagements are booked."` / Ruby | REFUSED | correct |
+| `"Ruby speaking slot is at noon."` / Ruby | REFUSED | correct |
+| `"Ruby speaking, admissions lead."` / Ruby | **RESOLVES** | correct — the recall attack you asked for passes |
+| `"Ruby speaking."` · `"Nilesh Gotecha speaking from CEPT."` | RESOLVES | correct |
+| `"Ruby speaking; welcome all."` · `"Ruby speaking — admissions."` · `"Ruby speaking? No, listening."` · `"Ruby speaking to you from Pune."` | RESOLVES | correct |
+| `"Ruby speaking Hindi."` · `"Ruby speaking Hindi and English."` / Ruby | REFUSED | **scoping note** — see below |
+| `"Ruby speaking very briefly."` / Ruby | REFUSED | **residual — ISS-099** |
+| `"Ruby speaking first, then Nilesh."` / Ruby | REFUSED | **residual — ISS-099** |
+
+**The honest characterisation.** The discriminator is *not* a following-noun test. It is a ~45-word
+`FUNCTION_FOLLOWERS` allowlist with everything outside it read as a noun — the same shape as the
+cycle-2 nine-preposition allowlist, with the list enlarged and the default changed from veto to
+fall-through. The manifest's line *"the discriminator is a following NOUN … instead of an allowlist
+of what may follow"* is therefore not accurate as written: `very` and `first` fall outside the list
+and drop a legitimate introduction, while ISS-098's own recorded `fix_direction` says an adverb
+*"must keep resolving"*.
+
+**Is it blocking? No — and I am being explicit because a FAIL here stalls the unit.** The ten
+recorded regressions are all restored; the residual appears only on input no ledger row records,
+found by probes I authored; and it errs toward refusal, which cannot fabricate an identity — the
+safe direction for this contract. Charging it would burn the last cycle on a defect the maker was
+never shown evidence of, while the defect it *was* shown is fully closed. Filed as **ISS-099
+(medium, open)** for the next unit, with the manifest-accuracy half called out so the next reader
+is not told a noun test exists when it does not.
+
+`"Ruby speaking Hindi."` I judge a **scoping note, not a residual**: the rule the contract and the
+ledger both state is that a following noun means participle, and `Hindi` is a following noun. A
+module that resolved it would have to re-open `"English speaking students"`. That trade needs a
+gazetteer or the model layer — already the named open question carried to the apply unit.
+
+## 4. Duplicated comment and control bytes
+
+**Both claims verified true this time.**
+
+- **Control bytes:** byte scan across all 10 files in `packages/index/src/pipeline/` for any byte
+  `< 0x09`, `0x0B–0x0C`, `0x0E–0x1F`, or `0x7F`. **Total: 0.** (`speaker-name-rules.ts`: 15 023
+  bytes, 259 lines.)
+- **Duplicated comment:** at `9b0fdce` (cycle 2) lines 193–203 held two paraphrases of the same
+  paragraph back to back — I re-read that revision to confirm the duplication the maker now admits
+  was present when it claimed otherwise. At `0eedf2d` the paragraph appears **once**
+  (`participial modifier` count = 1). The two remaining occurrences of "the first attempt" are a
+  doc-block and an inline comment saying different things, not a duplication.
+
+The maker's self-correction of its own false cycle-2 claim is accurate, and I credit it.
+
+## 5. Mutation table — reproduced independently, both sides
+
+I wrote my own mutations rather than re-running the maker's, and restored afterwards.
+
+| mutation | my result | maker's claim | side |
+|---|---|---|---|
+| no-op control | **153 / 0** | 153 / 0 | — |
+| always cue on `speaking` (drop the follower check) | **152 / 1** | 152 / 1 | refusal |
+| empty `FUNCTION_FOLLOWERS` | **145 / 8** | 145 / 8 | **recall** |
+| *(mine)* re-insert the cycle-2 unconditional `return false` | **153 / 0** | not claimed | — |
+
+The table **does** now exercise both sides — my cycle-2 requirement, and it is met: eight recall
+tests redden when the follower set is emptied, where previously the entire gate reddened exactly
+one test. Restoration verified: `git diff HEAD` empty, suite back to 153/153.
+
+My fourth mutation is the finding: **re-inserting the exact veto ISS-098 charged reddens nothing.**
+The test named *"a bare noun after `speaking` declines the cue WITHOUT vetoing later branches"* uses
+a turn whose name occurrence never enters the `speaking` branch, and structurally the fall-through
+is unreachable for the same occurrence — every branch after it requires `rawAfter` to start with a
+comma, which cannot hold when `rawAfter` starts with `speaking`. Fix (1) of ISS-098 is present in
+the source and correct as defensive coding, but it is unmeasured and its pin is nominal. Filed as
+**ISS-100 (low, open)**. Not blocking: the recall side that carries the ten regressions is pinned by
+ten real tests.
+
+## 6. The test-file split
+
+**A legitimate seam, and no test was dropped.**
+
+`lint-loc`'s budget is 400 lines; `speakers-llm.test.ts` had reached 434. The split moves the two
+ledger regression corpora into `speaker-name-rules.test.ts`, mirroring the existing
+`speakers-llm.ts` / `speaker-name-rules.ts` source split — the corpora now sit beside the rules they
+exercise, which is the right seam, not an arbitrary one.
+
+Arithmetic: 142 tests at cycle 2 → 153 at cycle 3. The 20 ISS-093 cases moved between files
+(−63 lines out, +134 in, count unchanged); the additions are 10 ISS-098 recall tests + 1
+fall-through test = **+11**. 142 + 11 = 153, and all 153 pass under my own run. Nothing was hidden
+by the relocation.
+
+## Criteria
+
+C1 ✓ (10/10 recorded introductions resolve as `person:ruby`; ISS-099 residual non-blocking) ·
+C2 / C2a ✓ (untouched, covered by the standing suite) · C2b ✓ (17/20 refused; three residues named
+and asserted so the count cannot rot in either direction) · C3–C11 ✓ (untouched paths, suite green) ·
+C12 ✓ (the load-bearing mutation still reddens; reproduced by me) ·
+C13 ✓ — **every figure in the manifest re-derived by me**: 17/20, 10/10, 153/153, 273 modules, and
+all four mutation rows.
+I1 ✓ · I2 ✓ (`speakers.ts` untouched; the commit's stat touches only the two rule files, the moved
+test file and the manifest) · I3 ✓ · I4 ✓.
+
+## Issues
+
+- **ISS-098** → `fixed` (10/10 restored; a later re-check moves it to `verified`).
+- **ISS-095**, **ISS-097** → `verified` (both re-derived this cycle: `Not` refused, `English` refused).
+- **ISS-093** stays `open` at 17/20 on its three gazetteer residues, exactly as the maker states.
+- **ISS-099** (medium, open) — the discriminator is an inverted-default allowlist, not a noun test;
+  an adverb outside the set drops a legitimate introduction; the manifest's description is
+  inaccurate as written.
+- **ISS-100** (low, open) — the fall-through pin does not detect the veto's return.
+
+## Note on the maker's questions
+
+The nine unpinned denylist words: ruling unchanged and correctly adopted — leave them, unpinned,
+question closed. The gazetteer assertions: honestly scoped, re-affirmed at three. And the maker's
+own accounting of what it got wrong in cycle 2 — the false "duplicated comment is gone" claim and
+the self-selected 14-probe denominator — is accurate, unflattering, and volunteered before I asked.
+That is the behaviour D-015 was written to produce, and it is why this cycle is a PASS rather than
+a third narrow miss.
