@@ -38,6 +38,23 @@ restated here in this path's terms.
   **dropped**. The model's spelling never overrides the transcript's. This is enforced
   **per cited turn**, not per speaker: an evidence turn that does not contain the name is
   discarded even when a sibling turn does.
+- **[C2a]** *(checker-added, cycle 1 of `speaker-verbatim-token-boundary`)* Containment is
+  **whole-word**, and the boundary characters that end the match must not be characters that
+  join a name to itself. A `displayName` matching only inside a longer *name* — across a hyphen
+  (`"Ruby"` in `"Ruby-Anne Smith"`), an apostrophe internal to a name, or a letter boundary
+  (`"Ruby"` in `"Rubykumar"`) — is **dropped**. The test is: would a human reading the transcript
+  say the turn names *this* person? A prefix of someone else's name does not.
+- **[C2b]** *(checker-added, same cycle)* A `displayName` must be **name-shaped**: every token
+  capitalised bar recognised interior particles, bounded token count. Shape alone is **not**
+  sufficient. A single-token `displayName` that is an ordinary English word functioning as
+  discourse rather than as an identity — a greeting, an interjection, an acknowledgement, a
+  pronoun (`"Welcome"`, `"Thanks"`, `"Okay"`, `"Hello"`, `"I"`) — is **dropped**, and so is a
+  multi-token one built only from such words (`"Thank You"`). The rule this enforces is the one
+  the substring test could not: *the string must have appeared in the transcript **as a name**,
+  not merely as capitalised text.* Sentence-initial capitalisation is the normal case in a
+  transcript, so capitalisation carries no evidential weight on its own.
+  Mechanism is the maker's choice (stopword list, position/context evidence, or requiring a
+  naming cue); the criterion is the outcome, not the implementation.
 - **[C3]** A `turnId` not present in the input is dropped. A speaker left with zero surviving
   evidence does not ship.
 - **[C4]** Partial survival is correct behaviour: real cited ids are kept, invented ones
@@ -94,7 +111,9 @@ Two identity defects are **real, reproduced, and deliberately not charged to thi
 this unit persists nothing and therefore cannot cause them to land. They must be blocking
 criteria on whichever unit first writes a `speakers` document or mutates `speakerRef`:
 
-1. **Token-boundary substring.** C2 is a substring test. A transcript reading
+1. ~~**Token-boundary substring.**~~ **Taken up early by `speaker-verbatim-token-boundary`
+   (cycle 1) and now governed by [C2a]/[C2b] above — no longer deferred.** Original text:
+   C2 is a substring test. A transcript reading
    `"My name is Rubykumar Shah."` accepts a model-returned `displayName` of `"Ruby"` — verbatim,
    well-formed, and a different human (checker probe, cycle 1). Likewise `"Good morning"` from
    `"Good morning everyone"` ships as `person:good-morning`. The apply unit must require the
@@ -116,3 +135,15 @@ criteria on whichever unit first writes a `speakers` document or mutates `speake
   proposed criteria did not — the load-bearing mutation and the re-derivable corpus numbers.
   All additions are tightenings and each was independently verified as already met in cycle 1,
   so no artifact was softened and no criterion was invented to fail one.
+- 2026-09-08 · routine (tightening) · Added **[C2a]** (whole-word containment must also not match
+  inside a longer *name* — hyphen/apostrophe joiners are not boundaries) and **[C2b]**
+  (name-shape is necessary but not sufficient; a capitalised ordinary word used as discourse is
+  not an identity). Un-deferred item 1 of "Deferred to the apply/persist unit", since
+  `speaker-verbatim-token-boundary` elected to close it at the source. · *Why:* the maker asked
+  the checker to amend C2 to require whole-word containment and a name-shaped `displayName`, and
+  invited a FAIL if the checker judged the remaining capitalised-word hole in scope. It is: the
+  twin attack this unit exists to close is *a human being invented out of a greeting*, and
+  `"Good morning"` is refused only because "morning" is lowercase — `"Welcome"`, `"Thanks"` and
+  the bare pronoun `"I"` still ship as people (checker probe, reproduced). Both additions are
+  **tightenings**; neither was written to fail a conforming artifact, and both were placed on the
+  contract by the checker's own cycle-1 verdict before this unit was built.
