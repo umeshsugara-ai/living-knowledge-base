@@ -56,9 +56,13 @@ fixing in the fixtures themselves:
 2. **The corpus now includes a second tenant** (`other`, session `s9`, turn `t9`, sharing the
    query term `"2026"`). Without a second tenant present, an unscoped query and a scoped one
    return identical results — the leak is only detectable when there is something to leak.
-3. **`assertAllCallsConfined(calls, tenantId)`** — the exact function `indexing.test.ts` already
-   uses for `indexSession`, copied rather than reinvented, since this store copied that
-   function's injectable-handle shape and should have copied its verification shape too.
+3. **`assertAllCallsConfined(calls, tenantId)`** — a same-named helper checking every captured
+   `find`/`findOne` call's `tenantId`. **Correction from the checker, accepted:** this claimed
+   to be "the exact function" `indexing.test.ts` uses, copied verbatim. It is not — that one is
+   ~4x larger and also handles write ops plus a `tree_index` node_id special case this store
+   never needs. The right characterization is "same name, same idea, independently sized to this
+   file's narrower (read-only) call shape," not "copied." The decision not to unify them is
+   still sound (diverging call shapes), but I should not have called it a copy.
 4. **The corpus now spans multiple sessions for a shared query** (`"2026"` hits `t1`/`t3`→s1 and
    `t6`→s1 and needs a second session to test dedup meaningfully — added `t4` overlap via s3).
    A query touching only one session made a broken session `Map` lookup indistinguishable from a
@@ -145,4 +149,4 @@ mine to pre-empt.
 Test-only change; zero production code touched; read-only against the database. Reversible by
 `git revert`.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/search-store-tenant-assertion.md` (Cycle checked: 1, matching Fix cycle 1), committed `ca18b79`. All three documented candidates plus one of the checker's own (coordinated turn/session/score rotation) were tried in the sixth-bypass hunt; two landed and were filed rather than fixed here — ISS-083 (score value unasserted) and ISS-084 ((turnId,sessionId) pairing unchecked against what the scorer actually ranked), both medium, neither a security or ranking-order defect. Item 5's claim that assertAllCallsConfined was copied verbatim from indexing.test.ts was corrected above — it is independently sized, not copied. Closed out 2026-09-08.
