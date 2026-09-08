@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 import { createGuardedFetcher, isBlockedAddress } from "./guarded-fetch.js";
 
 function fetcher(opts: {
-  lookup?: Record<string, string>;
+  lookup?: Record<string, string | string[]>;
   responses?: Record<string, { status: number; location?: string; body?: string }>;
   maxRedirects?: number;
   maxBytes?: number;
@@ -28,7 +28,7 @@ function fetcher(opts: {
     lookup: async (host) => {
       const ip = opts.lookup?.[host];
       if (!ip) throw new Error(`no test DNS entry for ${host}`);
-      return ip;
+      return Array.isArray(ip) ? ip : [ip];
     },
     request: async (url) => {
       seen.push(url);
@@ -147,4 +147,61 @@ test("an IPv4-mapped IPv6 address is judged on its embedded v4, both ways", () =
   assert.equal(isBlockedAddress("::ffff:10.0.0.1"), true, "mapped private is blocked");
   assert.equal(isBlockedAddress("::ffff:169.254.169.254"), true, "mapped metadata is blocked");
   assert.equal(isBlockedAddress("::ffff:93.184.216.34"), false, "mapped PUBLIC is allowed -- this is what pins the unwrap");
+});
+
+/**
+ * Fix cycle 2. The cycle-1 verdict FAILED this unit, and the headline finding is the one worth
+ * remembering: the guard matched TEXT, not addresses. It took the substring after the last colon
+ * and unwrapped it only when that looked like dotted-quad — so `64:ff9b::127.0.0.1` blocked while
+ * `64:ff9b::7f00:1`, THE SAME ADDRESS, was allowed. Blocking one spelling while allowing another
+ * is not a control. `isBlockedAddress` now parses into 8 groups and judges the numbers.
+ */
+for (const [label, ip] of [
+  ["NAT64 in hex form", "64:ff9b::7f00:1"],
+  ["NAT64 in dotted form (same address)", "64:ff9b::127.0.0.1"],
+  ["6to4 wrapping loopback", "2002:7f00:0001::1"],
+  ["6to4 wrapping 192.168.1.1", "2002:c0a8:0101::1"],
+  ["IPv4-mapped loopback in hex", "::ffff:7f00:1"],
+  ["IPv4-compatible loopback", "::127.0.0.1"],
+  ["site-local fec0::/10", "fec0::1"],
+  ["Teredo 2001::/32", "2001:0:1::1"],
+  ["bracketed loopback", "[::1]"],
+  ["link-local with a zone id", "fe80::1%eth0"],
+] as [string, string][]) {
+  test(`ISS-006: blocks ${label} (${ip})`, () => {
+    assert.equal(isBlockedAddress(ip), true, `${ip} reaches an internal address`);
+  });
+}
+
+test("ISS-006: genuinely public IPv6 is still allowed, including public 6to4 and mapped", () => {
+  assert.equal(isBlockedAddress("2606:4700:4700::1111"), false);
+  assert.equal(isBlockedAddress("2002:5db8:d822::1"), false, "6to4 wrapping a public v4");
+  assert.equal(isBlockedAddress("::ffff:93.184.216.34"), false, "mapped public v4");
+});
+
+test("ISS-007: EVERY resolved address must pass, not just the first", async () => {
+  // A host publishing one public and one private record gives the resolver a coin flip on every
+  // fetch -- no rebinding, no timing. Checking one address and connecting to another is not a
+  // control, so all of them are checked.
+  const { f, seen } = fetcher({ lookup: { "split.example": ["93.184.216.34", "10.0.0.7"] } });
+  await assert.rejects(() => f("https://split.example/"), /blocked|private/i);
+  assert.deepEqual(seen, [], "the request must never be issued");
+});
+
+test("ISS-007: an empty resolver answer fails CLOSED", async () => {
+  const { f, seen } = fetcher({ lookup: { "void.example": [] } });
+  await assert.rejects(() => f("https://void.example/"), /blocked|no addresses/i);
+  assert.deepEqual(seen, []);
+});
+
+test("ISS-009: an oversized body is refused on a REDIRECT hop too, not only the final one", async () => {
+  const { f } = fetcher({
+    lookup: { "a.example": "93.184.216.34", "b.example": "93.184.216.35" },
+    responses: {
+      "https://a.example/": { status: 302, location: "https://b.example/x", body: "x".repeat(5000) },
+      "https://b.example/x": { status: 200, body: "small" },
+    },
+    maxBytes: 1000,
+  });
+  await assert.rejects(() => f("https://a.example/"), /too large|size/i);
 });

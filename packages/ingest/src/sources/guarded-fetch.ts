@@ -10,21 +10,36 @@
  *   time the timer fires. Blocking a literal metadata IP in the route would LOOK like a control
  *   while leaving the actual path open, which is worse than having none.
  *
- * So the check is here, on the RESOLVED ADDRESS, immediately before each request, and every
+ * So the check is here, on the RESOLVED ADDRESSES, immediately before each request, and every
  * redirect hop is re-resolved and re-checked. `lookup` and `request` are injected so the whole
- * thing is testable without a network, and so the resolution the guard checks is the same one the
- * caller will use.
+ * thing is testable without a network.
+ *
+ * HONEST LIMIT (ISS-C-UNRUN-WRITERS-007). An earlier version of this comment claimed "the
+ * resolution the guard checks is the same one the caller will use". **That was false**, and an
+ * overclaim in a security docstring is worse than the gap it papers over: `request` takes a URL and
+ * re-resolves independently, so a check->connect window remains that only connect-time address
+ * pinning closes. What this module does guarantee is that EVERY address the resolver returns is
+ * checked, so a host publishing one public and one private record cannot win a coin flip. Closing
+ * the remaining window needs a transport that accepts a pinned address.
  *
  * It fails CLOSED throughout: an address that cannot be parsed is treated as blocked, because the
  * alternative is a parser disagreement becoming an exfiltration path.
  */
 
 export interface GuardedFetchDeps {
-  /** Resolve a hostname to a single IP string. Injected so the guard and the request agree. */
-  lookup(hostname: string): Promise<string>;
+  /**
+   * Resolve a hostname to EVERY address it currently answers with. All of them must pass.
+   *
+   * ISS-C-UNRUN-WRITERS-007 / cycle-1 ruling: a single address is not enough, and the reason is
+   * sharper than rebinding. A host publishing one public and one private A record gives the
+   * resolver a coin flip on every fetch -- no rebinding required, no timing needed. Judging one
+   * returned address and connecting to another is not a control.
+   */
+  lookup(hostname: string): Promise<string[]>;
   request(url: string): Promise<{ status: number; location: string | null; body: string }>;
   maxRedirects?: number;
   maxBytes?: number;
+  /** Refuse a response larger than this. */
 }
 
 const DEFAULT_MAX_REDIRECTS = 5;
@@ -59,6 +74,61 @@ function blockedIpv4(o: number[]): boolean {
 }
 
 /**
+ * Expand an IPv6 literal into exactly 8 16-bit groups, or `null` if it is not one.
+ *
+ * ISS-C-UNRUN-WRITERS-006. The first version matched TEXT: it took the substring after the last
+ * colon and unwrapped it only when that looked like dotted-quad. So `64:ff9b::127.0.0.1` blocked
+ * while `64:ff9b::7f00:1` -- THE SAME ADDRESS -- was allowed, as were `2002:7f00:0001::1` (6to4 to
+ * loopback) and `::ffff:7f00:1` (mapped loopback in hex). Blocking one spelling of an address while
+ * allowing another is not a control, so the address is now parsed into numbers and judged there.
+ */
+function parseIpv6Groups(value: string): number[] | null {
+  let text = value;
+  if (text.startsWith("[") && text.endsWith("]")) text = text.slice(1, -1);
+  text = text.split("%")[0] ?? text;                       // strip a zone id
+  if (!text.includes(":")) return null;
+
+  // A dotted tail is just two more groups; convert it before splitting.
+  const lastColon = text.lastIndexOf(":");
+  const tail = text.slice(lastColon + 1);
+  if (tail.includes(".")) {
+    const v4 = parseIpv4(tail);
+    if (!v4) return null;
+    const [a, b, c, d] = v4 as [number, number, number, number];
+    text = `${text.slice(0, lastColon + 1)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+
+  const halves = text.split("::");
+  if (halves.length > 2) return null;
+  const toGroups = (part: string): number[] | null => {
+    if (part === "") return [];
+    const out: number[] = [];
+    for (const g of part.split(":")) {
+      if (!/^[0-9a-f]{1,4}$/i.test(g)) return null;
+      out.push(parseInt(g, 16));
+    }
+    return out;
+  };
+  const head = toGroups(halves[0] ?? "");
+  const back = halves.length === 2 ? toGroups(halves[1] ?? "") : [];
+  if (head === null || back === null) return null;
+
+  if (halves.length === 2) {
+    const fill = 8 - head.length - back.length;
+    if (fill < 0) return null;
+    return [...head, ...Array<number>(fill).fill(0), ...back];
+  }
+  return head.length === 8 ? head : null;
+}
+
+/** The v4 address embedded in `g[i]`/`g[i+1]`, as octets. */
+function embeddedV4(g: number[], i: number): number[] {
+  const hi = g[i] ?? 0;
+  const lo = g[i + 1] ?? 0;
+  return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff];
+}
+
+/**
  * Is this address one we refuse to talk to?
  *
  * Exported because the honesty of this module depends on it being inspectable and testable on its
@@ -71,19 +141,28 @@ export function isBlockedAddress(address: string): boolean {
   const v4 = parseIpv4(value);
   if (v4) return blockedIpv4(v4);
 
-  if (!value.includes(":")) return true; // not v4, not v6 -> unparseable -> blocked
+  const g = parseIpv6Groups(value);
+  if (g === null) return true;                              // not v4, not v6 -> blocked
 
-  // IPv4-mapped / -compatible IPv6 (::ffff:127.0.0.1) must be judged on the embedded v4 address,
-  // or loopback walks straight through the v6 branch.
-  const tail = value.slice(value.lastIndexOf(":") + 1);
-  const embedded = parseIpv4(tail);
-  if (embedded) return blockedIpv4(embedded);
+  const [g0, g1] = g as [number, number, ...number[]];
 
-  if (value === "::" || value === "::1") return true;      // unspecified, loopback
-  if (/^f[cd][0-9a-f]{0,2}:/.test(value)) return true;      // fc00::/7 unique-local
-  if (/^fe[89ab][0-9a-f]?:/.test(value)) return true;       // fe80::/10 link-local
-  if (/^ff[0-9a-f]{0,2}:/.test(value)) return true;         // ff00::/8 multicast
-  if (!/^[0-9a-f:]+$/.test(value)) return true;             // not a v6 literal -> blocked
+  // Transition/translation prefixes carry a v4 address inside them. Each must be judged on the
+  // address it actually reaches, in whatever notation it was written.
+  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) return blockedIpv4(embeddedV4(g, 6)); // ::ffff:0:0/96
+  if (g.slice(0, 6).every((x) => x === 0)) {
+    const v = embeddedV4(g, 6);
+    if (v.every((x) => x === 0)) return true;               // ::
+    if (v[0] === 0 && v[1] === 0 && v[2] === 0 && v[3] === 1) return true; // ::1 loopback
+    return blockedIpv4(v);                                  // ::/96 v4-compatible
+  }
+  if (g0 === 0x2002) return blockedIpv4(embeddedV4(g, 1));   // 6to4
+  if (g0 === 0x0064 && g1 === 0xff9b) return blockedIpv4(embeddedV4(g, 6)); // NAT64
+
+  if (g0 === 0x2001 && g1 === 0x0000) return true;           // Teredo 2001::/32
+  if ((g0 & 0xfe00) === 0xfc00) return true;                 // fc00::/7 unique-local
+  if ((g0 & 0xffc0) === 0xfe80) return true;                 // fe80::/10 link-local
+  if ((g0 & 0xffc0) === 0xfec0) return true;                 // fec0::/10 site-local (deprecated)
+  if ((g0 & 0xff00) === 0xff00) return true;                 // ff00::/8 multicast
   return false;
 }
 
@@ -108,17 +187,28 @@ export function createGuardedFetcher(deps: GuardedFetchDeps): (url: string) => P
     for (let hop = 0; hop <= maxRedirects; hop++) {
       // Resolve and check IMMEDIATELY before the request, every hop, no caching. Caching the
       // verdict is what reintroduces the rebinding window this guard exists to close.
-      let address: string;
+      let addresses: string[];
       try {
-        address = await deps.lookup(current.hostname);
+        addresses = await deps.lookup(current.hostname);
       } catch (err) {
         throw new Error(`guarded-fetch: cannot resolve ${current.hostname}: ${err instanceof Error ? err.message : String(err)}`);
       }
-      if (isBlockedAddress(address)) {
-        throw new Error(`guarded-fetch: blocked -- ${current.hostname} resolves to a private or reserved address (${address})`);
+      // Fail closed on an empty answer: "no addresses" must never read as "nothing to object to".
+      if (addresses.length === 0) {
+        throw new Error(`guarded-fetch: blocked -- ${current.hostname} resolved to no addresses`);
+      }
+      const bad = addresses.find((a) => isBlockedAddress(a));
+      if (bad !== undefined) {
+        throw new Error(`guarded-fetch: blocked -- ${current.hostname} resolves to a private or reserved address (${bad})`);
       }
 
       const res = await deps.request(current.href);
+
+      // Size is checked on EVERY hop, redirects included. ISS-C-UNRUN-WRITERS-009: it used to be
+      // asserted only on the final response, so a redirect chain could stream unbounded bodies.
+      if (res.body.length > maxBytes) {
+        throw new Error(`guarded-fetch: response too large (${res.body.length} > ${maxBytes} bytes)`);
+      }
 
       if (res.status >= 300 && res.status < 400 && res.location) {
         const next = httpUrlOrNull(res.location, current.href);
