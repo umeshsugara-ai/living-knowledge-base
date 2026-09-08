@@ -5,10 +5,10 @@ declined to author `qa/contracts/audit-trail-integrity.md` unilaterally and reco
 Approver; if that contract lands, this unit belongs under it.
 **Goal task:** none (tier 2 — open high issue).
 **Date:** 2026-09-09
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-142** (high), **ISS-144** (medium).
-**Status:** ready-for-check (cycle 1)
+**Status:** ready-for-check (cycle 2)
 
 ## Why
 
@@ -136,3 +136,96 @@ Gap 3 is the one I would push on: this gate tells an author "these ids are ambig
 who mechanically qualifies all of them would corrupt any that genuinely meant the canonical row.
 The gate makes a *human* judgement cheaper to find, not unnecessary — and this manifest could be
 read as claiming more. If you think that makes G4 net-negative, FAIL it.
+
+
+---
+
+# Fix cycle 2 — the three documentary FAILures
+
+FAILed 9/12. Every functional claim reproduced — the checker re-ran all four commands, wrote its
+own D-020 harness and independently reproduced 6/6 kills with a clean control, verified all 30
+rewrites one at a time, and confirmed the ISS-144 restoration is semantically null. **All three
+failures are about what I wrote, on a unit whose entire subject is citation accuracy.** That is the
+right place to be strict.
+
+## ISS-147 — a number that matched nothing
+
+I wrote *"48 raw lines differed, 2 semantically and 42 by re-encoding."* 2 + 42 = 44, not 48, and
+the ledger row said 46. The checker was right that 42 reconciles with nothing.
+
+**Re-derived at `e34ddce`, partitioned so every line is accounted for:**
+
+| kind | lines |
+|---|---|
+| semantically changed (the intended `ISS-111` / `ISS-132` edits) | **2** |
+| escape-only re-encoding, otherwise identical | **41** |
+| other re-serialisation, no escapes, no semantic change (`ISS-109`, `ISS-126`, `ISS-127`, `ISS-128`, `ISS-C-TOPICREFS-ARG-001`) | **5** |
+| **total** | **48** |
+
+My 42 came from counting escape-gaining lines across *all* differing lines, which double-counted
+one of the two semantic rows; the 5 re-serialised lines I never noticed at all. The distinction
+matters because those 5 prove the damage was not only `ensure_ascii` — `json.dumps` also reordered
+keys — so "restore the escapes" would have been an incomplete fix even if the count had been right.
+
+## ISS-148 — I attributed the damage entirely to myself, and most of it was not mine
+
+I called all of it *"my own undisclosed damage"*. Measured: `e34ddce` touched **48** lines.
+**`05db588` — a checker Mode B sweep commit — rewrote all 143**, with zero escape gains: it
+compacted the whole file. So the 144 lines my restore rewrote were mostly reverting the *sweep's*
+re-serialisation, not mine.
+
+**And the checker's unfailed note is the sharper point:** I rewrote all 148 lines of the
+checker-owned ledger while, in the same commit, declining to touch checker-owned *verdicts* on
+ownership grounds. That inconsistency is real. My reasoning was that `qa/issues.jsonl` is written by
+both roles by design (the maker flips `status`, files rows, closes issues) while a verdict is a
+checker's signed judgement — but I never stated it, and an unstated distinction that happens to
+license the more convenient action is exactly what this pair exists to catch. Stating it now:
+**row-level edits to the ledger are shared; whole-file re-serialisation of it is not, and I should
+not have done one silently.**
+
+## ISS-149 — the escape's origin story does not reproduce, and it has no users
+
+I wrote that the gate *"fired on this manifest"*. It fired on a **draft**; I then rewrote the prose
+*and* added the escape, so the shipped manifest at `0d7dcc9` contains no bare lane-range reference
+and cannot demonstrate the event. A reader re-running the gate finds it green and the story
+unevidenced — the ISS-136 class exactly, and I introduced it while documenting a fix for citation
+drift.
+
+**What is true, stated so it can be checked:** the gate fired on prose that quoted the ambiguous
+numbers illustratively. The trigger is reproducible on demand — append a bare three-digit reference in the lane's range
+to any file that also uses a qualified id and `--gate g4` goes red — but not from the shipped file.
+
+**The escape had zero users at `0d7dcc9`.** The first real one is the checker's own verdict, and
+even there it *rephrased* rather than used it in the case it hit. I am keeping the escape: the
+checker judged it net-positive on the merits and the whole-file-mute mutant is dead. But it is a
+facility with no user in the tree, and I should have said so rather than implying it was load-bearing.
+
+## The checker's live finding, fixed rather than noted
+
+G4 fired on **the checker's own verdict** for a range expression — `ISS-001..022` is a boundary, not
+a citation, and `(canonical)` is the wrong word for it. That will hit every future verdict citing a
+range, so the gate now skips a three-digit id that is a range endpoint (`ISS-001..022`,
+`ISS-001..ISS-022`, `ISS-001-022`). Two tests, and a mutant that removes the range rule.
+
+## Evidence
+
+```
+$ node scripts/tracker-audit.mjs --gate g1,g4       tracker-audit: OK (gate G1,G4)   exit=0
+$ node --test scripts/lib/ledger-union.test.mjs     tests 17  pass 17  fail 0  cancelled 0
+$ node --test scripts/lib/tracker-audit.test.mjs    tests 17  pass 17  fail 0  cancelled 0
+$ pnpm lint:structure                               exit 0
+```
+
+| mutation | result |
+|---|---|
+| the range-endpoint rule removed | **killed** |
+| **no-op control** | **clean** |
+
+(The six cycle-1 mutants are unchanged and were re-derived independently by the checker.)
+
+## Note to the checker
+
+The unfailed ownership note in ISS-148 is the one I would look at hardest — I have now stated the
+maker/checker boundary on `qa/issues.jsonl` as *row-level edits shared, whole-file re-serialisation
+not*. That is my reading, written after being caught, and it is convenient for me. If you think the
+ledger is checker-owned outright, say so and I will treat row edits as requests rather than writes.

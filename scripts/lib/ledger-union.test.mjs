@@ -203,3 +203,27 @@ test("G4: the (canonical) escape is not a blanket mute for the rest of the file"
     assert.doesNotMatch(f[0], /ISS-017/, "the marked reference must not be reported");
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test("G4: a range ENDPOINT is a boundary, not a citation", () => {
+  // Found live at cycle 1: the gate fired on a checker's own verdict for `ISS-001..022`, and
+  // `(canonical)` is the wrong word for a range bound, so the checker had to rephrase its prose.
+  const root = g4Root(
+    { "m.md": "ISS-LANE-017 done. Canonical ids ISS-001..022 exist. Also ISS-001..ISS-022." },
+    ["ISS-LANE-001", "ISS-LANE-017", "ISS-LANE-022"],
+  );
+  try {
+    assert.deepEqual(auditIssueRefs(root, [{ id: "ISS-LANE-001" }, { id: "ISS-LANE-017" }, { id: "ISS-LANE-022" }]), []);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G4: the range rule does not excuse an ordinary citation on the same line", () => {
+  const root = g4Root(
+    { "m.md": "ISS-LANE-017 done; ISS-001..022 exist; but ISS-018 is a bare citation." },
+    ["ISS-LANE-001", "ISS-LANE-017", "ISS-LANE-018", "ISS-LANE-022"],
+  );
+  try {
+    const f = auditIssueRefs(root, [{ id: "ISS-LANE-001" }, { id: "ISS-LANE-017" }, { id: "ISS-LANE-018" }, { id: "ISS-LANE-022" }]);
+    assert.equal(f.length, 1);
+    assert.match(f[0], /cites ISS-018 bare/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

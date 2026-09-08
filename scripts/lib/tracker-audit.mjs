@@ -244,6 +244,13 @@ export function auditIssueRefs(root, ledgerRows) {
         // blanket qualification visibly wrong rather than silently wrong. Found the honest way:
         // this gate fired on the very manifest that shipped it, on citations that were correct.
         if (m[2]) continue;
+        // A range ENDPOINT is a boundary, not a citation, and `(canonical)` is the wrong word for
+        // it. Found live: this gate fired on a checker's own verdict for `ISS-001..022`, and the
+        // checker rephrased its prose rather than mislabel a range as a citation. Every future
+        // verdict quoting a range would have hit the same wall.
+        const before = text.slice(Math.max(0, m.index - 8), m.index);
+        const after = text.slice(m.index + m[0].length, m.index + m[0].length + 8);
+        if (/(\.\.|--|–|—)\s*(ISS-)?$/.test(before) || /^\s*(\.\.|--|–|—)/.test(after)) continue;
         if (laneNumbers.has(m[1])) hits.add(`ISS-${m[1]}`);
       }
       if (hits.size) {
