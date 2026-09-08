@@ -67,3 +67,23 @@ the last sweep reopened ISS-006 precisely because makers edited their own ground
   extract the check into its own named function first and have the test call that function
   directly, never a hand-copied duplicate of its logic — then the mutation test is the thing that
   proves the extraction, not just the fix. — folded 2026-09-08
+
+- 2026-09-08 · maker (self-caught, confirmed by the concurrent sweep's own report) · PATTERN:
+  **mutation-with-proof-of-application writes a deliberately-broken state into a real file, and any
+  concurrent reader can observe it and reasonably report it as a shipped defect.** Mutation testing
+  is mandatory here, so this hazard is structural, not a one-off slip. EVIDENCE: the Mode B sweep
+  dispatched at the top of the 2026-09-08T01:12 tick ran for ~385s, overlapping the window in which
+  `packages/index/src/eval/baseline.ts` was mutated (`const saturated = false`) to prove the
+  saturation test reddens. The sweep read the file mid-mutation and reported it as a possible
+  shipped defect — "a saturation detector that can't detect saturation certifies the broken number
+  as informative". It was right about what it saw; the file was restored seconds later and verified
+  (`grep` shows the real detector, 7/7 green, real data verdicts SATURATED). Two things prevented
+  harm, both worth keeping: the sweep HEDGED rather than filing ("reads as mid-TDD red, not a
+  shipped defect"), and narrow-pathspec commit discipline meant its commit `c11515a` touched only
+  its own three qa/ files — verified afterwards that no commit anywhere ever captured the mutated
+  line (`git log --all -S'const saturated = false'` → empty). APPLIES NEXT: do not dispatch a sweep
+  or checker that reads the same files you are about to mutate. Sequence it — mutate before
+  dispatching, or after the concurrent reader returns. If the overlap is genuinely unavoidable, say
+  so in the dispatch prompt so the reader knows a transient broken state is expected. The general
+  rule: a verification technique that temporarily makes the repo lie must not run while something
+  else is reading the repo for truth. — folded 2026-09-08
