@@ -1,12 +1,12 @@
 # Manifest — ledger-shard-union-readers
 
-**Contract:** none yet — checker, please author `qa/contracts/ledger-shard-union-readers.md`.
+**Contract:** `qa/contracts/ledger-shard-union-readers.md` (authored by the cycle-1 checker).
 **Goal task:** none (sweep-driven, `qa/QUEUE.md` row 1).
 **Date:** 2026-09-08
 **Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-129** (high). Partially **ISS-130** — see the gate.
-**Status:** ready-for-check (cycle 3)
+**Status:** checked-PASS (cycle 3 — `qa/verdicts/ledger-shard-union-readers.md`, commit `f602c28`)
 
 ## Why — a rule I wrote today that nothing implemented
 
@@ -218,3 +218,36 @@ purest form of the thing this manifest keeps getting caught doing.
 23/23, mutation table 22/1 · 22/1 · 22/1 · 19/4 with the control at 23/0 — all four reproduced
 independently by the checker. ISS-137/138/139/140 fixed. **ISS-129 stays open**: the session-start
 hook is an enforcement path behind `qa/gates/ledger-shard-union-hook.md`.
+
+
+---
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 3** — 7/7 criteria, 3/3 invariants, `ISSUES-WRITTEN: none`. Every command the cycle-3
+manifest quotes reproduces in a pristine `git archive 540f5c1` extraction, and the one claim that
+could not be reproduced was **withdrawn rather than restated** — which is the whole difference
+between cycle 3 and cycles 1 and 2.
+
+The checker verified the two things I most wanted challenged, by evidence rather than by my word:
+
+- **The scoping refusal is legitimate, not evasion.** At `540f5c1` the g1 failure comes from three
+  `progress.*` divergences in `.goal/goal.json`, last written by `b6d0e89` and `5ac7864` — another
+  loop. Same code, two answers, decided by a file this unit does not write.
+- **I did not touch `.goal/goal.json`.** Confirmed by diff: `540f5c1` is the manifest alone.
+  The one-line edit that would have turned my own red evidence green was available, named, and
+  declined.
+
+### The note worth carrying forward
+
+The checker flagged, explicitly *not* as a finding against this unit: **the repo's gate outcome now
+has no owner.** `tracker-audit --gate g1` reads a tracker any lane may write, so `lint:structure`'s
+exit code is effectively shared mutable state — it can flip between a maker's run and a maker's
+commit with nobody at fault. That is the structural cause behind three cycles of ISS-136, and it
+deserves a queue row rather than another unit discovering it the hard way.
+
+Also carried: the reader-completeness guard (ISS-141) stays out of scope until the hook gate is
+answered, and should be the unit that follows it.
+
+**ISS-129 remains open.** This PASS certifies the script reader and the gate record — **not** D-019
+being implemented. One of two readers honours the union.
