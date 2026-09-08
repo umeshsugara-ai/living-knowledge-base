@@ -2,6 +2,320 @@
 
 **Date:** 2026-09-08
 **Mode:** A (unit check)
+**Cycle checked:** 2
+**Bound root:** `D:\KnowledgeBase`
+**Named contract:** `qa/contracts/ingest-indexing-pipeline.md`
+**Judged against:** plan §10 U1.4 + the standing gates — the named contract does not cover vector
+retrieval, exactly as cycle 1 stated. See "Contract gap" below; the position is unchanged.
+
+---
+
+## VERDICT: PASS
+
+**SCOREBOARD: 7/7 criteria met, 6/6 invariants hold**
+
+| # | Criterion (source) | Cycle 1 | Cycle 2 |
+|---|---|---|---|
+| P1 | recall@5 as a **delta against the U0.10 baseline** (plan §10 U1.4 *Verify*) | MET | **MET** — re-reproduced |
+| P2 | **p95 latency recorded** (plan §10 U1.4 *Verify*) | NOT MET (ISS-123) | **MET** |
+| P3 | **dep-cruiser green** (plan §10 U1.4 *Verify*) | MET | **MET** — re-run |
+| P4 | **DECISIONS entry superseding D-003** (plan §10 U1.4 body) | NOT MET (ISS-124) | **MET** |
+| P5 | Lives in `packages/index`, satisfies `RetrieveFn`, drops into the recall harness | MET | **MET** |
+| P6 | Standing gate — no regression (`pnpm -r typecheck`, `pnpm -r test`) | MET | **MET** |
+| P7 | Standing gate — mutation-killable unit coverage | MET (6/6 killed) | **MET** — code byte-identical, coverage intact |
+
+Both cycle-1 failures are genuinely closed. Nothing regressed.
+
+---
+
+## Contract gap (restated, unchanged)
+
+`qa/contracts/ingest-indexing-pipeline.md` covers **summarize → claims → tree_index →
+status.index**; its criteria 1–8 name `summarize.ts`, `claims.ts`, `indexing.ts` and the two ingest
+composition roots. **None of them is about vector retrieval.** So this unit is judged, as in cycle
+1, against plan §10 U1.4's own *Verify:* line and body deliverables plus the project's standing
+gates. I have not amended the ingest contract to absorb vector retrieval; the two are different
+features.
+
+**I still recommend `/checker init-contract vector-retrieval` before U1.5 begins**, and I still have
+not created it — initial contract creation is human-gated under the criticality gate, so this is a
+recommendation to the Approver and nothing more. The reason has if anything strengthened: U1.5 is
+the hybrid merge and the `vectorSearchFn` composition-root injection, it will inherit this unit's
+0.935 as an input to a `≥ 0.85` exit criterion, and `packages/index/src/vector/` still has no
+criteria of its own for the next checker to judge against.
+
+---
+
+## What I re-ran myself (nothing below is taken from the manifest)
+
+### 1. ISS-124 (high) — the D-021 supersession. **Genuinely closed, and correctly scoped.**
+
+**The entry exists and is well-formed.** `docs/DECISIONS.md` carries
+`## D-021 | 2026-09-08 | type: decision | status: ACTIVE` with all of What / Why / Result /
+Supersedes / Changes-authorized / Links populated.
+
+**The supersession really is scoped to Q5 and does not quietly revoke the rest of D-003.** This was
+the thing I most wanted to catch, because a broad supersession would silently unpin the whole stack.
+It does not. The scoping is stated three separate times and each is explicit about what survives:
+
+- *What:* "This replaces the answer to ARCHITECTURE Open Question Q5 only. Every other part of D-003
+  (the TypeScript pnpm monorepo, Python confined to ML workers, JSON Schemas as the single source of
+  truth with generated TS types, and the CI budgets) is untouched and remains in force."
+- *Supersedes:* "…deliberately leaves the whole of D-003's stack, language-split, schema-source and
+  CI-budget content in force."
+- *Result:* confined to re-answering Q5.
+
+I checked the effect rather than the wording too: `ARCHITECTURE.md` Q2 still reads **"CLOSED by
+D-003: TS pnpm monorepo"** and is untouched by this unit, so the stack answer D-003 owns is still
+attributed to D-003 and still standing. Only Q5 moved.
+
+**`Changes-authorized` genuinely covers the ARCHITECTURE edit, and the edit stayed inside it.** The
+field reads `ARCHITECTURE.md section 6 Q5 (re-answer: brute-force cosine over chunks, no Atlas);
+packages/index/src/vector/cosine.ts`. I diffed the actual edit rather than trusting that:
+
+```
+$ git diff 6da5251 HEAD -- ARCHITECTURE.md
+-- **Q5:** ... **CLOSED by D-003:** Mongo Atlas Vector Search on `chunks` — one DB until measured otherwise.
+++ **Q5:** ... **CLOSED by D-003 → D-021:** brute-force exact cosine in `packages/index/src/vector/`
+++   over `chunks`, behind `vectorSearchFn`. Atlas Vector Search is unavailable (self-hosted mongod,
+++   no `+srv`), and at 1452×3072 an exhaustive scan is exact.
+```
+
+**That single hunk is the entire ARCHITECTURE change.** No Frozen §2 edit, no `contracts/` edit, no
+drive-by elsewhere in §6. `ARCHITECTURE.md` is 131 lines against its 150 budget.
+
+**Written BEFORE the edit.** Both land in one commit (`59d0579`), so commit order cannot prove
+sequence on its own. What I can verify is that the only write path was taken: the entry is in
+`docs/DECISIONS.md` in `append_decision.ps1`'s schema shape, and the maker's own account of the
+D-019 collision — that the guard *refused* its first attempt because the concurrent lane had already
+taken D-019/D-020 — is corroborated independently by git: `05b93cc` (D-019) and `6a57bae` (D-020)
+both pre-date `59d0579` and belong to the other lane. A maker that had bypassed the guard would not
+have hit its id allocator. Combined with `Changes-authorized` naming the ARCHITECTURE section that
+was then edited and nothing else, the Lab Protocol ordering requirement is satisfied as well as it
+can be evidenced.
+
+**`docs/DECISIONS.md` remains additions-only.**
+
+```
+$ git diff d8850c2 HEAD -- docs/DECISIONS.md | grep -E "^-" | grep -v "^---"
+(no output — zero deletion lines)
+```
+
+Eight added lines, nothing removed or altered. No prior entry touched.
+
+**`cosine.ts` cites the real id.** `cosine.ts:4` now reads *"WHY BRUTE FORCE (D-021, which supersedes
+D-003 on ARCHITECTURE Q5 only)"*.
+
+**"D-a" does not remain in the vector code — but it does still remain in the schema.** See ISS-125
+below. It is not a shortfall against ISS-124's recorded reproduction and it is not this unit's doing.
+
+### 2. ISS-123 (medium) — p95. **Measured for real, and the framing is honest.**
+
+I re-ran the harness myself rather than reading the maker's number back:
+
+```
+$ node scripts/eval-recall.mjs --retriever vector
+...
+wrote D:\KnowledgeBase\data\eval\recall-report-vector.json
+
+$ (latency block from that report, my run)
+  { unit: "ms", note: "ranking only, 1452 chunks x 3072 dims, excludes the batched embed",
+    n: 92, p50: 25.39, p95: 78.11, max: 139.02 }
+```
+
+| | maker | my re-run |
+|---|---|---|
+| p50 | 28.84 | **25.39** |
+| p95 | 62.35 | **78.11** |
+| max | 127.55 | **139.02** |
+
+**The numbers are real and in the stated region.** They are not byte-identical, and they should not
+be — unlike the ranking itself (which is deterministic and *was* byte-identical), wall-clock timing
+on a shared machine is not reproducible to two decimals. My p95 is 25 % above the maker's, which is
+ordinary variance for 92 CPU-bound samples on a laptop, and both land in the same tens-of-ms band.
+What matters is that the conclusion is robust to that spread: D-021's revisit threshold is ~500 ms
+and even my slower p95 is **6.4× inside it**. A number this far from its threshold does not need
+precision.
+
+The instrumentation is genuine and I read it rather than inferring it: `scripts/eval-recall.mjs`
+times 92 `retrieve()` calls with `performance.now()`, sorts, and emits p50/p95/max into the report.
+No new script file was added (respecting the D-018 `scripts/` budget), and the timing loop is
+separate from the scored run, so it cannot contaminate recall.
+
+**Is excluding the batched embed honest framing or convenient framing? Honest — with one boundary
+worth naming.** Three reasons I accept it:
+
+1. It is what the issue itself asked for. ISS-123's `fix_direction`, written by cycle-1 me, said:
+   *"Report ranking latency alone, not ranking+embedding … mixing them measures neither."* The maker
+   is complying with the recorded fix direction, not inventing a flattering denominator.
+2. It measures the thing the decision rests on. The p95 exists to justify **brute force over ANN**.
+   An ANN index would change ranking cost and would not change embedding cost at all, so the embed
+   term is common to both arms of the comparison and cancels. Including it would make the number
+   *less* informative about the decision it supports.
+3. It is disclosed at every layer — in the report's own `note` field, in the code comment, and in
+   the manifest. Convenient framing hides its exclusion; this one is stamped into the artifact.
+
+The boundary: **this is not end-to-end `/ask` latency**, where one embed round-trip per question is
+real and unamortised, and nothing in this unit measures that. That is correctly U1.5's problem (the
+composition-root injection), and the manifest does not claim otherwise. I am recording it so U1.5
+cannot inherit 62–78 ms as a user-facing figure.
+
+**The "milliseconds" overclaim was corrected, and the correction is unusually good.** The old comment
+read *"an exhaustive scan is a few million multiply-adds, which is milliseconds"*. The new one:
+
+> MEASURED, not asserted (2026-09-08, 1452 chunks × 3072 dims, ranking only, 92 real questions):
+> **p50 29 ms · p95 62 ms · max 128 ms**. An earlier draft of this comment said "milliseconds",
+> which understated it by an order of magnitude — the number is now taken from
+> `data/eval/recall-report-vector.json` rather than from an intuition.
+
+It does not quietly swap the wrong claim for the right one; it names its own error, states the
+magnitude of the error, and cites where the replacement comes from. That is the correction I would
+want to find.
+
+### 3. No regression in the retriever — verified with git, not by reading
+
+```
+$ git diff 6da5251 HEAD --stat -- packages/index/src/vector/
+ packages/index/src/vector/cosine.ts | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+```
+
+**One file, and the full diff is entirely inside the leading `/** … *\/` block comment.** Not one
+line of executable code changed: `retriever.ts` is untouched, and in `cosine.ts` every `+`/`-` line
+begins with ` *`. The maker's claim that "the retriever the checker attacked and could not break is
+byte-identical" is **true of the code**, and I am satisfied that cycle 1's 6/6 mutation kills still
+describe the shipped artifact — the same 194 tests exercise the same functions.
+
+The recall number reproduced exactly, including the misses:
+
+```
+recall@5 = 0.935 (86/92 hits)
+control (question-blind) = 0.217 | chance floor = 0.217
+filter bias: none — 0 candidates rejected, so kept === combined
+VERDICT: INFORMATIVE — 0.935 vs a 0.217 question-blind control (+0.717), 6 miss(es) left to move
+```
+
+All six misses are the **same six** as cycle 1, with the same ordered top-5 `got` lists
+(`atlas-skilltech-gq01`, `atlas-skilltech-gq03`, `in-focus-1-gq03`,
+`entrance-exams-pathways-india-part1-gq01`, `cept-university-gq01`, `ashoka-university-gq04`). The
+heuristic baseline `data/eval/recall-report.json` is still on disk and still 0.391 (36/92); the
+cycle-2 commit `59d0579` does not list it among its seven changed files, so the clobber fix continues
+to hold. **Delta +0.543 re-confirmed.**
+
+### 4. The gates, each individually by exit code
+
+```
+$ pnpm -r typecheck                                    → exit 0
+$ pnpm -r test                                         → exit 0
+$ pnpm --filter @lkb/index test                        → exit 0   tests 194  pass 194  fail 0
+$ npx depcruise --config .dependency-cruiser.cjs packages apps
+    ✔ no dependency violations found (284 modules, 867 dependencies cruised)   → exit 0
+$ pnpm lint:structure                                  → exit 1  (see below)
+    lint-loc        OK (267 files within budget)
+    lint-dirsize    OK (78 dirs within budget)
+    lint-root       OK (15 loose root files)
+    lint-dupes      OK (290 unique exports, 24 unique schema $ids)
+    lint-migrations OK (1235 files scanned)
+    snapshot        OK (docs/SNAPSHOT.md matches a fresh regeneration, 114 lines / budget 200)
+    tracker-audit --gate G1  → 2 findings
+$ wc -l ARCHITECTURE.md                                → 131  (budget 150)
+```
+
+**`lint:structure`'s exit 1 is still not attributable to this unit.** Both G1 findings are the same
+pre-existing one cycle 1 documented — `U2.4 uses unknown status "partial" in TASKS.md`, plus its
+mirror `U2.4 is "pending" in goal.json but "partial" in TASKS.md`. `U2.4` belongs to the concurrent
+speaker lane; `TASKS.md` and `.goal/goal.json` are files I was instructed not to touch and did not.
+Every sub-gate the manifest claims green **is** green, and each was confirmed by its own output line
+rather than by the wrapper's exit code. Not charged.
+
+---
+
+## FAILURES
+
+None.
+
+**ISSUES-WRITTEN: ISS-125** (medium — filed as a ledger row only, per this repo's severity gate; it
+is not a failure of this unit and does not gate the PASS).
+
+Ledger updates made: **ISS-123 → `fixed`**, **ISS-124 → `fixed`** (both with the verifying evidence
+recorded on the row; only a later re-check moves them to `verified`).
+
+---
+
+## Notes that are NOT failures
+
+- **ISS-125 (medium, new): "D-a" survives in the schema.** D-021's *Result* declares the shorthand
+  retired, and `cosine.ts` was repointed — but `grep -rn "D-a\b"` still hits
+  `schema/chunks.schema.json:5` and its generated `packages/core/src/generated/chunks.ts:8`
+  (*"the embedding VECTOR is stored inline because brute-force cosine (D-a) must read the numbers"*).
+  I am explicitly **not** charging this to the unit, for two reasons. First, per D-015 I measured the
+  fix against the issue's own recorded reproduction: ISS-124's row names exactly three artefacts —
+  the entry, `ARCHITECTURE.md:126`, `cosine.ts:4` — and **all three are closed**; the schema is
+  outside what was recorded. Second, it pre-dates this unit (introduced at `821341b`, U1.2). It earns
+  a ledger row only because D-003 makes JSON Schemas the single source of truth, so the one file
+  class that is definitionally authoritative now cites an id D-021 says is retired. Fix is one word
+  plus `pnpm gen:types`; U1.5 is the natural place, and it must be the schema that is edited, never
+  the generated file.
+- **D-021's `Changes-authorized` field ends with a stale id: "replace the 'D-a' citation with
+  D-019".** That is the refused first attempt's number showing through into the entry that actually
+  landed as D-021. It is cosmetic — the field's *scope* (which files may be edited) is correct and
+  was honoured, and What / Why / Result / Supersedes all say D-021 — but a future reader chasing
+  "D-019" from this field lands on the concurrent lane's per-lane-ledger decision instead. I am
+  raising it **only as a note and deliberately not as a fix request**: `docs/DECISIONS.md` is
+  append-only, so the entry cannot be corrected in place, and appending a whole new decision to fix
+  one stale token in a non-load-bearing field would be worse governance than leaving it. Recorded
+  here so the record of the discrepancy exists somewhere mutable.
+- **Round cap (D-014).** This is PASS **1** on the vector-retrieval seam (cycle 1 was a FAIL and does
+  not count as a PASS). The non-security cap of 2 PASSes is not in play. ISS-125 is non-security
+  class and has been *filed* rather than promoted into a round 3, which is what D-014 asks for.
+- **`Issues addressed: ISS-124, ISS-123`** is accurate — both were raised by the cycle-1 FAIL and
+  both are genuinely closed by this cycle, verified above rather than accepted.
+- **Cycle-1's substantive findings stand and were not re-litigated.** The 0.935-is-a-floor caveat,
+  the `atlas-skilltech` 4-chunk contributor, and the prohibition on using this number to close gate
+  condition 4 or settle U1.5's `≥ 0.85` while precondition 1 is open — the manifest carries all three
+  forward verbatim in "The checker's findings I am carrying forward rather than closing". That is the
+  correct disposition and I am re-affirming the constraint here so it travels with the PASS:
+  **0.935 may be cited as a floor with disclosure 1 attached; it may not close the golden-set gate.**
+
+---
+
+## EXPLANATION
+
+Both cycle-1 failures are genuinely closed and I verified each against its own recorded
+reproduction rather than against the maker's account. D-021 exists, is well-formed, and its
+supersession is **scoped to Q5 three times over** with D-003's stack, language-split, schema-source
+and CI-budget content explicitly left in force — which I confirmed by effect as well as by wording,
+since ARCHITECTURE Q2 still attributes the stack to D-003 untouched; `Changes-authorized` names the
+ARCHITECTURE section that was then edited and the git diff shows that Q5 block is the *only* hunk;
+and `docs/DECISIONS.md` took eight added lines with zero deletions. On the p95, my own re-run gives
+25.39 / 78.11 / 139.02 ms against the maker's 28.84 / 62.35 / 127.55 — not identical, correctly so
+for wall-clock timing, same band, and even my slower p95 is 6.4× inside D-021's 500 ms revisit
+threshold. Excluding the batched embed is honest framing: it is what ISS-123's own fix direction
+demanded, the embed term cancels between the brute-force and ANN arms the number exists to compare,
+and the exclusion is stamped into the report, the comment and the manifest — though it is *not*
+end-to-end `/ask` latency and U1.5 must not inherit it as one.
+
+Nothing regressed. `git diff` over `packages/index/src/vector/` since the cycle-1 commit is one file
+and **entirely inside a block comment** — no executable line moved — so cycle 1's 6/6 mutation kills
+still describe what shipped; recall reproduced at 0.935 (86/92) with the identical six misses and
+identical top-5 lists, the heuristic baseline is intact at 0.391, and typecheck / test / 194 index
+tests / dep-cruiser are each green by their own exit code. `lint:structure`'s exit 1 is the same
+pre-existing concurrent-lane `U2.4` tracker row cycle 1 documented, in files I was told not to touch.
+One new medium finding (ISS-125: "D-a" still in `schema/chunks.schema.json`) is filed as a ledger row
+only — it is outside ISS-124's recorded reproduction, pre-dates this unit, and under this repo's
+severity gate a medium is verified inside the next unit that touches the file rather than given its
+own ceremony. **PASS, 7/7.** I renew the cycle-1 recommendation, unchanged and still human-gated:
+`/checker init-contract vector-retrieval` before U1.5 starts, not after.
+
+---
+---
+
+# ARCHIVE — cycle 1 verdict (FAIL), preserved verbatim
+
+# Verdict — vector-cosine-retriever
+
+**Date:** 2026-09-08
+**Mode:** A (unit check)
 **Cycle checked:** 1
 **Bound root:** `D:\KnowledgeBase`
 **Named contract:** `qa/contracts/ingest-indexing-pipeline.md`
