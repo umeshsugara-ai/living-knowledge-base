@@ -4,8 +4,181 @@
 **Contract:** qa/contracts/golden-set-recall.md
 **Gate (the acceptance authority for this unit):** qa/gates/golden-set-redesign.md — ANSWERED,
 Option C, conditions 1–4 binding
-**Cycle checked: 1**
+**Cycle checked: 2**
 **Dual check:** no
+
+```
+VERDICT: PASS
+SCOREBOARD: 3/3 in-scope gate conditions met (1, 2, 3; condition 4 correctly out of scope), 3/3 regression gates hold
+FAILURES: none
+ISSUES-WRITTEN: ISS-093
+EXPLANATION: Both cycle-1 findings are genuinely fixed, and fixed structurally rather than
+textually — I verified ISS-091's class fix by deleting the provenance file and confirming the
+report degrades to "UNKNOWN … uninterpretable" instead of substituting a claim, and ISS-092's
+three bias figures now recompute on every run and reproduce my own independent cycle-1
+measurement to the digit. The golden set is byte-identical to the one I reviewed, so no
+regeneration smuggled in a different artifact. ISS-093 records the deferred pin-corpus redesign,
+which I rule was correctly deferred — it is a tracking row for work this verdict endorses
+postponing, not a finding against this unit.
+```
+
+## What I re-ran myself (nothing below is read from the manifest)
+
+| check | my result | manifest claim | agrees |
+|---|---|---|---|
+| `node scripts/eval-recall.mjs` | recall@5 **0.30666666666666664** (23/75), **52 misses**, control 0.18667, floor 0.21739, `INFORMATIVE` | 0.307 / 52 / 0.187 / informative | ✅ |
+| `filterBias` in the report | kept **0.30666666666666664** (n=75) · rejected **0.7647058823529411** (n=17) · combined **0.391304347826087** (n=92) | 0.307 / 0.765 / 0.391 | ✅ |
+| console line, every run | `filter bias: kept 0.307 … rejected 0.765 … combined 0.391 — kept is a FLOOR` | claimed emitted, not prose | ✅ |
+| `goldenSetProvenance` type | **object**, read from disk, `model: gemini-2.5-pro`, `recordedAfterTheFact: true` | object, not a string | ✅ |
+| **delete provenance + re-run** | field becomes `"UNKNOWN — … Treat the score as uninterpretable until provenance exists."` | claimed | ✅ |
+| `node scripts/gen-golden-set.mjs --provenance-only` | rebuilt the file, **no API call**, byte-identical modulo `generatedAt` | claimed | ✅ |
+| `git diff b28005d -- data/eval/golden-set.json` | **empty** — byte-identical to the set I reviewed at cycle 1 | "the set the checker reviewed is byte-identical" | ✅ |
+| `pnpm --filter @lkb/api test` | **109 pass / 0 fail** | 109/109 | ✅ |
+| `pnpm -r typecheck` | Done, exit 0 | exit 0 | ✅ |
+| `pnpm lint:structure` | OK · SNAPSHOT fresh · depcruise **0 violations / 269 modules** | clean | ✅ |
+
+## ISS-091 — the class-fix claim is real, and I tested the failure mode directly
+
+The maker claims it fixed a *class* of defect rather than a sentence. That claim is checkable, so I
+checked it rather than reading it.
+
+**Deleted `data/eval/golden-set-provenance.json`, re-ran `node scripts/eval-recall.mjs`.** The
+report's `goldenSetProvenance` became:
+
+> `"UNKNOWN — data/eval/golden-set-provenance.json is absent, so nothing here describes how this golden set was built. Re-run scripts/gen-golden-set.mjs. Treat the score as uninterpretable until provenance exists."`
+
+No substituted guess, no stale fallback, no silent omission of the key. **That is the property that
+was missing at cycle 1** — the old design let the reader's field outlive the data it described.
+Restored with `--provenance-only`; it rebuilt the record with **no API call**, identical apart from
+the timestamp.
+
+The structural point holds on inspection too: `eval-recall.mjs:130-134` only ever **reads**
+(`existsSync(PROVENANCE_PATH) ? loadJson(...) : "UNKNOWN…"`), and `gen-golden-set.mjs:125`
+`writeProvenance` is called by the generator. Counts (`kept`, `rejected`, `sessions`) are derived
+from the artifacts on disk at `:177-180`, not hardcoded. The producer writes; the consumer reads;
+the consumer can no longer assert.
+
+**One honest limit, which the code states itself and I am not filing:** under `--provenance-only`
+the `model`/`postFilter` prose describes what the *current* code does, true only if the code has
+not changed since generation. The docstring at `:121-123` says exactly this and
+`recordedAfterTheFact: true` flags it in the artifact. That is the correct disclosure of a real
+weakness, not a defect.
+
+**Stale claims: gone.** `grep -niE "anthropic|keyInsights excerpt|verbatim session_page"` over both
+scripts returns two hits, and both are **historical comments explaining the fix**, not live claims:
+`gen-golden-set.mjs:219` names the Anthropic OAuth path *this replaced*, and
+`eval-recall.mjs:126` quotes the old false string while explaining why the field is now read. The
+header at `gen-golden-set.mjs:15-18` now names Flash → Pro and the same-vendor caveat; the
+"this is Anthropic" line I flagged at cycle 1 is gone. Repo-wide, no other file carries the phrase.
+
+## ISS-092 — the bias is measured, not narrated, and it matches my numbers exactly
+
+`filterBias` is computed and written on every run and printed to the console. My independent
+cycle-1 replay produced **0.765 / 0.307 / 0.391**; the report now carries
+**0.7647058823529411 / 0.30666666666666664 / 0.391304347826087**. Identical.
+
+The maker's reasoning for fixing this by measurement is correct and worth recording: a prose caveat
+would have gone stale exactly the way ISS-091's string did. A figure recomputed from the data every
+run cannot. Both fixes are the same move applied twice.
+
+`note` in the report states it plainly — *"`kept` is a downward-biased floor; `combined` is the
+pre-filter figure"* — so a reader of the JSON alone cannot mistake 0.307 for an unbiased estimate.
+
+## The deferral — I rule it CORRECT, and I am binding it so it cannot be forgotten
+
+This was the live judgment call, so I am ruling explicitly.
+
+**First, the weakness is worse than I reported at cycle 1.** I re-derived the rejection tokens from
+`data/eval/golden-set-rejected.json`:
+
+```
+parents, interest, parents, story, story, living, sat, applicants, should,
+paths, skills, people, officers, will, aptitude, you, you
+```
+
+**13 of 17 rejections fire on ordinary or function words** — `should`, `will`, `people`, `paths`,
+`skills`, `living`, and `you` **twice**. At cycle 1 I said "page-unique is weaker than rare-entity";
+the sharper statement is that on the majority of its firings the criterion is close to arbitrary
+with respect to its stated intent, while remaining systematically adversarial to the retriever.
+Two education-loan questions and one about tax relief on loans were discarded for `parents` /
+`interest`.
+
+**And I still rule the deferral correct**, on four grounds:
+
+1. **The fix is not a fix — it is a regeneration.** Changing the pin corpus changes which candidates
+   survive, so the shipped set changes. That costs 23 non-deterministic paid calls and, decisively,
+   **invalidates the 12-question read I did at cycle 1 and every number in this verdict**. A fix
+   cycle is the wrong container for work whose output is a different artifact.
+2. **Nothing currently depends on 0.307 being unbiased.** Gate condition 4 — the one that would let
+   this metric become U1.4's delta baseline and U1.5's `≥ 0.85` target — is explicitly **not
+   executed** by this unit. The blast radius is a report nobody has yet built a decision on.
+3. **The cost is published, not asserted.** `filterBias` puts 0.391 beside 0.307 on every run and in
+   every report. A reader who acts on the floor as though it were an estimate has to ignore a figure
+   printed next to it. That is a genuinely different situation from cycle 1, where the bias existed
+   and was invisible.
+4. **The unit's actual deliverable is met.** The gate asked for a falsifiable metric. 0.307 with 52
+   misses inside (0.217, 1.000) is falsifiable regardless of which side of the bias you read it
+   from — the bias moves the level, not the falsifiability.
+
+**The condition I attach, which is what makes the deferral safe rather than merely convenient:**
+ISS-093 (filed, high) must be closed **before** gate condition 4 is executed. The pin-corpus
+redesign and the sibling-session ambiguity now share one precondition on condition 4 — and they
+should, because they have the same remedy shape: both require regenerating or curating the set, and
+doing them in one unit costs one regeneration instead of two.
+
+**What would have made me rule the other way:** if condition 4 had been executed here, or if
+`filterBias` had been a paragraph instead of a computation. Shipping a known-weak criterion is
+acceptable *because* the weakness is instrumented and nothing downstream has consumed it yet. It
+would not be acceptable the moment either of those stops being true.
+
+## Condition 2 — checked literally, again
+
+**0.30666666666666664**, strictly greater than 0.217 and strictly less than 1.000, with **52**
+misses. **SATISFIED.** Not 1.000, so the remedy did not fail and this does not escalate to Option B.
+
+**No regeneration happened.** `git diff b28005d -- data/eval/golden-set.json data/eval/golden-set-rejected.json`
+is empty: the set is byte-identical to the one I reviewed and sampled at cycle 1, so my
+12-question reading and every diagnostic from cycle 1 still describe this artifact. The cycle-2
+commit `cbedeb9` touched only `eval-recall.mjs`, `gen-golden-set.mjs`, the provenance file, the
+report and the manifest.
+
+## Conditions 1 and 3 — still satisfied
+
+Condition 1: the provenance object states the leakage limit in the artifact itself
+(`independence`, `postFilterBiasWarning`), the manifest restates it, and the control (0.187) plus
+the chance floor (0.217) sit beside every score in the report and the console. Condition 3 is
+unchanged — the diagnostics were run on this same byte-identical set at cycle 1 (pin 56.5% → 9.3%
+on the turns corpus, overlap mean 0.164 / max 0.313).
+
+## The multi-session finding is recorded — with one placement caveat
+
+The manifest records it as a **precondition on gate condition 4**, names the mechanism (seven
+identically-formatted `uniaccess-*` sessions plus the `-reupload` duplicate), concedes my reading
+against its own counter-argument, and states plainly that the control at 0.187 rules out *total*
+degeneracy but not the partial kind. That is what I asked for at cycle 1, met.
+
+**Caveat, not a failure:** the precondition lives in the manifest and in this verdict, **not in
+`qa/gates/golden-set-redesign.md`**, which is the file whoever executes condition 4 will read. I am
+not filing this against the maker — the gate is a human-answered artifact and the maker was right
+not to edit it, and my cycle-1 ask did not name the gate file. It is instead carried by ISS-093,
+which any sweep will surface, and I am naming it here so it is on the record: **whoever opens the
+condition-4 unit must read this verdict, not only the gate.**
+
+## Nothing claims the gate is CLOSED — confirmed
+
+The manifest says so explicitly, names condition 4 as not done by this unit, and the gate file is
+**unmodified** (`git log -1 -- qa/gates/golden-set-redesign.md` → `a7641bf`, predating this unit).
+Its own closing line — *"This gate is not closed by this answer"* — is intact. Correct.
+
+## Still not certified by this verdict
+
+`apps/api/src/ai-transport.ts` — ruled defensible at cycle 1, still governed by no criterion in
+`golden-set-recall.md`, still without a regression test. Unchanged position: its own unit.
+
+---
+---
+
+# ARCHIVE — cycle 1 verdict (FAIL), preserved verbatim
 
 ```
 VERDICT: FAIL
