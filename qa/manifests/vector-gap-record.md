@@ -98,4 +98,34 @@ This is the specific thing ISS-118 said was missing: **deleting the surface now 
    source-path test updated). It is mechanical, `git mv` preserved history for the two tracked
    files, and every gate is green — but it deserves a read rather than a skim.
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/vector-gap-record.md` — PASS, cycle 1, 8/8 criteria, 3/3 invariants,
+committed `f59fb3a`. `ISSUES-WRITTEN: ISS-121 (medium)`.
+
+**The checker retired my two live-verification disclosures rather than accepting them.** I had
+disclosed that no `vector-pending` row had ever been written against real Mongo and that
+`GET /gaps` was unverified end to end. It wrote its own live script against scratch tenants
+(`chk118-a/b`), and proved on real rows: a real gap row written, idempotence across a re-index,
+resolution to `received`, that a never-failed session gains **no** row, schema validity, zero
+tenant-less rows collection-wide, and the real `gaps(tenantId)` accessor behind `GET /gaps`
+(tenant A sees it, tenant B does not). It then deleted the scratch data and **read the cleanup
+back from the server**. Both Dashboard renderers print `kind` with no allowlist, so the new kind
+needs no UI change.
+
+**The tenancy attack held.** It mutated `tenantScope.updateOne` to skip the merge *only on the
+upsert path* — precisely the defect the new parameter makes possible — and both suites caught it
+(`packages/db` 13/1, `apps/api` 126/2, independently). No tenant-less row is creatable through the
+upsert path; `raw` stays gone.
+
+**ISS-121 (medium) — a real bug I introduced, and its consequence is worse than its severity
+label suggests.** `_id = vector-pending:<sessionId>` is globally unique while the *filter* is
+tenant-merged, so a second tenant recording a gap for the same `sessionId` hits a live-reproduced
+`E11000`. It is reachable: `whatsapp-store.ts:132` derives `sessionId` from a sha256 of
+`(groupJid, ownerUserId)` with **no tenant in it**. Isolation held (A's row stayed A's, B created
+nothing), so the checker correctly graded it availability rather than disclosure. But the throw
+escapes `recordVectorGap`, which `session.ts` calls **before** the `tree_index` update and the
+`status.index` flip — so that session stays `"pending"` forever while ingest still returns 201.
+**That is a silent indexing failure introduced by the unit whose entire purpose was to end a
+silent indexing failure.** Pulled immediately as the next unit under the severity gate's
+tenancy/data-write clause, not deferred.
