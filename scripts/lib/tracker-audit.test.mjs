@@ -268,3 +268,43 @@ test("G1 still accepts agreeing `blocked` rows — the new class did not make bl
   assert.deepEqual(filterByGate(audit(root), "G1"), []);
   rmSync(root, { recursive: true, force: true });
 });
+
+/**
+ * ISS-139. G3's `git log` call had a bare catch, so any git failure silently disabled the gate
+ * forever — and a gate that never fires looks exactly like a gate that passes. Only "not a git
+ * checkout" (exit 128) and a missing git binary (ENOENT) are expected.
+ */
+test("G3: a non-repo directory is quiet, and G3 simply does not fire", () => {
+  const root = fixtureRoot();
+  try {
+    const findings = audit(root);
+    assert.ok(!findings.some((f) => f.startsWith("G3")), "no .last-sweep and no repo -> no G3 finding");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+/**
+ * ISS-139, pinned properly. My first attempt at this test passed whether the catch rethrew or
+ * swallowed — both produce no G3 finding — so the mutant survived and I had "fixed" something
+ * nothing enforced. That is precisely the ISS-137 failure repeating one test later.
+ *
+ * The git call is now injectable, so the branch can actually be exercised: an unexpected failure
+ * must propagate, because a gate that silently never fires looks exactly like a gate that passes.
+ */
+test("G3: an UNEXPECTED git failure propagates instead of silently disabling the gate", () => {
+  const root = fixtureRoot();
+  writeFileSync(join(root, "qa", ".last-sweep"), "2020-01-01T00:00:00Z\n");
+  const boom = () => { const e = new Error("git exploded"); e.status = 1; throw e; };
+  try {
+    assert.throws(() => audit(root, { exec: boom }), /git exploded/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G3: 'not a git checkout' (exit 128) stays quiet, as intended", () => {
+  const root = fixtureRoot();
+  writeFileSync(join(root, "qa", ".last-sweep"), "2020-01-01T00:00:00Z\n");
+  const notRepo = () => { const e = new Error("not a git repository"); e.status = 128; throw e; };
+  try {
+    const findings = audit(root, { exec: notRepo });
+    assert.ok(!findings.some((f) => f.startsWith("G3")), "expected case -> no finding, no throw");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

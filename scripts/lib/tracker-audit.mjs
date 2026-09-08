@@ -88,7 +88,7 @@ export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..")
  */
 const NORMALISE = { open: "not-done", pending: "not-done", in_progress: "not-done", blocked: "blocked", done: "done" };
 
-export function audit(root = ROOT) {
+export function audit(root = ROOT, { exec = execFileSync } = {}) {
   const findings = [];
   const goal = JSON.parse(readFileSync(join(root, ".goal", "goal.json"), "utf8"));
   const md = readFileSync(join(root, "TASKS.md"), "utf8");
@@ -154,8 +154,15 @@ export function audit(root = ROOT) {
     const swept = Date.parse((readFileSync(stamp, "utf8").trim().split("\n").pop() ?? "").slice(0, 20));
     let headAt = NaN;
     try {
-      headAt = Date.parse(execFileSync("git", ["log", "-1", "--format=%cI"], { cwd: root, encoding: "utf8" }).trim());
-    } catch { /* not a git checkout */ }
+      headAt = Date.parse(exec("git", ["log", "-1", "--format=%cI"], { cwd: root, encoding: "utf8" }).trim());
+    } catch (err) {
+      // ISS-139, found eight lines below the ISS-137 fix and in the same class: a bare catch here
+      // meant ANY git failure — a broken PATH, a corrupt repo, a permissions error — silently
+      // disabled G3 forever, and a gate that never fires looks exactly like a gate that passes.
+      // "Not a git checkout" is the only expected case, and git says so with exit 128.
+      const notARepo = err?.status === 128 || err?.code === "ENOENT";
+      if (!notARepo) throw err;
+    }
     if (!Number.isNaN(swept) && !Number.isNaN(headAt) && swept < headAt) {
       const days = ((headAt - swept) / 86_400_000).toFixed(1);
       findings.push(`G3 stale sweep: qa/.last-sweep predates HEAD by ${days} day(s) — the safety net has not seen the current code`);
