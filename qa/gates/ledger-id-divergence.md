@@ -87,3 +87,71 @@ the historical record is not a checker's call to make unilaterally). Re-derived 
   ten legitimate self-introductions").
 - `ISS-093 → ISS-104` **unconfirmed**: ISS-104 is about a cycle-2 naming-cue rule failing to close
   C2b, not the 20-case fabrication corpus described here.
+
+---
+
+## Correction of the mapping table — ISS-132, 2026-09-09, by the maker
+
+The sweep was right that the table is wrong, and **both of its proposed corrections were also
+wrong.** Two independent hand-readings of the same ledger disagreed with each other *and* with the
+ledger. So this correction is not a third reading: it is **derived**, by
+`scripts/lib/id-divergence.mjs`, and pinned by a test that fails if it ever stops reproducing.
+
+**Method, so it is reproducible rather than trusted.** For every `checker:` commit matching
+`speaker`, take the ids that commit allocated (present at the commit, absent at its parent) and ask
+which id carries that finding today across the ledger **union** (`qa/issues.jsonl` + every
+`qa/issues.*.jsonl`). Titles are compared with the `[RENUMBERED …]` provenance suffix stripped,
+because that suffix is precisely what a renumbering appends.
+
+```
+$ node -e "import('./scripts/lib/id-divergence.mjs').then(async m =>
+    console.log(m.deriveDivergence('.', m.checkerCommits('.', 'speaker'))))"
+```
+
+### The mapping, complete
+
+| Filed in `lane/a-speakers` | Carried on master by | State |
+|---|---|---|
+| ISS-091 | **ISS-102** | displaced |
+| ISS-092 | **ISS-103** | displaced |
+| ISS-093 | **ISS-104** | displaced |
+| ISS-094 | **ISS-105** | displaced |
+| ISS-095 | **ISS-106** | displaced |
+| ISS-096 | **ISS-107** | displaced |
+| ISS-097 | **ISS-108** | displaced |
+| ISS-098 | **ISS-109** | displaced |
+| ISS-099 | **ISS-110** | displaced |
+| ISS-100 | **ISS-101 *and* ISS-111** | **duplicated** |
+| ISS-102 | **ISS-114** | displaced |
+| ISS-103 | **ISS-115** | displaced |
+
+### What the two earlier readings each got wrong
+
+- **The original table listed four rows. There are twelve.** ISS-091/092/094/096/099 and the second
+  collision pair ISS-102/103 were never in it. Eight of the twelve displacements were unrecorded,
+  so a reader following any of those ids had nothing at all to follow.
+- **`ISS-093 → ISS-104` is CORRECT**, not "unevidenced" as the sweep judged it. The row commit
+  `2a44b7e` filed as ISS-093 is the same finding master carries as ISS-104 — *"The cycle-2 naming-cue
+  rule does not close C2b … 20/20 checker attacks resolved"*. The sweep compared the table's
+  paraphrase ("the 20-case fabrication corpus") against ISS-104's title and found them unalike; they
+  are the same finding described two ways.
+- **`ISS-097 → ISS-108` is CORRECT, and the sweep's correction inverted it.** The sweep called
+  ISS-108 "the gazetteer-reachability residue, an unrelated finding" and proposed `ISS-097 → ISS-111`
+  alone. ISS-108 *is* lane-A's ISS-097 — both are *"'English speaking students may apply.' ships
+  person:english"*. Had this been transcribed, the record would have been made worse: the one row
+  the table got right would have been replaced by a wrong one.
+- **The `+ ISS-111` in the original was the real error in that row**, and the sweep found the right
+  symptom for the wrong reason. ISS-111 belongs to ISS-100, not ISS-097.
+- **ISS-101 and ISS-111 are one finding under two ids** — not "byte-identical" as the sweep wrote
+  (ISS-101 carries a `[RENUMBERED …]` suffix ISS-111 lacks), but identical once that suffix is
+  stripped, which is what makes them a duplicate rather than two rows. `ISS-111` is now flagged
+  `duplicate_of: ISS-101` in the ledger. **Neither is renumbered** — D-019 forbids it, and the
+  permanence is the point.
+
+### The lesson, which is not about four characters
+
+The table was wrong because it was **hand-maintained**: its only evidence was that someone had read
+carefully, and the sweep proved that a second careful reader gets a different answer. D-015 makes a
+fix measurable only if the id it cites resolves to the right row, so a rotting map silently weakens
+every measurement built on it — while still looking authoritative. The derivation and its test are
+the actual remedy; this table is just its output.
