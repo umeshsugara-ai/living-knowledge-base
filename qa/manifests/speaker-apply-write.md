@@ -8,7 +8,7 @@ items to.
 **Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** none directly. Carries the deferred items listed below.
-**Status:** ready-for-check (cycle 2)
+**Status:** checked-PASS (cycle 2 — `qa/verdicts/speaker-apply-write.md`, commit `7daccda`)
 **Branch:** `lane/a-speakers`
 
 ## Why this unit is different in kind
@@ -179,3 +179,46 @@ is **not** implemented. No collision exists in the corpus today and `--allow-col
 been passed, so adding an unexercised field would be the same mistake as the `replaceOne` path:
 shipping code no test and no run has touched. It belongs with the first real collision. Recorded
 rather than silently skipped.
+
+
+---
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 2** — 12/12 criteria, 6/6 invariants, `ISSUES-WRITTEN: none`. ISS-102 and ISS-103
+both closed, and closed structurally rather than patched.
+
+The checker tested ISS-103's own acceptance in both directions itself, re-derived the two documents
+from the corpus, pushed them through `writeSpeakerDocs` against a target modelled on the real
+`scopedCollection` source, and validated the persisted result against `schema/speakers.schema.json`
+with Python `jsonschema`. Both validate and both carry `tenantId` — the bare-replace trap is
+genuinely closed, not renamed. `pnpm -r test` 490/0 across the workspace.
+
+It also confirmed no key mismatch: `_id` is deterministically `<tenantId>-<personId>` and
+`deleteMany` is tenant-merged, so deleting by `personId` and by `_id` select the same row. Two
+consecutive writes gave before=0→after=2, then before=2→after=2.
+
+### My reasoning for deferring the `contested` marker was wrong
+
+The checker accepted the decision and rejected the argument, and it is right. I claimed that adding
+a `contested` field would repeat the `replaceOne` mistake — shipping unexercised code. It would not.
+
+**ISS-102 was unexercised because it was structurally *unexercisable*:** a `.mjs` entrypoint,
+outside every typecheck scope, on a branch only a live write could reach. A `contested` flag would
+sit in **typechecked source on a path that already has three passing tests**, and is schema-legal
+today. Deferring it until a real collision exists is fine on product grounds; the analogy is not,
+and it must not become precedent — "unexercised" and "unreachable by any check" are different
+things, and only the second is what made ISS-102 dangerous.
+
+### One more overclaim of mine, recorded
+
+Among the checker's low notes: the new typecheck-test pins `insertOne` **for existence, not for
+shape**, while my manifest implied the shapes were pinned. `countDocuments` and `deleteMany` are
+shape-pinned; `insertOne` is not. Stated plainly here rather than left standing.
+
+Other low notes carried, none blocking: the tenantId test asserts a composition rather than the
+accessor's own behaviour; delete-then-insert is not atomic; and the sync is
+authoritative-by-replacement, so it would discard a richer future document.
+
+**U2.4 stays `pending`.** B3/B10 cannot flip without a live write, and B10 still needs its human
+downgrade to PARTIAL.
