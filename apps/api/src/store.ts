@@ -24,6 +24,8 @@ import { flattenTreeToGraph, treeIndexRootFilter, type Graph } from "@lkb/index"
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
+import { createWatchedSource, listActive as listActiveWatchedSources } from "@lkb/db";
+import type { WatchedSourceDeps } from "./routes/watched-sources.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
 import type { HealthDeps } from "./routes/health.js";
@@ -266,5 +268,21 @@ export function createMongoHealthDeps(): HealthDeps {
           return collections;
         },
       ),
+  };
+}
+
+/**
+ * A13. Delegates to the tenant-scoped accessors T-027 already shipped and checker-PASSed
+ * (`createWatchedSource`, `listActive`) rather than reaching Mongo directly — this file supplies
+ * the wiring the feature was missing, not a second implementation of it.
+ */
+export function createMongoWatchedSourceDeps(): WatchedSourceDeps {
+  return {
+    async create(tenantId, doc) {
+      await createWatchedSource(tenantId, doc);
+    },
+    async listActive(tenantId) {
+      return listActiveWatchedSources(tenantId);
+    },
   };
 }

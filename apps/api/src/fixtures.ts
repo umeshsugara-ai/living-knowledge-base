@@ -4,12 +4,13 @@
  * them so every test file builds `ServerDeps` the same honest way.
  */
 import type { CompleteResult } from "@lkb/ai";
-import type { EvalRuns, TreeIndexNode } from "@lkb/core";
+import type { EvalRuns, TreeIndexNode, WatchedSources } from "@lkb/core";
 import type { AskV2Deps } from "@lkb/ask";
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import { randomUUID } from "node:crypto";
+import type { WatchedSourceDeps } from "./routes/watched-sources.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationsDeps } from "./routes/citations.js";
 import type { HealthDeps, HealthReport } from "./routes/health.js";
@@ -113,6 +114,24 @@ export function fakeBrainReadDeps(overrides: Partial<BrainReadDeps> = {}): Brain
 /** An in-memory `CitationsDeps` — tests never touch Mongo. Shares `claim-1`/`t1`/`session-1`
  * with `fakeBrainReadDeps`' fixture so a test can cross-check the same ids resolve consistently
  * from both routes. */
+/**
+ * In-memory watched sources, partitioned BY TENANT — not one shared array. A fake that ignores
+ * tenantId cannot fail the isolation test, and isolation is the property most worth testing on a
+ * route that stores outbound fetch targets.
+ */
+export function fakeWatchedSourceDeps(overrides: Partial<WatchedSourceDeps> = {}): WatchedSourceDeps {
+  const byTenant = new Map<string, WatchedSources[]>();
+  return {
+    create: async (tenantId, doc) => {
+      const list = byTenant.get(tenantId) ?? [];
+      list.push({ ...doc, tenantId } as WatchedSources);
+      byTenant.set(tenantId, list);
+    },
+    listActive: async (tenantId) => (byTenant.get(tenantId) ?? []).filter((s) => s.active),
+    ...overrides,
+  };
+}
+
 export function fakeCitationsDeps(overrides: Partial<CitationsDeps> = {}): CitationsDeps {
   const fixtureCitation: Citation = {
     claim: { _id: "claim-1", tenantId: "tenant-1", text: "A fixture claim.", status: "verified", evidence: [{ turnId: "t1", sessionId: "session-1" }] },
@@ -280,6 +299,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     whatsapp: fakeWhatsAppDeps(),
     keys: fakeKeysDeps(),
     ingest: fakeIngestDeps(),
+    watchedSources: fakeWatchedSourceDeps(),
     ...overrides,
   };
 }

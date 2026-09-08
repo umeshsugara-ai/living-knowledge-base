@@ -549,7 +549,7 @@
     {
       "id": "U2.4",
       "title": "Speaker resolution (TOC turns are literally spk:0)",
-      "status": "pending",
+      "status": "in_progress",
       "base_criticality": "MEDIUM",
       "deps": [
         "U2.2"
