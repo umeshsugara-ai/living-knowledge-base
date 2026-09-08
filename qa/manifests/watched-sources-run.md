@@ -7,7 +7,7 @@ Checker: please author `qa/contracts/watched-sources-run.md` for the composition
 **Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** none new. **Closes the orphan:** the guarded fetcher had no caller.
-**Status:** ready-for-check (cycle 3)
+**Status:** checked-PASS (cycle 3)
 **Branch:** `lane/c-unrun-writers`
 
 ## Why — and a course correction
@@ -204,10 +204,21 @@ unreported truncation reads exactly like a complete run.
 ## Evidence
 
 ```
-$ pnpm --filter '@lkb/ingest' test   tests 98   pass 98   fail 0   cancelled 0
+$ pnpm --filter '@lkb/ingest' test   tests 97   pass 97   fail 0   cancelled 0
 $ pnpm --filter '@lkb/api'    test   tests 138  pass 138  fail 0   cancelled 0
 $ pnpm -r typecheck                  exit 0
+$ pnpm lint:structure                see ISS-021 below
 ```
+
+**Correction (ISS-C-UNRUN-WRITERS-022, filed by the cycle-3 checker):** the ingest count above
+first read **98**; **97** is what reproduces at `534af4e`. ISS-136 class — a number quoted from a
+run I did not re-derive at the submitted commit.
+
+**Correction (ISS-C-UNRUN-WRITERS-021):** cycle 3 as submitted turned `lint:structure` RED —
+`apps/api/src` hit 31 files against a budget of 30, crossed by the ISS-017 fix's own new test
+file, and my Evidence block was the first of the three cycles to omit that gate. The three
+composition tests now live in `apps/api/src/routes/watched-sources.test.ts`; the directory is
+back to 30.
 
 **Mutation table**, pure-Python harness under D-020 (`timeout=900`, restore in a `finally`, each
 restore asserted SHA256-identical to the pre-mutation file):
@@ -237,3 +248,34 @@ restore asserted SHA256-identical to the pre-mutation file):
 
 Gap 1 is the one that matters for the goal, and it is deliberately out of scope for this unit —
 please judge whether A13's flip belongs in a separate live unit or should have blocked this PASS.
+
+
+---
+
+# Close-out — PASS at cycle 3
+
+Checker verdict `qa/verdicts/watched-sources-run.md` (`Cycle checked: 3`, commit `e274eee`):
+**PASS, 11/11 criteria, 5/5 invariants.** It re-derived the mutation table with its own harness and
+added two mutants I had not run — removing the brand's `defineProperty` (137/1) and forcing
+`remaining = 0` (95/2) — both dead, so the new tests are load-bearing beyond the four they were
+written for. ISS-017/018/019/020 are closed.
+
+**Three corrections it made against me, all recorded rather than argued:**
+
+1. **Cycle 2 was a FAIL (9/11), not a PASS with mediums carried forward.** My dispatch said
+   otherwise. The four mediums are identical either way, but a summary that upgrades a FAIL is how
+   a unit's history starts being read from prose instead of from the verdict file.
+2. **ISS-021 (high) — the ISS-017 fix broke `lint:structure`.** Fixed above; `lint-dirsize` is
+   back to OK across 75 directories.
+3. **ISS-022 (low) — 98 ingest tests claimed, 97 reproduce.** Corrected above.
+
+**On the question I asked it to rule on:** A13's flip must NOT have blocked this PASS — both
+contracts already forbid the only act that could have flipped it (a placeholder row is a falsified
+measurement), so refusing to write one is compliance. A13 stays MISSING until a real live run.
+
+**One residual it credited but recorded:** invariant I5's second clause — two concurrent runs must
+not double-fetch — has no per-tenant in-flight lock. It belongs to whichever unit adds the
+scheduler.
+
+**Next unit recommended by the checker:** a Mode C live validation of A13, not another round on
+this seam.

@@ -12,7 +12,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { isGuardedFetcher } from "@lkb/ingest";
+
 import { startTestServer } from "../testUtils.js";
+import { createWatchedRunDeps } from "../store.js";
 import { buildTestDeps, fakeKeyStore, fakeWatchedSourceDeps } from "../fixtures.js";
 
 const key = (scopes: string[]) => fakeKeyStore({ "ws-key": { tenantId: "tenant-1", scopes } });
@@ -219,4 +222,32 @@ test("POST /watched-sources/run runs the AUTHED tenant's sources, not another's"
     await server.close();
   }
   assert.deepEqual(ranFor, ["tenant-1"]);
+});
+
+/**
+ * ISS-C-UNRUN-WRITERS-017 / -021. These three assert on the PRODUCTION composition, not the route.
+ * They live here rather than in their own file because `apps/api/src` is at its 30-file dirsize
+ * budget and a new file there turned `lint:structure` red for the whole lane -- the fix for one
+ * finding must not be the cause of the next.
+ *
+ * Watched Sources fetches user-supplied URLs unattended on a timer, so the guarded fetcher is the
+ * feature's SSRF boundary. While it was composed inline inside `run`, swapping it for a bare fetch
+ * left the entire suite green: no test could reach the composition.
+ */
+test("the production watched-run deps use a BRANDED guarded fetcher, not a bare one", () => {
+  assert.equal(isGuardedFetcher(createWatchedRunDeps().fetcher), true);
+});
+
+test("isGuardedFetcher rejects a plain function -- the brand is not incidental", () => {
+  assert.equal(isGuardedFetcher(async (_url: string) => ""), false);
+  assert.equal(isGuardedFetcher(globalThis.fetch), false);
+});
+
+test("the deps supply a real sha256 hasher and an ISO clock", () => {
+  const deps = createWatchedRunDeps();
+  assert.equal(
+    deps.hasher("abc"),
+    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+  );
+  assert.match(deps.now(), /^\d{4}-\d{2}-\d{2}T/);
 });
