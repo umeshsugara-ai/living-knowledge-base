@@ -58,4 +58,32 @@ in this repo's protocol that may only be written after explicit human confirmati
 you actually approved D-013 and the `.claude/CLAUDE.md` backlog-priority override. If you did not,
 it needs a superseding entry — not a silent edit, since `docs/DECISIONS.md` is append-only.
 
-**Answered:** _(pending)_
+**Answered: 2026-09-08 — Option 4 (keep both loops), coordinating through commits — Umesh, in
+session ("dono code push by commits kregne").**
+
+Recorded late, and that lateness is itself the finding: the answer was given in chat hours ago and
+this file was not updated, which is precisely the D-006 pattern this gate mechanism exists to stop
+(a gate answered in conversation but not on disk keeps being re-raised). Written down now.
+
+**What the ruling means in practice**, as implemented since:
+
+- Both sessions run. Neither stands down.
+- **Commits are the coordination channel.** A dirty file belongs to whoever is mid-unit on it; you
+  do not edit, mutate, or commit another session's dirty file. Commit at the end of every unit with
+  a narrow pathspec, never `git add -A`.
+- **The mutation hazard is now closed by construction, not by care.** `scripts/lib/mutate.mjs`
+  refuses to arm any file that is not byte-identical to HEAD, so a file the other session is
+  mid-edit on reads `modified` and cannot be mutated or `git checkout`-ed away. That is the same
+  precondition that makes restore authoritative — one check, both guarantees. Shipped and
+  checker-PASSed as `loop-safety-mutation-guard`; `.claude/hooks/mc-precommit.ps1` denies a commit
+  while a mutation is armed.
+- Option 2 (split by path) is effectively in force as a convention — this session works
+  `qa/`, `scripts/`, `.claude/`, `.goal/`; the other works `apps/web` — but it is **not** the
+  safety mechanism. The `apply` precondition is.
+
+**Evidence the ruling works:** the other session landed D-013, the golden-set gate answer, and the
+U3.1 Ask page cleanly while this session shipped the mutation guard and the tracker reconciliation.
+Zero collisions after the guard landed. The one collision that did occur (a mutation left on
+production source) predates it and is what motivated it.
+
+**This gate is CLOSED.**
