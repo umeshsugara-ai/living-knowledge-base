@@ -1,232 +1,377 @@
 [
   {
     "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq01",
-    "question": "New Zealand: 76% of 2025 visa applications approved, government target is 27,000 Indian students by 2030.",
+    "question": "Do I need to get a loan against property, or are personal loans without collateral okay for the visa process?",
     "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
   },
   {
     "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq02",
-    "question": "New Zealand funds test accepts only 4 sponsor types: secured loans from 14 nationalized banks, 3-month bank statements, 6-month-old fixed deposits, or Provident Fund withdrawals — NBFC and unsecured loans are outright rejected.",
+    "question": "Is there a clear path from a student visa to getting permanent residency and eventually citizenship?",
+    "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+  },
+  {
+    "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq03",
+    "question": "Do I have to pay the full tuition fee before I even know if my student visa is approved?",
+    "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
+  },
+  {
+    "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq04",
+    "question": "Can I show funds from my uncle or aunt to support my student visa application?",
     "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz"
   },
   {
     "id": "2026-05-08-funding-dreams-loans-forex-gq01",
-    "question": "RBI-authorized Category II forex dealers like FRR Forex charge ~1% markup versus 2-2.5% at banks/Flywire -- a real cost saving on large remittances.",
-    "expectedSessionId": "2026-05-08-funding-dreams-loans-forex"
-  },
-  {
-    "id": "2026-05-08-funding-dreams-loans-forex-gq02",
-    "question": "FEMA rules: only mother, father, sibling, or spouse can remit funds abroad for a student's education (not grandparents, aunts, or uncles).",
+    "question": "Is it better to just use my family's regular bank to transfer tuition fees, or are there other options I should look into?",
     "expectedSessionId": "2026-05-08-funding-dreams-loans-forex"
   },
   {
     "id": "2026-05-20-telling-your-brand-story-better-gq01",
-    "question": "E.D.U.C.A.T.E. framework: Examine, Decode, Unearth, Connect, Articulate, Trigger, Express.",
+    "question": "What's the key to getting your message across when everyone is so distracted and busy?",
     "expectedSessionId": "2026-05-20-telling-your-brand-story-better"
   },
   {
     "id": "2026-05-20-telling-your-brand-story-better-gq02",
-    "question": "7 emotional doors a story can open: Joy, Surprise, Fear/Anxiety, Pride, Belonging, Nostalgia, Hope.",
+    "question": "What are the most common mistakes organizations make when they try to communicate what makes them special?",
     "expectedSessionId": "2026-05-20-telling-your-brand-story-better"
   },
   {
     "id": "2026-05-22-uniaccess-xavier-university-gq01",
-    "question": "11:1 student-to-faculty ratio, average class size ~23 students.",
+    "question": "How do you make sure that students, especially in their first year, don't just feel like a number in a huge lecture hall?",
     "expectedSessionId": "2026-05-22-uniaccess-xavier-university"
   },
   {
     "id": "2026-05-22-uniaccess-xavier-university-gq02",
-    "question": "$2.8 million NIH research grant -- Xavier was one of only six institutions in that inaugural cohort.",
+    "question": "What specific programs or systems do you have in place to help new students adjust to campus life and avoid feeling overwhelmed or isolated?",
+    "expectedSessionId": "2026-05-22-uniaccess-xavier-university"
+  },
+  {
+    "id": "2026-05-22-uniaccess-xavier-university-gq03",
+    "question": "Beyond what happens in the classroom, how does the university's location connect students with practical opportunities like internships or jobs?",
+    "expectedSessionId": "2026-05-22-uniaccess-xavier-university"
+  },
+  {
+    "id": "2026-05-22-uniaccess-xavier-university-gq04",
+    "question": "When my child applies, are they automatically considered for scholarships, or is that a separate application we need to worry about?",
     "expectedSessionId": "2026-05-22-uniaccess-xavier-university"
   },
   {
     "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
-    "question": "ISDI (design school) runs in collaboration with Parsons School of Design.",
+    "question": "What kind of support is available for students looking for internships?",
     "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech"
   },
   {
     "id": "2026-05-23-uniaccess-atlas-skilltech-gq02",
-    "question": "ISME (management school) is part of the Babson group, roughly 30 schools worldwide.",
+    "question": "Is the university located right in the city or is it more of a secluded campus?",
+    "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech"
+  },
+  {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq03",
+    "question": "Does the teaching style follow an international model or is it more traditional for the region?",
     "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech"
   },
   {
     "id": "2026-05-28-in-focus-1-gq01",
-    "question": "Innovique claims a 48-hour turnaround to match a student with an MSME-hosted project.",
+    "question": "What if my child doesn't have any experience? Is there a selection process for the internships you mentioned?",
     "expectedSessionId": "2026-05-28-in-focus-1"
   },
   {
     "id": "2026-05-28-in-focus-1-gq02",
-    "question": "Innovique secures government-registered copyright certificates for student inventions/projects.",
+    "question": "My daughter is artistic but doesn't have a specific style yet. Do you have programs that help students explore different creative fields before committing to one for their portfolio?",
+    "expectedSessionId": "2026-05-28-in-focus-1"
+  },
+  {
+    "id": "2026-05-28-in-focus-1-gq03",
+    "question": "My family lives in a smaller town, not a major city. Are there options for students to participate remotely or is everything on-site?",
+    "expectedSessionId": "2026-05-28-in-focus-1"
+  },
+  {
+    "id": "2026-05-28-in-focus-1-gq04",
+    "question": "Beyond just doing a project, how do you help students frame that experience in their actual college applications?",
     "expectedSessionId": "2026-05-28-in-focus-1"
   },
   {
     "id": "2026-05-29-decoding-ever-expanding-cast-gq01",
-    "question": "Facilitators mapped roughly 24 distinct professional roles across the education-services ecosystem.",
+    "question": "About how many different types of professionals are involved in helping a student get to college?",
     "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast"
   },
   {
     "id": "2026-05-29-decoding-ever-expanding-cast-gq02",
-    "question": "75% of participants identified university-outreach-yield-goals vs. family-cost-reality as the sharpest tension in the sector.",
+    "question": "When we talk about all the people who help with college applications, are parents considered part of that external support team?",
+    "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast"
+  },
+  {
+    "id": "2026-05-29-decoding-ever-expanding-cast-gq03",
+    "question": "How is getting career guidance different now compared to in the past?",
+    "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast"
+  },
+  {
+    "id": "2026-05-29-decoding-ever-expanding-cast-gq04",
+    "question": "What should I consider when trying to understand the different kinds of support available for students?",
     "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast"
   },
   {
     "id": "2026-06-03-dual-enrollment-pathway-gq01",
-    "question": "~80% of US high school students now have access to some form of dual enrollment.",
+    "question": "How can I show universities that I'm ready for their challenging courses, besides just getting good grades?",
     "expectedSessionId": "2026-06-03-dual-enrollment-pathway"
   },
   {
     "id": "2026-06-03-dual-enrollment-pathway-gq02",
-    "question": "Universities typically cap transferable dual-enrollment credit at around 30 credits (roughly one academic year).",
+    "question": "Is it better to take college-level classes or just stick with the advanced courses my school offers?",
+    "expectedSessionId": "2026-06-03-dual-enrollment-pathway"
+  },
+  {
+    "id": "2026-06-03-dual-enrollment-pathway-gq03",
+    "question": "I've realized late that I'm missing a key subject for the major I want to apply for. Is there anything I can do about it now?",
+    "expectedSessionId": "2026-06-03-dual-enrollment-pathway"
+  },
+  {
+    "id": "2026-06-03-dual-enrollment-pathway-gq04",
+    "question": "Can taking extra courses in high school actually help me finish my degree faster and save money?",
     "expectedSessionId": "2026-06-03-dual-enrollment-pathway"
   },
   {
     "id": "2026-06-19-entrance-exams-pathways-india-part1-gq01",
-    "question": "JEE: roughly 12 lakh candidates compete for only about 40,000 government-funded engineering seats (NIT/IIT/IIIT/GFTI combined).",
+    "question": "Is it better to pick a top-ranked college even if it's for a less popular course, or should I prioritize the course I want at a lower-ranked institution?",
     "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1"
   },
   {
     "id": "2026-06-19-entrance-exams-pathways-india-part1-gq02",
-    "question": "NEET: government MBBS seats (~58-60,000) create a 1:40 competition ratio against qualified candidates.",
+    "question": "How does the main entrance exam differ from the advanced-level one in terms of what it's trying to test?",
+    "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+  },
+  {
+    "id": "2026-06-19-entrance-exams-pathways-india-part1-gq03",
+    "question": "Once the test results are released, what is the procedure for how students are matched with specific colleges and courses?",
+    "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1"
+  },
+  {
+    "id": "2026-06-19-entrance-exams-pathways-india-part1-gq04",
+    "question": "What are my options if I don't get into one of the top government universities?",
     "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1"
   },
   {
     "id": "2026-06-25-in-focus-2-gq01",
-    "question": "Futurowise runs 2-4 week courses led by university professors/industry experts, ending in a published project + certificate.",
+    "question": "What are the expectations for student participation during the online workshops?",
     "expectedSessionId": "2026-06-25-in-focus-2"
   },
   {
     "id": "2026-06-25-in-focus-2-gq02",
-    "question": "The Student Scoop's 5-stage model: Diagnose -> Map -> Teach -> Practice -> Report.",
+    "question": "Is it possible to try a sample session before committing to a full program?",
+    "expectedSessionId": "2026-06-25-in-focus-2"
+  },
+  {
+    "id": "2026-06-25-in-focus-2-gq03",
+    "question": "How can I get my work seen by a wider audience after completing a project?",
+    "expectedSessionId": "2026-06-25-in-focus-2"
+  },
+  {
+    "id": "2026-06-25-in-focus-2-gq04",
+    "question": "Do you offer any support for humanities subjects like foreign languages or design?",
     "expectedSessionId": "2026-06-25-in-focus-2"
   },
   {
     "id": "2026-06-30-exploring-identity-success-counseling-gq01",
-    "question": "Career Construction Inventory 4Cs: Control, Concern, Curiosity, Confidence.",
+    "question": "How does a counselor's own life experience shape the advice they give to students?",
     "expectedSessionId": "2026-06-30-exploring-identity-success-counseling"
   },
   {
     "id": "2026-06-30-exploring-identity-success-counseling-gq02",
-    "question": "Andrew Hallam's 'four-legged table' frames success as financial stability + physical/emotional health + purpose + relationships.",
+    "question": "Besides just getting university offers, what do counselors see as a successful result for a student?",
+    "expectedSessionId": "2026-06-30-exploring-identity-success-counseling"
+  },
+  {
+    "id": "2026-06-30-exploring-identity-success-counseling-gq03",
+    "question": "Are there standardized rules for how counselors have to do their job, or do they have a lot of freedom in their approach?",
+    "expectedSessionId": "2026-06-30-exploring-identity-success-counseling"
+  },
+  {
+    "id": "2026-06-30-exploring-identity-success-counseling-gq04",
+    "question": "How can a professional in this field figure out which area they should specialize in?",
     "expectedSessionId": "2026-06-30-exploring-identity-success-counseling"
   },
   {
     "id": "2026-07-03-inside-the-uc-session-gq01",
-    "question": "UC system: 10 campuses total, only 9 offer undergraduate programs; over 300,000 students system-wide.",
+    "question": "Is there a single application deadline or do they review applications as they come in?",
     "expectedSessionId": "2026-07-03-inside-the-uc-session"
   },
   {
     "id": "2026-07-03-inside-the-uc-session-gq02",
-    "question": "UC is test-blind/test-free: ACT/SAT scores are not reviewed for admission or scholarships.",
+    "question": "Do I have to write a long personal essay, or is the format different for this application?",
     "expectedSessionId": "2026-07-03-inside-the-uc-session"
   },
   {
     "id": "2026-07-08-beyond-black-robes-law-careers-gq01",
-    "question": "Practicing law in India after a foreign UG law degree requires a mandatory 2-year Bar Council of India bridge course.",
+    "question": "How is a career in this field different now compared to what my parents' generation experienced?",
     "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers"
   },
   {
     "id": "2026-07-08-beyond-black-robes-law-careers-gq02",
-    "question": "Shardul Amarchand Mangaldas adopted Harvey AI for legal work; Claude for Legal (Anthropic) is also used by firms for case summaries/first drafts.",
+    "question": "What's the first year actually like for a recent graduate, and how much does your experience during your studies affect where you end up?",
     "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers"
   },
   {
     "id": "2026-07-15-creative-futures-gq01",
-    "question": "SCAD's own stat: 85% of career success comes from soft skills, 15% from technical skill.",
+    "question": "How are you preparing students for the job market when new technologies are starting to automate entry-level creative work?",
     "expectedSessionId": "2026-07-15-creative-futures"
   },
   {
     "id": "2026-07-15-creative-futures-gq02",
-    "question": "63% of SCAD degree programs are STEM-designated, giving international grads 3 years of OPT.",
+    "question": "What if my student isn't sure exactly what they want to major in? Can they explore different options before committing?",
+    "expectedSessionId": "2026-07-15-creative-futures"
+  },
+  {
+    "id": "2026-07-15-creative-futures-gq03",
+    "question": "How do students get practical, real-world experience working on professional projects before they graduate?",
     "expectedSessionId": "2026-07-15-creative-futures"
   },
   {
     "id": "2026-07-22-uniaccess-cept-university-gq01",
-    "question": "CEPT was founded in 1962 by Pritzker Prize-winning architect B.V. Doshi.",
+    "question": "What's the relative importance of high school grades compared to standardized test scores when you calculate a final merit score for admission?",
     "expectedSessionId": "2026-07-22-uniaccess-cept-university"
   },
   {
     "id": "2026-07-22-uniaccess-cept-university-gq02",
-    "question": "70% of CEPT's academic credit is studio-based, not lecture-based.",
+    "question": "How much flexibility is there in the curriculum for students to choose their own courses versus following a set path?",
+    "expectedSessionId": "2026-07-22-uniaccess-cept-university"
+  },
+  {
+    "id": "2026-07-22-uniaccess-cept-university-gq03",
+    "question": "Do I need to submit a portfolio with my application for the design programs?",
+    "expectedSessionId": "2026-07-22-uniaccess-cept-university"
+  },
+  {
+    "id": "2026-07-22-uniaccess-cept-university-gq04",
+    "question": "Realistically, what kind of daily time commitment should students expect to spend on campus for classes and project work?",
     "expectedSessionId": "2026-07-22-uniaccess-cept-university"
   },
   {
     "id": "2026-07-28-metrics-and-mingling-gq01",
-    "question": "~80% of the room self-identified as introverts in conference/networking settings.",
+    "question": "What's the best way to approach professionals at a career fair without it feeling forced or like I'm just trying to sell myself?",
     "expectedSessionId": "2026-07-28-metrics-and-mingling"
   },
   {
     "id": "2026-07-28-metrics-and-mingling-gq02",
-    "question": "'Plate Space' rule: proactively invite solo attendees to join your table or group.",
+    "question": "I'm going to a new school where everyone already seems to know each other. I feel like such an outsider, what can I do?",
+    "expectedSessionId": "2026-07-28-metrics-and-mingling"
+  },
+  {
+    "id": "2026-07-28-metrics-and-mingling-gq03",
+    "question": "How can I politely end a conversation with someone who just won't stop talking, especially if they're more senior than me?",
     "expectedSessionId": "2026-07-28-metrics-and-mingling"
   },
   {
     "id": "2026-07-30-in-focus-3-gq01",
-    "question": "StarterSky pricing: INR 75,000 (group track) or INR 90,000 (individual track), plus tax.",
+    "question": "My child is interested in starting a project but doesn't have a specific idea yet. Is there a program that could still work for them?",
     "expectedSessionId": "2026-07-30-in-focus-3"
   },
   {
     "id": "2026-07-30-in-focus-3-gq02",
-    "question": "Estero's cited New Zealand visa approval rate: ~92% average over the last 15 years.",
+    "question": "What kind of support is available for students who don't have strong technical or coding skills to build their ideas out?",
+    "expectedSessionId": "2026-07-30-in-focus-3"
+  },
+  {
+    "id": "2026-07-30-in-focus-3-gq03",
+    "question": "How does the education system over there prepare students for the workforce compared to other English-speaking destinations?",
+    "expectedSessionId": "2026-07-30-in-focus-3"
+  },
+  {
+    "id": "2026-07-30-in-focus-3-gq04",
+    "question": "Is it a viable long-term strategy to study in New Zealand if someone eventually wants to live and work in Australia?",
     "expectedSessionId": "2026-07-30-in-focus-3"
   },
   {
     "id": "2026-08-03-uk-beyond-offer-letters-gq01",
-    "question": "Outbound Indian students grew from 131,000 (2005) to over 1.3 million (2025) without proportional growth in UK university capacity.",
+    "question": "Is it true that UK universities don't want as many international students anymore?",
     "expectedSessionId": "2026-08-03-uk-beyond-offer-letters"
   },
   {
     "id": "2026-08-03-uk-beyond-offer-letters-gq02",
-    "question": "Universities are adopting the Enroly CAS Shield platform for pre-CAS financial and credibility checks as compliance tightens.",
+    "question": "Once I get my offer letter, is the hard part of the process over?",
+    "expectedSessionId": "2026-08-03-uk-beyond-offer-letters"
+  },
+  {
+    "id": "2026-08-03-uk-beyond-offer-letters-gq03",
+    "question": "Are universities getting stricter about checking your finances before you can even apply for a visa?",
+    "expectedSessionId": "2026-08-03-uk-beyond-offer-letters"
+  },
+  {
+    "id": "2026-08-03-uk-beyond-offer-letters-gq04",
+    "question": "How can I be sure I'll find a good job after graduating?",
     "expectedSessionId": "2026-08-03-uk-beyond-offer-letters"
   },
   {
     "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq01",
-    "question": "Same underlying session as 2026-08-03-uk-beyond-offer-letters, but this file's captured transcript is shorter (49 turns vs 154).",
+    "question": "I've heard it's getting more competitive to study in the UK. Is that true and why is it happening?",
     "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
   },
   {
     "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq02",
-    "question": "Repeats the 131,000 (2005) to 1.3 million (2025) outbound-student growth figure.",
+    "question": "What can my child do during their studies to increase their chances of finding a job after they graduate?",
+    "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
+  },
+  {
+    "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq03",
+    "question": "Once I get an offer letter, what are the next steps and what are some common problems I might face before I can get my visa?",
+    "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
+  },
+  {
+    "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq04",
+    "question": "How can I best prepare for the financial checks and visa interview to show that I'm a genuine student?",
     "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload"
   },
   {
     "id": "2026-08-10-ucas-what-changed-what-matters-gq01",
-    "question": "UCAS personal statement: 3 structured prompts, minimum 350 characters each, total cap remains 4,000 characters.",
+    "question": "Should I include a link to my online portfolio in my main application essay?",
     "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters"
   },
   {
     "id": "2026-08-10-ucas-what-changed-what-matters-gq02",
-    "question": "UCAS LOR is now split into 3 sections: School Context, Extenuating Circumstances, and Academic Suitability.",
+    "question": "If my subject teacher provides input for my counselor's recommendation letter, should it sound like two different people wrote it?",
     "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters"
   },
   {
     "id": "2026-08-12-uniaccess-ashoka-university-gq01",
-    "question": "Admissions: Ashoka Aptitude Assessment or Ashoka Mathematics Challenge, plus a mandatory 30-minute on-spot essay -- no application fee at any stage.",
+    "question": "What are you looking for in a student besides their test scores and grades?",
     "expectedSessionId": "2026-08-12-uniaccess-ashoka-university"
   },
   {
     "id": "2026-08-12-uniaccess-ashoka-university-gq02",
-    "question": "~43-44% of the current student body is on financial aid; the institutional goal is 50%.",
+    "question": "How much flexibility is there to explore different subjects before committing to a major?",
+    "expectedSessionId": "2026-08-12-uniaccess-ashoka-university"
+  },
+  {
+    "id": "2026-08-12-uniaccess-ashoka-university-gq03",
+    "question": "What's the best way to approach the personal essays for the application?",
     "expectedSessionId": "2026-08-12-uniaccess-ashoka-university"
   },
   {
     "id": "2026-08-24-uniaccess-leeds-arts-university-gq01",
-    "question": "Two campuses: Vernon Street (foundation, dating to 1903) and Blenheim Walk (undergrad/postgrad, built in the 1980s).",
+    "question": "Are there any art programs where I don't need to submit a portfolio to apply?",
     "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university"
   },
   {
     "id": "2026-08-24-uniaccess-leeds-arts-university-gq02",
-    "question": "Entry requirements for Indian students: ~55% for Foundation/Postgraduate, ~65% for Undergraduate.",
+    "question": "What is the city like for an arts student, beyond just what's on campus?",
+    "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university"
+  },
+  {
+    "id": "2026-08-24-uniaccess-leeds-arts-university-gq03",
+    "question": "Are creative jobs safe from being replaced by AI?",
+    "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university"
+  },
+  {
+    "id": "2026-08-24-uniaccess-leeds-arts-university-gq04",
+    "question": "I'm interested in industrial or product design. What kinds of programs do you have in those areas?",
     "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university"
   },
   {
     "id": "2026-08-27-in-focus-4-gq01",
-    "question": "Education & You starts every student with a diagnostic test before building a customized prep schedule.",
+    "question": "Is your program a standard curriculum for everyone, or is it tailored to each student's specific needs and weaknesses?",
     "expectedSessionId": "2026-08-27-in-focus-4"
   },
   {
     "id": "2026-08-27-in-focus-4-gq02",
-    "question": "Education & You's flashcard set ('mithai ka dabba') contains 1,500+ physical vocabulary cards.",
+    "question": "Beyond just getting into a good school, how does this help prepare students for the actual difficulty of university-level academic work?",
     "expectedSessionId": "2026-08-27-in-focus-4"
   }
 ]

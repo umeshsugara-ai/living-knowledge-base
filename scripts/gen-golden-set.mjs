@@ -115,9 +115,8 @@ function parseQuestions(text) {
 }
 
 async function main() {
-  const { AnthropicProvider } = await import("../packages/ai/src/providers/anthropic.ts");
-  // Reused, not rewritten: this is the workspace's only real Transport, and it already routes
-  // `kind: "cli"` through a shell-less spawn (deliberately — transcript text reaches argv).
+  const { GeminiProvider } = await import("../packages/ai/src/providers/gemini.ts");
+  // Reused, not rewritten: this is the workspace's only real Transport.
   const { realTransport } = await import("../apps/api/src/ai-transport.ts");
 
   const sessionIds = readdirSync(DATA_DIR, { withFileTypes: true })
@@ -145,18 +144,20 @@ async function main() {
   // a token is only a shortcut if the retriever can see it.
   const unique = globallyUniqueTokens(pageText);
 
-  // OAuth (the `claude` CLI), not an API key: `.env` carries ANTHROPIC_API_KEY as a bare name
-  // with no value, so the api-key path throws at construction. The OAuth adapter D-008 already
-  // provides needs no key, and D-005 routes exactly this shape of work — one-off, bulk, not
-  // user-facing — to Claude Code's flat rate rather than metered spend.
+  // GEMINI 2.5 PRO — chosen by Umesh 2026-09-08 ("go with gemini api key"), and it does satisfy
+  // the gate's "different model" condition literally: the summarize jobKind resolves to Gemini's
+  // DEFAULT_MODEL, `gemini-2.5-flash`, so `session_page.json` was written by Flash and this is Pro.
   //
-  // Vendor matters here beyond convenience: the gate requires a model DIFFERENT from the
-  // summarizer, and the summarize jobKind is Gemini-first in config/ai-routing.yaml. Generating
-  // with any Gemini model would leave the same vendor's phrasing habits on both sides of the
-  // eval, which is the leakage this regeneration exists to reduce.
+  // DISCLOSED WEAKNESS, so no reader mistakes this for full independence: different model, SAME
+  // VENDOR AND FAMILY. Cross-vendor generation (the Anthropic OAuth path this replaced) would
+  // share no training data or phrasing habits with the summarizer; Pro and Flash share both. So
+  // this reduces same-source vocabulary leakage by less than a cross-vendor run would, on top of
+  // the reduction the gate itself already calls partial. The diagnostics below are what decide
+  // whether that mattered — pin rate and overlap are measured, not assumed, and a recall@5 of
+  // 1.000 still means the remedy FAILED and escalates to Option B.
   const provider = DRY_RUN
     ? null
-    : new AnthropicProvider(realTransport, { mode: "oauth", model: "claude-sonnet-4-5-20250929" });
+    : new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY, model: "gemini-2.5-pro" });
 
   const questions = [];
   const rejected = [];

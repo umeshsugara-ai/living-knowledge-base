@@ -1,26 +1,651 @@
 {
-  "generatedAt": "2026-09-08T01:21:45.075Z",
+  "generatedAt": "2026-09-08T08:19:02.689Z",
   "k": 5,
   "retriever": "heuristic",
-  "recallAtK": 1,
-  "total": 46,
-  "hits": 46,
-  "misses": [],
+  "recallAtK": 0.30666666666666664,
+  "total": 75,
+  "hits": 23,
+  "misses": [
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq01",
+      "question": "Is it better to just use my family's regular bank to transfer tuition fees, or are there other options I should look into?",
+      "expectedSessionId": "2026-05-08-funding-dreams-loans-forex",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-05-20-telling-your-brand-story-better"
+      ]
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq01",
+      "question": "How do you make sure that students, especially in their first year, don't just feel like a number in a huge lecture hall?",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-08-27-in-focus-4",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq02",
+      "question": "What specific programs or systems do you have in place to help new students adjust to campus life and avoid feeling overwhelmed or isolated?",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-07-03-inside-the-uc-session",
+        "2026-07-30-in-focus-3",
+        "2026-08-03-uk-beyond-offer-letters-reupload"
+      ]
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq03",
+      "question": "Beyond what happens in the classroom, how does the university's location connect students with practical opportunities like internships or jobs?",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq04",
+      "question": "When my child applies, are they automatically considered for scholarships, or is that a separate application we need to worry about?",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-07-03-inside-the-uc-session"
+      ]
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "question": "What kind of support is available for students looking for internships?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq03",
+      "question": "Does the teaching style follow an international model or is it more traditional for the region?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-12-uniaccess-ashoka-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better"
+      ]
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq01",
+      "question": "What if my child doesn't have any experience? Is there a selection process for the internships you mentioned?",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-27-in-focus-4"
+      ]
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq02",
+      "question": "My daughter is artistic but doesn't have a specific style yet. Do you have programs that help students explore different creative fields before committing to one for their portfolio?",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-27-in-focus-4",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq03",
+      "question": "My family lives in a smaller town, not a major city. Are there options for students to participate remotely or is everything on-site?",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "got": [
+        "2026-08-27-in-focus-4",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-08-funding-dreams-loans-forex"
+      ]
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq04",
+      "question": "Beyond just doing a project, how do you help students frame that experience in their actual college applications?",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "got": [
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-06-25-in-focus-2",
+        "2026-05-29-decoding-ever-expanding-cast",
+        "2026-07-22-uniaccess-cept-university"
+      ]
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq01",
+      "question": "About how many different types of professionals are involved in helping a student get to college?",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "got": [
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-27-in-focus-4",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-08-funding-dreams-loans-forex"
+      ]
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq03",
+      "question": "How is getting career guidance different now compared to in the past?",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-03-dual-enrollment-pathway"
+      ]
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq04",
+      "question": "What should I consider when trying to understand the different kinds of support available for students?",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-08-24-uniaccess-leeds-arts-university"
+      ]
+    },
+    {
+      "id": "2026-06-03-dual-enrollment-pathway-gq02",
+      "question": "Is it better to take college-level classes or just stick with the advanced courses my school offers?",
+      "expectedSessionId": "2026-06-03-dual-enrollment-pathway",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-23-uniaccess-atlas-skilltech",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
+      "id": "2026-06-03-dual-enrollment-pathway-gq03",
+      "question": "I've realized late that I'm missing a key subject for the major I want to apply for. Is there anything I can do about it now?",
+      "expectedSessionId": "2026-06-03-dual-enrollment-pathway",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq01",
+      "question": "Is it better to pick a top-ranked college even if it's for a less popular course, or should I prioritize the course I want at a lower-ranked institution?",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-10-ucas-what-changed-what-matters"
+      ]
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq02",
+      "question": "How does the main entrance exam differ from the advanced-level one in terms of what it's trying to test?",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "got": [
+        "2026-07-15-creative-futures",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq03",
+      "question": "Once the test results are released, what is the procedure for how students are matched with specific colleges and courses?",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "got": [
+        "2026-07-15-creative-futures",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-27-in-focus-4",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better"
+      ]
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq03",
+      "question": "How can I get my work seen by a wider audience after completing a project?",
+      "expectedSessionId": "2026-06-25-in-focus-2",
+      "got": [
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq04",
+      "question": "Do you offer any support for humanities subjects like foreign languages or design?",
+      "expectedSessionId": "2026-06-25-in-focus-2",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq01",
+      "question": "How does a counselor's own life experience shape the advice they give to students?",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-07-03-inside-the-uc-session"
+      ]
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq02",
+      "question": "Besides just getting university offers, what do counselors see as a successful result for a student?",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-23-uniaccess-atlas-skilltech"
+      ]
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq03",
+      "question": "Are there standardized rules for how counselors have to do their job, or do they have a lot of freedom in their approach?",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-06-03-dual-enrollment-pathway"
+      ]
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq04",
+      "question": "How can a professional in this field figure out which area they should specialize in?",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "got": [
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-08-funding-dreams-loans-forex"
+      ]
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq01",
+      "question": "Is there a single application deadline or do they review applications as they come in?",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-08-03-uk-beyond-offer-letters-reupload"
+      ]
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq02",
+      "question": "Do I have to write a long personal essay, or is the format different for this application?",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-05-20-telling-your-brand-story-better"
+      ]
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq01",
+      "question": "How are you preparing students for the job market when new technologies are starting to automate entry-level creative work?",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "got": [
+        "2026-08-27-in-focus-4",
+        "2026-08-24-uniaccess-leeds-arts-university",
+        "2026-07-30-in-focus-3",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq02",
+      "question": "What if my student isn't sure exactly what they want to major in? Can they explore different options before committing?",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "got": [
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq03",
+      "question": "How do students get practical, real-world experience working on professional projects before they graduate?",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-27-in-focus-4",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-28-in-focus-1",
+        "2026-05-29-decoding-ever-expanding-cast"
+      ]
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq01",
+      "question": "What's the relative importance of high school grades compared to standardized test scores when you calculate a final merit score for admission?",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "got": [
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-03-inside-the-uc-session",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload"
+      ]
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq02",
+      "question": "How much flexibility is there in the curriculum for students to choose their own courses versus following a set path?",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-27-in-focus-4",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq03",
+      "question": "Do I need to submit a portfolio with my application for the design programs?",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "got": [
+        "2026-07-15-creative-futures",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-23-uniaccess-atlas-skilltech",
+        "2026-05-28-in-focus-1"
+      ]
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq01",
+      "question": "What's the best way to approach professionals at a career fair without it feeling forced or like I'm just trying to sell myself?",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-10-ucas-what-changed-what-matters"
+      ]
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq02",
+      "question": "I'm going to a new school where everyone already seems to know each other. I feel like such an outsider, what can I do?",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "got": [
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq03",
+      "question": "How can I politely end a conversation with someone who just won't stop talking, especially if they're more senior than me?",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "got": [
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-05-29-decoding-ever-expanding-cast"
+      ]
+    },
+    {
+      "id": "2026-07-30-in-focus-3-gq01",
+      "question": "My child is interested in starting a project but doesn't have a specific idea yet. Is there a program that could still work for them?",
+      "expectedSessionId": "2026-07-30-in-focus-3",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-25-in-focus-2",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-07-30-in-focus-3-gq02",
+      "question": "What kind of support is available for students who don't have strong technical or coding skills to build their ideas out?",
+      "expectedSessionId": "2026-07-30-in-focus-3",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-08-03-uk-beyond-offer-letters"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq03",
+      "question": "Are universities getting stricter about checking your finances before you can even apply for a visa?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "got": [
+        "2026-08-27-in-focus-4",
+        "2026-05-29-decoding-ever-expanding-cast",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq04",
+      "question": "How can I be sure I'll find a good job after graduating?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "got": [
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-29-decoding-ever-expanding-cast"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq01",
+      "question": "I've heard it's getting more competitive to study in the UK. Is that true and why is it happening?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-07-22-uniaccess-cept-university"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq02",
+      "question": "What can my child do during their studies to increase their chances of finding a job after they graduate?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-06-03-dual-enrollment-pathway"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq04",
+      "question": "How can I best prepare for the financial checks and visa interview to show that I'm a genuine student?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-22-uniaccess-xavier-university"
+      ]
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq01",
+      "question": "What are you looking for in a student besides their test scores and grades?",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "got": [
+        "2026-08-27-in-focus-4",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-15-creative-futures",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-08-funding-dreams-loans-forex"
+      ]
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq02",
+      "question": "How much flexibility is there to explore different subjects before committing to a major?",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-07-22-uniaccess-cept-university"
+      ]
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq03",
+      "question": "What's the best way to approach the personal essays for the application?",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "got": [
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-05-20-telling-your-brand-story-better"
+      ]
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq01",
+      "question": "Are there any art programs where I don't need to submit a portfolio to apply?",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "got": [
+        "2026-07-03-inside-the-uc-session",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-28-in-focus-1"
+      ]
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq02",
+      "question": "What is the city like for an arts student, beyond just what's on campus?",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-08-12-uniaccess-ashoka-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-08-beyond-black-robes-law-careers"
+      ]
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq03",
+      "question": "Are creative jobs safe from being replaced by AI?",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "got": [
+        "2026-07-15-creative-futures",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-07-03-inside-the-uc-session",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-08-03-uk-beyond-offer-letters"
+      ]
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq04",
+      "question": "I'm interested in industrial or product design. What kinds of programs do you have in those areas?",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-07-15-creative-futures",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-23-uniaccess-atlas-skilltech"
+      ]
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq01",
+      "question": "Is your program a standard curriculum for everyone, or is it tailored to each student's specific needs and weaknesses?",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-28-in-focus-1",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-05-08-funding-dreams-loans-forex"
+      ]
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq02",
+      "question": "Beyond just getting into a good school, how does this help prepare students for the actual difficulty of university-level academic work?",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-06-25-in-focus-2"
+      ]
+    }
+  ],
   "control": {
     "retriever": "null (question-blind)",
-    "recallAtK": 0.21739130434782608,
-    "hits": 10
+    "recallAtK": 0.18666666666666668,
+    "hits": 14
   },
   "assessment": {
     "k": 5,
     "sessionCount": 23,
     "chanceFloor": 0.21739130434782608,
-    "measuredRecall": 1,
-    "controlRecall": 0.21739130434782608,
-    "liftOverControl": 0.782608695652174,
-    "saturated": true,
-    "verdict": "saturated",
-    "reason": "46/46 with zero misses — the metric is pinned at its ceiling, so it can register a regression but can never demonstrate an improvement; a harder or independently-authored question set is needed before this number can support a claim"
+    "measuredRecall": 0.30666666666666664,
+    "controlRecall": 0.18666666666666668,
+    "liftOverControl": 0.11999999999999997,
+    "saturated": false,
+    "verdict": "informative",
+    "reason": "0.307 vs a 0.187 question-blind control (+0.120), with 52 miss(es) left to move"
   },
   "goldenSetProvenance": "questions are verbatim session_page.keyInsights excerpts (see scripts/gen-golden-set.mjs), i.e. machine-generated statements drawn from the same pipeline and document as the retrieval target — not independently authored user questions"
 }
