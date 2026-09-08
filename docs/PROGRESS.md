@@ -9,30 +9,6 @@ Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe
 if that changes, a probe was edited and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
 
-> **UNCOMMITTED — `apps/api/src/routes/search.ts` is not in git, so nobody else can reproduce this score**
-
-> **UNCOMMITTED — `apps/api/src/routes/search.test.ts` is not in git, so nobody else can reproduce this score**
-
-> **UNCOMMITTED — `packages/index/src/search/lexical.test.ts` is not in git, so nobody else can reproduce this score**
-
-> **UNCOMMITTED — `packages/index/src/search/lexical.ts` is not in git, so nobody else can reproduce this score**
-
-> **EDITED SINCE COMMIT — `apps/api/src/fixtures.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `apps/api/src/production.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `apps/api/src/routes/pages.test.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `apps/api/src/routes/stubs.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `apps/api/src/server.test.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `apps/api/src/server.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `apps/api/src/store.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
-> **EDITED SINCE COMMIT — `packages/index/src/index.ts` no longer matches the version in git, so this score is not the one the repository supports**
-
 Collection counts from `qa/evidence/live-2026-09-07-01-58-41/preflight.json` (run 2026-09-07T01:58:41.367Z, content `78a2fc2b0743`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
 ## By group
