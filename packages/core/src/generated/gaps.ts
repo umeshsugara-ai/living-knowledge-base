@@ -7,7 +7,10 @@
 export interface Gaps {
   _id: string;
   tenantId: string;
-  kind: "recording-pending" | "source-pending";
+  /**
+   * ADDITIVE (ISS-118): `vector-pending` marks a session that indexed successfully but got NO embedding vectors, so it is absent from vector search while every status field reads "done". The first two kinds describe content we never received; this one describes content we HAVE and cannot retrieve — a different failure, but the same standing-ask lifecycle (open -> received), which is why it belongs here rather than in a new collection.
+   */
+  kind: "recording-pending" | "source-pending" | "vector-pending";
   description?: string;
   /**
    * Who the standing ask went to (docs/adr/0002-standing-ask-process.md) — e.g. an org/person ref, not free text.

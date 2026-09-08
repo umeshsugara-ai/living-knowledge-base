@@ -12,7 +12,7 @@ import type { Sources, Sessions, Turns } from "@lkb/core";
 import { createWhatsAppSource, type WhatsAppFetcher, type WhatsAppMessage, type ConsentContext, type Turn } from "@lkb/ingest";
 import type { WhatsAppRouteDeps, WhatsAppGroup, WhatsAppIngestResult } from "./routes/whatsapp.js";
 import { sha256Hex } from "./hash.js";
-import type { BoundIndexer } from "./indexing.js";
+import type { BoundIndexer } from "./indexing/session.js";
 
 let client: MongoClient | null = null;
 let db: Db | null = null;

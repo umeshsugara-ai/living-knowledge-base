@@ -16,7 +16,7 @@ import { scopedCollection, withTenant } from "./tenantScope.js";
 
 interface Row { _id: string; tenantId: string; sessionId?: string }
 
-interface Call { op: string; filter?: unknown; docs?: unknown; update?: unknown }
+interface Call { op: string; filter?: unknown; docs?: unknown; update?: unknown; options?: unknown }
 
 /** Records what actually reaches the driver — the filter, not just the method name. */
 function fakeDb(): { db: Db; calls: Call[] } {
@@ -28,7 +28,7 @@ function fakeDb(): { db: Db; calls: Call[] } {
       insertOne: async (doc: unknown) => { calls.push({ op: "insertOne", docs: [doc] }); return {}; },
       insertMany: async (docs: unknown) => { calls.push({ op: "insertMany", docs }); return {}; },
       deleteMany: async (filter: unknown) => { calls.push({ op: "deleteMany", filter }); return { deletedCount: 0 }; },
-      updateOne: async (filter: unknown, update: unknown) => { calls.push({ op: "updateOne", filter, update }); return { matchedCount: 0 }; },
+      updateOne: async (filter: unknown, update: unknown, options?: unknown) => { calls.push({ op: "updateOne", filter, update, options }); return { matchedCount: 0 }; },
       countDocuments: async (filter: unknown) => { calls.push({ op: "countDocuments", filter }); return 0; },
     }),
   } as unknown as Db;
@@ -75,7 +75,7 @@ test("updateOne is tenant-scoped, and its update body is passed through untouche
   // hand-carrying its own tenantId in the filter.
   const { db, calls } = fakeDb();
   await coll(db)("t1").updateOne({ _id: "a" }, { $set: { sessionId: "s2" } });
-  assert.deepEqual(calls[0], { op: "updateOne", filter: { _id: "a", tenantId: "t1" }, update: { $set: { sessionId: "s2" } } });
+  assert.deepEqual(calls[0], { op: "updateOne", filter: { _id: "a", tenantId: "t1" }, update: { $set: { sessionId: "s2" } }, options: {} });
 });
 
 test("updateOne's tenantId cannot be overridden by a caller-supplied one either", async () => {
@@ -130,4 +130,20 @@ test("withTenant is pure — it does not mutate the caller's filter object", asy
   const merged = withTenant<Row>("t1", original);
   assert.deepEqual(original, { sessionId: "s1" }, "the input filter must be left alone");
   assert.deepEqual(merged, { sessionId: "s1", tenantId: "t1" });
+});
+
+test("updateOne's UPSERT still merges the tenantId into the filter (ISS-118)", async () => {
+  // The `options` parameter was added so ISS-118 could upsert one gap row per session. An upsert
+  // builds the INSERTED document from the filter when nothing matches, so if the tenant merge were
+  // skipped on this path a brand-new document would be created with NO tenantId at all — a
+  // tenant-less row written by the very helper whose job is to make that impossible. This asserts
+  // the merge happens on the upsert path specifically, not just the plain-update path above.
+  const { db, calls } = fakeDb();
+  await coll(db)("t1").updateOne({ _id: "a" }, { $set: { kind: "vector-pending" } }, { upsert: true });
+  assert.deepEqual(calls[0], {
+    op: "updateOne",
+    filter: { _id: "a", tenantId: "t1" },
+    update: { $set: { kind: "vector-pending" } },
+    options: { upsert: true },
+  });
 });

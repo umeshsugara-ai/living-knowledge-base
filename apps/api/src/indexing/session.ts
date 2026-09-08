@@ -19,7 +19,11 @@ import type { Db } from "mongodb";
 import { getDb, scopedCollection } from "@lkb/db";
 import type { SessionPages, Chunks, Claims, Sessions, TreeIndexRootDocument, Turns } from "@lkb/core";
 import { summarizeSession, extractClaims, buildChunks, buildTree, regenerate, treeIndexRootFilter, type SummarizeCompleteFn } from "@lkb/index";
-import type { EmbedJob, EmbedResult } from "@lkb/ai";
+import { recordVectorGap } from "./vector-gap.js";
+import type { IndexEmbedFn, ChunkWriteResult, IndexSessionResult } from "./types.js";
+
+// Re-exported so existing importers keep one import site for the indexing surface.
+export type { IndexEmbedFn, ChunkSkipReason, ChunkWriteResult, IndexSessionResult } from "./types.js";
 
 /** `schema/{session_pages,claims}.schema.json` both declare `evidence.minItems: 1`, which the
  * generated types express as a non-empty tuple. Both callers below only ever build this from an
@@ -30,9 +34,6 @@ function toEvidenceTuple<T>(items: T[]): [T, ...T[]] {
   if (items.length === 0) throw new Error("toEvidenceTuple: evidence must be non-empty");
   return items as [T, ...T[]];
 }
-
-/** Mirrors `SummarizeCompleteFn`: a bound call, so this file never knows about routing config. */
-export type IndexEmbedFn = (job: EmbedJob) => Promise<EmbedResult>;
 
 export interface IndexSessionDeps {
   complete: SummarizeCompleteFn;
@@ -78,20 +79,6 @@ async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promi
  * @returns what actually happened, so a caller (the backfill) can report per-session counts
  *          instead of inferring success from the absence of a throw. `indexSession` ignores it.
  */
-/** Why a session ended up with no vectors. `null` means it genuinely got them. */
-export type ChunkSkipReason = "no-chunkable-turns" | "embedding-failed" | "no-embedder" | null;
-
-export interface ChunkWriteResult {
-  written: number;
-  skipped: ChunkSkipReason;
-}
-
-/** What `indexSession` observed. Returned so a caller can SEE a silent degradation (ISS-116). */
-export interface IndexSessionResult {
-  sessionId: string;
-  chunks: ChunkWriteResult;
-}
-
 export async function writeSessionChunks(
   tenantId: string,
   sessionId: string,
@@ -247,6 +234,7 @@ export async function indexSession(
   const chunks = deps.embed
     ? await writeSessionChunks(tenantId, sessionId, turns, deps.embed, db)
     : { written: 0, skipped: "no-embedder" as const };
+  await recordVectorGap(tenantId, sessionId, chunks, db);
   const [allSessions, allPages, existingRoot] = await Promise.all([
     sessionsColl(tenantId).find({}).toArray() as Promise<Sessions[]>,
     sessionPagesColl(tenantId).find({}).toArray() as Promise<SessionPages[]>,

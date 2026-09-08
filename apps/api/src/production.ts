@@ -18,7 +18,7 @@ import { createMongoWhatsAppDeps } from "./whatsapp-store.js";
 import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 import { createTavilySearchFn } from "./ask-web-fallback.js";
-import { indexSession, type BoundIndexer } from "./indexing.js";
+import { indexSession, type BoundIndexer } from "./indexing/session.js";
 
 const ROUTING_CONFIG_PATH = fileURLToPath(new URL("../../../config/ai-routing.yaml", import.meta.url));
 /** `write` for the router's own per-attempt ledger entries — a tenant isn't known until a

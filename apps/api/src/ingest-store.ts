@@ -14,7 +14,7 @@ import type { Sources, Sessions, Turns } from "@lkb/core";
 import { createUrlSource, type ConsentContext, type Turn } from "@lkb/ingest";
 import type { IngestDeps, IngestResult } from "./routes/ingest.js";
 import { sha256Hex } from "./hash.js";
-import type { BoundIndexer } from "./indexing.js";
+import type { BoundIndexer } from "./indexing/session.js";
 
 async function jinaReaderFetch(url: string): Promise<string> {
   const apiKey = process.env.JINA_API_KEY;

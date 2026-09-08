@@ -6,7 +6,7 @@
 // at every call site — `coll(tenantId).find(filter)` — so a tenant-less query is a TS
 // compile error, not a runtime bug. Every packages/db/src/collections/<coll>.ts file
 // wraps this once; it is the only place the tenant-scoping logic itself is written.
-import type { Collection, Db, Filter, OptionalUnlessRequiredId, UpdateFilter } from "mongodb";
+import type { Collection, Db, Filter, OptionalUnlessRequiredId, UpdateFilter, UpdateOptions } from "mongodb";
 
 export type TenantId = string;
 
@@ -58,7 +58,13 @@ export function scopedCollection<T extends { tenantId: string; _id: string }>(
        * of its own, so every caller reached `raw` and hand-carried `tenantId` in the filter —
        * exactly the shape of escape hatch ISS-060 went through on `deleteMany`, before that one
        * was closed the same way. */
-      updateOne: (filter: Filter<T>, update: UpdateFilter<T>) => raw.updateOne(withTenant<T>(tenantId, filter), update),
+      /** `options` was added for ISS-118, which needs an idempotent upsert (one gap row per
+       * session, created or updated in a single write, never accumulating). It is deliberately
+       * options-only and cannot weaken the scoping: the filter is still `withTenant`-merged before
+       * it reaches the driver, so an upsert's inserted document is built from a filter that
+       * already carries the tenantId. Passing options is not an escape hatch — `raw` stays gone. */
+      updateOne: (filter: Filter<T>, update: UpdateFilter<T>, options?: UpdateOptions) =>
+        raw.updateOne(withTenant<T>(tenantId, filter), update, options ?? {}),
     };
   };
 }

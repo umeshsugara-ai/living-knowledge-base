@@ -24,8 +24,9 @@ function read(relPath: string): string {
   return readFileSync(`${HERE}${relPath}`, "utf8");
 }
 
-test("indexing.ts imports treeIndexRootFilter and does not re-derive the tenant: prefix", () => {
-  const src = read("indexing.ts");
+test("indexing/session.ts imports treeIndexRootFilter and does not re-derive the tenant: prefix", () => {
+  // Path updated when the indexing files were consolidated into apps/api/src/indexing/ (ISS-118).
+  const src = read("indexing/session.ts");
   assert.match(src, /import\s*\{[^}]*\btreeIndexRootFilter\b[^}]*\}\s*from\s*"@lkb\/index"/, "must import the shared filter");
   assert.doesNotMatch(src, HAND_WRITTEN_FILTER, "must not hand-write the node_id shape again");
 });
