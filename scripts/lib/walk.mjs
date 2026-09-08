@@ -53,11 +53,18 @@ export function* walk(root, dir, ignoreDirs = []) {
   }
 }
 
-/** Files directly inside `dir` (non-recursive), excluding directories. */
+/**
+ * Files directly inside `dir` (non-recursive), excluding directories.
+ *
+ * `.git` is excluded explicitly. In a normal clone it is a directory and the `isFile()` filter
+ * drops it anyway -- but in a **git worktree** `.git` is a FILE (it holds a `gitdir:` pointer), so
+ * it counted as a loose root file there and every worktree failed `lint-root` by exactly one
+ * against a budget the main tree passed. It is git metadata, never repo content, in both layouts.
+ */
 export function looseFiles(dir) {
   try {
     return readdirSync(dir, { withFileTypes: true })
-      .filter((e) => e.isFile())
+      .filter((e) => e.isFile() && e.name !== ".git")
       .map((e) => e.name);
   } catch {
     return [];
