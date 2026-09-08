@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T17:34:42",
+  "updated": "2026-09-08T17:54:44",
   "progress": {
-    "total": 59,
-    "done": 36,
+    "total": 60,
+    "done": 37,
     "in_progress": 2,
     "blocked": 0,
     "pending": 21,
-    "current": "U1.0c",
-    "percent": 61
+    "current": "U1.0d",
+    "percent": 62
   },
   "tasks": [
     {
@@ -506,10 +506,21 @@
     {
       "id": "U1.0c",
       "title": "Durable vector-pending gap row (ISS-118)",
-      "status": "in_progress",
+      "status": "done",
       "base_criticality": "high",
       "deps": [
         "U1.0b"
+      ],
+      "evidence": "qa/verdicts/vector-gap-record.md - PASS 8/8 cycle 1 (f59fb3a). Checker verified LIVE on scratch tenants and filed ISS-121.",
+      "criticality": "high"
+    },
+    {
+      "id": "U1.0d",
+      "title": "Tenant-namespace the vector-gap id + never strand a session (ISS-121)",
+      "status": "in_progress",
+      "base_criticality": "high",
+      "deps": [
+        "U1.0c"
       ],
       "evidence": "ready-for-check, checker dispatched",
       "criticality": "high"
@@ -684,6 +695,13 @@
       "message": "U1.0c needs review (high)",
       "task_id": "U1.0c",
       "acked": false
+    },
+    {
+      "ts": "2026-09-08T17:54:44",
+      "level": "warn",
+      "message": "U1.0d needs review (high)",
+      "task_id": "U1.0d",
+      "acked": false
     }
   ],
   "preferences": {
@@ -692,8 +710,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 4.05,
+    "velocity_per_day": 4.04,
     "eta_days": 5.7
   },
-  "last_deterministic_tick": "2026-09-08T17:34:42"
+  "last_deterministic_tick": "2026-09-08T17:54:44"
 }
