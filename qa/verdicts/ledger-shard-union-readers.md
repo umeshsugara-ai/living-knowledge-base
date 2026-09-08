@@ -1,164 +1,167 @@
 # Verdict — ledger-shard-union-readers
 
-**Cycle checked: 2**
 **Date:** 2026-09-08
-**Commit:** b9159cf
-**Contract:** qa/contracts/ledger-shard-union-readers.md
-**Mode:** A (unit check), bound to `D:/KnowledgeBase` (main tree)
+**Mode:** A (unit check)
+**Bound root:** `D:/KnowledgeBase` (main tree; sibling lane worktrees read-only)
+**Commit checked:** `540f5c1`
+**Cycle checked:** 3
+**Contract:** `qa/contracts/ledger-shard-union-readers.md`
 
 ```
-VERDICT: FAIL
-SCOREBOARD: 7/7 criteria met, 2/3 invariants hold
-FAILURES:
-- [I2] sev: medium · the cycle-2 evidence block pastes `pnpm lint:structure >/dev/null 2>&1; echo $?` -> `0`; at the submitted commit, in a pristine extraction, it is `1` · state the outcome you can reproduce at your own commit, or run only the sub-steps you own and say which · issue: ISS-136
+VERDICT: PASS
+SCOREBOARD: 7/7 criteria met, 3/3 invariants hold
+FAILURES (if any): none
 ISSUES-WRITTEN: none
-EXPLANATION: Four of the five cycle-1 findings are genuinely fixed and I killed every mutant
-myself — the whole mutation table reproduces exactly (22/1 · 22/1 · 22/1 · 19/4, control 23/0),
-so ISS-137/138/139/140 move to `fixed`. ISS-136 does not. The named cause (U2.4 `partial`) is
-really gone, but `pnpm lint:structure` still exits 1 at b9159cf on a divergence another loop's
-commit introduced, and the manifest pastes `0` for it — a second consecutive cycle asserting an
-outcome for this exact chain that a third party cannot reproduce, which is the one thing this
-issue is about. The remedy is one honest paragraph, not code.
+EXPLANATION: The single cycle-2 failure (ISS-136) is resolved. Every command the cycle-3
+manifest quotes reproduces exactly in a pristine `git archive 540f5c1` extraction — 23/23
+tests and `lint-loc && lint-dirsize && lint-dupes` exit 0 — and the full-chain claim that
+could not be reproduced has been withdrawn rather than restated. The refusal to assert
+`pnpm lint:structure`'s exit code is legitimate scoping, not evasion: I confirmed the
+failure at this commit is `G1 progress.done says 39, 40 tasks are done`, sourced from
+`.goal/goal.json` written by another loop's `b6d0e89`, and that the live tree now returns 0
+with no code change of this unit's. The maker did not touch `.goal/goal.json` in either
+cycle. ISS-129 correctly remains open behind a well-formed human gate.
 ```
 
-## What I re-ran (nothing here is quoted from the manifest)
+## What I re-ran myself
 
-| Command | My result |
-|---|---|
-| `node --test scripts/lib/tracker-audit.test.mjs scripts/lib/ledger-union.test.mjs` | tests 23 · pass 23 · fail 0 · **cancelled 0** · exit 0 |
-| `pnpm lint:structure >/dev/null 2>&1; echo $?` (main tree) | **1** |
-| `git archive b9159cf` -> pristine dir -> `node scripts/tracker-audit.mjs --gate G1` | **exit 1**, 2 findings |
-| Real-repo union with the `c-unrun-writers` shard copied into a temp root | 162 rows, canonical first, `ISS-C-UNRUN-WRITERS-005` visible: **true** |
-| Full mutation table (own Python harness, byte-backup + `cmp` restore, 300 s timeout per run) | see below |
+Pristine extraction — `git archive 540f5c1 | tar -x` into a scratch dir, no dirty-tree
+contamination — then:
 
-### Mutation table — reproduced exactly
+```
+$ node --test scripts/lib/tracker-audit.test.mjs scripts/lib/ledger-union.test.mjs
+  tests 23   pass 23   fail 0   cancelled 0
 
-Harness: Python, `subprocess.run(..., timeout=300)`, summary parsed with explicit UTF-8, source
-restored from a byte copy after **every** run and asserted byte-identical (`filecmp` deep compare;
-`restored byte-identical: True` at the end). `cancelled` grepped alongside `fail` on every row per
-D-020.
+$ node scripts/lint-loc.mjs && node scripts/lint-dirsize.mjs && node scripts/lint-dupes.mjs
+  lint-loc: OK (272 file(s) within budget)
+  lint-dirsize: OK (77 dir(s) within budget)
+  lint-dupes: OK (295 unique export(s), 24 unique schema $id(s))
+  SUBSTEP EXIT: 0
+```
 
-| mutation | maker claimed | I measured |
+Both quoted blocks reproduce verbatim. **This is the whole of ISS-136 and it is now clean.**
+
+### Mutation table — re-derived independently
+
+Python harness, each run in a subprocess with a timeout, byte backup restored and asserted
+byte-identical after every round (D-020). Baseline 23 pass / 0 fail / 0 cancelled.
+
+| mutation | manifest claims | I measured |
 |---|---|---|
-| M1 ISS-137 — swallow non-ENOENT readdir | 22 / 1 | **22 / 1 / cancelled 0** |
-| M2 ISS-139 — swallow any git failure | 22 / 1 | **22 / 1 / cancelled 0** |
-| M3 ISS-138 — shards before canonical | 22 / 1 | **22 / 1 / cancelled 0** |
-| M4 — read no shards at all | 19 / 4 | **19 / 4 / cancelled 0** |
-| **no-op control** | 23 / 0 | **23 / 0 / cancelled 0, exit 0** |
+| ISS-137 swallow non-ENOENT readdir | 22 / 1 | **22 / 1** |
+| ISS-139 swallow any git failure | 22 / 1 | **22 / 1** |
+| ISS-138 shards before canonical | 22 / 1 | **22 / 1** |
+| read no shards at all | 19 / 4 | **19 / 4** |
+| no-op control | 23 / 0 | **23 / 0** |
 
-The control is valid this time — same file rewritten with identical bytes, suite green, restore
-clean. The table is the maker's own and it holds under an independently written harness.
+`restore verified byte-identical after every run.` The control is valid, so the mutants are.
 
-## The five cycle-1 findings
+### [C5] against the real repository
 
-**ISS-137 (high) — FIXED.** I deleted the rethrow myself, as dispatched. `22 / 1`: the mutant dies
-on *"a non-ENOENT readdir failure is RETHROWN, never swallowed as 'no shards'"*. The pin is honest
-— `qa` written as a regular file makes `readdirSync` throw `ENOTDIR`, which is not `ENOENT`, so a
-swallowing implementation returns zero shards and the assertion fires. The ENOENT-quiet twin keeps
-the expected case from being pinned by accident.
+Copied the live lane shard (`D:/KnowledgeBase-lanes/c-unrun-writers/qa/issues.c-unrun-writers.jsonl`)
+into the *sandbox* extraction — never into the bound tree — and called the module directly:
 
-**ISS-139 (medium) — FIXED, and the seam is sound.** `22 / 1` on removing `if (!notARepo) throw
-err;`. The branch is genuinely exercisable now: an injected exec throwing `status: 1` must
-propagate, one throwing `status: 128` must stay silent, and both assertions discriminate. It also
-did **not** weaken anything — see the ruling below. Worth recording that the maker reported its own
-first attempt at this test as vacuous and rewrote it; that self-report is accurate, and catching it
-before submission is the behaviour this unit is about.
+```
+files: [ 'qa\issues.jsonl', 'qa\issues.c-unrun-writers.jsonl' ]
+total rows read: 162 | lane rows now visible: 20
+ISS-C-UNRUN-WRITERS-005 (cited by D-020) visible: true | unparseable: 0
+```
 
-**ISS-138 (low) — FIXED.** `22 / 1`. The replacement discriminates for a real reason: `issues.jsonl`
-sorts *after* `issues.alpha.jsonl`, so "canonical first" can only hold by prepending, never by the
-platform's readdir order. That is precisely what the cycle-1 test lacked.
+Canonical first, shard second. Shard removed afterwards. (162 vs the manifest's cycle-1
+figure of 155 — the canonical ledger has grown since; the lane count of 20 and the
+`ISS-C-UNRUN-WRITERS-005` visibility match exactly. Not a discrepancy.)
 
-**ISS-140 (low) — FIXED, and the retraction is correct on both counts.**
-`scripts/lib/tracker-audit.test.mjs` was added in `40f0666`, well before this unit — it pre-existed.
-`structure.config.json` sets `dirsize.overrides.scripts = 32`, not 31, against 30 files. Both
-invented constraints, both correctly withdrawn.
-On the further split into `scripts/lib/ledger-union.test.mjs`: **a real seam, not another
-improvisation.** I measured it rather than taking the claim — `tracker-audit.test.mjs` is 285
-non-blank lines against `loc.max` 300 (`.test.mjs` matches no entry in `loc.testPatterns`, so it
-gets 300, not `testMax` 400), and the 112 union lines would land it near 397. The single file was
-arithmetically impossible. The division — `ledgerFiles`/`readLedgerRows` answer *what is the
-ledger*, the rest tests the gates that read it — is a division of subject, and `scripts/lib` went
-14 → 15 against a budget of 30. [C6] has been clarified in the contract to say so; that
-clarification passes nothing, since this cycle FAILs on other grounds.
+## The ruling you asked for: scoping or evasion?
 
-**ISS-136 (medium) — NOT FIXED, and this is the FAIL.**
-The cause really was fixed: `git archive f3ded7c` reproduces the U2.4 `partial` findings and
-`b6d0e89` does not. But the chain still exits 1 at the submitted commit, now on
-`G1 progress.done says 39, 40 tasks are done` / `progress.percent says 65%, the rows give 67%` —
-introduced by `b6d0e89`, another loop's U2.1 close-out, one commit *before* this submission.
-I verified by exit code and not by reading output, and twice: in the main tree (`EXIT=1`) and in a
-pristine `git archive b9159cf` extraction where `.goal/goal.json` and `TASKS.md` are exactly HEAD's
-— so this is not the dirty-tree confound cycle 1 already ruled out.
+**Legitimate scoping.** Three things decide it, and none of them is the maker's word.
 
-The maker did **not** stop quoting the command; it quoted it in the strengthened form the issue
-asked for (`>/dev/null 2>&1; echo $?`), which is the right instrument. It then reported `0` for an
-instrument that returns `1`. The G1 divergence is not this unit's fault and the contract's
-out-of-scope section forgives it — what it does not forgive is [I2]: an evidence line a third party
-cannot reproduce at the submitted commit. Two cycles running, the one document a checker is
-entitled to trust has overstated this chain. Charging a fix cycle for a paragraph is harsh; leaving
-it would make the strengthened form of the evidence line worth less than the weak one.
+1. **The number is genuinely not a function of this unit's code.** At `540f5c1`, in a clean
+   extraction, `node scripts/tracker-audit.mjs --gate g1` emits three findings — all of them
+   `progress.total` / `progress.done` / `progress.percent` divergences read out of
+   `.goal/goal.json`. `git log -- .goal/goal.json` shows its last two writers are `b6d0e89`
+   and `5ac7864`, another loop's commits. The live tree today exits **0**. The same code,
+   two different answers, decided entirely by a file this unit does not write.
+2. **The maker did not silence it.** Evasion would look like omission. The manifest states
+   in bold that the full chain is not quoted, names `tracker-audit --gate g1` as the reason,
+   and explains the failure mode. [I2] asks that the outcome be stated honestly, and the
+   contract's "Out of scope" already excludes pre-existing failures this unit did not cause
+   *"but see [I2] on how they are reported"* — this is exactly that reporting.
+3. **The alternative reading leads somewhere worse.** Requiring a unit to assert its repo's
+   gate outcome would have forced one of two things here: editing another lane's in-flight
+   `progress.done` to clear its own number — outside the unit's authority and the single
+   most self-serving edit available to it — or pasting a number a third party cannot
+   reproduce, which is precisely what ISS-136 is. The maker declined both. That is the
+   correct call, and the manifest's own framing ("*a statement about a moment, not
+   evidence*") is the right generalisation.
 
-## The three judgement calls the dispatch asked for
+The narrow scoping is not a licence to stop reporting the chain forever; it is this unit's
+correct boundary. A repo-level gate-health assertion belongs to whichever unit owns the
+trackers — see the note below.
 
-**1. Is `audit(root, { exec })` an acceptable seam? — Yes, plainly.** Three reasons, each checked
-rather than assumed. (a) *Blast radius*: the injected value reaches exactly one call,
-`git log -1 --format=%cI` inside G3; it is not a general process runner threaded through the
-module. (b) *Reachability*: the only production caller is `scripts/tracker-audit.mjs:16`, which
-calls `audit()` with no second argument, so the default `execFileSync` is what ships; there is no
-CLI flag, env var, or config key that reaches the parameter. (c) *The specific hole you named —
-a fake that always succeeds* — **cannot weaken the gate**. A stub returning success returns an
-unparseable date, `headAt` stays `NaN`, and `!Number.isNaN(headAt)` skips G3: the outcome is
-silence, which is exactly the pre-existing behaviour, not a manufactured pass. There is no input to
-`exec` that makes G3 report "fresh" when the sweep is stale; the staleness comparison is driven by
-`qa/.last-sweep` and HEAD's real timestamp. The default path is also still exercised for real by
-the non-repo fixture test, which hits git's actual exit 128. If I were to push on anything it is
-that nothing asserts the default *is* `execFileSync` — but that is a note, not a hole, and I am not
-filing it.
+## `.goal/goal.json` — checked, not taken on trust
 
-**2. Is ISS-129's OPEN status honest? — Yes, and it is the most creditable line in the manifest.**
-One of the two readers implements D-019; `.claude/hooks/mc-sessionstart.ps1:5` still reads
-`$LEDGER = 'qa/issues.jsonl'` alone. I confirmed the hook is untouched by this cycle (`git show
---stat b9159cf` lists five files, none under `.claude/`). The gate record at
-`qa/gates/ledger-shard-union-hook.md` is well-formed: it names the question in one line, the exact
-change, why it needs the Approver, and two options — including the honest option B, retiring D-019
-rather than leaving a union only half of its readers implement. A unit that fixes half the readers
-and says so is doing the thing this whole unit is about; a unit that fixed half and claimed the
-rule was implemented would be ISS-129 all over again. [C7] met.
+```
+$ git show 540f5c1 --stat   →  qa/manifests/ledger-shard-union-readers.md  (1 file, 54+/4-)
+$ git show b9159cf --stat   →  manifest + scripts/lib/ledger-union.test.mjs
+                               + scripts/lib/tracker-audit.mjs + tracker-audit.test.mjs
+                               + scripts/lint.test.mjs  (5 files)
+$ git log --oneline -- .goal/goal.json  →  5ac7864, b6d0e89, 48beec0, …
+```
 
-**3. Did this cycle introduce a NEW instance of the class it is fixing — a declared behaviour with
-nothing enforcing it?** In the **code**, no. I read every catch site in the touched file: `:59`
-narrowed and now pinned, `:71` counts and surfaces via a G2 finding (the opposite of swallowing),
-G3 narrowed and now pinned. Every behaviour this diff declares has a mutant that dies. In the
-**manifest**, yes — and it is ISS-136 itself: "the chain now exits 0, verified by exit code, not by
-reading" is a declared behaviour with nothing enforcing it, asserted in the very section retracting
-the same mistake. That is why this is a FAIL rather than a note.
+Neither the cycle-2 nor the cycle-3 commit touches `.goal/goal.json`, and neither appears in
+that file's history. **The claim is true.** Worth saying plainly: the maker had a one-line
+edit available that would have turned its own red evidence green, knew it, named it, and
+did not make it. That is the behaviour this contract's [I2] exists to produce.
 
-## Criteria and invariants
+## Criterion-by-criterion
 
-| id | verdict | evidence |
+| | verdict | evidence |
 |---|---|---|
-| C1 union resolution, deterministic order | met | `ledgerFiles` = canonical prepended + `/^issues\..+\.jsonl$/` sorted; M3/M4 both die |
-| C2 G2 audits the union | met | `readLedgerRows(root)` drives G2; the shard-unverified test discriminates |
-| C3 order tested discriminatingly | met | M3 22/1 |
-| C4 narrowed catch tested discriminatingly | met | M1 22/1, deletion performed by me |
-| C5 verified against the real repo | met | 162 rows with the real `c-unrun-writers` shard, canonical first, `ISS-C-UNRUN-WRITERS-005` visible, temp root removed |
-| C6 no new file in `scripts/`, tests with their module | met | new file is in `scripts/lib`, not `scripts/`; split forced by a measured 300-line budget (see ISS-140 above) |
-| C7 hook untouched + well-formed gate | met | `.claude/` absent from the commit; gate record carries question, exact change, options |
-| I1 no unreported error-swallowing in the touched file | holds | all three catch sites read; two narrowed and pinned, one counting |
-| **I2 evidence reproducible and outcome stated honestly** | **fails** | `lint:structure` exit 1 vs the pasted 0, twice, one in a pristine extraction |
-| I3 enforcement paths / DECISIONS / contracts / ARCH §2 unmodified | holds | commit touches 5 files, none of them |
+| [C1] | ✅ | `ledgerFiles()` — canonical prepended, `readdirSync` filtered on `/^issues\..+\.jsonl$/` and `.sort()`ed. Deterministic order demonstrated above. |
+| [C2] | ✅ | G2 (`tracker-audit.mjs:141-149`) calls `ledgerFiles`/`readLedgerRows`, not the canonical path. Union row count 162 vs canonical 142. |
+| [C3] | ✅ | Discriminating: shards-before-canonical → 22/1. The test holds only because the canonical file is *prepended* (`issues.jsonl` sorts after `issues.alpha.jsonl`). |
+| [C4] | ✅ | `if (err?.code !== "ENOENT") throw err;` — reverting it → 22/1, pinned by a `qa`-as-regular-file `ENOTDIR` case. |
+| [C5] | ✅ | Real-repo run above; shard removed afterwards. |
+| [C6] | ✅ | Tests live in `scripts/lib/` beside the module. The split into `ledger-union.test.mjs` is budget-forced and **measured**: `tracker-audit.test.mjs` is 310 raw / 285 non-blank against `loc.max` 300, and `lint-loc` passes at exactly that. The seam (*what is the ledger* vs *the gates that read it*) is a division of subject. Satisfies the cycle-2 amendment. |
+| [C7] | ✅ | `.claude/hooks/mc-sessionstart.ps1` untouched (absent from both diffs). `qa/gates/ledger-shard-union-hook.md` names the question, the exact change ("ledger path resolution only — nothing else"), and three options incl. the honest decline. Unanswered, correctly. |
+| [I1] | ✅ | All three catches in the file re-read: `:54` ENOENT-narrowed, `:158` narrowed to git exit 128 / ENOENT, `:71` counts `unparseable` and surfaces it as a G2 finding — the opposite of swallowing. Nothing of the ISS-129 class left standing. |
+| [I2] | ✅ | Every quoted command reproduced at `540f5c1`. The one non-reproducible claim was withdrawn with its reason. |
+| [I3] | ✅ | `.claude/hooks/*`, `docs/DECISIONS.md`, `contracts/`, `ARCHITECTURE.md` all absent from both commits' diffs. |
+
+## ISS-129 — the unit claims no more than it delivered
+
+Confirmed: ledger row `ISS-129` is **open**, the manifest says "**ISS-129 stays open**" in
+both the cycle-2 and cycle-3 sections, the gate record is unanswered, and the hook still
+reads `qa/issues.jsonl` alone. One of two readers implements D-019, which is exactly what
+the manifest says. No over-claim. ISS-130 likewise stays open and is described as
+half-addressed. This PASS certifies the script reader and the gate record — **not** D-019
+being fully implemented.
+
+## Non-blocking notes (for a later unit, not findings against this one)
+
+None of these is blocking; nothing here would have changed the verdict.
+
+- **The repo's gate outcome now has no owner.** This unit correctly declines to assert
+  `pnpm lint:structure`'s exit code, and it was right to. But the consequence is that a
+  chain which is red at one commit and green at another is nobody's assertion. The real
+  remedy is not a manifest paragraph: it is that `G1` reads a tracker any lane may write, so
+  its exit code is shared mutable state. A unit that owns `.goal/goal.json` consistency — or
+  a rule that `--gate g1` findings sourced from another lane's counters are warnings, not
+  exit-1 — would close it. Worth a `qa/QUEUE.md` row; I have not written one.
+- **Manifest gap 3 (no reader-completeness guard) stands, and I am not requiring it.** The
+  contract explicitly puts it out of scope, for a reason cycle 1 already ruled on: such a
+  guard cannot be written while one reader is legitimately unfixed behind a human gate. When
+  the hook gate is answered, that guard becomes writable and should be the unit that follows.
+- **Manifest header line 3 still reads `**Contract:** none yet — checker, please author…`.**
+  It was true in cycle 1 and the contract has existed since. Cosmetic staleness in a header,
+  not an evidence defect.
 
 ## Ledger
 
-- ISS-137, ISS-138, ISS-139, ISS-140 → `fixed` (2026-09-08), each with my own mutation evidence appended.
-- ISS-136 → stays `open`, re-check evidence appended.
-- ISS-129 → stays `open`, correctly, behind `qa/gates/ledger-shard-union-hook.md`.
-- ISS-141 → stays `open` (blocked behind the same gate, per cycle 1's ruling).
+- `ISS-136` → **fixed**, `verified_date` 2026-09-08 (re-derived at `540f5c1` by pristine
+  extraction; both quoted blocks reproduce).
+- `ISS-137`, `ISS-138`, `ISS-139`, `ISS-140` → **verified** (fixed in cycle 2, re-confirmed
+  this cycle by my own mutation table — the later re-check that moves `fixed → verified`).
+- `ISS-129`, `ISS-130` stay **open**.
 
-## What cycle 3 needs
-
-Only this: replace the `pnpm lint:structure … echo $?` line with what the command actually returns
-at your commit, and name the `progress.done` divergence as pre-existing and not yours — or run only
-the linters you own and say which. No code change is required; `git archive` your own commit into a
-scratch dir and run it there before pasting. If cycle 3 arrives with that paragraph corrected and
-nothing else touched, it PASSes.
+No new issues. `ISSUES-WRITTEN: none`.
