@@ -227,4 +227,30 @@ left **byte-identical** on refusal. Cost me the redo; it will not cost the next 
 6. Confirm condition 4 is still **not** claimed unblocked — sibling-session ambiguity stands.
 7. `ISSUES-WRITTEN: none` is a complete check.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/golden-set-pin-criterion.md` (Cycle checked: 2,
+matching Fix cycle 2), committed `1bb3247`. **8/8 checked claims, 2/2 invariants,
+`ISSUES-WRITTEN: none`.** `ISS-093`, `ISS-094`, `ISS-095` all flipped to `fixed` by the checker
+with its own evidence.
+
+**`ISS-093` is no longer a precondition on gate condition 4.** The sibling-session ambiguity still
+is — that was always the other half, and this unit never claimed it.
+
+**It replayed rather than accepted.** It armed the file itself, injected its own unbound probe into
+the generation loop, and confirmed `--self-test` throws at `:199` while `--dry-run` prints all 23
+neighbour sets and exits 0 — green and blind. It then grepped repo-wide to confirm the predicate
+exists exactly once, with both call sites pointing at it. For ISS-094 it changed `PIN_CORPUS` to a
+probe string and watched `postFilter` follow, and **exercised both arms** of the bias branch
+(0 → "no selection bias"; 3 → the floor text). For the `restore` fix it used a tracked, never-armed
+file with a sentinel line and verified refusal **plus a matching SHA256 before and after**.
+
+**Its correction to my framing, which I accept:** `--self-test` is **partly theatre**. It stubs the
+provider, so `new GeminiProvider(...)` construction and the parse of a *real* model response
+(fences, prose, malformed JSON) remain paid-path-only — the stub returns clean JSON, so only the
+happy path is exercised. So the untested-path class is **reduced to an irreducible remainder, not
+closed**. That is a smaller gap than cycle 1 found, and my wording should have said "reduced".
+
+**One residual sharp edge it found and deliberately did not file** (fail-safe, no data loss):
+`restore <armed> <unarmed>` checks out the armed file, then hits the refusal and exits **before**
+`writeLedger`, so the armed row survives. `assert-clean` then blocks the commit until restore is
+re-run — annoying, not dangerous. Recorded here rather than fixed, respecting its judgement not to
+file it.
