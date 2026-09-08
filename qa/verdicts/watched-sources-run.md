@@ -171,3 +171,118 @@ composition assertion (`[C8]`), one fake that observes its argument (`[C9]`), on
 already being returned (`[I3]`), and one genuine design question (`[C7]` — pin the address, or
 argue on the record that it belongs to a separate unit and get that ruled before anything is
 scheduled against this).
+
+---
+
+# Verdict — watched-sources-run (cycle 2)
+
+**Date:** 2026-09-09
+**Cycle checked:** 2
+**Commit checked:** `f6f2b86`
+**Project root:** `D:/KnowledgeBase-lanes/c-unrun-writers` (bound; no other worktree or lane touched)
+**Contract:** `qa/contracts/watched-sources-run.md`
+
+```
+VERDICT: FAIL
+SCOREBOARD: 9/11 criteria met, 3/5 invariants hold
+FAILURES:
+- [C8] sev: medium · The SSRF boundary is still one word from removal: replacing store.ts:294 `createGuardedFetcher({ lookup: resolveAll, request: httpRequest })` with `async (u: string) => await (await fetch(u)).text()` leaves apps/api at 134/134/0. Not addressed this cycle; the code comment above the line is prose, not a control · Assert the composition in the style the suite already uses for treeIndexRootFilter, or brand the guarded fetcher so the run refuses an unbranded one · issue: ISS-C-UNRUN-WRITERS-017
+- [C9] sev: medium · The run route's tenant argument is still unobserved: `deps.run(req.auth!.tenantId)` -> `deps.run("other-tenant")` passes 134/134/0, because fixtures.ts:131 is still `run: async () => (...)` — a fake with no parameter cannot fail an isolation test · Make the fake record its tenantId and assert the authenticated one, as create and listActive already are · issue: ISS-C-UNRUN-WRITERS-018
+- [I3] sev: medium · recordFetch's boolean is still discarded (run.ts:59 awaits, :64-65 increments unconditionally). Re-probed at this commit: two due sources with `recordFetch: async () => false` returned {"checked":2,"changed":2,"skipped":0,"failed":[]} — a clean summary for a run that persisted nothing · Treat `false` as a per-source failure, the shape a throw already gets · issue: ISS-C-UNRUN-WRITERS-019
+- [I5] sev: medium · The run is still an unbounded sequential network loop awaited inline in a request handler (routes/watched-sources.ts:98, run.ts:51, 30s default per source), with no cap, no whole-run deadline and no per-tenant in-flight lock · Cheapest sufficient fix: a max-sources cap or a run deadline checked between sources · issue: ISS-C-UNRUN-WRITERS-020
+ISSUES-WRITTEN: none
+EXPLANATION: The two high findings are genuinely closed and I re-derived both rather than reading
+them: the pin is real over a socket, it fails closed on a bad address instead of falling back to
+DNS, and I built the HTTPS fixture the maker did not — certificate validation demonstrably binds to
+the hostname while the address is pinned. The mutation table reproduced exactly, control included.
+It fails on the three cycle-1 findings the maker chose not to touch (C8, C9, I3) plus I5, which
+cycle 1 credited while its own ISS-020 said otherwise; I am correcting that here rather than
+carrying an inconsistency into a PASS. All four are already on the ledger from cycle 1 — nothing
+new is being asked. Cycle 3 is the last one: all four are small and none needs new machinery.
+```
+
+## Question 1 — is the pin real? (yes, proven by my own probes, not the maker's tests)
+
+I wrote my own probe file, ran it, and deleted it (`git status --porcelain` empty afterwards).
+
+| Probe | Result |
+|---|---|
+| URL names `nonexistent-host-xyz.invalid:PORT`, `address: 127.0.0.1`, local server listening | body `SERVER-A` returned — the request can only have arrived via the injected address |
+| URL hostname **does** resolve (`localhost:PORT`, server live), `address: "999.999.999.999"` | **REJECTED** `Invalid IP address: 999.999.999.999` — it fails **closed**; there is no fallback to real DNS. The maker's reported failure direction is correct |
+| `all: true` array form | The connecting path exercised it (Node 24 `autoSelectFamily` calls `lookup` with `all: true`); both branches are implemented and the connection succeeded, so the array shape is the one actually consumed |
+| Host header | server observed `pinned.invalid:PORT` — the name still travels |
+
+**One observation, not a defect.** When the URL hostname is an **IP literal**, Node skips `lookup`
+entirely: `http://127.0.0.1:PORT/` with `address: "127.0.0.2"` connected to 127.0.0.1 (ECONNREFUSED
+on the other server's port). That is harmless in this composition — for a literal, the guard's
+`resolveAll` returns that same literal, so the pinned address equals the hostname and no
+check-to-connect window exists. Worth knowing before anyone reuses `httpRequest` with an address
+that can differ from a literal host.
+
+## Question 2 — does `Host`/`servername` survive? Ruling: **not a blocker; proven, not deferred**
+
+I did not want to rule on a reasoned claim, so I built the fixture the maker didn't: two self-signed
+CAs (openssl), an HTTPS server on 127.0.0.1, and the URL naming `pinned.example` with
+`address: "127.0.0.1"`.
+
+- cert with `SAN=DNS:pinned.example`, trusted via `NODE_EXTRA_CA_CERTS` -> **`TLS-OK`**, request
+  succeeded while the address was pinned.
+- cert with `SAN=DNS:wrong.example`, **also trusted** -> **rejected**:
+  `Hostname/IP does not match certificate's altnames: Host: pinned.example. is not in the cert's altnames: DNS:wrong.example`.
+
+So certificate validation binds to the **name**, not the pinned address, exactly as claimed, and a
+regression here fails closed (a connection error), never open — `rejectUnauthorized` is never
+touched. **A self-signed HTTPS test is NOT required before this unit passes.** It is worth having as
+a regression guard in whichever unit next touches this file, but as a *later* unit: the property is
+now proven on disk in this verdict, and holding a unit for a test of a property that fails closed
+would be ceremony.
+
+## Question 3 — the declared-UNPINNED `res.destroy()`. Ruling: **honest scoping, accepted**
+
+Reproduced: removing `res.destroy()` from the redirect branch leaves 93/0/0. The maker's reasoning
+is correct — the redirect body is never read into the response either way, so no assertion over the
+returned value can distinguish the two, and the stream stays paused rather than buffering. It is
+resource hygiene (socket teardown), not a control. Writing a test that *looked* like coverage would
+have been the worse outcome; declaring it plainly, with the mutation result attached, is what I want
+from a maker. Not a gap, not a blocker. Low note only.
+
+## Question 4 — mutation table reproduced (my own harness, D-020 discipline)
+
+Every run under `timeout 400`, file restored from a backup and `md5sum -c` verified **byte-identical
+after each** (all `OK`), `cancelled` grepped beside `fail`.
+
+| Mutation | pass / fail / cancelled | Maker's claim |
+|---|---|---|
+| **no-op control** (comment) | 93 / 0 / 0 | 93 / 0 — matches |
+| **unpin** (custom `lookup` removed) | **88 / 5 / 0** | 88 / 5 — matches |
+| size abort neutered (`if (false && ...)`) | 92 / 1 / 0 | 92 / 1 — matches |
+| timeout neutered (`setTimeout(9_000_000)`) | 92 / 1 / 0 | 92 / 1 — matches |
+| redirect `res.destroy()` removed | 93 / 0 / 0 | 93 / 0 UNPINNED — matches, disclosed |
+
+Every figure in the manifest reproduced exactly. **C6 and C7 pass.**
+
+## Question 5 — the three unaddressed cycle-1 findings
+
+All re-derived at `f6f2b86`, all still open; none was silently fixed.
+
+| Issue | State now | Should it have blocked cycle 2? |
+|---|---|---|
+| ISS-017 (`[C8]`, store.ts SSRF boundary) | bare-`fetch` mutant still 134/134/0 | It did not have to *lead*, but it is the cheapest of the four and sits on the same boundary the cycle was about. Fixing the pin while leaving the composition removable by one word is a half-closed door |
+| ISS-018 (`[C9]`, route tenant) | `deps.run("other-tenant")` still 134/134/0; fixtures.ts:131 unchanged | No — genuinely independent of the transport work |
+| ISS-019 (`[I3]`, discarded boolean) | probe returns `{"checked":2,"changed":2,...,"failed":[]}` with `recordFetch` returning false | No — but it is the one that makes the route **lie to its caller**, and it is a three-line change |
+
+Prioritising the two high findings over these was a defensible call. It is not defensible twice:
+this is cycle 2 of max 3, so all four listed failures must land together in cycle 3.
+
+## Baselines I re-ran myself
+
+| Command | Result | Manifest claim |
+|---|---|---|
+| `pnpm --filter '@lkb/ingest' test` | tests 93 · pass 93 · fail 0 · cancelled 0 | matches |
+| `pnpm --filter '@lkb/api' test` | tests 134 · pass 134 · fail 0 · cancelled 0 | matches |
+| `pnpm -r typecheck` | exit 0 | matches |
+| `pnpm lint:structure` | exit 0 | matches |
+
+Ledger: ISS-C-UNRUN-WRITERS-011 and -016 moved open -> fixed with my re-derived evidence. -017,
+-018, -019, -020 stay open. Working tree left clean; every probe and mutation reverted and
+byte-verified.
