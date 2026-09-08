@@ -93,4 +93,46 @@ cosine(doc0,doc1): 0.8178   (<1, so distinct sentences give distinct vectors)
 Additive: one optional interface method, two adapter methods, one router function, one config line.
 No existing behaviour changed; no product code calls any of it yet. `git revert` is clean.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/embed-provider-seam.md` (Cycle checked: 1),
+committed `69c6b5f`. **8/8 contract criteria, 3/3 invariants**, 7/7 manifest items reproduced. Goal
+task **U1.1 closed** (progress 57%).
+
+**It wrote its own probe rather than re-running my tests** — nine mispairing attacks across both
+adapters (fewer vectors, more vectors, ragged, an entry missing `values`, the `embeddings` key
+absent). All nine threw. It independently confirmed **3072 dims** with its own transport and
+sentences, and checked the semantics actually work: the query scored **0.727** against the relevant
+sentence vs **0.563** against an irrelevant one.
+
+**It verified the "does NOT do" section exactly rather than approximately** — including my weakest
+claim. I said Ollama's live path was untested; it went and found *why*: the daemon is up with
+`qwen3:8b`, and `POST /api/embed` with `nomic-embed-text` returns **"model not found, try pulling
+it first"**. That is a better disclosure than the one I wrote.
+
+**On the design call it ruled CORRECT, and closed the question I actually had.** A typo'd provider
+name throws in `route()` *before* capability is consulted, so a misconfiguration and an incapable
+provider stay distinct failures; a chain of entirely incapable providers throws and names each
+skip. It also endorsed the ledger semantics for a reason I had not articulated: a skip consumed no
+provider, no tokens and no cost, so recording it as `failed` would inflate the very failure rate
+the ledger exists to report.
+
+### Two issues filed, both mine
+
+- **ISS-096 (medium)** — the degenerate case my guards miss: N texts in, N **empty** vectors back
+  returns `{dims: 0}` instead of throwing. Both guards are *relative* (count vs count, length vs
+  `length[0]`) and neither has a **floor**. Pairing stays correct, so this is not the mispairing
+  failure — and nothing can be corrupted today because nothing stores vectors. **It must close
+  before U1.3**, or a dims-0 batch would make every later cosine degenerate while the index build
+  reports success. One line per adapter; the next unit touching this path owns it, per D-014's
+  severity gate.
+- **ISS-097 (low)** — my comment at `router.ts:98` says a skip "is recorded as an attempt so the
+  ledger still explains where a request went". **It is not.** It lives only in the thrown error,
+  and on a *succeeding* chain leaves no trace at all. Behaviour right, sentence wrong — the same
+  class as ISS-091/094: prose asserting something the code does not do.
+
+### The contract amendment, and the restraint in it
+
+It added **C9** (the embedding sub-seam) and **[I4]** (a batch is never silently mispaired), because
+the contract predated the seam and U1.2–U1.5 would otherwise be judged against one blind to their
+foundation. It **deliberately did not** add a `dims > 0` criterion, on the grounds that *writing a
+new criterion to fail the unit in front of you distorts the gate as surely as softening one would*.
+That is the right call and worth recording as precedent — the gap lives in ISS-096 instead.
