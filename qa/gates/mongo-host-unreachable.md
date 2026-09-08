@@ -59,3 +59,13 @@ keep flagging the batch size each tick rather than letting it become background 
 **I have not tried to restart anything.** Infrastructure changes are outward-facing and yours.
 
 **Answered:** _(pending)_
+
+**Answered:** 2026-09-08 — SELF-RESOLVED, no human decision was needed — maker tick, verified by
+re-probe. TCP :27017 connects in ~31 ms and the driver reads all 23 `lkb` collections; the host
+came back on its own. **Correction to this gate's own evidence:** ICMP `ping` still shows 100%
+loss and always would, because ICMP is filtered at that host — `ping` was never a valid health
+probe here and the "100% packet loss" line above overstates what it can prove. TCP connect is the
+signal. Last night both agreed, so the wrong conclusion was not drawn, but the reasoning was luckier
+than it looked. Nothing was built past this gate while it was open, and the deferred C8/ISS-113
+row-level checks were discharged on real rows in the `chunk-backfill` unit (26/26 sessions, 0 dim
+mismatches, 0 dangling turnRefs).

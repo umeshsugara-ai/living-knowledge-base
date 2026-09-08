@@ -26,7 +26,19 @@ const ROUTING_CONFIG_PATH = fileURLToPath(new URL("../../../config/ai-routing.ya
  * carry the real per-request tenantId) are logged under this fixed system id. */
 const ROUTER_TENANT_ID = "system";
 
-export function buildProductionDeps(): ServerDeps {
+/**
+ * The real routing wiring — parsed chains, registered providers, and the Mongo job ledger.
+ *
+ * Exported (U1.0 backfill) so an offline job gets the SAME chain config and the SAME provider set
+ * as the running server. A script that re-registered its own providers would be a second
+ * definition free to drift from this one, and the comment below is a standing reminder that the
+ * membership of `providers` is load-bearing, not incidental.
+ */
+export function buildRouting(): {
+  chains: ReturnType<typeof parseRoutingYaml>;
+  providers: Record<string, Provider>;
+  jobWrite: ReturnType<typeof createMongoJobWriter>;
+} {
   const chains = parseRoutingYaml(readFileSync(ROUTING_CONFIG_PATH, "utf8"));
   const jobWrite = createMongoJobWriter();
 
@@ -44,6 +56,11 @@ export function buildProductionDeps(): ServerDeps {
     "claude-code": new ClaudeCodeProvider(realTransport),
     ollama: new OllamaProvider(realTransport, { baseUrl: process.env.OLLAMA_BASE_URL }),
   };
+  return { chains, providers, jobWrite };
+}
+
+export function buildProductionDeps(): ServerDeps {
+  const { chains, providers, jobWrite } = buildRouting();
 
   const tavilySearchFn = createTavilySearchFn();
 

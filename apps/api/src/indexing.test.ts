@@ -14,7 +14,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Db } from "mongodb";
-import { indexSession } from "./indexing.js";
+import { indexSession, writeSessionChunks } from "./indexing.js";
 
 interface Call { coll: string; op: string; filter?: Record<string, unknown>; docs?: Record<string, unknown>[]; update?: Record<string, unknown> }
 
@@ -285,6 +285,54 @@ test("a SUCCESSFUL embed replaces the session's chunks — delete BEFORE insert,
   const ops = chunkOps(calls);
   assert.ok(ops.includes("deleteMany") && ops.includes("insertMany"));
   assert.equal(ops[0], "deleteMany", "delete must precede insert");
+});
+
+/* ── U1.0 — writeSessionChunks' RETURN CONTRACT ────────────────────────────────────────────────
+ * `writeSessionChunks` deliberately never throws (a chunk failure must not take indexing down),
+ * which means a caller cannot learn what happened from control flow. The backfill script's whole
+ * honesty rests on the returned `{written, skipped}`: it exits non-zero and names the sessions
+ * that got no chunks. If `skipped` were ever null on a failure, a partial backfill would report
+ * itself complete — the same class of silent-success bug as ISS-056, one layer up.
+ */
+const REAL_TURNS = [{ _id: "t1", tenantId: "t", sessionId: "s1", speakerRef: "spk:0", tStart: 0, tEnd: 1, text: "A real sentence." }];
+
+test("writeSessionChunks reports a provider failure as skipped, never as a silent success", async () => {
+  const { db, calls } = fakeDb();
+  const res = await writeSessionChunks("t", "s1", REAL_TURNS as never, async () => { throw new Error("all providers failed"); }, db);
+  assert.equal(res.written, 0);
+  assert.equal(res.skipped, "embedding-failed", "a caller must be able to SEE the failure in the return value");
+  assert.deepEqual(chunkOps(calls), [], "and still no destructive write");
+});
+
+test("writeSessionChunks reports a contradictory batch (the ISS-112 assertion) as skipped, not as success", async () => {
+  // dims says 99, the vector holds 3 — the correlation JSON Schema cannot express. It must be
+  // caught, reported, and must NOT delete the existing chunks.
+  const { db, calls } = fakeDb();
+  const res = await writeSessionChunks(
+    "t", "s1", REAL_TURNS as never,
+    (async (job: { texts: string[] }) => ({ vectors: job.texts.map(() => [0.1, 0.2, 0.3]), dims: 99, provider: "fake", model: "fake-embed" })) as never,
+    db,
+  );
+  assert.equal(res.skipped, "embedding-failed");
+  assert.deepEqual(chunkOps(calls), [], "a contradictory batch must never reach the delete");
+});
+
+test("writeSessionChunks reports a real write with the count it actually inserted", async () => {
+  const { db, calls } = fakeDb();
+  const res = await writeSessionChunks("t", "s1", REAL_TURNS as never, embedOk as never, db);
+  assert.equal(res.skipped, null);
+  const insert = calls.find((c) => c.coll === "chunks" && c.op === "insertMany");
+  assert.equal(res.written, insert!.docs!.length, "the reported count must equal the rows actually inserted");
+  assert.ok(res.written > 0);
+});
+
+test("writeSessionChunks reports a session with no chunkable turns distinctly from a failure", async () => {
+  // The backfill must not report an empty session as a provider outage — they need different
+  // human responses (one is fine, the other means re-run).
+  const { db } = fakeDb();
+  const res = await writeSessionChunks("t", "s1", [] as never, embedOk as never, db);
+  assert.equal(res.written, 0);
+  assert.equal(res.skipped, "no-chunkable-turns");
 });
 
 test("chunk rows carry a real vector, a matching dims, and turnRefs — never an embeddingRef pointer", async () => {

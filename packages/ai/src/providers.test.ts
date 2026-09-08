@@ -112,7 +112,7 @@ test("claude-code adapter throws on a non-zero CLI exit code", async () => {
 const vec = (n: number, fill: number) => Array.from({ length: n }, () => fill);
 
 
-test("embed: gemini batches all texts into ONE call and pairs vectors by index", async () => {
+test("embed: gemini batches texts within the API limit into ONE call and pairs vectors by index", async () => {
   const t = fakeTransport({
     status: 200,
     body: { embeddings: [{ values: vec(768, 0.1) }, { values: vec(768, 0.2) }] },
@@ -157,6 +157,76 @@ test("embed: REFUSES a ragged response — differing lengths cannot be compared 
   });
   const p = new GeminiProvider(t, { apiKey: "k" });
   await assert.rejects(p.embed!({ kind: "embedding", texts: ["a", "b"] }), /ragged set/);
+});
+
+/* ── The 100-per-batch API limit (found live by the U1.0 backfill, 2026-09-08) ────────────────
+ * `batchEmbedContents` rejects >100 requests with a 400. Three of the 26 real TOC sessions are
+ * over it (237, 228, 111 chunks). Because the caller degrades instead of throwing, the whole
+ * failure surfaced as "the three biggest sessions have no vectors" — an index that looks
+ * populated and silently omits its richest content. Every case below is over the boundary,
+ * because a test at 2 texts can never see this.
+ */
+test("embed: gemini SPLITS a batch over the 100-request API limit instead of being rejected", async () => {
+  // The fake answers each call with exactly as many vectors as that call asked for, so a
+  // provider that sent one oversized request would fail the arity check below.
+  const t = fakeTransport((req) => {
+    const n = (req.body as { requests: unknown[] }).requests.length;
+    assert.ok(n <= 100, `sent a batch of ${n} — the real API rejects anything over 100`);
+    return { status: 200, body: { embeddings: Array.from({ length: n }, () => ({ values: vec(768, 0.5) })) } };
+  });
+  const p = new GeminiProvider(t, { apiKey: "k" });
+  const r = await p.embed!({ kind: "embedding", texts: Array.from({ length: 237 }, (_, i) => `chunk ${i}`) });
+
+  assert.equal(t.calls.length, 3, "237 texts must become 3 calls (100 + 100 + 37)");
+  assert.equal(r.vectors.length, 237, "every text must come back with a vector");
+  assert.equal(r.dims, 768);
+});
+
+test("embed: a split batch preserves ORDER across call boundaries — the caller pairs by index", async () => {
+  // Each text embeds to a vector whose first component encodes its global position, so any
+  // reordering or mis-concatenation across the three calls is detectable.
+  let seen = 0;
+  const t = fakeTransport((req) => {
+    const n = (req.body as { requests: unknown[] }).requests.length;
+    const body = { embeddings: Array.from({ length: n }, (_, j) => ({ values: [seen + j, 0, 0] })) };
+    seen += n;
+    return { status: 200, body };
+  });
+  const p = new GeminiProvider(t, { apiKey: "k" });
+  const r = await p.embed!({ kind: "embedding", texts: Array.from({ length: 250 }, (_, i) => `t${i}`) });
+
+  assert.equal(r.vectors.length, 250);
+  for (let i = 0; i < 250; i++) {
+    assert.equal(r.vectors[i]![0], i, `vector at index ${i} came back out of order`);
+  }
+});
+
+test("embed: a dimension change ACROSS batch boundaries is still caught — no single batch can see it", async () => {
+  // The per-batch arity check cannot catch this: both batches are internally consistent. Only
+  // the combined check can, which is why it was kept after the split.
+  const t = fakeTransport((req) => {
+    const n = (req.body as { requests: unknown[] }).requests.length;
+    const dims = t.calls.length === 1 ? 768 : 512;
+    return { status: 200, body: { embeddings: Array.from({ length: n }, () => ({ values: vec(dims, 0.1) })) } };
+  });
+  const p = new GeminiProvider(t, { apiKey: "k" });
+  await assert.rejects(
+    p.embed!({ kind: "embedding", texts: Array.from({ length: 150 }, (_, i) => `t${i}`) }),
+    /ragged set/,
+  );
+});
+
+test("embed: a short SECOND batch is refused and names its offset, not silently truncated", async () => {
+  const t = fakeTransport((req) => {
+    const n = (req.body as { requests: unknown[] }).requests.length;
+    const give = t.calls.length === 1 ? n : n - 1; // second batch returns one too few
+    return { status: 200, body: { embeddings: Array.from({ length: give }, () => ({ values: vec(768, 0.1) })) } };
+  });
+  const p = new GeminiProvider(t, { apiKey: "k" });
+  await assert.rejects(
+    p.embed!({ kind: "embedding", texts: Array.from({ length: 150 }, (_, i) => `t${i}`) }),
+    /offset 100/,
+  );
   });
 
 

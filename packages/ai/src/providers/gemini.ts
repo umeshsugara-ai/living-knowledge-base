@@ -95,26 +95,50 @@ export class GeminiProvider implements Provider {
     const model = this.config.embedModel ?? DEFAULT_EMBED_MODEL;
     if (job.texts.length === 0) return { vectors: [], dims: 0, provider: this.name, model };
 
-    const res = await this.transport({
-      kind: "http",
-      url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:batchEmbedContents?key=${this.config.apiKey}`,
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: {
-        requests: job.texts.map((text) => ({
-          model: `models/${model}`,
-          content: { parts: [{ text }] },
-          taskType: job.purpose === "query" ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
-        })),
-      },
-    });
+    // MEASURED, not anticipated (U1.0 backfill, 2026-09-08): the API rejects a batch of more than
+    // 100 with `400 ... BatchEmbedContentsRequest.requests: at most 100 requests can be in one
+    // batch`. Three of the 26 real sessions exceed it (237, 228 and 111 chunks) — 576 chunks, 40%
+    // of the corpus, and precisely the LONGEST sessions, i.e. the most content-rich ones. Because
+    // `writeSessionChunks` degrades rather than throws, the effect was an index that looked
+    // populated while silently missing its three biggest sessions. Splitting here rather than at
+    // the caller keeps the provider's own API limit the provider's problem: every caller
+    // (indexing, the backfill, a future re-embed) would otherwise have to know this number.
+    const MAX_BATCH = 100;
+    const vectors: number[][] = [];
+    for (let i = 0; i < job.texts.length; i += MAX_BATCH) {
+      const slice = job.texts.slice(i, i + MAX_BATCH);
+      const res = await this.transport({
+        kind: "http",
+        url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:batchEmbedContents?key=${this.config.apiKey}`,
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: {
+          requests: slice.map((text) => ({
+            model: `models/${model}`,
+            content: { parts: [{ text }] },
+            taskType: job.purpose === "query" ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
+          })),
+        },
+      });
 
-    if (res.status < 200 || res.status >= 300) {
-      throw new Error(`gemini embed error ${res.status}: ${JSON.stringify(res.body)}`);
+      if (res.status < 200 || res.status >= 300) {
+        throw new Error(`gemini embed error ${res.status}: ${JSON.stringify(res.body)}`);
+      }
+
+      const body = res.body as { embeddings?: { values?: number[] }[] };
+      // Per-batch arity is checked here so a short batch names its own offset; the combined
+      // checks below still run over the whole set, so a cross-batch dimension mismatch — which
+      // no single batch can see — is still caught.
+      const batch = (body.embeddings ?? []).map((e) => e.values ?? []);
+      if (batch.length !== slice.length) {
+        throw new Error(
+          `gemini embed returned ${batch.length} vector(s) for ${slice.length} text(s) in the ` +
+            `batch at offset ${i} — refusing to pair them by index`,
+        );
+      }
+      vectors.push(...batch);
     }
 
-    const body = res.body as { embeddings?: { values?: number[] }[] };
-    const vectors = (body.embeddings ?? []).map((e) => e.values ?? []);
     if (vectors.length !== job.texts.length) {
       throw new Error(
         `gemini embed returned ${vectors.length} vector(s) for ${job.texts.length} text(s) — ` +

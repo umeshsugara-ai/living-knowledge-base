@@ -58,6 +58,90 @@ async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promi
   return db.collection<TreeIndexRootDocument>("tree_index").findOne(treeIndexRootFilter(tenantId));
 }
 
+/**
+ * ---- chunks + embeddings (U1.3) --------------------------------------------------------------
+ *
+ * DEGRADE-SAFE, and that is the whole design here. ISS-056 was paid for on the claims path: a
+ * provider outage returned an empty array indistinguishable from "nothing found", the
+ * unconditional delete ran, and a transient failure silently destroyed real extracted data. The
+ * same shape applies with more force to chunks, because a vector index is expensive to rebuild
+ * and its absence is INVISIBLE — a search just quietly returns less. So the delete only ever runs
+ * when a replacement is actually in hand.
+ *
+ * EXTRACTED from `indexSession`'s body (U1.0 backfill) rather than copied. The backfill needs
+ * exactly this step and none of the LLM ones: re-running `indexSession` over the 26 already-
+ * indexed sessions would re-bill `summarize`/`claims` on every one and could overwrite good
+ * `session_pages`/`claims` with a degraded fallback. Duplicating the logic into a script would
+ * have meant the shipped path and the backfill path could drift — and the chunk write is
+ * precisely where this project has already paid for a delete/insert asymmetry once.
+ *
+ * @returns what actually happened, so a caller (the backfill) can report per-session counts
+ *          instead of inferring success from the absence of a throw. `indexSession` ignores it.
+ */
+export async function writeSessionChunks(
+  tenantId: string,
+  sessionId: string,
+  turns: Turns[],
+  embed: IndexEmbedFn,
+  db: Pick<Db, "collection">,
+): Promise<{ written: number; skipped: "no-chunkable-turns" | "embedding-failed" | null }> {
+  const chunksColl = scopedCollection<Chunks>(db as never, "chunks");
+  const plans = buildChunks(turns);
+  if (plans.length === 0) {
+    console.warn(`indexSession(${tenantId}/${sessionId}): no chunkable turns — chunks left unchanged`);
+    return { written: 0, skipped: "no-chunkable-turns" };
+  }
+  // ISS-112: the C8 assertions below MUST sit inside this try. They previously followed it, so a
+  // contradictory batch threw past the catch and skipped `tree_index` and the status flip as well
+  // — exactly the "no vectors this run becomes no summary, no claims, no tree" trade the comment
+  // below says it refuses. A guarantee stated in a comment and contradicted by the line numbering
+  // is worse than no comment, because it stops the next reader checking.
+  try {
+    const embedded = await embed({ kind: "embedding", texts: plans.map((p) => p.text), purpose: "document" });
+
+    // The correlation JSON Schema cannot express (the U1.2 verdict's finding): `vector` and
+    // `dims` are independently optional there, so `{vector: [3 items], dims: 99}` validates.
+    // Asserted at the only place that can see both — the write.
+    if (embedded.vectors.length !== plans.length) {
+      throw new Error(
+        `indexSession: embedder returned ${embedded.vectors.length} vector(s) for ${plans.length} chunk(s)`,
+      );
+    }
+    const chunkDocs: Chunks[] = plans.map((plan, i) => {
+      const vector = embedded.vectors[i] ?? [];
+      if (vector.length !== embedded.dims) {
+        throw new Error(
+          `indexSession: chunk ${plan.chunkIndex} has ${vector.length} dims, batch reports ${embedded.dims}`,
+        );
+      }
+      return {
+        _id: randomUUID(),
+        tenantId,
+        sourceRef: sessionId,
+        turnRefs: toEvidenceTuple(plan.turnRefs),
+        chunkIndex: plan.chunkIndex,
+        vector: toEvidenceTuple(vector),
+        dims: embedded.dims,
+        embeddingModel: embedded.model,
+      };
+    });
+    // Clean replace, never accumulate — a re-index must not double the corpus. Reached only
+    // after every assertion above has passed, so the delete never runs without its replacement.
+    await chunksColl(tenantId).deleteMany({ sourceRef: sessionId } as never);
+    await chunksColl(tenantId).insertMany(chunkDocs);
+    return { written: chunkDocs.length, skipped: null };
+  } catch (err) {
+    // Never rethrow: the rest of indexing already succeeded, and failing the whole call would
+    // turn "no vectors this run" into "no summary, no claims, no tree" too. This now also
+    // covers the C8 assertions (ISS-112), which used to throw past it.
+    console.warn(
+      `indexSession(${tenantId}/${sessionId}): embedding failed — chunks left unchanged: ` +
+        `${err instanceof Error ? err.message : String(err)}`,
+    );
+    return { written: 0, skipped: "embedding-failed" };
+  }
+}
+
 /** Real summary + real evidence-checked claims + a real tree_index update for one already-
  * ingested session. Never throws out of the caller's control on an LLM failure — `summarizeSession`/
  * `extractClaims` already degrade honestly on their own (a labeled fallback summary, an empty
@@ -137,69 +221,9 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
     await claimsColl(tenantId).insertMany(claimDocs);
   }
 
-  // ---- chunks + embeddings (U1.3) -------------------------------------------------------------
-  //
-  // DEGRADE-SAFE, and that is the whole design here. ISS-056 was paid for on the claims path a few
-  // lines above: a provider outage returned an empty array indistinguishable from "nothing found",
-  // the unconditional delete ran, and a transient failure silently destroyed real extracted data.
-  // The same shape applies with more force to chunks, because a vector index is expensive to
-  // rebuild and its absence is INVISIBLE — a search just quietly returns less. So the delete only
-  // ever runs when a replacement is actually in hand.
   if (deps.embed) {
-    const plans = buildChunks(turns);
-    if (plans.length === 0) {
-      console.warn(`indexSession(${tenantId}/${sessionId}): no chunkable turns — chunks left unchanged`);
-    } else {
-      // ISS-112: the C8 assertions below MUST sit inside this try. They previously followed it,
-      // so a contradictory batch threw past the catch and skipped `tree_index` and the status flip
-      // as well — exactly the "no vectors this run becomes no summary, no claims, no tree" trade
-      // the comment below says it refuses. A guarantee stated in a comment and contradicted by the
-      // line numbering is worse than no comment, because it stops the next reader checking.
-      try {
-        const embedded = await deps.embed({ kind: "embedding", texts: plans.map((p) => p.text), purpose: "document" });
-
-        // The correlation JSON Schema cannot express (the U1.2 verdict's finding): `vector` and
-        // `dims` are independently optional there, so `{vector: [3 items], dims: 99}` validates.
-        // Asserted at the only place that can see both — the write.
-        if (embedded.vectors.length !== plans.length) {
-          throw new Error(
-            `indexSession: embedder returned ${embedded.vectors.length} vector(s) for ${plans.length} chunk(s)`,
-          );
-        }
-        const chunkDocs: Chunks[] = plans.map((plan, i) => {
-          const vector = embedded.vectors[i] ?? [];
-          if (vector.length !== embedded.dims) {
-            throw new Error(
-              `indexSession: chunk ${plan.chunkIndex} has ${vector.length} dims, batch reports ${embedded.dims}`,
-            );
-          }
-          return {
-            _id: randomUUID(),
-            tenantId,
-            sourceRef: sessionId,
-            turnRefs: toEvidenceTuple(plan.turnRefs),
-            chunkIndex: plan.chunkIndex,
-            vector: toEvidenceTuple(vector),
-            dims: embedded.dims,
-            embeddingModel: embedded.model,
-          };
-        });
-        // Clean replace, never accumulate — a re-index must not double the corpus. Reached only
-        // after every assertion above has passed, so the delete never runs without its replacement.
-        await chunksColl(tenantId).deleteMany({ sourceRef: sessionId } as never);
-        await chunksColl(tenantId).insertMany(chunkDocs);
-      } catch (err) {
-        // Never rethrow: the rest of indexing already succeeded, and failing the whole call would
-        // turn "no vectors this run" into "no summary, no claims, no tree" too. This now also
-        // covers the C8 assertions (ISS-112), which used to throw past it.
-        console.warn(
-          `indexSession(${tenantId}/${sessionId}): embedding failed — chunks left unchanged: ` +
-            `${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-    }
+    await writeSessionChunks(tenantId, sessionId, turns, deps.embed, db);
   }
-
   const [allSessions, allPages, existingRoot] = await Promise.all([
     sessionsColl(tenantId).find({}).toArray() as Promise<Sessions[]>,
     sessionPagesColl(tenantId).find({}).toArray() as Promise<SessionPages[]>,
