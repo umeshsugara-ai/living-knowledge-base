@@ -104,4 +104,39 @@ append-only DECISIONS entry. No product code touched — `apps/`, `packages/` un
 Reversible by `git revert`, except D-014 which is append-only by protocol and would need a
 superseding entry.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/loop-safety-mutation-guard.md` (Cycle checked: 1,
+matching Fix cycle 1), committed `782234d`. 8/8 criteria, 4/4 invariants.
+
+**Two corrections the checker made to this manifest, both accepted:**
+
+1. **My stated reason for the `catalogue-cli` failures was wrong.** I claimed `docs/PROGRESS.md`
+   was left dirty by the other session. The checker found it **clean** before it ran anything: the
+   whole diff is one banner line (`EDITED SINCE COMMIT — .goal/catalogue.json…`) baked into the
+   *tracked* file by commit `fbbafc0`, two commits before this unit. Right conclusion (not this
+   unit's fault), wrong route. My instruction to "confirm they pass once committed" is **falsified**
+   — it is committed and they still fail. Belongs to the session that made `fbbafc0`.
+2. **I mis-located my own weak spot.** I offered test (c) — "the ledger can be cleared by hand" — as
+   the guard's hole. The checker points out that models *deliberate evasion*, which no local hook
+   survives anyway (`--no-verify`, or a human typing git). The 2026-09-08 incident was **forgetting,
+   not evasion**, and against forgetting the ledger fails closed. It also notes I undersold the
+   design: the safety property is the **`apply` precondition** (HEAD-identity at arm time), not the
+   ledger — that is what makes `git checkout --` authoritative and structurally deletes the
+   "restore reported success but didn't hold" failure. It survives the ledger being deleted, and is
+   now recorded as **[I1]** in the new contract.
+
+**On the tree-wide question I asked it to attack:** it agreed with narrow, and gave the reason I
+had not — a tree-wide assertion would refuse ~100% of commits while a second session is
+legitimately dirty, so it would be switched off; and tree-dirtiness is not mutation. Recorded as
+**[I3]**, CRITICAL to reverse. Its better alternative is **per-unit close-out (C7)**: the checker
+asserts the files *it* armed match HEAD — procedure, not code.
+
+**It authored `qa/contracts/loop-safety.md`** (C1–C8, I1–I4) derived wholly from D-014, so no fresh
+START gate is needed — flagged in that file for Umesh to ratify.
+
+**ISS-086 (high) — a real miss of mine, fixed this tick.** D-014's `Result` field says
+`.claude/CLAUDE.md`'s round-cap paragraph is replaced. **I never made that edit.** DECISIONS is
+history; CLAUDE.md is what each tick obeys — so the rule actually in force remained the count-based
+cap that D-014 itself measures as having closed the search seam two rounds before ISS-078 was
+found. Writing a decision and not applying it is worse than not deciding, because the decision log
+then reads as though it were done. Both passages are now corrected in place (the cap is
+class-based; the `checker/SKILL.md:127` misreading is retracted inline).
