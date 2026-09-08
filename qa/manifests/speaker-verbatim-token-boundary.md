@@ -209,3 +209,96 @@ The cue rule refuses a name mentioned without an adjacent naming cue in that sam
 deliberate recall reduction on an unmeasured baseline: the real LLM yield above 15.8% was never
 measured (known gap 1), and this makes it lower than it would otherwise have been. Refusing is the
 right error for anti-fabrication, but it is a cost and the measurement unit must report it.
+
+---
+
+# Fix cycle 3 — responding to the cycle-2 FAIL
+
+FAILed again, 12/14, and the diagnosis was exactly right: **the cue was in the wrong slot.** It
+evidences that the *turn* names someone; it never constrains whether the *candidate* is a name.
+
+## ISS-093 (critical) — 20 of 20 fabricated people shipped
+
+One capitalised non-name next to any cue was enough. Reproduced as a 12-case corpus before fixing:
+`"Welcome Everyone…"` → `person:everyone`, `"Hi Guys…"` → `person:guys`, `"Welcome To the annual
+conference."` → `person:to`, `"Thank you Monday…"` → `person:monday`. **0 of 12 refused.**
+
+**Fix — two changes, because one guard was answering the wrong question.**
+
+1. **A candidate-level discourse denylist.** I resisted this in cycle 1, arguing a stopword list is
+   unbounded. That objection was wrong-headed and I withdraw it: this is not "everything that is
+   not a name". It is the **closed class** of English function words, discourse markers and
+   calendar terms — pronouns, determiners, prepositions, conjunctions, greetings, quantifiers,
+   collective address nouns, days, months. Closed classes are enumerable; "not a name" is not.
+   Real names that are also ordinary nouns (`Grace`, `Hope`, `Summer`) are deliberately absent,
+   because they are not function words.
+2. **Person-directed cues.** Bare `welcome` / `hi` / `thanks` precede objects at least as often as
+   people (`"Welcome Diwali celebrations"`), so they are gone as standalone cues. What remains
+   either names the speaker, hands over to them, or addresses them with punctuation only address
+   takes.
+
+## ISS-094 (high) — cycle 2 refused the class the contract exists to admit
+
+`"Good morning Prasanti, please go ahead."`, `"Prasanti, what do you think about this?"` (the
+contract's own probe A3) and `"Our next presenter is Nilesh Gotecha."` were all dropped. Cycle 2
+was worst-of-both: it neither blocked fabrication nor admitted real evidence.
+
+Restored via address-shaped forms. **The comma does real work:** `"Good morning Prasanti,"` is an
+address; `"Welcome Diwali celebrations"` is not.
+
+## The one attack a pattern cannot reach
+
+`"This is India calling."` survived both fixes — telling a country from a person is a gazetteer
+problem. Closed instead by **demoting the bare demonstrative for single-token candidates**:
+demonstratives point at anything (`"This is Wednesday."`, `"This is Great news."`), so `this is` +
+one capitalised token is not evidence of a person, while `"This is Makrand Rajadhyaksha"` keeps the
+cue. Principled rather than a special case, and it needs no gazetteer.
+
+## Result
+
+**12/12 fabrications refused · 9/9 genuine naming forms accepted.** Both blocks are now standing
+tests, asserted together on purpose — tightening one at the cost of the other is precisely how
+cycle 2 failed.
+
+```
+$ pnpm --filter '@lkb/index' test     tests 122   pass 122   fail 0
+$ pnpm -r typecheck                   exit 0
+$ pnpm lint:structure                 green (250 files within budget, 272 modules, 0 violations)
+```
+
+**Mutation table** (baseline 122/0) — five independent guards, none subsuming another:
+
+| mutation | result |
+|---|---|
+| remove the discourse denylist | **120 / 2** |
+| un-tier the demonstrative | **120 / 2** |
+| drop the address-comma requirement | **121 / 1** |
+| remove the name-shape guard | **120 / 2** |
+| remove the cue rule | **118 / 4** |
+| **no-op control** | **122 / 0** |
+
+**No corpus regression:** 11/11 sessions degrade honestly; deterministic path unchanged at 78/494.
+
+## One more fixture change, disclosed
+
+`"This is Ruby again."` → `"Ruby here again."` — single-token + demonstrative is now weak by
+design. Fixture prose only; the assertion is untouched. That is three fixtures re-worded across
+three cycles, and I flag each because re-fixturing is how a weakened test hides.
+
+## New file — `speaker-name-rules.ts`
+
+`lint-loc` failed at 321 lines against a 300 budget, and the split follows a real seam rather than
+a convenient one: these rules answer a question about **names and text**, know nothing about
+providers or jobs, and are the surface three checker cycles attacked. `speakers-llm.ts` is now 160
+lines, the rules 218.
+
+## Honest limits
+
+1. **A gazetteer-class proper noun in a strong cue still passes.** `"My name is Bangalore."` would
+   ship. No pattern closes that; only world knowledge does.
+2. **Recall cost is real and unmeasured.** The cue rule refuses names mentioned without an adjacent
+   cue. The measurement unit must report the true yield, and it will be lower than an unguarded
+   extractor's.
+3. **Non-Latin scripts are refused wholesale** by the shape guard's `\p{Lu}` requirement — a real
+   limit, not just the particle list.
+4. **`"J"` from `"My name is J. Smith."`** ships as `person:j`. Carried from cycle 2, uncharged.

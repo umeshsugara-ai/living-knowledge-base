@@ -56,8 +56,9 @@ test("drops a fabricated turnId, and drops the speaker entirely if none survive"
 });
 
 test("keeps only the surviving subset when some cited turns are real and some are not", async () => {
-  // Both turns must NAME Ruby -- under the cycle-2 cue rule a bare mention is not evidence.
-  const turns = [turn("t1", "spk:0", "My name is Ruby."), turn("t2", "spk:0", "This is Ruby again.")];
+  // Both turns must NAME Ruby: a bare mention is not evidence. Cycle 3 also demoted the bare
+  // demonstrative for SINGLE-token names ("This is India calling."), so t2 uses an after-cue.
+  const turns = [turn("t1", "spk:0", "My name is Ruby."), turn("t2", "spk:0", "Ruby here again.")];
   const { resolved } = await extractSpeakers(turns, replies([
     { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1", "t404", "t2"] },
   ]));
@@ -283,6 +284,74 @@ test("token cap alone rejects a title-cased phrase after a cue", async () => {
     replies([{ speakerRef: "spk:0", displayName: "Our Journey So Far Together", turnIds: ["t1"] }]),
   );
   assert.deepEqual(resolved, [], "a slide title is not a person");
+});
+
+/**
+ * Fix cycle 3. The cycle-2 verdict FAILED with ISS-093 (critical) and ISS-094 (high): the cue rule
+ * was in the wrong slot. It evidences that the TURN names someone; it says nothing about whether
+ * the CANDIDATE is a name -- so 20 of 20 fabricated people shipped ("Welcome Everyone" ->
+ * person:everyone, "Hi Guys" -> person:guys, "Welcome To the conference" -> person:to). Worse, it
+ * simultaneously REFUSED the greeting / handover / address class the contract exists to admit.
+ *
+ * These two blocks are the standing regression corpus: every fabrication must be refused, and
+ * every genuine naming form must survive. They are asserted together on purpose -- tightening one
+ * at the cost of the other is exactly how cycle 2 failed.
+ */
+for (const [text, name] of [
+  ["Welcome Everyone to the session.", "Everyone"],
+  ["Thanks All for being here.", "All"],
+  ["Hi Guys, let us begin.", "Guys"],
+  ["Welcome To the annual conference.", "To"],
+  ["Thank you Monday was busy.", "Monday"],
+  ["Welcome Diwali celebrations everyone.", "Diwali"],
+  ["This is India calling.", "India"],
+  ["Hello Everyone and welcome.", "Everyone"],
+  ["Welcome Back to another session.", "Back"],
+  ["Thanks Folks for joining.", "Folks"],
+  ["Hi Team, quick update.", "Team"],
+  ["This is Great news for all.", "Great"],
+] as [string, string][]) {
+  test(`ISS-093: refuses ${JSON.stringify(name)} as a fabricated person`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.deepEqual(resolved, [], `${JSON.stringify(name)} is not a human being`);
+  });
+}
+
+for (const [text, name] of [
+  ["My name is Jubin Thakkar.", "Jubin Thakkar"],
+  ["This side Nilesh Gotecha from CEPT.", "Nilesh Gotecha"],
+  ["Hello, D'Souza here.", "D'Souza"],
+  ["My name is Ruby-Anne Smith.", "Ruby-Anne Smith"],
+  ["Good morning Prasanti, please go ahead.", "Prasanti"],
+  ["Prasanti, what do you think about this?", "Prasanti"],
+  ["Our next presenter is Nilesh Gotecha.", "Nilesh Gotecha"],
+  ["This is Makrand Rajadhyaksha speaking.", "Makrand Rajadhyaksha"],
+  ["Over to Ruby", "Ruby"],
+  ["Ruby speaking.", "Ruby"],
+] as [string, string][]) {
+  test(`ISS-094: still accepts ${JSON.stringify(name)} in a genuine naming form`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.equal(resolved.length, 1, `${JSON.stringify(name)} must still resolve in: ${text}`);
+  });
+}
+
+test("ISS-093: a demonstrative alone does not name a SINGLE-token candidate", async () => {
+  // "This is India calling." is the one attack a closed-class list cannot reach -- telling a
+  // country from a person is a gazetteer problem. Demoting the bare demonstrative for one-token
+  // candidates closes it without a gazetteer; two-token names keep the cue.
+  const weak = await extractSpeakers([turn("t1", "spk:0", "This is Bangalore calling.")], replies([
+    { speakerRef: "spk:0", displayName: "Bangalore", turnIds: ["t1"] },
+  ]));
+  assert.deepEqual(weak.resolved, []);
+
+  const strong = await extractSpeakers([turn("t1", "spk:0", "This is Makrand Rajadhyaksha speaking.")], replies([
+    { speakerRef: "spk:0", displayName: "Makrand Rajadhyaksha", turnIds: ["t1"] },
+  ]));
+  assert.equal(strong.resolved.length, 1, "a two-token name keeps the demonstrative cue");
 });
 
 test("empty input never calls the provider", async () => {

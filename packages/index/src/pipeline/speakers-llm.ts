@@ -25,6 +25,7 @@ import type { Turns } from "@lkb/core";
 import type { CompleteResult, Job } from "@lkb/ai";
 import { parseJsonLoose } from "@lkb/ai";
 import { personIdFor, resolveSpeakers, type ResolvedSpeaker } from "./speakers.js";
+import { looksLikeAName, isDiscourseOnly, citesNameAsAnIntroduction } from "./speaker-name-rules.js";
 
 export type SpeakersCompleteFn = (job: Job) => Promise<CompleteResult>;
 
@@ -43,119 +44,6 @@ const SPEAKERS_SYSTEM_PROMPT = [
   "entirely -- an unnamed speaker is correct, a guessed one is a serious error. If no speaker can",
   "be identified, respond with an empty array [].",
 ].join(" ");
-
-/**
- * Name particles that are legitimately lowercase INSIDE a name ("van der Berg", "de Souza").
- * Never valid as the first token, which is why `looksLikeAName` only allows them at i > 0.
- */
-const NAME_PARTICLES = new Set([
-  "van", "von", "der", "den", "de", "del", "della", "di", "da", "dos", "du", "la", "le",
-  "bin", "binte", "ibn", "al", "el",
-]);
-
-/**
- * Is this string shaped like a person's name at all?
- *
- * The model supplies `displayName`, so "it appears in the transcript" is not sufficient -- a
- * greeting appears in the transcript too. The cycle-1 checker got `"Good morning"` shipped as
- * `person:good-morning` on exactly that gap. Requiring each token to be capitalised (bar interior
- * particles) rejects prose while keeping real names.
- *
- * Deliberately conservative, consistent with "leave low-confidence speakers unresolved rather than
- * guessing": an all-lowercase real name, or one longer than four tokens, is refused not guessed.
- */
-export function looksLikeAName(name: string): boolean {
-  const tokens = name.trim().split(/\s+/).filter(Boolean);
-  if (tokens.length === 0 || tokens.length > 4) return false;
-  return tokens.every((tok, i) => {
-    if (/^\p{Lu}[\p{L}'’.-]*$/u.test(tok)) return true;
-    return i > 0 && i < tokens.length - 1 && NAME_PARTICLES.has(tok.toLowerCase());
-  });
-}
-
-/**
- * Does `text` contain `name` as a whole name?
- *
- * Two guards failed open before. A bare `includes()` let "Ruby" match "Rubykumar Shah" (ISS-092's
- * ancestor). Then a letters-and-digits boundary let "Ruby" match "Ruby-Anne Smith" -- because this
- * function treated "-" as a boundary while `looksLikeAName` admits "-" INSIDE a name. Two
- * contradictory definitions of where a name ends, and the containment side is the one that fails
- * open, so it is the one that had to move.
- *
- * `NAME_JOINERS` is therefore shared by both: a character that can sit inside a name can never
- * simultaneously mark its edge. "." is deliberately NOT a joiner here -- it ends far more sentences
- * than it joins names, and treating it as one would refuse "My name is Ruby."
- *
- * Deliberately not a RegExp: it would have to be built from a model-supplied string, and a
- * mis-escape fails OPEN by widening what matches. indexOf has no escaping surface.
- */
-const NAME_JOINERS = new Set(["-", "'", "\u2019"]);
-
-export function containsNameVerbatim(text: string, name: string): boolean {
-  const isNameChar = (ch: string | undefined): boolean =>
-    ch !== undefined && (/[\p{L}\p{N}]/u.test(ch) || NAME_JOINERS.has(ch));
-  for (let from = 0; ; ) {
-    const at = text.indexOf(name, from);
-    if (at === -1) return false;
-    if (!isNameChar(text[at - 1]) && !isNameChar(text[at + name.length])) return true;
-    from = at + 1;
-  }
-}
-
-/**
- * Cue phrases that mark an act of NAMING, checked immediately adjacent to the candidate.
- *
- * ISS-091: `looksLikeAName` tests capitalisation, not nameness, and transcript prose capitalises
- * nearly every sentence start -- so "Welcome", "Thanks", "Okay" and even the bare pronoun "I" all
- * shipped as people. "Good morning" was caught only because English lowercases "morning". Shape is
- * necessary, not sufficient.
- *
- * A naming cue is used rather than a stopword list because a stopword list is unbounded and
- * language-specific, while a cue is positive evidence that this turn introduces or addresses
- * someone -- which is exactly what the LLM path's prompt asks the model to find. It also costs
- * recall on purpose: a name mentioned with no cue in that turn is refused rather than guessed at.
- *
- * These are fixed constants, never model-supplied, so a RegExp here carries no injection surface.
- */
-const NAMING_CUES_BEFORE = [
-  "my name is", "my name's", "i am", "i'm", "this is", "that is", "that's", "this side",
-  "call me", "welcome", "joined by", "joining us", "introduce", "introducing",
-  "over to", "hand over to", "handing over to", "thank you", "thanks", "hi", "hello", "hey",
-];
-const NAMING_CUES_AFTER = ["here", "speaking", "from", "with us", "joining"];
-
-/** Is the occurrence of `name` at `at` an act of naming, rather than a passing mention? */
-function hasNamingCue(text: string, name: string, at: number): boolean {
-  const before = text
-    .slice(Math.max(0, at - 40), at)
-    .toLowerCase()
-    .replace(/[\s,:;."'\u2019()\u2014-]+$/u, "");
-  if (NAMING_CUES_BEFORE.some((cue) => before.endsWith(cue))) return true;
-
-  const after = text
-    .slice(at + name.length, at + name.length + 24)
-    .toLowerCase()
-    .replace(/^[\s,:;."'\u2019()\u2014-]+/u, "");
-  return NAMING_CUES_AFTER.some((cue) => after.startsWith(cue));
-}
-
-/** Every whole-name occurrence of `name` in `text`, as start offsets. */
-function nameOccurrences(text: string, name: string): number[] {
-  const isNameChar = (ch: string | undefined): boolean =>
-    ch !== undefined && (/[\p{L}\p{N}]/u.test(ch) || NAME_JOINERS.has(ch));
-  const out: number[] = [];
-  for (let from = 0; ; ) {
-    const at = text.indexOf(name, from);
-    if (at === -1) return out;
-    if (!isNameChar(text[at - 1]) && !isNameChar(text[at + name.length])) out.push(at);
-    from = at + 1;
-  }
-}
-
-/** Whole-name containment AND positive evidence that the turn is naming someone. */
-export function citesNameAsAnIntroduction(text: string, name: string): boolean {
-  return nameOccurrences(text, name).some((at) => hasNamingCue(text, name, at));
-}
 
 function buildCitableTranscript(turns: Turns[]): string {
   return turns.map((t) => `[id:${t._id}] [${t.speakerRef}] ${t.text}`).join("\n");
@@ -231,6 +119,8 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
     // Shape check BEFORE containment: a greeting can be verbatim in the transcript and still not
     // be a name. Cheaper too -- it rejects without touching any turn.
     if (!looksLikeAName(name)) continue;
+    // Shape says "could be a name"; this says "is not a discourse word". Different questions.
+    if (isDiscourseOnly(name)) continue;
 
     const cited = Array.isArray(entry.turnIds) ? entry.turnIds : [];
     const evidence: { turnId: string; sessionId: string }[] = [];
