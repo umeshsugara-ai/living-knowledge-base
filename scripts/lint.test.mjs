@@ -86,6 +86,26 @@ pair(
   /packages\/a\/src: 31 files/,
 );
 
+// C2b — the dirsize override (D-017) is SCOPED: a named directory gets extra room, and every
+// other directory keeps the global cap. Without the second half of this, an override could quietly
+// become a global raise -- which is the exact mistake D-016 would have made.
+test("dirsize override raises the cap only for the directory it names", () => {
+  const root = fixture();
+  const cfg = JSON.parse(JSON.stringify(CONFIG));
+  cfg.dirsize.overrides = { "packages/a/src": dirMax + 1 };
+  writeFileSync(join(root, "structure.config.json"), JSON.stringify(cfg));
+  // the OVERRIDDEN directory may hold one more than the global cap
+  for (let i = 0; i <= dirMax; i++) put(root, `packages/a/src/f${i}.ts`);
+  const ok = run("dirsize", root);
+  assert.equal(ok.status, 0, `override should permit ${dirMax + 1} files: ${ok.out}`);
+
+  // an UNLISTED sibling is still held to the global cap
+  for (let i = 0; i <= dirMax; i++) put(root, `packages/b/src/f${i}.ts`);
+  const bad = run("dirsize", root);
+  assert.notEqual(bad.status, 0, "an unlisted directory must still fail at the global cap");
+  assert.match(bad.out, /packages\/b\/src: 31 files \(budget 30\)/);
+});
+
 // C3 — root
 const r = CONFIG.root;
 pair(

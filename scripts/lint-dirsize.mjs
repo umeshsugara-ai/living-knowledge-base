@@ -2,6 +2,11 @@
 /**
  * scripts/lint-dirsize.mjs — C2: no directory under the roots holds more than
  * structure.config.json → dirsize.maxFiles files (non-recursive count).
+ *
+ * `dirsize.overrides` (D-017) maps a repo-relative directory path to its own cap, for the case
+ * where one directory has earned more room and the rest have not. Deliberately explicit: a
+ * directory must be NAMED to get extra space, so accretion shows up in a diff and in DECISIONS
+ * rather than hiding behind a raised global. Anything unlisted keeps `maxFiles`.
  * Usage: node scripts/lint-dirsize.mjs [--root <dir>]
  */
 import { basename, join, relative } from "node:path";
@@ -17,14 +22,16 @@ function* dirs(root, dir, ignoreDirs) {
 }
 
 export function check(root, cfg = loadConfig(root)) {
-  const { maxFiles } = cfg.dirsize;
+  const { maxFiles, overrides = {} } = cfg.dirsize;
   const violations = [];
   let scanned = 0;
   for (const r of cfg.roots) {
     for (const dir of dirs(root, join(root, r), cfg.ignoreDirs)) {
       scanned++;
+      const rel = posix(relative(root, dir)) || ".";
+      const budget = Object.prototype.hasOwnProperty.call(overrides, rel) ? overrides[rel] : maxFiles;
       const n = looseFiles(dir).length;
-      if (n > maxFiles) violations.push(`${posix(relative(root, dir)) || "."}: ${n} files (budget ${maxFiles})`);
+      if (n > budget) violations.push(`${rel}: ${n} files (budget ${budget})`);
     }
   }
   return { violations, scanned };
