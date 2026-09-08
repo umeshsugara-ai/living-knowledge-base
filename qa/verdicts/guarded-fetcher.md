@@ -449,3 +449,162 @@ mutation count downward and corrected its own explanation of why the odd IPv4 en
 diagnosis of the missing manifest is right, non-self-serving, and generalises to a real property of
 the tooling that bit me too while writing this verdict. One criterion, one cycle left, and the
 security core of the unit is sound.
+
+---
+
+# Cycle 3 check
+
+**Date:** 2026-09-08
+**Cycle checked:** 3
+**Commit under check:** `948212e`
+**Bound root:** `D:\KnowledgeBase-lanes\c-unrun-writers` (branch `lane/c-unrun-writers`)
+**Contract:** `qa/contracts/guarded-fetcher.md`
+**Ledger:** `qa/issues.c-unrun-writers.jsonl` (D-019 lane ledger)
+**Note:** a cycle-3 check dispatched earlier died on an API error (ENOTFOUND) and wrote no
+verdict. That was BLOCKED, not a verdict; it consumed no fix cycle. This is the first cycle-3
+verdict.
+
+```
+VERDICT: PASS
+SCOREBOARD: 7/7 criteria met, 3/3 invariants hold
+```
+
+## What I re-ran myself
+
+| Command | Result |
+|---|---|
+| `pnpm --filter '@lkb/ingest' test` | **79 pass / 0 fail**, 945ms — matches the manifest |
+| `pnpm -r test` | green — apps/api **132 pass / 0 fail**, meeting-bot green, all Done |
+| `pnpm -r typecheck` | exit 0, all packages Done |
+| `pnpm lint:structure` | green — lint-migrations OK (906 files), SNAPSHOT.md fresh, tracker-audit OK (G1), depcruise **281 modules / 857 deps / 0 violations** |
+
+Plus two probe programs of my own against the shipped module (never the maker's tests): a
+50-address table over `isBlockedAddress`, and a six-case deadline probe. Nothing below is taken
+from the manifest.
+
+## Address table re-derived (C3 / C4)
+
+The cycle-2 to cycle-3 diff touches only the deps interface and the fetch loop
+(`guarded-fetch.ts` +37/-11), not the parser, but I re-derived it rather than inherit it:
+**40 must-block + 10 must-allow addresses, 0 anomalies.** Both spellings of every v4-embedding
+prefix (`::ffff:127.0.0.1` / `::ffff:7f00:1`, `::127.0.0.1` / `::7f00:1`, `2002:7f00:0001::1`,
+`64:ff9b::127.0.0.1` / `64:ff9b::7f00:1`, `2001:0:1::1`) block; malformed input (`1::2::3`,
+nine groups, `gggg::1`, empty, `not-an-ip`) fails closed; the just-outside neighbours
+(`172.32.0.1`, `172.15.0.1`, `100.63.0.1`, `198.20.0.1`, `223.255.255.255`,
+`2001:4860:4860::8888`) are allowed, so the table is not passing by over-blocking.
+
+## Mutation table (D-020: byte backup, trap restore on EXIT/INT/TERM/ERR, `timeout`, `cmp` verify)
+
+Baseline **79/0**. Every restore verified `cmp`-identical; the file was byte-identical to the
+backup at the end of the run, and `git diff HEAD -- packages/` is empty now.
+
+| Mutant | pass/fail | killed? |
+|---|---|---|
+| **no-op control** | 79 / 0 | — (control holds) |
+| delete the `Promise.race` entirely (no deadline) | 78 pass, **1 cancelled, runner exit 1 in 7s** | **yes** — see below |
+| renew the budget every hop (`left = timeoutMs`) | 77 / **2** | yes |
+| pass `Number.MAX_SAFE_INTEGER` instead of `maxBytes` to the transport | 78 / **1** | yes |
+
+### On the maker's honesty about the infinite-deadline mutant — item 3
+
+The maker reported this mutant as "detected — the run TIMED OUT", called it weaker than a red
+assertion, and explicitly declined to write it up as a clean kill. **I reproduced it, and the
+characterisation is honest but understated in the maker's own disfavour.** What actually
+happens: the run ends in **7 seconds with exit status 1**, and the runner prints
+`x ISS-009: a hanging request is abandoned, not waited on forever (5009ms)` under
+`x failing tests:` with the reason `'test timed out after 5000ms'`. That is not the runner
+hanging and being killed from outside — it is the test's own explicit `{ timeout: 5000 }` bound
+firing, deterministically, and taking the suite red.
+
+**A timeout-detected mutant does count as pinned here**, because the property under test *is* a
+duration bound: "must not exceed 5s" is the assertion, and an elapsed-time assertion can only be
+expressed as a timeout. The one artefact that misled the maker is a Node reporting quirk — a
+timed-out test is counted under `cancelled 1`, so the summary line reads `pass 78 / fail 0` even
+though the process exits 1 and the test is listed under failing tests. Reading `fail 0` as "not
+a clean kill" is a reasonable misreading of that summary, not an overclaim. Corrected upward,
+and credited: erring against yourself is the right direction to err.
+
+## Deadline probe — item 2
+
+| Probe | Observed |
+|---|---|
+| `timeoutMs: 0` | throws at `:226` in **1ms**, before any request is issued — fails closed |
+| `timeoutMs: -5000` | throws in **0ms**, same path — fails closed |
+| `timeoutMs: 3_000_000_000` + never-settling transport | throws in **5ms** with Node's `TimeoutOverflowWarning ... set to 1` — ISS-014 |
+| redirect chain, `timeoutMs: 300`, 100ms per hop | per-hop budgets **[300, 194, 83]** then refusal at **307ms** — the deadline is total, and it, not the redirect cap, ends the chain |
+| `maxBytes: 42` | transport received `{maxBytes: 42, timeoutMs: 1000}` |
+
+**Redirect cap and deadline do not interact badly.** The budget strictly decreases across hops
+and whichever bound is tighter fires first; a hop is never issued with a dead budget
+(`left <= 0` throws before the request). Zero and negative `timeoutMs` refuse instantly rather
+than meaning "no limit" — the fail-closed direction, so I am not requiring them to be
+construction errors. The only defect the probe found is at the far end: a `timeoutMs` above
+2^31-1 inverts into a ~1ms deadline. It still fails **closed**, it is availability-only, and
+nobody configures a fetcher with a 25-day budget — **ISS-014, low, not a `[C7]` failure.**
+
+## Ruling on the un-cancellable race — item 1 (the maker's direct question)
+
+Reproduced: with `timeoutMs: 50` against a transport settling at 400ms, the caller rejects on
+schedule and **the abandoned transport still runs to completion afterwards.** The maker's
+description is exactly right, and the module does not claim otherwise — its comment is scoped to
+"must not be able to hang **this caller**", which is literally true.
+
+**Ruling: acceptable at this seam; NOT a `[C7]` or `[C6]` failure; filed as
+ISS-C-UNRUN-WRITERS-015, BLOCKING on the transport unit.** `[C7]` asks that a declared bound
+actually bound, and the caller's duration *is* bounded — what is not bounded is the lifetime of
+a handle held by a transport that does not exist. This follows the **ISS-011 precedent**
+deliberately: the pinned address was split out to the transport rather than demanded here, and
+the same reasoning applies to cancellation, which is a property of the thing being cancelled.
+
+One honest asymmetry, recorded so the transport unit inherits it rather than discovers it:
+unlike a pinned address — where the real contract is address + original Host + SNI + cert
+validation, and guessing that blind is what causes the migration "fix seams early" is trying to
+avoid — `signal: AbortSignal` has exactly **one** standard shape, taken by `node:https`,
+`undici` and `fetch` alike. So adding it now would have been cheap and non-speculative, and I
+would not have objected. I am not failing cycle 3 for it, because the criterion it would serve
+is met without it and because ISS-015 makes it non-forgettable at the layer that can honour it.
+**ISS-015 is a scoping note for the unbuilt transport unit, not a blocker on this unit.**
+
+## Manifest self-consistency — item 4
+
+**Confirmed: the cycle-2 contradiction is not repeated.** At cycle 2 the header listed ISS-009
+under "Issues addressed" while the same document's Known-gaps section admitted the timeout was
+unfixed. The cycle-3 document opens by naming that failure in those terms, and its Known-gaps
+section now lists only things not claimed as addressed anywhere in it: ISS-011 (check-to-connect,
+already blocking on the transport), no real transport, ISS-012 (`::ffff:0:0:0/96`, low), and no
+allowlist mode. I re-verified each of those four is genuinely still open and none is claimed
+fixed. The mutation table is likewise not overstated — the one weak row is the one the maker
+flagged as weak, and it is in fact stronger than flagged.
+
+## Criteria
+
+| | Verdict | Evidence |
+|---|---|---|
+| **[C1]** resolved address, fetch time, uncached | **met** | `lookup` inside the hop loop (`:212`), no memo; the cycle-2 mutant "check only the FIRST resolved address" dies 74/1 and that code is unchanged |
+| **[C2]** every hop re-resolved, non-http refused, bounded | **met** | `:207` loop, `:244-248` re-enters with the new URL, `:246` refuses non-http(s), `:257` bounds hops; the probe shows hops 2 and 3 each re-resolved with a fresh budget |
+| **[C3]** IPv4 table | **met** | 13 must-block v4 probes all block; 5 just-outside neighbours allowed |
+| **[C4]** IPv6 table incl. embedded v4 in both notations | **met** | both spellings of mapped / compatible / 6to4 / NAT64 / Teredo block; 0 anomalies over 50 addresses |
+| **[C5]** fails closed | **met** | unparseable returns `true` (`:159`); empty resolver answer refused (`:217`); non-http(s) input refused (`:200`); `timeoutMs <= 0` refuses before issuing |
+| **[C6]** claims match behaviour | **met** | the ISS-007 docstring correction stands; the deadline comment claims only that the caller cannot be hung, which is what the probe measured; residual windows are stated, not implied away |
+| **[C7]** bounds actually bound | **met** | `maxBytes` in `opts` (mutant dies 78/1) **and** still checked per hop; TOTAL deadline with the remaining budget per hop (mutants die 77/2 and exit-1) |
+
+## Invariants
+
+| | Verdict |
+|---|---|
+| **[I1]** the table only tightens | **holds** — the cycle-3 diff removes no range; the parser is untouched |
+| **[I2]** `lookup`/`request` injected, every range exercised by a test that fails when the range is removed | **holds** — 79 tests, no network; the cycle-2 range mutants still die, and the three new bound mutants die too |
+| **[I3]** (inherited) network-level defence on the resolved IP | **holds** — and is now accompanied by the resource bounds `[C7]` demanded |
+
+## Ledger
+
+- **ISS-C-UNRUN-WRITERS-009 → fixed.** All three parts re-derived above.
+- **ISS-C-UNRUN-WRITERS-014** (low, new) — `timeoutMs > 2^31-1` collapses the deadline to ~1ms.
+- **ISS-C-UNRUN-WRITERS-015** (medium, new) — the race cannot cancel the loser; **BLOCKING on
+  the transport unit**, alongside ISS-011.
+- Still open and correctly disclosed: **ISS-011** (check-to-connect, blocking on transport),
+  **ISS-012** (low parser laxnesses), **ISS-013** (process backstop, needs the Approver).
+
+**This is a PASS on the primitive, not on the feature.** `request` is still an injected seam
+with nothing behind it, so **A13 does not move**, and three ledger rows now stand between this
+seam and a transport that would be accepted without pinning, cancellation, or a real cap.
