@@ -55,3 +55,15 @@ verdict still blocks the lint. APPLIES NEXT: any gate that can be red for legiti
 normal work — the earlier ruling "a gate that blocks every commit until someone else acts is a gate
 people delete" applies to this one too. Not changed unilaterally: I13/I14 are checker-owned, and
 the last sweep reopened ISS-006 precisely because makers edited their own ground truth.
+
+- 2026-09-08 · PATTERN observed twice this session (empty-manual-verdict-refusal ISS-036, then
+  tracker-audit-g1-gate ISS-053, then again while drafting catalogue-cli-clean-check ISS-064
+  before it was caught pre-ship): a regression test that re-derives its own inline check instead
+  of calling the SAME exported function the production code path uses is a false-green trap — a
+  real regression in the production logic can pass the "proving" test because the test never
+  actually calls it. Caught every time only because mutation-testing-with-proof-of-application is
+  mandatory here; a green suite alone would have shipped all three false-green tests silently.
+  APPLIES NEXT: when writing a regression test for a bug in a filter/check/guard function, always
+  extract the check into its own named function first and have the test call that function
+  directly, never a hand-copied duplicate of its logic — then the mutation test is the thing that
+  proves the extraction, not just the fix. — folded 2026-09-08
