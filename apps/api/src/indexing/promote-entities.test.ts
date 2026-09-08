@@ -108,3 +108,41 @@ test("ISS-126: an empty tree writes nothing rather than writing empty rows", asy
   assert.equal(writes(calls, "orgs").length, 0);
   assert.equal(res.skipped, null, "nothing to promote is a success, not a failure");
 });
+
+/* ── ISS-126 item (4): the tagClaims:TRUE path was unreachable in all 137 tests ────────────────
+ * Cycle 2's writer tests asserted `tagClaims: false` writes nothing, and stopped there. But
+ * `fakeDb.find` returned `[]` for `claims`, so the branch that actually WRITES topicRefs never
+ * executed — mutating `{ $set: { topicRefs: refs } }` to `{ $set: { topicRefs: [] } }` left the
+ * suite fully green. ISS-126's own fix_direction had warned in advance: "extend fakeDb rather than
+ * assuming an untested op is unreachable." I asserted the negative case and mistook it for
+ * covering both.
+ */
+test("ISS-126(4): tagClaims writes the session's REAL topicRefs onto each of its claims", async () => {
+  const { db, calls } = fakeDb({
+    claims: [
+      { _id: "c1", tenantId: "t", text: "a", evidence: [{ turnId: "t1", sessionId: "s1" }] },
+      { _id: "c2", tenantId: "t", text: "b", evidence: [{ turnId: "t2", sessionId: "s1" }] },
+    ],
+  });
+  const res = await promoteAndPersistEntities("t", "s1", treeRoot(), db);
+
+  const claimWrites = calls.filter((c) => c.coll === "claims" && c.op === "updateOne");
+  assert.equal(claimWrites.length, 2, "every claim of this session must be tagged");
+  assert.equal(res.claimsTagged, 2);
+  for (const w of claimWrites) {
+    const set = (w.update as Record<string, Record<string, unknown>>).$set!;
+    assert.deepEqual(set.topicRefs, ["visa-rules"],
+      "the REAL topic slugs must be written — an empty array here is the mutation that stayed green");
+  }
+});
+
+test("ISS-126(4): a session whose tree surfaced NO topics clears topicRefs rather than leaving them stale", async () => {
+  // Writing [] is correct here and is a different case from the bug above: it removes a tagging
+  // from a previous build whose topic no longer exists in the tree.
+  const { db, calls } = fakeDb({ claims: [{ _id: "c1", tenantId: "t", evidence: [{ turnId: "t1", sessionId: "other" }] }] });
+  const root = node("tenant:t", "t", "root"); // no topic nodes at all
+  await promoteAndPersistEntities("t", "s1", root, db);
+  const w = calls.find((c) => c.coll === "claims" && c.op === "updateOne");
+  assert.ok(w, "the claim is still visited");
+  assert.deepEqual((w!.update as Record<string, Record<string, unknown>>).$set!.topicRefs, []);
+});

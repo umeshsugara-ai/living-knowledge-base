@@ -29,7 +29,16 @@ export interface Call {
  * ISS-059 guard (a degraded summarize run must not overwrite a real prior page).
  */
 export function fakeDb(
-  opts: { existingSessionPage?: Record<string, unknown> | null } = {},
+  opts: {
+    existingSessionPage?: Record<string, unknown> | null;
+    /**
+     * Rows `claims.find()` returns. Default `[]`, which is what every test had until ISS-126
+     * cycle 2 — and that default made the ENTIRE `tagClaims: true` path unreachable in all 137
+     * tests, so mutating `topicRefs: refs` to `topicRefs: []` stayed green. An empty fixture does
+     * not test the empty case; it tests nothing at all. Opt-in so existing tests are unchanged.
+     */
+    claims?: Record<string, unknown>[];
+  } = {},
 ): { db: Pick<Db, "collection">; calls: Call[] } {
   const calls: Call[] = [];
   const TURN = { _id: "t1", tenantId: "t", sessionId: "s1", speakerRef: "spk:0", tStart: 0, tEnd: 1, text: "A real sentence." };
@@ -58,6 +67,7 @@ export function fakeDb(
             rec("find", { filter });
             if (name === "turns") return [TURN];
             if (name === "sessions") return [SESSION];
+            if (name === "claims") return opts.claims ?? [];
             return [];
           },
         }),

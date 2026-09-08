@@ -2,7 +2,7 @@
 **Contract:** qa/contracts/tree-index-v2.md
 **Goal task:** U2.1 (plan §10 — roadmap tier 3)
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** ISS-126 (high), ISS-127 (high), ISS-128 (high) — all raised by the cycle-1 FAIL
 
@@ -196,6 +196,53 @@ pnpm -r typecheck = 0 · pnpm -r test = 0   (@lkb/api 137, @lkb/index 203)
 scripts guard: 12/12 in scripts/lint.test.mjs, now inside lint:structure
 lint:structure exits 1 ONLY on the pre-existing tracker-audit G1 (other lane's U2.4, ISS-117)
 topics = 0 rows · orgs = 0 rows · claims.topicRefs still [] — still deliberately unwritten
+```
+
+## Cycle 3 — two findings, both of which I should have caught myself
+
+**Verdict:** FAIL, cycle 2. It re-derived all three of my claimed mutations rather than accepting
+the counts (they reproduced exactly), then found a **fourth I had missed**, and caught a claim of
+mine that was simply untrue.
+
+### 1. My writer tests never exercised the tagging path at all
+
+Mutating `{ $set: { topicRefs: refs } }` → `{ $set: { topicRefs: [] } }` left the suite at
+**137 pass / 0 fail**. Cause: `testutils.ts`'s `fakeDb.find` returns `[]` for `claims`, so the
+`tagClaims: true` branch was **unreachable in all 137 tests**.
+
+I had written a test asserting `tagClaims: false` writes nothing and treated that as covering the
+feature. It covers the *negative* case only. **ISS-126's own `fix_direction` had warned about
+exactly this in advance** — *"extend fakeDb rather than assuming an untested op is unreachable"* —
+and I read that row, added the guard it asked for, and skipped the part that needed a fixture.
+
+Fixed: `fakeDb` takes an opt-in `claims` fixture (default `[]`, so no existing test changes), plus
+two cases — the real slugs are written onto every claim of the session, and a session whose tree
+surfaced no topics **clears** `topicRefs` rather than leaving a stale tagging. 139 pass.
+
+### 2. The guard I said "actually gates" did not gate
+
+I appended `pnpm test:lint` to the **end** of `lint:structure`'s `&&` chain — behind
+`tracker-audit --gate g1`, which is red on the other lane's `U2.4`. So the chain aborted before
+reaching it every time. I wrote *"wired into lint:structure so it actually gates rather than
+waiting for someone to run it"* and that sentence was false the moment I wrote it. **This is the
+ISS-100 lesson (an `&&` chain short-circuits) recurring in a unit where I had already cited
+ISS-100 in my own verification notes.** Moved ahead of `tracker-audit`; the scripts guard now runs.
+
+### On the checker's third observation — it was my dirt, not the other lane's
+
+It reported `pnpm test:lint` failing on `catalogue-cli` cases and attributed them to a stale
+`docs/PROGRESS.md` banner left by the concurrent lane. Checked: the failures are
+`catalogue-score --check` **refusing on a dirty working tree** — my own uncommitted cycle-3 files —
+which is the scorer behaving exactly as designed so a score stays reproducible by someone else.
+Not the other lane, and not a defect. Recording it because an unexamined attribution to another
+lane is how a real problem gets parked as somebody else's.
+
+## Cycle 3 outputs
+
+```
+pnpm -r typecheck = 0 · pnpm -r test = 0   (@lkb/api 139, @lkb/index 203)
+lint:structure order: … snapshot --check && pnpm test:lint && tracker-audit --gate g1 && depcruise
+topics = 0 · orgs = 0 · claims.topicRefs still empty on all 81 — still deliberately unwritten
 ```
 
 ## Status: ready-for-check
