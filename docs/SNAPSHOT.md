@@ -46,15 +46,12 @@ a client of that API — with the long-range goal of beating top human counsello
   - `qa/verdicts/`
 - `raw/` — Data and source repos
   - `raw/TOC/`
-- `reference/`
-  - `reference/kb-deck-screens/`
 - `schema/` — JSON Schemas + fixtures + Python validator
-  - `schema/__pycache__/`
   - `schema/fixtures/`
 - `scripts/`
   - `scripts/lib/`
 - `sources/` — Data and source repos
-  - `sources/whatsapp_msg/` — Multi-tenant read-only WhatsApp group message archiver
+  - `sources/whatsapp_msg/`
 - `workers/`
   - `workers/transcribe/` — Python ML worker (Whisper/diarization) — talks to the TS packages via the job queue only. No TS code; package.json exists so pnpm sees the workspace member.
 
