@@ -33,13 +33,15 @@
  * Usage: node scripts/gen-golden-set.mjs [--dry-run] [--per-session N]
  *   --dry-run          build prompts and report the neighbour selection; make no API call.
  *   --provenance-only  rewrite golden-set-provenance.json from the set already on disk; no API call.
+ *   --refilter         re-apply the CURRENT filter to the candidates already on disk; no API call.
  */
 import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { register } from "tsx/esm/api";
-import { tokenize, globallyUniqueTokens, verbatimOverlap } from "./lib/golden-set-diagnostics.mjs";
+import { tokenize } from "./lib/golden-set-diagnostics.mjs";
+import { loadCorpora, buildPinTokens, writeProvenance, refilter } from "./lib/golden-set-build.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_DIR = join(ROOT, "data", "toc-migrated");
@@ -49,6 +51,7 @@ const OUT_PATH = join(OUT_DIR, "golden-set.json");
 const PER_SESSION = Number(process.argv.find((a) => a.startsWith("--per-session="))?.split("=")[1] ?? 4);
 const DRY_RUN = process.argv.includes("--dry-run");
 const PROVENANCE_ONLY = process.argv.includes("--provenance-only");
+const REFILTER = process.argv.includes("--refilter");
 const NEIGHBOURS = 3;
 const MAX_TRANSCRIPT_CHARS = 40_000;
 const GENERATION_MODEL = "gemini-2.5-pro";
@@ -110,54 +113,6 @@ ${transcript}
 Return ONLY a JSON array of ${perSession} strings. No prose, no markdown fence.`;
 }
 
-/**
- * Provenance is WRITTEN BY THE GENERATOR, so it cannot describe a set the generator did not
- * produce. It used to be a hardcoded string inside `eval-recall.mjs`; when this unit replaced the
- * golden set, that string went on asserting the OLD set's properties — a field whose entire
- * purpose is honesty became the report's one false statement (ISS-091). A derived record cannot
- * drift from its subject, which is the actual fix; correcting the sentence would only have reset
- * the clock on the same failure.
- *
- * `afterTheFact` marks a record rebuilt by `--provenance-only` from artifacts already on disk. It
- * is honest but weaker: the counts are read from the real files, while the model and filter fields
- * describe what THIS code does now, which is only the truth if the code has not changed since.
- */
-function writeProvenance(kept, rejectedCount, sessionCount, afterTheFact) {
-  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
-  writeFileSync(
-    join(OUT_DIR, "golden-set-provenance.json"),
-    JSON.stringify(
-      {
-        generatedAt: new Date().toISOString(),
-        recordedAfterTheFact: afterTheFact,
-        generator: "scripts/gen-golden-set.mjs",
-        source: "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
-        model: GENERATION_MODEL,
-        summarizerModel: SUMMARIZER_MODEL,
-        independence:
-          `different model from the summarizer (${SUMMARIZER_MODEL}), but the SAME vendor and ` +
-          "family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
-        promptStrategy:
-          "real student questions, near-neighbour sessions named so wording must fit them too",
-        postFilter:
-          "rejects any candidate carrying a token unique to its own session within the SCORED " +
-          `corpus (session_page summary+keyInsights), or overlapping the transcript past ${MAX_OVERLAP}`,
-        postFilterBiasWarning:
-          "the pin check runs over the same corpus the retriever scores, so it preferentially " +
-          "removes questions the retriever would answer — the resulting recall is a DOWNWARD-" +
-          "BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
-        kept,
-        rejected: rejectedCount,
-        sessions: sessionCount,
-      },
-      null,
-      2,
-    ) + "\n",
-    "utf8",
-  );
-  console.log(`wrote golden-set-provenance.json (afterTheFact=${afterTheFact})`);
-}
-
 function parseQuestions(text) {
   const m = text.match(/\[[\s\S]*\]/);
   if (!m) return [];
@@ -182,34 +137,18 @@ async function main() {
     return;
   }
 
+  if (REFILTER) return refilter();
+
   const { GeminiProvider } = await import("../packages/ai/src/providers/gemini.ts");
   // Reused, not rewritten: this is the workspace's only real Transport.
   const { realTransport } = await import("../apps/api/src/ai-transport.ts");
 
-  const sessionIds = readdirSync(DATA_DIR, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-    .filter((d) => existsSync(join(DATA_DIR, d, "turns.json")))
-    .sort();
-
-  const turnsText = new Map();
-  const pageText = new Map();
-  const titles = new Map();
-  for (const id of sessionIds) {
-    turnsText.set(id, loadJson(join(DATA_DIR, id, "turns.json")).map((t) => t.text ?? "").join(" "));
-    const pagePath = join(DATA_DIR, id, "session_page.json");
-    if (existsSync(pagePath)) {
-      const p = loadJson(pagePath);
-      pageText.set(id, [p.summary ?? "", ...(p.keyInsights ?? [])].join(" "));
-    }
-    const sessionPath = join(DATA_DIR, id, "session.json");
-    titles.set(id, existsSync(sessionPath) ? (loadJson(sessionPath).title ?? id) : id);
-  }
+  // One loader shared with the re-filter path, so generation and re-filtering cannot end up
+  // judging different corpora.
+  const { sessionIds, turnsText, pageText, titles } = loadCorpora();
 
   const vocab = new Map([...turnsText].map(([id, t]) => [id, contentTokens(t)]));
-  // Pinning is judged against the corpus RETRIEVAL scores (the page text), not the transcript —
-  // a token is only a shortcut if the retriever can see it.
-  const unique = globallyUniqueTokens(pageText);
+  const unique = buildPinTokens(turnsText, pageText);
 
   // GEMINI 2.5 PRO — chosen by Umesh 2026-09-08 ("go with gemini api key"), and it does satisfy
   // the gate's "different model" condition literally: the summarize jobKind resolves to Gemini's

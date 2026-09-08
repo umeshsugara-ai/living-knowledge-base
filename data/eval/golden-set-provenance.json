@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T08:30:53.512Z",
+  "generatedAt": "2026-09-08T08:49:14.309Z",
   "recordedAfterTheFact": true,
   "generator": "scripts/gen-golden-set.mjs",
   "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
@@ -9,7 +9,7 @@
   "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
   "postFilter": "rejects any candidate carrying a token unique to its own session within the SCORED corpus (session_page summary+keyInsights), or overlapping the transcript past 0.5",
   "postFilterBiasWarning": "the pin check runs over the same corpus the retriever scores, so it preferentially removes questions the retriever would answer — the resulting recall is a DOWNWARD-BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
-  "kept": 75,
-  "rejected": 17,
+  "kept": 92,
+  "rejected": 0,
   "sessions": 23
 }

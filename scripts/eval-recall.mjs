@@ -81,7 +81,19 @@ async function main() {
       question: r.question,
       expectedSessionId: r.sessionId,
     }));
-    if (rejectedQs.length > 0) {
+    if (rejectedQs.length === 0) {
+      // Distinguish "no bias" from "not measured". A null here would read as the latter, and the
+      // whole point of ISS-092 was that an unstated bias is worse than a stated one.
+      filterBias = {
+        note:
+          "0 candidates rejected, so the kept set IS the candidate set and the filter introduces " +
+          "no selection bias on this run — kept === combined by construction",
+        kept: { n: result.total, recallAtK: result.recallAtK },
+        rejected: { n: 0, recallAtK: null },
+        combined: { n: result.total, recallAtK: result.recallAtK },
+      };
+      console.log("filter bias: none — 0 candidates rejected, so kept === combined");
+    } else {
       const rejectedResult = computeRecallAtK(rejectedQs, retrieve, K);
       const combined = computeRecallAtK([...questions, ...rejectedQs], retrieve, K);
       filterBias = {

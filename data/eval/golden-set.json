@@ -373,5 +373,90 @@
     "id": "2026-08-27-in-focus-4-gq02",
     "question": "Beyond just getting into a good school, how does this help prepare students for the actual difficulty of university-level academic work?",
     "expectedSessionId": "2026-08-27-in-focus-4"
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq02",
+    "question": "My parents have saved up for my college fees. Is there any reason we should still consider taking out a loan?",
+    "expectedSessionId": "2026-05-08-funding-dreams-loans-forex"
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq03",
+    "question": "When comparing education loans, what should I look at besides just the interest rate?",
+    "expectedSessionId": "2026-05-08-funding-dreams-loans-forex"
+  },
+  {
+    "id": "2026-05-08-funding-dreams-loans-forex-gq04",
+    "question": "Are there any tax advantages for my parents if we use an education loan to pay for my university fees?",
+    "expectedSessionId": "2026-05-08-funding-dreams-loans-forex"
+  },
+  {
+    "id": "2026-05-20-telling-your-brand-story-better-gq03",
+    "question": "How can you reframe a standard selling point, like having a great team, into a more powerful and memorable story?",
+    "expectedSessionId": "2026-05-20-telling-your-brand-story-better"
+  },
+  {
+    "id": "2026-05-20-telling-your-brand-story-better-gq04",
+    "question": "What are some of the key emotions a good story should tap into to connect with people?",
+    "expectedSessionId": "2026-05-20-telling-your-brand-story-better"
+  },
+  {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+    "question": "Is living in the dorms required for students?",
+    "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech"
+  },
+  {
+    "id": "2026-07-03-inside-the-uc-session-gq03",
+    "question": "How are standardized test scores like the SAT or ACT considered in the review process?",
+    "expectedSessionId": "2026-07-03-inside-the-uc-session"
+  },
+  {
+    "id": "2026-07-03-inside-the-uc-session-gq04",
+    "question": "Are international applicants eligible for any kind of scholarships, or is it only for domestic students?",
+    "expectedSessionId": "2026-07-03-inside-the-uc-session"
+  },
+  {
+    "id": "2026-07-08-beyond-black-robes-law-careers-gq03",
+    "question": "What qualities or skills should a student have to know if they're a good fit for this profession?",
+    "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers"
+  },
+  {
+    "id": "2026-07-08-beyond-black-robes-law-careers-gq04",
+    "question": "Besides the obvious jobs everyone thinks of, what are some of the less common career paths I can pursue with this degree?",
+    "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers"
+  },
+  {
+    "id": "2026-07-15-creative-futures-gq04",
+    "question": "My child is artistic but we're worried about job security. Are there programs that combine creative skills with more technical or science-focused subjects?",
+    "expectedSessionId": "2026-07-15-creative-futures"
+  },
+  {
+    "id": "2026-07-28-metrics-and-mingling-gq04",
+    "question": "I'm really shy and get overwhelmed in big groups. How can I meet people and make connections at university events without feeling so awkward?",
+    "expectedSessionId": "2026-07-28-metrics-and-mingling"
+  },
+  {
+    "id": "2026-08-10-ucas-what-changed-what-matters-gq03",
+    "question": "What information about my high school do admissions officers actually want to see in the counselor's recommendation?",
+    "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters"
+  },
+  {
+    "id": "2026-08-10-ucas-what-changed-what-matters-gq04",
+    "question": "If my counselor mentions my learning disability in my application, will universities see that as a negative?",
+    "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters"
+  },
+  {
+    "id": "2026-08-12-uniaccess-ashoka-university-gq04",
+    "question": "If there's an aptitude test as part of the process, what kind of skills does it measure?",
+    "expectedSessionId": "2026-08-12-uniaccess-ashoka-university"
+  },
+  {
+    "id": "2026-08-27-in-focus-4-gq03",
+    "question": "How do you keep parents informed about their student's progress and what's being covered in the sessions?",
+    "expectedSessionId": "2026-08-27-in-focus-4"
+  },
+  {
+    "id": "2026-08-27-in-focus-4-gq04",
+    "question": "What is the teaching format like—for instance are sessions live or recorded, and do you create your own study materials or use existing ones?",
+    "expectedSessionId": "2026-08-27-in-focus-4"
   }
 ]

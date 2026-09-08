@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-08T08:30:53.851Z",
+  "generatedAt": "2026-09-08T08:49:14.489Z",
   "k": 5,
   "retriever": "heuristic",
-  "recallAtK": 0.30666666666666664,
-  "total": 75,
-  "hits": 23,
+  "recallAtK": 0.391304347826087,
+  "total": 92,
+  "hits": 36,
   "misses": [
     {
       "id": "2026-05-08-funding-dreams-loans-forex-gq01",
@@ -629,26 +629,74 @@
         "2026-08-10-ucas-what-changed-what-matters",
         "2026-06-25-in-focus-2"
       ]
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+      "question": "Is living in the dorms required for students?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-25-in-focus-2",
+        "2026-07-22-uniaccess-cept-university"
+      ]
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq04",
+      "question": "I'm really shy and get overwhelmed in big groups. How can I meet people and make connections at university events without feeling so awkward?",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "got": [
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-05-23-uniaccess-atlas-skilltech"
+      ]
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq03",
+      "question": "How do you keep parents informed about their student's progress and what's being covered in the sessions?",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "got": [
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-29-decoding-ever-expanding-cast",
+        "2026-06-03-dual-enrollment-pathway"
+      ]
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq04",
+      "question": "What is the teaching format like—for instance are sessions live or recorded, and do you create your own study materials or use existing ones?",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
     }
   ],
   "control": {
     "retriever": "null (question-blind)",
-    "recallAtK": 0.18666666666666668,
-    "hits": 14
+    "recallAtK": 0.21739130434782608,
+    "hits": 20
   },
   "assessment": {
     "k": 5,
     "sessionCount": 23,
     "chanceFloor": 0.21739130434782608,
-    "measuredRecall": 0.30666666666666664,
-    "controlRecall": 0.18666666666666668,
-    "liftOverControl": 0.11999999999999997,
+    "measuredRecall": 0.391304347826087,
+    "controlRecall": 0.21739130434782608,
+    "liftOverControl": 0.1739130434782609,
     "saturated": false,
     "verdict": "informative",
-    "reason": "0.307 vs a 0.187 question-blind control (+0.120), with 52 miss(es) left to move"
+    "reason": "0.391 vs a 0.217 question-blind control (+0.174), with 56 miss(es) left to move"
   },
   "goldenSetProvenance": {
-    "generatedAt": "2026-09-08T08:30:53.512Z",
+    "generatedAt": "2026-09-08T08:49:14.309Z",
     "recordedAfterTheFact": true,
     "generator": "scripts/gen-golden-set.mjs",
     "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
@@ -658,19 +706,19 @@
     "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
     "postFilter": "rejects any candidate carrying a token unique to its own session within the SCORED corpus (session_page summary+keyInsights), or overlapping the transcript past 0.5",
     "postFilterBiasWarning": "the pin check runs over the same corpus the retriever scores, so it preferentially removes questions the retriever would answer — the resulting recall is a DOWNWARD-BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
-    "kept": 75,
-    "rejected": 17,
+    "kept": 92,
+    "rejected": 0,
     "sessions": 23
   },
   "filterBias": {
-    "note": "the post-filter removes questions the retriever tends to answer, so `kept` is a downward-biased floor; `combined` is the pre-filter figure",
+    "note": "0 candidates rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run — kept === combined by construction",
     "kept": {
-      "n": 75,
-      "recallAtK": 0.30666666666666664
+      "n": 92,
+      "recallAtK": 0.391304347826087
     },
     "rejected": {
-      "n": 17,
-      "recallAtK": 0.7647058823529411
+      "n": 0,
+      "recallAtK": null
     },
     "combined": {
       "n": 92,
