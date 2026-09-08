@@ -102,5 +102,47 @@ test("a blocked URL is a per-source failure, never a crash of the run", async ()
 
 test("no active sources is a clean no-op, not an error", async () => {
   const { d } = deps({ listActive: async () => [] });
-  assert.deepEqual(await runWatchedSources("toc", d as WatchedRunDeps), { checked: 0, changed: 0, skipped: 0, failed: [] });
+  assert.deepEqual(await runWatchedSources("toc", d as WatchedRunDeps), { checked: 0, changed: 0, skipped: 0, failed: [], remaining: 0 });
+});
+
+/**
+ * ISS-C-UNRUN-WRITERS-019. `recordFetch` returns false when it matched no row — the source was
+ * deleted, or belongs to another tenant. Discarding that boolean made a run which persisted
+ * NOTHING report `{checked: 2, changed: 2, failed: []}`: a clean success for a write that never
+ * happened. This mutant survived the whole suite before this test existed.
+ */
+test("a recordFetch that matched no row is a FAILURE, never a silent success", async () => {
+  const { d } = deps({ recordFetch: async () => false });
+  const r = await runWatchedSources("toc", d as WatchedRunDeps);
+  assert.equal(r.checked, 0, "nothing was persisted, so nothing was checked");
+  assert.equal(r.changed, 0);
+  assert.equal(r.failed.length, 1);
+  assert.match(r.failed[0]!.reason, /nothing was persisted/);
+});
+
+/**
+ * ISS-C-UNRUN-WRITERS-020. The loop is a sequential chain of network calls awaited inline in an
+ * HTTP handler. Without the cap it runs until something else gives up, and an unreported
+ * truncation reads exactly like a complete run — so `remaining` is asserted, not just the count.
+ */
+test("maxSources caps the run and REPORTS what it left untouched", async () => {
+  const many = Array.from({ length: 5 }, (_, i) => source({ _id: `ws-${i}` }));
+  const { d, fetched } = deps({ listActive: async () => many });
+  const r = await runWatchedSources("toc", d as WatchedRunDeps, { maxSources: 2 });
+  assert.equal(fetched.length, 2, "the cap must stop the network calls, not just the counter");
+  assert.equal(r.checked, 2);
+  assert.equal(r.remaining, 3);
+});
+
+test("an elapsed deadline stops the run and reports the remainder", async () => {
+  const many = Array.from({ length: 4 }, (_, i) => source({ _id: `ws-${i}` }));
+  const { d, fetched } = deps({ listActive: async () => many });
+  const r = await runWatchedSources("toc", d as WatchedRunDeps, { timeoutMs: -1 });
+  assert.deepEqual(fetched, [], "a spent budget must fetch nothing at all");
+  assert.equal(r.remaining, 4);
+});
+
+test("under the cap, nothing is reported as remaining", async () => {
+  const { d } = deps();
+  assert.equal((await runWatchedSources("toc", d as WatchedRunDeps, { maxSources: 25 })).remaining, 0);
 });

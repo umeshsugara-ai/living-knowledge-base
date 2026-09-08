@@ -24,6 +24,8 @@ export interface WatchedRunSummary {
   changed: number;
   skipped: number;
   failed: { id: string; url: string; reason: string }[];
+  /** Sources the run left untouched because its cap or deadline stopped it. */
+  remaining: number;
 }
 
 export interface WatchedSourceDeps {

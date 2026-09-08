@@ -26,7 +26,7 @@ import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
 import { createHash } from "node:crypto";
 import { createWatchedSource, listActive as listActiveWatchedSources, recordFetch as recordWatchedFetch } from "@lkb/db";
-import { createGuardedFetcher, resolveAll, httpRequest, runWatchedSources } from "@lkb/ingest";
+import { createGuardedFetcher, resolveAll, httpRequest, runWatchedSources, type WatchedRunDeps } from "@lkb/ingest";
 import type { WatchedSourceDeps } from "./routes/watched-sources.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
@@ -278,6 +278,25 @@ export function createMongoHealthDeps(): HealthDeps {
  * (`createWatchedSource`, `listActive`) rather than reaching Mongo directly — this file supplies
  * the wiring the feature was missing, not a second implementation of it.
  */
+/**
+ * The production `WatchedRunDeps`, built as a NAMED value rather than inline in the handler.
+ *
+ * ISS-C-UNRUN-WRITERS-017: while this object was constructed inside `run`, replacing the guarded
+ * fetcher with a bare one left the whole suite green — nothing could reach the composition to
+ * assert on it. Exported, `watched-run-deps.test.ts` can assert `isGuardedFetcher(deps.fetcher)`,
+ * so that mutant dies. This is the feature's SSRF boundary: every control in guarded-fetch.ts is
+ * bypassed if this one line changes.
+ */
+export function createWatchedRunDeps(): WatchedRunDeps {
+  return {
+    listActive: listActiveWatchedSources,
+    fetcher: createGuardedFetcher({ lookup: resolveAll, request: httpRequest }),
+    hasher: (text: string) => createHash("sha256").update(text, "utf8").digest("hex"),
+    recordFetch: recordWatchedFetch,
+    now: () => new Date().toISOString(),
+  };
+}
+
 export function createMongoWatchedSourceDeps(): WatchedSourceDeps {
   return {
     async create(tenantId, doc) {
@@ -287,18 +306,7 @@ export function createMongoWatchedSourceDeps(): WatchedSourceDeps {
       return listActiveWatchedSources(tenantId);
     },
     async run(tenantId) {
-      // The GUARDED fetcher is injected here, and this is the only place it is composed with a
-      // real transport. Watched Sources fetches user-supplied URLs unattended on a timer, so this
-      // line is the feature's SSRF boundary: swap it for a bare fetch and every control in
-      // guarded-fetch.ts is bypassed while every test still passes.
-      const fetcher = createGuardedFetcher({ lookup: resolveAll, request: httpRequest });
-      return runWatchedSources(tenantId, {
-        listActive: listActiveWatchedSources,
-        fetcher,
-        hasher: (text: string) => createHash("sha256").update(text, "utf8").digest("hex"),
-        recordFetch: recordWatchedFetch,
-        now: () => new Date().toISOString(),
-      });
+      return runWatchedSources(tenantId, createWatchedRunDeps());
     },
   };
 }

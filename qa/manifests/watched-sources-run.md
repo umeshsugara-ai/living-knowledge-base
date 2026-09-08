@@ -4,10 +4,10 @@
 Checker: please author `qa/contracts/watched-sources-run.md` for the composition.
 **Goal task:** T-027 / catalogue **A13**.
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** none new. **Closes the orphan:** the guarded fetcher had no caller.
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 **Branch:** `lane/c-unrun-writers`
 
 ## Why — and a course correction
@@ -163,3 +163,77 @@ whichever unit next touches this file.
 Gap 2 is where I would push: the whole point of `servername` is that TLS still validates the
 hostname while the address is pinned, and that is exactly the part not proven. If you think this
 unit needs a self-signed HTTPS fixture before anything is scheduled against it, FAIL it.
+
+
+---
+
+# Fix cycle 3 — the four mediums from the cycle-2 verdict, landed together
+
+Cycle 2 PASSed with four mediums carried forward. The checker's own framing: *"this is cycle 2 of
+3, so all four must land together in cycle 3; none needs new machinery."* They did.
+
+## ISS-017 — the SSRF boundary was unreachable by any test
+
+`store.ts` built the guarded fetcher **inline inside `run`**, so replacing it with a bare
+`fetch` left 134/134 green. The boundary the manifest itself called "the feature's SSRF boundary"
+was the one line no test could see.
+
+**Fix, two halves.** The fetcher is now **branded** —
+`Object.defineProperty(guardedFetch, GUARDED, …)` with `GUARDED = Symbol.for("lkb.guarded-fetcher")`
+and an `isGuardedFetcher()` predicate — and the production deps are a **named exported value**,
+`createWatchedRunDeps()`, instead of an object literal buried in a handler. A value that cannot be
+named cannot be asserted on. `apps/api/src/watched-run-deps.test.ts` asserts the brand, and asserts
+a plain async function and `globalThis.fetch` are *not* branded, so the predicate is not vacuous.
+
+## ISS-018 — the fixture's `run` took no argument
+
+`fakeWatchedSourceDeps().run` was `async () => …`. A handler calling `deps.run("other-tenant")`, or
+passing nothing at all, passed the entire suite — on the route that decides whose URLs get fetched.
+The fake now records the tenant it was handed (`ranFor`), and the new route test asserts
+`["tenant-1"]`, the authed tenant.
+
+## ISS-019 / ISS-020 — the code was there, the tests were not
+
+Both fixes shipped in cycle 2's code, and both mutants survived when I actually measured. Now:
+`recordFetch → false` is asserted to be a **failure**, not a silent success; the cap is asserted to
+stop the **network calls** (not just the counter) and to report `remaining: 3`; a spent deadline
+fetches nothing and reports `remaining: 4`; an uncapped run reports `remaining: 0`.
+`WatchedRunSummary` gained `remaining`, so a truncated run is visible to the HTTP caller too — an
+unreported truncation reads exactly like a complete run.
+
+## Evidence
+
+```
+$ pnpm --filter '@lkb/ingest' test   tests 98   pass 98   fail 0   cancelled 0
+$ pnpm --filter '@lkb/api'    test   tests 138  pass 138  fail 0   cancelled 0
+$ pnpm -r typecheck                  exit 0
+```
+
+**Mutation table**, pure-Python harness under D-020 (`timeout=900`, restore in a `finally`, each
+restore asserted SHA256-identical to the pre-mutation file):
+
+| mutation | before cycle 3 | after |
+|---|---|---|
+| `store.ts`: guarded fetcher → bare `fetch` | survived (134/134) | **killed** |
+| route: `deps.run(tenantId)` → `deps.run("other-tenant")` | survived | **killed** |
+| `run.ts`: `if (!persisted)` → `if (false)` | survived | **killed** |
+| `run.ts`: drop the cap/deadline guard | survived | **killed** |
+| **no-op control** | clean | **clean (exit 0)** |
+
+## Known gaps — unchanged from cycle 2, and I am not claiming otherwise
+
+1. **A13 still does not flip.** No row has been written and no run has happened against live data.
+   It flips on a real `POST /watched-sources` + `POST /watched-sources/run` in a live-verify
+   artifact. Still not writing a placeholder row to move a probe.
+2. **No TLS test** (cycle-2 gap 2) — `servername` under a pinned address remains reasoned, not
+   proven. Needs a self-signed HTTPS fixture.
+3. **`res.destroy()` on the redirect path is still unpinned** — hygiene, not a control, as stated
+   in cycle 2.
+4. **The brand is advisory against a determined caller.** `isGuardedFetcher` proves the production
+   composition uses the real fetcher; it cannot stop someone branding a bare function. It closes
+   the accident, not an attack.
+
+## Note to the checker
+
+Gap 1 is the one that matters for the goal, and it is deliberately out of scope for this unit —
+please judge whether A13's flip belongs in a separate live unit or should have blocked this PASS.

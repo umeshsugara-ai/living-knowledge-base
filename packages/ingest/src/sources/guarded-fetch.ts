@@ -189,13 +189,31 @@ function httpUrlOrNull(value: string, base?: string): URL | null {
   }
 }
 
+/**
+ * Marks a fetcher as having come from `createGuardedFetcher`.
+ *
+ * ISS-C-UNRUN-WRITERS-017: `store.ts` is this feature's SSRF boundary, and swapping its one line
+ * for a bare `fetch` left every test green — the composition was asserted nowhere. A brand makes
+ * "is this the guarded fetcher?" a question code can ask, so the boundary is checkable instead of
+ * merely documented. It is a marker, not a security control: anyone can set it. Its job is to make
+ * an accidental swap fail a test, not to stop a deliberate one.
+ */
+export const GUARDED = Symbol.for("lkb.guarded-fetcher");
+
+export type GuardedFetcher = ((url: string) => Promise<string>) & { readonly [GUARDED]: true };
+
+/** Is this fetcher the guarded one, rather than a bare transport? */
+export function isGuardedFetcher(fn: unknown): fn is GuardedFetcher {
+  return typeof fn === "function" && (fn as unknown as Record<symbol, unknown>)[GUARDED] === true;
+}
+
 /** A `UrlFetcher` that resolves and checks every hop before issuing it. */
-export function createGuardedFetcher(deps: GuardedFetchDeps): (url: string) => Promise<string> {
+export function createGuardedFetcher(deps: GuardedFetchDeps): GuardedFetcher {
   const maxRedirects = deps.maxRedirects ?? DEFAULT_MAX_REDIRECTS;
   const maxBytes = deps.maxBytes ?? DEFAULT_MAX_BYTES;
   const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  return async function guardedFetch(startUrl: string): Promise<string> {
+  const guardedFetch = async function guardedFetch(startUrl: string): Promise<string> {
     let current = httpUrlOrNull(startUrl);
     if (!current) throw new Error(`guarded-fetch: not an http(s) url: ${startUrl}`);
 
@@ -260,4 +278,7 @@ export function createGuardedFetcher(deps: GuardedFetchDeps): (url: string) => P
 
     throw new Error(`guarded-fetch: too many redirects (> ${maxRedirects})`);
   };
+
+  Object.defineProperty(guardedFetch, GUARDED, { value: true, enumerable: false });
+  return guardedFetch as GuardedFetcher;
 }

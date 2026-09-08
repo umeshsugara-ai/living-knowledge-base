@@ -33,6 +33,17 @@ export interface WatchedRunDeps {
   now(): string;
 }
 
+export interface WatchedRunOptions {
+  /**
+   * Most sources to touch in one run. ISS-C-UNRUN-WRITERS-020: this loop is an unbounded sequential
+   * chain of network calls awaited inline in an HTTP handler — one slow or numerous set of sources
+   * holds the request open indefinitely. A cap makes the worst case statable.
+   */
+  maxSources?: number;
+  /** Total wall-clock budget for the whole run, not per source. */
+  timeoutMs?: number;
+}
+
 export interface WatchedRunResult {
   /** Sources actually fetched and recorded. */
   checked: number;
@@ -42,25 +53,49 @@ export interface WatchedRunResult {
   skipped: number;
   /** Per-source failures — reported, never thrown. */
   failed: { id: string; url: string; reason: string }[];
+  /** Sources left untouched because the cap or the deadline stopped the run. */
+  remaining: number;
 }
 
-export async function runWatchedSources(tenantId: string, deps: WatchedRunDeps): Promise<WatchedRunResult> {
-  const result: WatchedRunResult = { checked: 0, changed: 0, skipped: 0, failed: [] };
+export async function runWatchedSources(
+  tenantId: string,
+  deps: WatchedRunDeps,
+  options: WatchedRunOptions = {},
+): Promise<WatchedRunResult> {
+  const maxSources = options.maxSources ?? 25;
+  const deadline = Date.now() + (options.timeoutMs ?? 120_000);
+  const result: WatchedRunResult = { checked: 0, changed: 0, skipped: 0, failed: [], remaining: 0 };
   const sources = await deps.listActive(tenantId);
   const now = deps.now();
 
+  let index = 0;
   for (const source of sources) {
+    // Stop on the cap or the deadline and SAY how many were left, rather than running until
+    // something else gives up. An unreported truncation reads exactly like a complete run.
+    if (index >= maxSources || Date.now() >= deadline) {
+      result.remaining = sources.length - index;
+      break;
+    }
+    index++;
     if (!isDueForCheck(source, now)) {
       result.skipped++;
       continue;
     }
     try {
       const check = await checkWatchedSource(source, deps.fetcher, deps.hasher, deps.now);
-      await deps.recordFetch(tenantId, source._id, {
+      // recordFetch returns false when the row it should update no longer matches — deleted,
+      // or a different tenant. Discarding that made a run which persisted NOTHING report
+      // {checked: 2, changed: 2, failed: []} (ISS-C-UNRUN-WRITERS-019). A write nobody confirmed
+      // is not a write.
+      const persisted = await deps.recordFetch(tenantId, source._id, {
         fetchedAt: check.fetchedAt,
         hash: check.hash,
         diffFrom: check.diffFrom,
       });
+      if (!persisted) {
+        result.failed.push({ id: source._id, url: source.url, reason: "recordFetch matched no row — nothing was persisted" });
+        continue;
+      }
       result.checked++;
       if (check.changed) result.changed++;
     } catch (err) {

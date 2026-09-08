@@ -174,7 +174,7 @@ test("POST /watched-sources/run reports per-source failures instead of 500ing", 
     watchedSources: {
       create: async () => {},
       listActive: async () => [],
-      run: async () => ({ checked: 1, changed: 1, skipped: 2, failed: [{ id: "ws-bad", url: "https://x/", reason: "blocked -- private address" }] }),
+      run: async () => ({ checked: 1, changed: 1, skipped: 2, failed: [{ id: "ws-bad", url: "https://x/", reason: "blocked -- private address" }], remaining: 0 }),
     },
   }));
   try {
@@ -197,4 +197,26 @@ test("POST /watched-sources/run 403s without the sources scope", async () => {
     });
     assert.equal(res.status, 403);
   } finally { await server.close(); }
+});
+
+test("POST /watched-sources/run runs the AUTHED tenant's sources, not another's", async () => {
+  // ISS-C-UNRUN-WRITERS-018: the fixture's `run` took NO argument, so a handler calling
+  // `deps.run("other-tenant")` -- or passing nothing -- passed this suite. It now records the
+  // tenant it was actually handed, and this asserts on that recording.
+  const ranFor: string[] = [];
+  const server = await startTestServer(buildTestDeps({
+    watchedSources: fakeWatchedSourceDeps({}, ranFor),
+    keyStore: key(["sources"]),
+  }));
+  try {
+    const res = await fetch(`${server.baseUrl}/watched-sources/run`, {
+      method: "POST",
+      headers: { authorization: "Bearer ws-key" },
+    });
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { checked: 0, changed: 0, skipped: 0, failed: [], remaining: 0 });
+  } finally {
+    await server.close();
+  }
+  assert.deepEqual(ranFor, ["tenant-1"]);
 });

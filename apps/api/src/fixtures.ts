@@ -119,7 +119,10 @@ export function fakeBrainReadDeps(overrides: Partial<BrainReadDeps> = {}): Brain
  * tenantId cannot fail the isolation test, and isolation is the property most worth testing on a
  * route that stores outbound fetch targets.
  */
-export function fakeWatchedSourceDeps(overrides: Partial<WatchedSourceDeps> = {}): WatchedSourceDeps {
+export function fakeWatchedSourceDeps(
+  overrides: Partial<WatchedSourceDeps> = {},
+  ranFor: string[] = [],
+): WatchedSourceDeps {
   const byTenant = new Map<string, WatchedSources[]>();
   return {
     create: async (tenantId, doc) => {
@@ -128,7 +131,12 @@ export function fakeWatchedSourceDeps(overrides: Partial<WatchedSourceDeps> = {}
       byTenant.set(tenantId, list);
     },
     listActive: async (tenantId) => (byTenant.get(tenantId) ?? []).filter((s) => s.active),
-    run: async () => ({ checked: 0, changed: 0, skipped: 0, failed: [] }),
+    // ISS-C-UNRUN-WRITERS-018: this fake took NO argument, so a handler that ran the wrong
+    // tenant's sources -- or no tenant at all -- passed every test. It records what it was given.
+    run: async (tenantId) => {
+      ranFor.push(tenantId);
+      return { checked: 0, changed: 0, skipped: 0, failed: [], remaining: 0 };
+    },
     ...overrides,
   };
 }
