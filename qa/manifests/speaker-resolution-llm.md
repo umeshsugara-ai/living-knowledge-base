@@ -9,7 +9,7 @@ priority override" (D-013 as amended by D-014).
 **Fix cycle:** 1 of max 3
 **Dual check:** no
 **Issues addressed:** none — new feature work.
-**Status:** ready-for-check
+**Status:** checked-PASS (cycle 1 — `qa/verdicts/speaker-resolution-llm.md`, commit `5af0106`)
 **Branch:** `lane/a-speakers`
 
 ## Why
@@ -117,3 +117,50 @@ C8 is what stops an outage looking like an empty session. Re-run the mutation ta
 **including the no-op control**; if the control ever reddens, the whole table is worthless. Gap 5 is
 the one I am least sure about — if same-first-name collision is in scope for this unit rather than a
 later one, say so and FAIL it.
+
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 1** — 13/13 criteria, 4/4 invariants, `ISSUES-WRITTEN: none`.
+
+The checker authored `qa/contracts/speaker-resolution-llm.md` as a **separate** contract rather
+than amending the deterministic one, and its reason is load-bearing: deterministic **C6** says a
+third-party mention never resolves a speaker, but this path's prompt *deliberately* invites
+greeting/handover evidence — that is precisely how it gets past 15.8%. A merged contract would have
+contradicted itself. It added **C12** (the verbatim rule must stay mutation-pinned) and **C13**
+(corpus figures must be re-derivable), both verified as already met.
+
+It reproduced the mutation table with its own driver (control held at 82/0), verified `speakers.ts`
+byte-untouched across `942cf73 → 76009f8`, and re-derived the degradation figures independently:
+11/11 degraded, 78/494, same two speakers.
+
+**C8 came out stronger than claimed.** Beyond the single test, it probed a non-`Error` throw, a
+resolved-`undefined`, an empty body, an object-not-array and a junk array — all five degrade with a
+non-null reason *and* the deterministic result intact.
+
+### Two attacks got through C2, and they are being fixed rather than filed
+
+| attack | result |
+|---|---|
+| `"Ruby"` against `"My name is Rubykumar Shah."` | ships as `person:ruby` |
+| `"Good morning"` | ships as `person:good-morning` |
+
+The verbatim check is a bare substring test with no token boundaries and no name-shape constraint.
+The checker did not FAIL the unit for this and I agree with its reasoning: C2 as written says
+*substring*, the module does exactly that, and the unit claims nothing more — inventing a criterion
+mid-verdict to fail an artifact that met the stated rule is the mirror image of softening one. It
+placed both as **blocking criteria on the apply/persist unit**.
+
+I am not deferring them that far. They are a real weakness in the anti-fabrication rule and the fix
+is cheap, so the next unit — `speaker-verbatim-token-boundary` — tightens C2 itself. Note the
+vulnerability is **LLM-path-specific**: in `speakers.ts` the regex captures `Rubykumar`, not `Ruby`,
+and `[A-Z][a-z]+` cannot produce `"Good morning"`, so `speakers.ts` stays untouched and I2 holds.
+
+**Gap 5 — the checker's plain answer was "no, not in scope, not a FAIL".** It reproduced the
+collision (two labels both named "Ruby" share `personId: person:ruby`) but placed it correctly: it
+originates in `personIdFor` inside the already-PASSed `speakers.ts`, which this unit's own I2
+forbids touching, and the deterministic path collides identically. It becomes blocking the moment
+something writes it down.
+
+**U2.4 deliberately left open.** This unit persists nothing and does not flip B3/B10 by its own
+statement, so closing the goal task on this PASS would overclaim.
