@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T23:46:02",
+  "updated": "2026-09-08T23:56:02",
   "progress": {
-    "total": 60,
-    "done": 39,
+    "total": 61,
+    "done": 40,
     "in_progress": 3,
     "blocked": 0,
     "pending": 18,
-    "current": "U2.1",
-    "percent": 65
+    "current": "U2.1b",
+    "percent": 66
   },
   "tasks": [
     {
@@ -561,12 +561,13 @@
     {
       "id": "U2.1b",
       "title": "Assert claims/topics/orgs write TARGETING (ISS-C-CLAIMS-TARGETING-001)",
-      "status": "in_progress",
+      "status": "done",
       "base_criticality": "high",
       "deps": [
         "U2.1"
       ],
-      "evidence": "ready-for-check; precondition on U2.2/U2.3 live backfill"
+      "evidence": "qa/verdicts/claims-write-targeting.md - PASS cycle 1 (2dbeffa). 2/2 recorded reproductions killed; the U2.2/U2.3 precondition is SATISFIED. One medium filed (ISS-C-TOPICREFS-ARG-001, fixture limitation).",
+      "criticality": "high"
     },
     {
       "id": "U2.2",
@@ -714,6 +715,13 @@
       "message": "U1.0d needs review (high)",
       "task_id": "U1.0d",
       "acked": false
+    },
+    {
+      "ts": "2026-09-08T23:51:02",
+      "level": "warn",
+      "message": "U2.1b needs review (high)",
+      "task_id": "U2.1b",
+      "acked": false
     }
   ],
   "preferences": {
@@ -725,5 +733,5 @@
     "velocity_per_day": 3.86,
     "eta_days": 5.4
   },
-  "last_deterministic_tick": "2026-09-08T23:46:02"
+  "last_deterministic_tick": "2026-09-08T23:56:02"
 }

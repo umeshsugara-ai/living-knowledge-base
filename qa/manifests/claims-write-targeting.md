@@ -66,4 +66,49 @@ tests pin two distinct defects rather than both tripping on one symptom.
    graded this persistence layer against a plan bullet three times), and D-015 by-issue-id
    reproduction reporting (ISS-134).
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/claims-write-targeting.md` — **PASS**, cycle 1, committed `2dbeffa`.
+`ISSUES-WRITTEN: ISS-C-TOPICREFS-ARG-001 (medium)`.
+
+**ISS-C-CLAIMS-TARGETING-001 is closed: 2/2 recorded reproductions killed**, re-derived by the
+checker rather than taken from this manifest, at the stated counts. Its **U2.2/U2.3 precondition is
+satisfied.** The differing counts (141/1 vs 140/2) were treated as load-bearing evidence that the
+two assertions pin distinct defects.
+
+**The fake change was checked rather than accepted.** `fakeDb` has 46 call sites; only four pass
+`claims:`, all seeded on the indexed session, and each still asserts a *positive* write count — so
+nothing silently degraded to a vacuous empty-branch assertion. It also verified the filtering
+logic is right rather than merely present: `ev.some(...)` matches Mongo's array-subdocument dotted
+-path semantics, where a fake matching only `ev[0]` would have been the "filters wrongly" failure
+mode I flagged as the risk. And it confirmed the fake ignoring `tenantId` is safe by *attacking*
+it — `claimsColl(tenantId)` → `claimsColl("ATTACKER")` reddens the ISS-060/061 confinement test.
+
+### The hunt found one survivor, and it is honestly a fixture limitation
+
+`topicRefsForSession(sessionId, …)` → `topicRefsForSession("s2", …)` survives at 142/142, because
+`treeRoot()`'s single topic carries `sessionRefs: ["s1","s2"]` — so no test can tell which session
+was passed, and none builds a tree whose topic *excludes* the indexed session. Filed **medium**
+and deliberately not a unit: the function is independently tested including its negative case, the
+shipped argument is correct, the path is not live, and it is intra-tenant correctness rather than
+the never-capped security class. Per the severity gate that is a ledger line.
+
+**Also killed** (so they are not decorative): both the topics and orgs upsert filters → `{}`, and a
+rethrow inserted into the never-throws `catch` — that guard is live, unlike its three predecessors
+in this unit.
+
+### A method note from the checker worth keeping
+
+Its first attempt at the rethrow mutation used a `perl -0pi` that **silently matched nothing**
+against this file's CRLF endings and returned a clean 142/142. *A no-op mutation is
+indistinguishable from a well-defended one*, so it read the file back before believing any
+survivor. That is a real trap in every mutation result in this project, including mine.
+
+### Two things carried forward
+
+- **`tree-index-v2` governs the tree generator; C1–C4 do not touch this writer, so only C5
+  applied.** This is the **fourth consecutive check** grading this persistence layer against a plan
+  bullet rather than criteria written for it. Escalated into
+  `qa/gates/vector-retrieval-contract.md` rather than left in a manifest again.
+- **9 of the 81 claims lack `topicRefs` entirely** rather than carrying `[]`. Predates this unit,
+  but a future backfill's idempotency check must not assume the field exists.

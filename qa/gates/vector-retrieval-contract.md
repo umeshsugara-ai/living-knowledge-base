@@ -50,3 +50,26 @@ unit inherits the number without the caveat — which is precisely how 1.000 bec
 before the golden set was rebuilt.
 
 **Answered:** _(pending)_
+
+---
+
+## AMENDED 2026-09-08T23:40Z — this is now TWO layers, not one, and the evidence is stronger
+
+The same gap has since been raised against a second shipped layer, by four different checkers:
+
+**`apps/api/src/indexing/promote-entities.ts`** (the U2.1 entity writer) has no contract either.
+`qa/contracts/tree-index-v2.md` governs the *tree generator* — its C1–C4 do not touch this code, so
+only C5 has ever applied. The cycle-1, cycle-2, cycle-3 and U2.1b checkers each said so
+independently, and the last put it plainly: **that is four consecutive checks grading a persistence
+layer against a plan bullet instead of criteria written for it.**
+
+Both layers write to the database. Between them they have now produced, across seven checks:
+one cross-tenant duplicate-key bug, one session-stranding bug, and **three separate guards whose
+branch never executed** — every one found by a checker's mutation rather than by a passing suite.
+A layer with no criteria of its own is a layer where "what should this do?" is answered by whoever
+last wrote a manifest.
+
+**The ask is unchanged and is one decision, not two:** approve `/checker init-contract` for
+`vector-retrieval` **and** `entity-promotion`. The checker drafts; you approve. I cannot write
+either, because a maker writing the contract it will be judged against is the segregation-of-duties
+failure ISS-006 was filed for.
