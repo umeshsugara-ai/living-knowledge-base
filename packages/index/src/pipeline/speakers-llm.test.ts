@@ -56,7 +56,8 @@ test("drops a fabricated turnId, and drops the speaker entirely if none survive"
 });
 
 test("keeps only the surviving subset when some cited turns are real and some are not", async () => {
-  const turns = [turn("t1", "spk:0", "My name is Ruby."), turn("t2", "spk:0", "Ruby again here.")];
+  // Both turns must NAME Ruby -- under the cycle-2 cue rule a bare mention is not evidence.
+  const turns = [turn("t1", "spk:0", "My name is Ruby."), turn("t2", "spk:0", "This is Ruby again.")];
   const { resolved } = await extractSpeakers(turns, replies([
     { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1", "t404", "t2"] },
   ]));
@@ -84,7 +85,9 @@ test("drops a speakerRef that does not exist in the transcript at all", async ()
 });
 
 test("one label claiming two different names is left unresolved, not coin-flipped", async () => {
-  const turns = [turn("t1", "spk:0", "Anita Desai here."), turn("t2", "spk:0", "Actually Rahul Mehta.")];
+  // Both turns must be cued introductions, otherwise one claim is filtered out first and the
+  // contradiction this test exists to catch never reaches the guard.
+  const turns = [turn("t1", "spk:0", "Anita Desai here."), turn("t2", "spk:0", "Actually, my name is Rahul Mehta.")];
   const { resolved, unresolved } = await extractSpeakers(turns, replies([
     { speakerRef: "spk:0", displayName: "Anita Desai", turnIds: ["t1"] },
     { speakerRef: "spk:0", displayName: "Rahul Mehta", turnIds: ["t2"] },
@@ -168,7 +171,9 @@ test("still accepts the legitimate names the hardening must not break", async ()
 });
 
 test("accepts a name at the very start and very end of a turn", async () => {
-  for (const text of ["Ruby speaking.", "That would be Ruby"]) {
+  // Still testing the offset arithmetic at both edges of a turn -- now with turns that
+  // actually name someone, which is what the cue rule requires.
+  for (const text of ["Ruby speaking.", "Over to Ruby"]) {
     const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
       { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
     ]));
@@ -182,6 +187,102 @@ test("refuses an absurdly long 'name' -- a sentence is not an identity", async (
     { speakerRef: "spk:0", displayName: text, turnIds: ["t1"] },
   ]));
   assert.deepEqual(resolved, []);
+});
+
+/**
+ * Fix cycle 2. The cycle-1 verdict on this hardening FAILED it with two findings, both reproduced
+ * before being fixed:
+ *
+ *   ISS-091 (critical) "Welcome" / "Thanks" / "Okay" / "I" all shipped as people. `person:i` came
+ *                      from "I am going to start now." -- a human being invented out of a pronoun.
+ *                      Capitalisation is not nameness: transcript prose capitalises sentence starts,
+ *                      so "Good morning" was only ever caught because English lowercases "morning".
+ *   ISS-092 (high)     The Rubykumar attack survived one character away: "Ruby" against
+ *                      "My name is Ruby-Anne Smith." still shipped, because containsNameVerbatim
+ *                      treated "-" as a boundary while looksLikeAName admits it INSIDE a name --
+ *                      two contradictory definitions of where a name ends, failing open.
+ */
+for (const [label, text, name] of [
+  ["a greeting", "Welcome everyone to the session.", "Welcome"],
+  ["a bare pronoun", "I am going to start now.", "I"],
+  ["a thanks", "Thanks for joining us today.", "Thanks"],
+  ["a filler word", "Okay so let us begin.", "Okay"],
+] as [string, string, string][]) {
+  test(`ISS-091: refuses ${label} as a person`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.deepEqual(resolved, [], `${JSON.stringify(name)} is not a human being`);
+  });
+}
+
+for (const [label, name] of [
+  ["the first half of a hyphenated name", "Ruby"],
+  ["the second half of a hyphenated name", "Anne"],
+] as [string, string][]) {
+  test(`ISS-092: refuses ${label}`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", "My name is Ruby-Anne Smith.")], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.deepEqual(resolved, [], "a hyphen joins a name, it does not end one");
+  });
+}
+
+test("ISS-092: the whole hyphenated name still resolves", async () => {
+  const { resolved } = await extractSpeakers([turn("t1", "spk:0", "My name is Ruby-Anne Smith.")], replies([
+    { speakerRef: "spk:0", displayName: "Ruby-Anne Smith", turnIds: ["t1"] },
+  ]));
+  assert.equal(resolved.length, 1);
+  assert.equal(resolved[0]?.personId, "person:ruby-anne-smith");
+});
+
+test("a name is only accepted where the turn actually NAMES someone", async () => {
+  // Same name, same speaker -- the difference is whether the turn is an act of naming.
+  const cued = await extractSpeakers([turn("t1", "spk:0", "My name is Ruby.")], replies([
+    { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
+  ]));
+  assert.equal(cued.resolved.length, 1, "an explicit introduction names someone");
+
+  const uncued = await extractSpeakers([turn("t1", "spk:0", "The Ruby programming language is popular.")], replies([
+    { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
+  ]));
+  assert.deepEqual(uncued.resolved, [], "a passing mention is not an introduction");
+});
+
+/**
+ * The cue rule and the shape rule are INDEPENDENT guards, and the cycle-2 mutation run proved the
+ * suite had stopped pinning the shape half: removing `looksLikeAName` (and the 4-token cap) changed
+ * nothing, because every existing fixture was already rejected by the cue rule first.
+ *
+ * That is not evidence the shape guard is redundant -- an earlier cycle taught exactly that lesson
+ * about a different guard. These cases have a real naming cue AND an unshaped candidate, so only
+ * the shape guard can stop them.
+ */
+for (const [label, text, name] of [
+  ["a lowercase phrase after a cue", "Thanks a lot everyone for coming.", "a lot"],
+  ["a lowercase single word after a cue", "Welcome back to another session.", "back"],
+  ["a whole clause after a cue (token cap)", "My name is going to be announced later in the session.", "going to be announced later"],
+] as [string, string, string][]) {
+  test(`shape guard alone rejects ${label}`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.deepEqual(resolved, [], `${JSON.stringify(name)} has a cue but is not a name`);
+  });
+}
+
+/**
+ * The 4-token cap is the LAST guard standing against title-cased prose -- a read-aloud slide title,
+ * which a webinar transcript really does contain. Every token is capitalised, so `looksLikeAName`'s
+ * per-token rule passes and only the length cap can reject it. Without this case the cap survives
+ * mutation, i.e. it is unpinned.
+ */
+test("token cap alone rejects a title-cased phrase after a cue", async () => {
+  const { resolved } = await extractSpeakers(
+    [turn("t1", "spk:0", "This is Our Journey So Far Together, as you can see on the slide.")],
+    replies([{ speakerRef: "spk:0", displayName: "Our Journey So Far Together", turnIds: ["t1"] }]),
+  );
+  assert.deepEqual(resolved, [], "a slide title is not a person");
 });
 
 test("empty input never calls the provider", async () => {

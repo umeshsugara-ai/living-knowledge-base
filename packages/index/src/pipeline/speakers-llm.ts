@@ -74,24 +74,87 @@ export function looksLikeAName(name: string): boolean {
 }
 
 /**
- * Does `text` contain `name` as WHOLE WORDS?
+ * Does `text` contain `name` as a whole name?
  *
- * A bare `includes()` let `"Ruby"` match `"My name is Rubykumar Shah."` and ship as `person:ruby`
- * -- a different real person. Unicode-aware lookarounds are used rather than ``, which is
- * ASCII-only and would misjudge non-Latin scripts.
+ * Two guards failed open before. A bare `includes()` let "Ruby" match "Rubykumar Shah" (ISS-092's
+ * ancestor). Then a letters-and-digits boundary let "Ruby" match "Ruby-Anne Smith" -- because this
+ * function treated "-" as a boundary while `looksLikeAName` admits "-" INSIDE a name. Two
+ * contradictory definitions of where a name ends, and the containment side is the one that fails
+ * open, so it is the one that had to move.
+ *
+ * `NAME_JOINERS` is therefore shared by both: a character that can sit inside a name can never
+ * simultaneously mark its edge. "." is deliberately NOT a joiner here -- it ends far more sentences
+ * than it joins names, and treating it as one would refuse "My name is Ruby."
+ *
+ * Deliberately not a RegExp: it would have to be built from a model-supplied string, and a
+ * mis-escape fails OPEN by widening what matches. indexOf has no escaping surface.
  */
+const NAME_JOINERS = new Set(["-", "'", "\u2019"]);
+
 export function containsNameVerbatim(text: string, name: string): boolean {
-  // Deliberately not a RegExp: building one from a model-supplied string means escaping it
-  // correctly every time, and a mis-escape here fails OPEN (it would widen what counts as a
-  // match). indexOf plus an explicit boundary test has no escaping surface at all.
-  const isWordChar = (ch: string | undefined): boolean =>
-    ch !== undefined && /[\p{L}\p{N}]/u.test(ch);
+  const isNameChar = (ch: string | undefined): boolean =>
+    ch !== undefined && (/[\p{L}\p{N}]/u.test(ch) || NAME_JOINERS.has(ch));
   for (let from = 0; ; ) {
     const at = text.indexOf(name, from);
     if (at === -1) return false;
-    if (!isWordChar(text[at - 1]) && !isWordChar(text[at + name.length])) return true;
+    if (!isNameChar(text[at - 1]) && !isNameChar(text[at + name.length])) return true;
     from = at + 1;
   }
+}
+
+/**
+ * Cue phrases that mark an act of NAMING, checked immediately adjacent to the candidate.
+ *
+ * ISS-091: `looksLikeAName` tests capitalisation, not nameness, and transcript prose capitalises
+ * nearly every sentence start -- so "Welcome", "Thanks", "Okay" and even the bare pronoun "I" all
+ * shipped as people. "Good morning" was caught only because English lowercases "morning". Shape is
+ * necessary, not sufficient.
+ *
+ * A naming cue is used rather than a stopword list because a stopword list is unbounded and
+ * language-specific, while a cue is positive evidence that this turn introduces or addresses
+ * someone -- which is exactly what the LLM path's prompt asks the model to find. It also costs
+ * recall on purpose: a name mentioned with no cue in that turn is refused rather than guessed at.
+ *
+ * These are fixed constants, never model-supplied, so a RegExp here carries no injection surface.
+ */
+const NAMING_CUES_BEFORE = [
+  "my name is", "my name's", "i am", "i'm", "this is", "that is", "that's", "this side",
+  "call me", "welcome", "joined by", "joining us", "introduce", "introducing",
+  "over to", "hand over to", "handing over to", "thank you", "thanks", "hi", "hello", "hey",
+];
+const NAMING_CUES_AFTER = ["here", "speaking", "from", "with us", "joining"];
+
+/** Is the occurrence of `name` at `at` an act of naming, rather than a passing mention? */
+function hasNamingCue(text: string, name: string, at: number): boolean {
+  const before = text
+    .slice(Math.max(0, at - 40), at)
+    .toLowerCase()
+    .replace(/[\s,:;."'\u2019()\u2014-]+$/u, "");
+  if (NAMING_CUES_BEFORE.some((cue) => before.endsWith(cue))) return true;
+
+  const after = text
+    .slice(at + name.length, at + name.length + 24)
+    .toLowerCase()
+    .replace(/^[\s,:;."'\u2019()\u2014-]+/u, "");
+  return NAMING_CUES_AFTER.some((cue) => after.startsWith(cue));
+}
+
+/** Every whole-name occurrence of `name` in `text`, as start offsets. */
+function nameOccurrences(text: string, name: string): number[] {
+  const isNameChar = (ch: string | undefined): boolean =>
+    ch !== undefined && (/[\p{L}\p{N}]/u.test(ch) || NAME_JOINERS.has(ch));
+  const out: number[] = [];
+  for (let from = 0; ; ) {
+    const at = text.indexOf(name, from);
+    if (at === -1) return out;
+    if (!isNameChar(text[at - 1]) && !isNameChar(text[at + name.length])) out.push(at);
+    from = at + 1;
+  }
+}
+
+/** Whole-name containment AND positive evidence that the turn is naming someone. */
+export function citesNameAsAnIntroduction(text: string, name: string): boolean {
+  return nameOccurrences(text, name).some((at) => hasNamingCue(text, name, at));
 }
 
 function buildCitableTranscript(turns: Turns[]): string {
@@ -177,7 +240,7 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
       if (!t) continue;                                  // fabricated turn id
       // THE RULE: the name must appear in its evidence as whole words, never as a substring
       // buried inside a longer word ("Ruby" inside "Rubykumar" is a different person).
-      if (!containsNameVerbatim(t.text ?? "", name)) continue;
+      if (!citesNameAsAnIntroduction(t.text ?? "", name)) continue;
       if (evidence.some((e) => e.turnId === id)) continue;
       evidence.push({ turnId: id, sessionId: t.sessionId });
     }
