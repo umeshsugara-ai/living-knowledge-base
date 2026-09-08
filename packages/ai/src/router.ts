@@ -4,7 +4,8 @@
  * `complete(jobKind, job, config)` tries each in order, first success wins, and records a `jobs`
  * ledger entry (C5) for every attempt via the injected `write`.
  */
-import type { CompleteResult, Job, Provider } from "./provider.js";
+import type { CompleteResult, EmbedJob, EmbedResult, Job, Provider } from "./provider.js";
+import { canEmbed } from "./provider.js";
 import { recordJob, type WriteJobFn } from "./jobs.js";
 
 export interface RoutingConfig {
@@ -78,6 +79,54 @@ export async function complete(jobKind: string, job: Job, config: RoutingConfig)
           provider: provider.name,
           error: message,
         },
+        config.write,
+      );
+    }
+  }
+
+  throw new AllProvidersFailedError(jobKind, attempts);
+}
+
+/**
+ * Embedding counterpart of `complete` (plan §10 U1.1). Same chain, same ledger, same
+ * first-success-wins rule — deliberately the same shape, so there is one fallback behaviour in
+ * this codebase rather than two that can drift.
+ *
+ * ONE difference, and it is the reason `embed` is optional on `Provider`: a chain member without
+ * an `embed()` is **skipped, not failed**. `claude-code` runs a CLI and Anthropic ships no
+ * embedding API, so a chain listing them for other jobKinds would otherwise die on its first
+ * member. Skipping is recorded as an attempt so the ledger still explains where a request went;
+ * a chain with NO capable member is an error rather than an empty result, because silently
+ * returning no vectors would look like a corpus with nothing in it.
+ */
+export async function embed(jobKind: string, job: EmbedJob, config: RoutingConfig): Promise<EmbedResult> {
+  const providers = route(jobKind, config);
+  const attempts: { provider: string; error: string }[] = [];
+
+  for (const provider of providers) {
+    if (!canEmbed(provider)) {
+      attempts.push({ provider: provider.name, error: "provider has no embed() — skipped" });
+      continue;
+    }
+    try {
+      const result = await provider.embed(job);
+      await recordJob(
+        {
+          tenantId: config.tenantId,
+          kind: jobKind,
+          status: "done",
+          provider: result.provider,
+          model: result.model,
+          costUsd: 0,
+        },
+        config.write,
+      );
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      attempts.push({ provider: provider.name, error: message });
+      await recordJob(
+        { tenantId: config.tenantId, kind: jobKind, status: "failed", provider: provider.name, error: message },
         config.write,
       );
     }

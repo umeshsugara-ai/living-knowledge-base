@@ -40,15 +40,43 @@ export interface ModelInfo {
   label: string;
 }
 
+/** One embedding request. Batched, because every provider charges and rate-limits per call. */
+export interface EmbedJob {
+  kind: string;
+  texts: string[];
+  /** Providers that support it (gemini) truncate/normalise differently for query vs document. */
+  purpose?: "document" | "query";
+}
+
+export interface EmbedResult {
+  /** One vector per input text, in the SAME ORDER — the caller pairs them back by index. */
+  vectors: number[][];
+  dims: number;
+  provider: string;
+  model: string;
+}
+
 /**
  * One `Provider` per adapter. `complete` runs one job; `listModels` returns the provider's
  * dropdown manifest (C3 — static-but-labeled for gemini/openai/anthropic/claude-code, a real
  * transport call for ollama).
+ *
+ * `embed` is OPTIONAL (plan §10 U1.1). Not every provider has an embedding endpoint — claude-code
+ * runs a CLI and Anthropic ships no embedding API — and making it required would force four
+ * adapters to implement a method that throws, which is a worse lie than not implementing it. The
+ * router skips providers where it is absent, so an embedding chain degrades to the members that
+ * actually support one rather than failing at the first that does not.
  */
 export interface Provider {
   readonly name: string;
   complete(job: Job): Promise<CompleteResult>;
   listModels(): Promise<ModelInfo[]>;
+  embed?(job: EmbedJob): Promise<EmbedResult>;
+}
+
+/** Narrowing helper so callers test capability rather than duck-typing at each call site. */
+export function canEmbed(p: Provider): p is Provider & Required<Pick<Provider, "embed">> {
+  return typeof p.embed === "function";
 }
 
 /**

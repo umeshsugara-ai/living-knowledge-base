@@ -7,8 +7,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import type { CompleteResult, Job, Provider } from "./provider.js";
-import { AllProvidersFailedError, complete, route, type RoutingConfig } from "./router.js";
+import type { CompleteResult, EmbedJob, EmbedResult, Job, Provider } from "./provider.js";
+import { AllProvidersFailedError, complete, embed, route, type RoutingConfig } from "./router.js";
 import type { JobEntry } from "./jobs.js";
 
 const FIXTURE_JOB: Job = { kind: "test", messages: [{ role: "user", content: "hi" }] };
@@ -119,4 +119,86 @@ test("complete() records exactly one jobs entry for a single-provider chain succ
 
   assert.equal(calls.length, 1);
   assert.equal(calls[0]!.status, "done");
+});
+
+/**
+ * U1.1 — the embedding chain. The behaviour worth pinning is the one that differs from
+ * `complete()`: a provider with no `embed()` is SKIPPED rather than counted as a failure, because
+ * a chain shared with other jobKinds will contain claude-code/anthropic, neither of which has an
+ * embedding endpoint. Get this wrong and every embedding request dies on its first chain member.
+ */
+const EMBED_JOB: EmbedJob = { kind: "embedding", texts: ["a", "b"] };
+
+function embeddingProvider(name: string): Provider {
+  return {
+    name,
+    complete: async () => okResult(name),
+    listModels: async () => [],
+    embed: async (): Promise<EmbedResult> => ({
+      vectors: [[1, 0], [0, 1]],
+      dims: 2,
+      provider: name,
+      model: "e",
+    }),
+  };
+}
+
+/** Deliberately has NO embed method — the claude-code / anthropic shape. */
+function completeOnlyProvider(name: string): Provider {
+  return { name, complete: async () => okResult(name), listModels: async () => [] };
+}
+
+test("embed() SKIPS a provider with no embed() and uses the next capable one", async () => {
+  const { write, calls } = recordingWrite();
+  const config: RoutingConfig = {
+    chains: { embedding: ["nope", "yes"] },
+    providers: { nope: completeOnlyProvider("nope"), yes: embeddingProvider("yes") },
+    tenantId: "t",
+    write,
+  };
+  const r = await embed("embedding", EMBED_JOB, config);
+  assert.equal(r.provider, "yes");
+  assert.equal(r.dims, 2);
+  // The skip must NOT be recorded as a failed job — nothing went wrong, the provider simply
+  // cannot do this kind of work.
+  assert.equal(calls.filter((c) => c.status === "failed").length, 0);
+  assert.equal(calls.filter((c) => c.status === "done").length, 1);
+});
+
+test("embed() falls back past a provider whose embed() throws, and records the failure", async () => {
+  const { write, calls } = recordingWrite();
+  const boom: Provider = {
+    name: "boom",
+    complete: async () => okResult("boom"),
+    listModels: async () => [],
+    embed: async () => {
+      throw new Error("rate limited");
+    },
+  };
+  const config: RoutingConfig = {
+    chains: { embedding: ["boom", "yes"] },
+    providers: { boom, yes: embeddingProvider("yes") },
+    tenantId: "t",
+    write,
+  };
+  const r = await embed("embedding", EMBED_JOB, config);
+  assert.equal(r.provider, "yes");
+  assert.equal(calls.filter((c) => c.status === "failed").length, 1);
+});
+
+test("embed() throws rather than returning zero vectors when NO chain member can embed", async () => {
+  // A silent empty result here would look exactly like a corpus with nothing in it — the worst
+  // possible failure mode for an index build, because it succeeds.
+  const { write } = recordingWrite();
+  const config: RoutingConfig = {
+    chains: { embedding: ["a", "b"] },
+    providers: { a: completeOnlyProvider("a"), b: completeOnlyProvider("b") },
+    tenantId: "t",
+    write,
+  };
+  await assert.rejects(embed("embedding", EMBED_JOB, config), (err: unknown) => {
+    assert.ok(err instanceof AllProvidersFailedError);
+    assert.match(String(err), /no embed\(\)/);
+    return true;
+  });
 });

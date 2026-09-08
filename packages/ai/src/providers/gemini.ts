@@ -4,7 +4,7 @@
  * `generateContent` REST endpoint through the injected `transport`; no real network call in
  * tests (C2).
  */
-import type { CompleteResult, Job, ModelInfo, Provider, Transport } from "../provider.js";
+import type { CompleteResult, EmbedJob, EmbedResult, Job, ModelInfo, Provider, Transport } from "../provider.js";
 
 /** Static-but-labeled manifest (C3) — refresh via https://ai.google.dev/gemini-api/docs/models. */
 export const GEMINI_MODELS: ModelInfo[] = [
@@ -14,6 +14,8 @@ export const GEMINI_MODELS: ModelInfo[] = [
 ];
 
 const DEFAULT_MODEL = "gemini-2.5-flash";
+/** Separate from DEFAULT_MODEL: generation and embedding are different endpoints and families. */
+const DEFAULT_EMBED_MODEL = "gemini-embedding-001";
 
 function roleToGemini(role: string): string {
   return role === "assistant" ? "model" : "user";
@@ -22,6 +24,8 @@ function roleToGemini(role: string): string {
 export interface GeminiConfig {
   apiKey: string;
   model?: string;
+  /** Overrides DEFAULT_EMBED_MODEL; `model` selects the generation model and is unrelated. */
+  embedModel?: string;
 }
 
 export class GeminiProvider implements Provider {
@@ -73,6 +77,59 @@ export class GeminiProvider implements Provider {
       model,
       costUsd: 0,
     };
+  }
+
+  /**
+   * Embeddings (plan §10 U1.1), over the SAME `Transport` as `complete` — so this is one more
+   * HTTP shape, not a second SDK, and the existing fake transport covers it in tests.
+   *
+   * `batchEmbedContents`, not N calls to `embedContents`: the caller chunks a whole session at
+   * once, and per-text calls would multiply latency and rate-limit pressure by the chunk count.
+   *
+   * Two things this deliberately validates rather than trusts, because a silently short or ragged
+   * vector list corrupts a similarity search in a way no type checks:
+   *   - one vector back per input text, IN ORDER — the caller pairs by index;
+   *   - every vector the same length, which is what `dims` then means.
+   */
+  async embed(job: EmbedJob): Promise<EmbedResult> {
+    const model = this.config.embedModel ?? DEFAULT_EMBED_MODEL;
+    if (job.texts.length === 0) return { vectors: [], dims: 0, provider: this.name, model };
+
+    const res = await this.transport({
+      kind: "http",
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${model}:batchEmbedContents?key=${this.config.apiKey}`,
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: {
+        requests: job.texts.map((text) => ({
+          model: `models/${model}`,
+          content: { parts: [{ text }] },
+          taskType: job.purpose === "query" ? "RETRIEVAL_QUERY" : "RETRIEVAL_DOCUMENT",
+        })),
+      },
+    });
+
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(`gemini embed error ${res.status}: ${JSON.stringify(res.body)}`);
+    }
+
+    const body = res.body as { embeddings?: { values?: number[] }[] };
+    const vectors = (body.embeddings ?? []).map((e) => e.values ?? []);
+    if (vectors.length !== job.texts.length) {
+      throw new Error(
+        `gemini embed returned ${vectors.length} vector(s) for ${job.texts.length} text(s) — ` +
+          "refusing to pair them by index",
+      );
+    }
+    const dims = vectors[0]?.length ?? 0;
+    const ragged = vectors.findIndex((v) => v.length !== dims);
+    if (ragged !== -1) {
+      throw new Error(
+        `gemini embed returned a ${vectors[ragged]?.length}-dim vector at index ${ragged} but ` +
+          `${dims} at index 0 — a ragged set cannot be compared by cosine`,
+      );
+    }
+    return { vectors, dims, provider: this.name, model };
   }
 
   async listModels(): Promise<ModelInfo[]> {

@@ -9,3 +9,7 @@ tree-summary: [gemini, claude-code]
 evaluator: [gemini, claude-code]
 answer: [gemini, claude-code, ollama]
 ask: [gemini, claude-code]
+# U1.1: embeddings. Gemini first per D-005; ollama second so the vector index can be built
+# entirely locally when the corpus must not leave our infrastructure (goal.md). Providers without
+# an embed() are skipped by the router rather than failing the chain, so listing one is harmless.
+embedding: [gemini, ollama]

@@ -4,14 +4,18 @@
  * adapter whose manifest is a REAL transport call, shaped like Ollama's local `/api/tags`
  * endpoint (C3), still injectable so tests use a fake.
  */
-import type { CompleteResult, Job, ModelInfo, Provider, Transport } from "../provider.js";
+import type { CompleteResult, EmbedJob, EmbedResult, Job, ModelInfo, Provider, Transport } from "../provider.js";
 
 const DEFAULT_MODEL = "llama3.1";
 const DEFAULT_BASE_URL = "http://localhost:11434";
+/** A dedicated embedding model, not the chat one — `llama3.1` has no embedding endpoint. */
+const DEFAULT_EMBED_MODEL = "nomic-embed-text";
 
 export interface OllamaConfig {
   baseUrl?: string;
   model?: string;
+  /** Overrides DEFAULT_EMBED_MODEL; `model` selects the chat model and is unrelated. */
+  embedModel?: string;
 }
 
 export class OllamaProvider implements Provider {
@@ -62,6 +66,52 @@ export class OllamaProvider implements Provider {
   }
 
   /** Calls the local /api/tags-shaped transport for a live model manifest (C3). */
+  /**
+   * Local embeddings (plan §10 U1.1, D-b). Ollama's `/api/embed` takes an array and returns
+   * `embeddings`, so one call covers the batch exactly as the Gemini adapter does.
+   *
+   * This is the member of the chain that keeps `goal.md`'s "never leak the corpus into a public
+   * model" reachable: chunking the whole transcript corpus for a vector index is the single
+   * largest volume of Vidysea text that would ever leave the building, and here it does not have to.
+   *
+   * The same two guarantees Gemini's adapter enforces are enforced here, for the same reason — a
+   * short or ragged vector list corrupts a similarity search silently.
+   */
+  async embed(job: EmbedJob): Promise<EmbedResult> {
+    const model = this.config.embedModel ?? DEFAULT_EMBED_MODEL;
+    if (job.texts.length === 0) return { vectors: [], dims: 0, provider: this.name, model };
+
+    const res = await this.transport({
+      kind: "http",
+      url: `${this.baseUrl}/api/embed`,
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: { model, input: job.texts },
+    });
+
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(`ollama embed error ${res.status}: ${JSON.stringify(res.body)}`);
+    }
+
+    const body = res.body as { embeddings?: number[][] };
+    const vectors = body.embeddings ?? [];
+    if (vectors.length !== job.texts.length) {
+      throw new Error(
+        `ollama embed returned ${vectors.length} vector(s) for ${job.texts.length} text(s) — ` +
+          "refusing to pair them by index",
+      );
+    }
+    const dims = vectors[0]?.length ?? 0;
+    const ragged = vectors.findIndex((v) => v.length !== dims);
+    if (ragged !== -1) {
+      throw new Error(
+        `ollama embed returned a ${vectors[ragged]?.length}-dim vector at index ${ragged} but ` +
+          `${dims} at index 0 — a ragged set cannot be compared by cosine`,
+      );
+    }
+    return { vectors, dims, provider: this.name, model };
+  }
+
   async listModels(): Promise<ModelInfo[]> {
     const res = await this.transport({
       kind: "http",
