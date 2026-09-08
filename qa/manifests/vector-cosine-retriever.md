@@ -2,9 +2,9 @@
 **Contract:** qa/contracts/ingest-indexing-pipeline.md
 **Goal task:** U1.4 (plan §10 — **roadmap tier 3**, the first non-QA-generated unit this stretch)
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** none — this is roadmap feature work
+**Issues addressed:** ISS-124 (high), ISS-123 (medium) — both raised by the cycle-1 FAIL
 
 ## The number
 
@@ -100,5 +100,79 @@ pnpm -r typecheck = 0 · pnpm -r test = 0
 5. **The dedupe-before-truncate behaviour changes what "k" means** versus a chunk-level ranking.
    That is intentional and tested, but it is a semantic choice a reviewer should agree with rather
    than inherit.
+
+## Cycle 2 — the cycle-1 FAIL, and what it got right
+
+**Verdict:** `qa/verdicts/vector-cosine-retriever.md` — **FAIL**, cycle 1, 5/7 criteria (6/6
+invariants held). Both failures were about **U1.4's own stated requirements, not retrieval
+quality** — and the checker was right on both.
+
+It confirmed the retrieval work independently and could not break it: 0.935 (86/92) reproduced
+exactly, 1452 real 3072-dim chunks over 26 sessions verified by its own live Mongo query, byte-
+identical rankings across runs **including every miss's full ordered top-5**, the clobber fix
+verified in git history rather than on disk, and **6/6 mutations killed** including
+dedupe-before-truncate and the tie-break.
+
+### FAILURE 1 — ISS-124 (high): I shipped code that reverses a recorded decision, citing an id that does not exist
+
+`cosine.ts` cited **"D-a"** — a *plan-local shorthand* that was never a DECISIONS id. Meanwhile
+`ARCHITECTURE.md` Q5 still read *"CLOSED by D-003: Mongo Atlas Vector Search on `chunks`"*, which
+the shipped code deliberately does not use. Plan §10 makes *"write the DECISIONS entry superseding
+D-003"* part of U1.4 itself, and I simply did not do it. **Fixed:**
+
+- **D-021 appended** via `scripts/append_decision.ps1`, `Supersedes: D-003` scoped explicitly to Q5
+  only — D-003's stack, language split, schema-source and CI budgets are untouched and stay in
+  force. (It was written as D-019 first and refused: the concurrent lane had taken D-019/D-020
+  while this unit was in flight. The append guard caught it — the exact collision class
+  `qa/gates/ledger-id-collision.md` is open about.)
+- `ARCHITECTURE.md` Q5 repointed to `D-003 → D-021` (authorized by that entry's
+  `Changes-authorized`, written **before** the edit, per the Lab Protocol).
+- `cosine.ts` now cites D-021.
+
+### FAILURE 2 — ISS-123 (medium): p95 was a stated Verify item, not an optional extra
+
+I had disclosed "no latency measurement" as if it were a caveat. It was a requirement: the plan's
+*Verify:* line names p95 beside the two things I did do, and my brute-force-over-ANN justification
+**rested on an unmeasured claim**. Measured now, ranking only (the batched embed is excluded
+deliberately — it is one round-trip amortised over every question, so folding it in would report
+network latency as retrieval latency):
+
+```
+p50 28.84 ms · p95 62.35 ms · max 127.55 ms   (n=92, 1452 chunks x 3072 dims)
+```
+
+**This also corrected an overclaim of mine.** The comment in `cosine.ts` said the scan was
+"milliseconds"; it is tens of milliseconds — off by an order of magnitude. The comment now carries
+the measured numbers and says where they come from. The conclusion survives (62 ms is comfortably
+inside D-021's ~500 ms revisit threshold) but it is now evidence rather than intuition.
+
+### Nothing in `packages/index/src/vector/` changed
+
+Both fixes are one DECISIONS entry, two one-line repoints, and timing instrumentation in
+`eval-recall.mjs`. The retriever the checker attacked and could not break is byte-identical.
+
+### The checker's findings I am carrying forward rather than closing
+
+- **It went further than I did on disclosure #1** and found a cause I missed: `atlas-skilltech`
+  has only **4 chunks** against 21–45 for other sessions, and owns **2 of the 6 misses**. Its view:
+  none of the six is a clean retrieval failure and at least four are ambiguous ground truth. So
+  0.935 is citable as **a floor with the caveat attached** — and explicitly **must not** be used to
+  close gate condition 4 or to settle U1.5's ≥0.85 while precondition 1 is open. I am recording
+  that constraint here so U1.5 cannot quietly inherit the number.
+- It also **discharged gate precondition 2** (ISS-093's biased post-filter): `golden-set-rejected`
+  is now empty, so `kept === combined` and there is no selection bias left in the comparison.
+- **`packages/index/src/vector/` has no contract at all**, and U1.5 builds on it. It recommends
+  `/checker init-contract vector-retrieval` (human-gated) before U1.5. Flagged, not actioned —
+  contract creation is the checker's and the human's, never the maker's.
+
+## Cycle 2 outputs
+
+```
+pnpm -r typecheck = 0 · pnpm -r test = 0
+lint-loc=0 lint-dirsize=0 lint-root=0 lint-dupes=0 lint-migrations=0 snapshot=0 depcruise=0
+ARCHITECTURE.md = 131 lines (budget 150)
+recall@5 = 0.935 (86/92) — unchanged, as expected: no retriever code changed
+latency: p50 28.84 · p95 62.35 · max 127.55 ms
+```
 
 ## Status: ready-for-check

@@ -123,8 +123,9 @@ unilaterally; they resolve only through /checkpoint verdicts)
   eval-harness work (T-012) starts. Question bank sources fixed by D-007.
 - **Q4:** ~~Consent rule~~ **CLOSED by D-002 → D-008:** provided-first capture (H8); silent
   capture last resort; provenance frozen. Legal exposure recorded once in D-002 and accepted.
-- **Q5:** ~~Dedicated vector DB?~~ **CLOSED by D-003:** Mongo Atlas Vector Search on `chunks`
-  — one DB until measured otherwise.
+- **Q5:** ~~Dedicated vector DB?~~ **CLOSED by D-003 → D-021:** brute-force exact cosine in
+  `packages/index/src/vector/` over `chunks`, behind `vectorSearchFn`. Atlas Vector Search is
+  unavailable (self-hosted mongod, no `+srv`), and at 1452×3072 an exhaustive scan is exact.
 - **Q6 (gated purge level):** what "processed to a defined level" means before media purge —
   D-008 fixes the gate (all citing claims verified + retained ±15 s evidence clips); the
   concrete retention values and purge job design are T-026, not yet decided.

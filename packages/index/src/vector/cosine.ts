@@ -1,13 +1,18 @@
 /**
  * packages/index/src/vector/cosine.ts — plan §10 U1.4. Brute-force exact vector search.
  *
- * WHY BRUTE FORCE (D-a). Atlas Vector Search does not exist here: the Mongo is self-hosted on a
- * raw EC2 IP (`mongodb://13.202.206.101:27017`, no `+srv`), so `$vectorSearch` is unavailable. At
- * the real corpus size — 1452 chunks × 3072 dims, measured 2026-09-08 — an exhaustive scan is a
- * few million multiply-adds, which is milliseconds, and it is **exact**. An ANN index would be
- * slower to build, approximate, and would trade recall for a speed budget nothing is asking for.
- * The `vectorSearchFn` seam means swapping this for a real vector DB later is an injection change,
- * not a rewrite.
+ * WHY BRUTE FORCE (D-021, which supersedes D-003 on ARCHITECTURE Q5 only). Atlas Vector Search
+ * does not exist here: the Mongo is self-hosted on a
+ * raw EC2 IP (`mongodb://13.202.206.101:27017`, no `+srv`), so `$vectorSearch` is unavailable.
+ *
+ * MEASURED, not asserted (2026-09-08, 1452 chunks × 3072 dims, ranking only, 92 real questions):
+ * **p50 29 ms · p95 62 ms · max 128 ms**. An earlier draft of this comment said "milliseconds",
+ * which understated it by an order of magnitude — the number is now taken from
+ * `data/eval/recall-report-vector.json` rather than from an intuition. That is comfortably inside
+ * the ~500 ms threshold at which D-021 says to revisit, and the scan is **exact**, where an ANN
+ * index would be approximate, slower to build, and would need invalidating on every re-embed.
+ * The `vectorSearchFn` seam means swapping in a real vector DB later is an injection change, not
+ * a rewrite.
  *
  * PURE, and no I/O: it takes vectors and returns rankings. The caller embeds the query and loads
  * the chunks. That is what makes the recall harness able to drive it without a model or a network.

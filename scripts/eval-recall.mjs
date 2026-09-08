@@ -100,12 +100,33 @@ async function main() {
   const useVector = process.argv.includes("--retriever") &&
     process.argv[process.argv.indexOf("--retriever") + 1] === "vector";
   let retrieverName = "heuristic";
+  let latency = null;
   let retrieve = createHeuristicRetriever(tree);
   if (useVector) {
     const { createVectorRetriever } = await import("../packages/index/src/vector/retriever.ts");
     const { questionVectors, chunks, model } = await embedQuestionsAndLoadChunks(questions, tenantId);
     retrieve = createVectorRetriever(questionVectors, chunks);
     retrieverName = `vector (brute-force cosine, ${model}, ${chunks.length} chunks)`;
+    // p95 over the RANKING only (plan section 10 U1.4's Verify line). The batched embed is excluded
+    // deliberately: it is one network round-trip amortised over every question, so folding it in
+    // would report network latency as retrieval latency. This is the number that justifies choosing
+    // brute force over an ANN index, so it is measured rather than asserted.
+    const timings = [];
+    for (const q of questions) {
+      const t0 = performance.now();
+      retrieve(q.question, K);
+      timings.push(performance.now() - t0);
+    }
+    timings.sort((a, b) => a - b);
+    const at = (p) => timings[Math.min(timings.length - 1, Math.floor(p * timings.length))];
+    latency = {
+      unit: "ms",
+      note: `ranking only, ${chunks.length} chunks x ${questionVectors.values().next().value.length} dims, excludes the batched embed`,
+      n: timings.length,
+      p50: +at(0.5).toFixed(2),
+      p95: +at(0.95).toFixed(2),
+      max: +timings[timings.length - 1].toFixed(2),
+    };
   }
   const result = computeRecallAtK(questions, retrieve, K);
 
@@ -184,6 +205,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     k: K,
     retriever: retrieverName,
+    ...(latency ? { latency } : {}),
     recallAtK: result.recallAtK,
     total: result.total,
     hits: result.hits,
