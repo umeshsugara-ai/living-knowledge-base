@@ -274,4 +274,37 @@ Headline unchanged at **55% (31/56)**; no task changed `done` state.
    unit goes `STALLED` to the human, so please do not withhold a real finding, and equally do not
    manufacture one.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/roadmap-tracker-reconciliation.md`
+(Cycle checked: 3, matching Fix cycle 3), committed `c7ab872`. **7/7 criteria, 6/6 invariants**,
+`ISSUES-WRITTEN: none`. Three cycles, two genuine FAILs, and both failures were mine.
+
+**What the checker verified rather than accepted:**
+
+- It did **not** stop at the `blocked_by` field grep — the precise mistake that produced cycle 2 —
+  and instead read the rows. It found four surviving `blocked` strings in TASKS.md and judged each
+  benign individually (an `UNBLOCKED` prefix, the gate's own "NOT gate-blocked" line, unrelated
+  diarization prose, and an explicit retraction). That is the difference between grepping and
+  reading.
+- It checked the three notes against **`qa/gates/golden-set-redesign.md` itself**, not against
+  `goal.json`, and confirmed the inversion survived paraphrase: PASS is still *strictly between*
+  0.217 and 1.000 with a non-zero miss count, and **1.000 is still a FAILURE escalating to Option
+  B**. Flattening that one clause would have silently restored the unfalsifiable metric.
+- It replayed the mutation **armed** via `mutate.mjs`, and independently re-derived the 55%
+  headline as `round(31/56*100)` rather than reading `progress`.
+
+**On the scope call I flagged for judgment:** it ruled the `NORMALISE` change **correct, not creep**
+— the collapse of `blocked` into `not-done` is *causally* why G1 could not see the divergence, so
+fixing only the three rows would have left the blind check that let it recur. It verified blockage
+stays representable **independently of my test 11**, by copying both trackers to a scratch root,
+setting `T-021` blocked on *both* sides, and confirming zero findings. That is the right way to
+check a claim of the form "I didn't break the other direction".
+
+**Three non-failures it relayed, handled:**
+
+1. The full audit (no `--gate`) still exits 1 on **35** `fixed`-without-`verified_date` rows.
+   Pre-existing, checker-owned, deliberately outside `lint:structure`, and already filed as
+   **ISS-088** — a gate that can never go green. Belongs to a sweep, not this unit.
+2. My cycle-2 "instead of" overclaim survived in a **test name** after I corrected the prose.
+   Fixed here — an inaccurate claim in a test name is still an inaccurate claim.
+3. The concurrent session's monitor tick leaves `.goal/goal.json` dirty with timestamp and
+   `progress` churn. Harmless, and not mine to commit.

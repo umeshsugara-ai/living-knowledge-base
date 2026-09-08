@@ -160,7 +160,7 @@ test("G1 catches a DUPLICATE TASKS.md row — a Map keeps only the last, so a co
   rmSync(root, { recursive: true, force: true });
 });
 
-test("G1 names an unknown status word instead of emitting a confusing mismatch", () => {
+test("G1 names an unknown status word, alongside the mismatch line it also emits", () => {
   // `partial` was in real use in TASKS.md and is in NORMALISE for neither tracker, so it mapped to
   // `undefined` — which compares unequal to everything and would have produced
   // `is "in_progress" but "partial"` rather than saying the vocabulary is wrong.
