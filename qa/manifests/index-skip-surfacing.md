@@ -53,9 +53,23 @@ pnpm --filter @lkb/api typecheck   exit=0
 pnpm --filter @lkb/api test        ℹ tests 124  ℹ pass 124  ℹ fail 0
 ```
 
-Mutation proof is recorded in the commit that follows this manifest (the file must be committed
-before `scripts/lib/mutate.mjs` will arm it — it refuses to mutate anything not byte-identical to
-HEAD, which is the guard added after a mutation was once found still applied to production source).
+**Mutation proof (run after committing `2d44750`, since `mutate.mjs` refuses to arm a file that is
+not byte-identical to HEAD):** forcing `skipped` to `null` in the returned object gives
+**122 pass / 2 fail**, and the two failures are the new "surfaces an embedding failure" and
+"reports 'no-embedder' distinctly" tests. **The third new test correctly stays green**, and that is
+not a gap: it asserts `skipped === null` on a successful run, which this particular mutation makes
+trivially true. Stating that rather than claiming 3/3 — a mutation that kills every test would mean
+the tests were all asserting the same thing.
+
+```
+MUTATION ARMED: apps/api/src/indexing.ts
+mutated: skipped forced to null
+  -> tests 124  pass 122  fail 2
+RESTORED: apps/api/src/indexing.ts (verified identical to HEAD)
+MUTATIONS CLEAN: none outstanding
+git diff --quiet HEAD -- apps/api/src/indexing.ts  -> clean
+  -> tests 124  pass 124  fail 0
+```
 
 ## Disclosed — the checker should press on these
 
