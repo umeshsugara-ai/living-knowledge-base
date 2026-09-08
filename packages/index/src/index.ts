@@ -16,3 +16,5 @@ export { lexicalSearchTurns, lexicalQueryTokens, type LexicalHit, type Searchabl
 export { summarizeSession, type SessionSummaryResult, type SummarizeResult, type SummarizeCompleteFn } from "./pipeline/summarize.js";
 export { extractClaims, type ExtractedClaim, type ClaimsCompleteFn } from "./pipeline/claims.js";
 export { resolveSpeakers, personIdFor, type ResolvedSpeaker, type SpeakerResolution } from "./pipeline/speakers.js";
+export { extractSpeakers, type SpeakersCompleteFn, type SpeakerExtractionResult } from "./pipeline/speakers-llm.js";
+export { looksLikeAName, isDiscourseOnly, containsNameVerbatim, citesNameAsAnIntroduction } from "./pipeline/speaker-name-rules.js";
