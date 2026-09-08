@@ -528,13 +528,14 @@
     {
       "id": "U1.4",
       "title": "Brute-force cosine retriever behind vectorSearchFn",
-      "status": "pending",
+      "status": "in_progress",
       "base_criticality": "MEDIUM",
       "deps": [
         "U1.3"
       ],
       "criticality": "low",
-      "note": "D-a: Atlas Vector Search unavailable (self-hosted Mongo, no +srv). Its recall delta claim additionally needs U0.10."
+      "note": "D-a: Atlas Vector Search unavailable (self-hosted Mongo, no +srv). Its recall delta claim additionally needs U0.10.",
+      "evidence": "ready-for-check. recall@5 0.935 (86/92) vs heuristic 0.391, control 0.217, delta +0.543, INFORMATIVE (not saturated)."
     },
     {
       "id": "U1.5",
