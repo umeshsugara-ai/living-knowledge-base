@@ -94,7 +94,7 @@ filed as ISS-C-UNRUN-WRITERS-003, correctly out of this unit's scope.
 
 ### My own citation error, fixed
 
-Known-gap 2 cited **ISS-003** where it meant **ISS-004**. Bookkeeping, but worth naming: a manifest
+Known-gap 2 cited **ISS-C-UNRUN-WRITERS-003** where it meant **ISS-C-UNRUN-WRITERS-004**. Bookkeeping, but worth naming: a manifest
 pointing at the wrong ledger row is precisely the failure D-019 exists to prevent, and I made it by
 hand inside the very lane that fixed it.
 

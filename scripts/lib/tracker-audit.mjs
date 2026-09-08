@@ -169,6 +169,88 @@ export function audit(root = ROOT, { exec = execFileSync } = {}) {
     }
   }
 
+  // ---- G4: an issue id that resolves to two different findings is not a citation.
+  findings.push(...auditIssueRefs(root, readLedgerRows(root).rows));
+
+  return findings;
+}
+
+/**
+ * Files whose bare `ISS-NNN` citations are known-ambiguous and are NOT the maker's to rewrite.
+ *
+ * `qa/verdicts/` is checker-owned; a maker editing a verdict is the self-certification this pair
+ * exists to prevent. So the debt is FROZEN and named here rather than silently tolerated: these
+ * files keep their existing ambiguous references, any NEW one anywhere fails the gate, and the
+ * list can only shrink. A checker that rewrites its own verdict deletes its line from this table.
+ */
+export const G4_FROZEN = new Set([
+  "qa/verdicts/guarded-fetcher.md",
+  "qa/verdicts/watched-sources-entrypoint.md",
+  "qa/verdicts/watched-sources-run.md",
+  "qa/verdicts/watched-sources-url-normalisation.md",
+]);
+
+/**
+ * G4: a bare `ISS-NNN` that a lane shard ALSO numbers is ambiguous — it resolves to two different
+ * findings depending on which ledger the reader opens.
+ *
+ * ISS-142. Merging `lane/c-unrun-writers` brought 96 such references onto master: the docs said
+ * "fix ISS-021 and ISS-022" meaning the lane's lint-red and test-count findings, while canonical
+ * ISS-021/ISS-022 are verdict-wording standardisation and a T-010 goal-status row. Nothing was
+ * corrupted; every citation simply started pointing somewhere else.
+ *
+ * This is not cosmetic, and it is the same defect ISS-132 corrected in the gate table. **D-015
+ * requires a fix to be measured against its issue's own recorded reproductions, and that rule is
+ * only as strong as the id resolving to the right row.**
+ *
+ * **Scoping, because the obvious rule is wrong.** Flagging every bare `ISS-NNN` that a shard also
+ * numbers reported 58 files on the first run — nearly all of them historical documents written
+ * long before any lane existed, whose bare references correctly mean the canonical row. A gate
+ * that fires on correct usage teaches people to ignore it.
+ *
+ * So a file is judged only when it **already uses the qualified form somewhere**: mixing
+ * `ISS-C-UNRUN-WRITERS-017` and bare `ISS-017` in one document is an inconsistency its own author
+ * owns, and it cannot misfire on a document that predates lane ids. Measured: this catches the
+ * three lane manifests and leaves every historical file alone.
+ */
+export function auditIssueRefs(root, ledgerRows) {
+  const laneNumbers = new Set();
+  for (const { id } of ledgerRows) {
+    const m = /^ISS-(?:[A-Z][A-Z0-9-]*)-(\d{3})$/.exec(id);
+    if (m) laneNumbers.add(m[1]);
+  }
+  if (laneNumbers.size === 0) return [];
+  const findings = [];
+  for (const sub of ["manifests", "verdicts", "contracts"]) {
+    const dir = join(root, "qa", sub);
+    let names = [];
+    try {
+      names = readdirSync(dir).filter((f) => f.endsWith(".md")).sort();
+    } catch (err) {
+      if (err?.code !== "ENOENT") throw err;
+      continue;
+    }
+    for (const name of names) {
+      const rel = `qa/${sub}/${name}`;
+      if (G4_FROZEN.has(rel)) continue;
+      const text = readFileSync(join(dir, name), "utf8");
+      // Only a document that already speaks the qualified dialect can be inconsistent in it.
+      if (!/ISS-[A-Z][A-Z0-9-]*-\d{3}/.test(text)) continue;
+      const hits = new Set();
+      for (const m of text.matchAll(/(?<![A-Z0-9-])ISS-(\d{3})(?![0-9-])(\s*\(canonical\))?/g)) {
+        // `ISS-021 (canonical)` is a DELIBERATE reference to the canonical row. The gate cannot
+        // tell an ambiguous number from a wrong meaning (it is title-blind), so the escape makes
+        // the author state the judgement instead of the gate guessing it -- and makes a careless
+        // blanket qualification visibly wrong rather than silently wrong. Found the honest way:
+        // this gate fired on the very manifest that shipped it, on citations that were correct.
+        if (m[2]) continue;
+        if (laneNumbers.has(m[1])) hits.add(`ISS-${m[1]}`);
+      }
+      if (hits.size) {
+        findings.push(`G4 ambiguous issue ref: ${rel} cites ${[...hits].sort().join(", ")} bare, but a lane shard numbers the same finding(s) — qualify as ISS-<LANE>-NNN`);
+      }
+    }
+  }
   return findings;
 }
 
@@ -181,7 +263,16 @@ export function parseGateArg(argv) {
   return null;
 }
 
-/** Restricts a finding list to one gate's prefix, or returns it unchanged when no gate is named. */
+/**
+ * Restricts a finding list to the named gate(s), or returns it unchanged when none is named.
+ *
+ * Accepts a comma-separated list (`--gate g1,g4`). G4 joins G1 in the commit gate on G1's own
+ * stated criterion: it is fully in the author's control and always clearable in the same commit.
+ * G2 and G3 stay out for the reason recorded at the top of this file -- each depends on someone
+ * ELSE acting later, and a gate that blocks on another person is one people learn to bypass.
+ */
 export function filterByGate(findings, gate) {
-  return gate ? findings.filter((f) => f.startsWith(gate)) : findings;
+  if (!gate) return findings;
+  const wanted = gate.split(",").map((g) => g.trim()).filter(Boolean);
+  return findings.filter((f) => wanted.some((g) => f.startsWith(g)));
 }

@@ -42,9 +42,9 @@ it makes the chain real end-to-end.
    step straight past the guard, which re-resolves and re-checks every hop. That is the whole
    control.
 3. **`resolveAll` returns every address** (`all: true`). Returning one would reinstate the coin-flip
-   bypass ISS-007 closed — a host publishing one public and one private A record.
+   bypass ISS-C-UNRUN-WRITERS-007 closed — a host publishing one public and one private A record.
 
-It also closes **ISS-015** at the layer that owns the socket: `AbortSignal.timeout` genuinely
+It also closes **ISS-C-UNRUN-WRITERS-015** at the layer that owns the socket: `AbortSignal.timeout` genuinely
 cancels the in-flight request, which `Promise.race` in the guard could not do. The body is read in
 chunks and abandoned mid-stream past `maxBytes`, rather than allocated and then measured.
 
@@ -96,7 +96,7 @@ something is scheduled against it.
 FAILed 7/11. The serious finding is the one I flagged against myself and the checker confirmed was
 worse than I described.
 
-## ISS-011 (high) — the guard's decision was advisory, not binding
+## ISS-C-UNRUN-WRITERS-011 (high) — the guard's decision was advisory, not binding
 
 `httpRequest` called `fetch(url)`, so **the OS resolved the hostname again**, independently of the
 addresses the guard had just vetted. The guard could approve `93.184.216.34` and the connection
@@ -111,7 +111,7 @@ is the supported way to say *connect to this address*. The hostname still travel
 header and in `servername`, so the server sees a normal request and **TLS still verifies against
 the name** — only the address is pinned.
 
-## ISS-016 (high) — the only network-touching code had no behavioural test
+## ISS-C-UNRUN-WRITERS-016 (high) — the only network-touching code had no behavioural test
 
 Deleting `redirect: "manual"`, the size abort or the `AbortSignal` each left the suite green.
 Now tested against a **real socket** via `http.createServer`. The pin test is the interesting one:
@@ -172,7 +172,7 @@ unit needs a self-signed HTTPS fixture before anything is scheduled against it, 
 Cycle 2 PASSed with four mediums carried forward. The checker's own framing: *"this is cycle 2 of
 3, so all four must land together in cycle 3; none needs new machinery."* They did.
 
-## ISS-017 — the SSRF boundary was unreachable by any test
+## ISS-C-UNRUN-WRITERS-017 — the SSRF boundary was unreachable by any test
 
 `store.ts` built the guarded fetcher **inline inside `run`**, so replacing it with a bare
 `fetch` left 134/134 green. The boundary the manifest itself called "the feature's SSRF boundary"
@@ -185,14 +185,14 @@ and an `isGuardedFetcher()` predicate — and the production deps are a **named 
 named cannot be asserted on. `apps/api/src/watched-run-deps.test.ts` asserts the brand, and asserts
 a plain async function and `globalThis.fetch` are *not* branded, so the predicate is not vacuous.
 
-## ISS-018 — the fixture's `run` took no argument
+## ISS-C-UNRUN-WRITERS-018 — the fixture's `run` took no argument
 
 `fakeWatchedSourceDeps().run` was `async () => …`. A handler calling `deps.run("other-tenant")`, or
 passing nothing at all, passed the entire suite — on the route that decides whose URLs get fetched.
 The fake now records the tenant it was handed (`ranFor`), and the new route test asserts
 `["tenant-1"]`, the authed tenant.
 
-## ISS-019 / ISS-020 — the code was there, the tests were not
+## ISS-C-UNRUN-WRITERS-019 / ISS-C-UNRUN-WRITERS-020 — the code was there, the tests were not
 
 Both fixes shipped in cycle 2's code, and both mutants survived when I actually measured. Now:
 `recordFetch → false` is asserted to be a **failure**, not a silent success; the cap is asserted to
@@ -207,7 +207,7 @@ unreported truncation reads exactly like a complete run.
 $ pnpm --filter '@lkb/ingest' test   tests 97   pass 97   fail 0   cancelled 0
 $ pnpm --filter '@lkb/api'    test   tests 138  pass 138  fail 0   cancelled 0
 $ pnpm -r typecheck                  exit 0
-$ pnpm lint:structure                see ISS-021 below
+$ pnpm lint:structure                see ISS-C-UNRUN-WRITERS-021 below
 ```
 
 **Correction (ISS-C-UNRUN-WRITERS-022, filed by the cycle-3 checker):** the ingest count above
@@ -215,7 +215,7 @@ first read **98**; **97** is what reproduces at `534af4e`. ISS-136 class — a n
 run I did not re-derive at the submitted commit.
 
 **Correction (ISS-C-UNRUN-WRITERS-021):** cycle 3 as submitted turned `lint:structure` RED —
-`apps/api/src` hit 31 files against a budget of 30, crossed by the ISS-017 fix's own new test
+`apps/api/src` hit 31 files against a budget of 30, crossed by the ISS-C-UNRUN-WRITERS-017 fix's own new test
 file, and my Evidence block was the first of the three cycles to omit that gate. The three
 composition tests now live in `apps/api/src/routes/watched-sources.test.ts`; the directory is
 back to 30.
@@ -258,16 +258,16 @@ Checker verdict `qa/verdicts/watched-sources-run.md` (`Cycle checked: 3`, commit
 **PASS, 11/11 criteria, 5/5 invariants.** It re-derived the mutation table with its own harness and
 added two mutants I had not run — removing the brand's `defineProperty` (137/1) and forcing
 `remaining = 0` (95/2) — both dead, so the new tests are load-bearing beyond the four they were
-written for. ISS-017/018/019/020 are closed.
+written for. ISS-C-UNRUN-WRITERS-017/018/019/020 are closed.
 
 **Three corrections it made against me, all recorded rather than argued:**
 
 1. **Cycle 2 was a FAIL (9/11), not a PASS with mediums carried forward.** My dispatch said
    otherwise. The four mediums are identical either way, but a summary that upgrades a FAIL is how
    a unit's history starts being read from prose instead of from the verdict file.
-2. **ISS-021 (high) — the ISS-017 fix broke `lint:structure`.** Fixed above; `lint-dirsize` is
+2. **ISS-C-UNRUN-WRITERS-021 (high) — the ISS-C-UNRUN-WRITERS-017 fix broke `lint:structure`.** Fixed above; `lint-dirsize` is
    back to OK across 75 directories.
-3. **ISS-022 (low) — 98 ingest tests claimed, 97 reproduce.** Corrected above.
+3. **ISS-C-UNRUN-WRITERS-022 (low) — 98 ingest tests claimed, 97 reproduce.** Corrected above.
 
 **On the question I asked it to rule on:** A13's flip must NOT have blocked this PASS — both
 contracts already forbid the only act that could have flipped it (a placeholder row is a falsified

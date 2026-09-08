@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-import { ledgerFiles, readLedgerRows } from "./tracker-audit.mjs";
+import { ledgerFiles, readLedgerRows, auditIssueRefs, G4_FROZEN, ROOT } from "./tracker-audit.mjs";
 
 // ---------------------------------------------------------------------------
 // ISS-129 — the ledger UNION declared by D-019.
@@ -120,3 +120,86 @@ test("ledger: a genuinely missing qa/ directory is still the quiet, expected cas
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+
+/**
+ * G4 — ISS-142. A bare `ISS-NNN` that a lane shard also numbers resolves to two different findings
+ * depending on which ledger the reader opens. Merging one lane brought 96 such references onto
+ * master: docs saying "fix ISS-021 and ISS-022" meant the lane's rows while canonical ISS-021/022
+ * are unrelated findings that exist.
+ *
+ * The first two tests below are the ones that matter, because the naive version of this gate fired
+ * on 58 files — almost all historical documents whose bare refs correctly mean the canonical row.
+ */
+function g4Root(files, ledgerIds) {
+  const root = mkdtempSync(join(tmpdir(), "lkb-g4-"));
+  mkdirSync(join(root, "qa", "manifests"), { recursive: true });
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+  writeFileSync(join(root, "qa", "issues.lane.jsonl"),
+    ledgerIds.map((id) => JSON.stringify({ id, title: "t" })).join("\n") + "\n");
+  for (const [name, text] of Object.entries(files)) writeFileSync(join(root, "qa", "manifests", name), text);
+  return root;
+}
+
+test("G4: a historical doc that never uses the qualified form is LEFT ALONE", () => {
+  // The whole reason the gate is scoped this way. This doc predates lane ids; its ISS-007 means
+  // the canonical row and always did. A gate that fires here teaches people to ignore it.
+  const root = g4Root({ "old.md": "fixed in ISS-007 and ISS-008\n" }, ["ISS-LANE-007", "ISS-LANE-008"]);
+  try { assert.deepEqual(auditIssueRefs(root, [{ id: "ISS-LANE-007" }, { id: "ISS-LANE-008" }]), []); }
+  finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G4: a doc that MIXES the qualified and bare forms is flagged", () => {
+  const root = g4Root({ "mixed.md": "closes ISS-LANE-017; see also ISS-018\n" }, ["ISS-LANE-017", "ISS-LANE-018"]);
+  try {
+    const f = auditIssueRefs(root, [{ id: "ISS-LANE-017" }, { id: "ISS-LANE-018" }]);
+    assert.equal(f.length, 1);
+    assert.match(f[0], /mixed\.md cites ISS-018 bare/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G4: a bare ref OUTSIDE the lane's numbering is not flagged", () => {
+  // ISS-136/ISS-137 are genuine canonical citations inside a lane manifest; qualifying them would
+  // break them. The gate must distinguish "ambiguous" from "merely bare".
+  const root = g4Root({ "m.md": "ISS-LANE-017 fixed; ISS-136 stands\n" }, ["ISS-LANE-017"]);
+  try { assert.deepEqual(auditIssueRefs(root, [{ id: "ISS-LANE-017" }]), []); }
+  finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G4: with no lane shard at all the gate is inert, not noisy", () => {
+  const root = g4Root({ "m.md": "ISS-LANE-017 and ISS-017\n" }, []);
+  try { assert.deepEqual(auditIssueRefs(root, [{ id: "ISS-017" }]), []); }
+  finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G4: the frozen list covers checker-owned verdicts, and can only shrink", () => {
+  // Verdicts are checker-owned; a maker rewriting one is the self-certification this pair exists
+  // to prevent. The debt is named rather than tolerated -- and a NEW ambiguous ref still fails.
+  assert.ok(G4_FROZEN.size > 0);
+  for (const p of G4_FROZEN) assert.match(p, /^qa\/verdicts\//, "only checker-owned files may be frozen");
+});
+
+test("G4: master itself is clean under this gate", () => {
+  assert.deepEqual(auditIssueRefs(ROOT, readLedgerRows(ROOT).rows), []);
+});
+
+test("G4: a bare ref marked (canonical) is a stated judgement, and is accepted", () => {
+  // The gate fired on the very manifest that shipped it, on citations that were correct: a doc
+  // explaining the ambiguity must quote the ambiguous numbers. True positive by the rule, false
+  // positive in meaning. The escape makes the author state the call the gate cannot make.
+  const root = g4Root({ "m.md": "closes ISS-LANE-017; contrast ISS-017 (canonical)" + String.fromCharCode(10) }, ["ISS-LANE-017"]);
+  try { assert.deepEqual(auditIssueRefs(root, [{ id: "ISS-LANE-017" }]), []); }
+  finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("G4: the (canonical) escape is not a blanket mute for the rest of the file", () => {
+  const root = g4Root(
+    { "m.md": "ISS-LANE-017 done. ISS-017 (canonical) is unrelated. But ISS-018 is still bare." },
+    ["ISS-LANE-017", "ISS-LANE-018"],
+  );
+  try {
+    const f = auditIssueRefs(root, [{ id: "ISS-LANE-017" }, { id: "ISS-LANE-018" }]);
+    assert.equal(f.length, 1);
+    assert.match(f[0], /cites ISS-018 bare/);
+    assert.doesNotMatch(f[0], /ISS-017/, "the marked reference must not be reported");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

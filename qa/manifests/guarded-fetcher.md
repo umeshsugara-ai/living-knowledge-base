@@ -11,7 +11,7 @@
 **Status:** checked-PASS (cycle 3 — `qa/verdicts/guarded-fetcher.md`, commit `c8b0171`)
 **Branch:** `lane/c-unrun-writers`
 
-## ISS-010 first: this manifest did not exist for cycle 1
+## ISS-C-UNRUN-WRITERS-010 first: this manifest did not exist for cycle 1
 
 The checker found **no manifest, in the worktree or in git history** — a handshake violation, and I
 dispatched a check without one.
@@ -51,7 +51,7 @@ and Teredo.
 and zone ids — and judges the numbers, unwrapping `::ffff:0:0/96`, `::/96`, `2002::/16` and
 `64:ff9b::/96` onto their embedded v4.
 
-### ISS-007 — a docstring overclaim worse than the gap
+### ISS-C-UNRUN-WRITERS-007 — a docstring overclaim worse than the gap
 
 The old comment said *"the resolution the guard checks is the same one the caller will use."*
 **That was false.** `request` re-resolves independently, so a check-to-connect window remains that
@@ -64,7 +64,7 @@ rebinding: a host publishing one public and one private A record gets a **coin f
 fetch**, no timing required. An empty answer fails closed: "no addresses" must never read as
 "nothing to object to".
 
-### ISS-008 / ISS-009
+### ISS-C-UNRUN-WRITERS-008 / ISS-C-UNRUN-WRITERS-009
 
 `fec0::/10` is blocked. Response size is enforced on **every hop including redirects** — previously
 asserted only on the final response, so a redirect chain could stream unbounded bodies.
@@ -98,9 +98,9 @@ trap on EXIT/INT/TERM/ERR, `cmp`-verified after each.
 
 ## Known gaps
 
-1. **The check-to-connect window remains** (ISS-007). Closing it needs a transport accepting a
+1. **The check-to-connect window remains** (ISS-C-UNRUN-WRITERS-007). Closing it needs a transport accepting a
    pinned address; the seam has no callers yet, so widening it later is cheap.
-2. **No request timeout.** Part of ISS-009; belongs with the real transport.
+2. **No request timeout.** Part of ISS-C-UNRUN-WRITERS-009; belongs with the real transport.
 3. **No real transport at all** — `request` is an injected seam. **A13 does not move.**
 4. **No allowlist mode.** Deny-by-range only.
 
@@ -113,14 +113,14 @@ thought of. Also rule on gap 1 — is stating the check-to-connect window accept
 
 ---
 
-# Fix cycle 3 — responding to the cycle-2 FAIL (ISS-009)
+# Fix cycle 3 — responding to the cycle-2 FAIL (ISS-C-UNRUN-WRITERS-009)
 
 FAILed 6/7. One finding, and it lands on something I should not have shipped: **there was no
 duration bound at all** on a fetcher whose entire purpose is to run unattended on a timer — in a
 repo that has D-020 *because* an unbounded hang killed its test suite, a rule I wrote earlier the
 same day.
 
-Worse than the omission: **my manifest listed ISS-009 under "Issues addressed" while its own
+Worse than the omission: **my manifest listed ISS-C-UNRUN-WRITERS-009 under "Issues addressed" while its own
 Known-gaps section admitted the timeout was unfixed.** Only the redirect-hop third was done. A
 manifest that contradicts itself is a worse defect than the missing feature, because it is the
 document a checker is entitled to trust.
@@ -169,13 +169,13 @@ than a red assertion, and I am not going to write it up as a clean kill.
 
 ## Known gaps
 
-1. **The check-to-connect window remains** — now tracked as **ISS-011, BLOCKING on the transport
+1. **The check-to-connect window remains** — now tracked as **ISS-C-UNRUN-WRITERS-011, BLOCKING on the transport
    unit**, so it cannot be closed by editing a docstring. The checker's ruling: pinning is a
    *transport* contract (pinned address + original Host + SNI + cert validation) and guessing that
    signature blind is what causes the migration the "fix seams early" argument tries to avoid.
 2. **No real transport.** `request` is still an injected seam. **A13 does not move.**
 3. **`::ffff:0:0:0/96`** (RFC 2765 v4-translated) is allowed; not in the contract's enumerated set
-   and no live bypass was demonstrated. ISS-012, low.
+   and no live bypass was demonstrated. ISS-C-UNRUN-WRITERS-012, low.
 4. **No allowlist mode.** Deny-by-range only.
 
 ## Note to the checker
@@ -191,8 +191,8 @@ must take an `AbortSignal` now. Also worth probing: clock skew via `Date.now()`,
 
 ## Close-out (2026-09-08)
 
-**PASS, cycle 3** — 7/7 criteria, 3/3 invariants. ISS-009 closed. Two notes filed, neither blocking:
-ISS-014 (low, `timeoutMs > 2^31-1` collapses to ~1ms — still fails closed) and ISS-015 (medium,
+**PASS, cycle 3** — 7/7 criteria, 3/3 invariants. ISS-C-UNRUN-WRITERS-009 closed. Two notes filed, neither blocking:
+ISS-C-UNRUN-WRITERS-014 (low, `timeoutMs > 2^31-1` collapses to ~1ms — still fails closed) and ISS-C-UNRUN-WRITERS-015 (medium,
 BLOCKING on the transport unit).
 
 **The checker corrected me upward.** I reported the infinite-deadline mutant as detected via a
@@ -203,7 +203,7 @@ greps `ℹ (pass|fail)`, so **my own tooling hid a killed mutant as a hang.** Th
 is a duration bound, which can only be asserted as a timeout; it does count as pinned.
 
 On the un-cancellable race: acceptable here, because what leaks is a handle held by a transport
-that does not exist — cancellation is a property of the thing cancelled. Filed as ISS-015 blocking
+that does not exist — cancellation is a property of the thing cancelled. Filed as ISS-C-UNRUN-WRITERS-015 blocking
 the transport unit, with the checker's honest asymmetry recorded: unlike a pinned address,
 `AbortSignal` has one standard shape, so adding it now would have been cheap.
 

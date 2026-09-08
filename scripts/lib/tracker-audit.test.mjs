@@ -308,3 +308,10 @@ test("G3: 'not a git checkout' (exit 128) stays quiet, as intended", () => {
     assert.ok(!findings.some((f) => f.startsWith("G3")), "expected case -> no finding, no throw");
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test("filterByGate accepts a comma-separated list, so one run can gate G1 and G4", () => {
+  const f = ["G1 a", "G2 b", "G4 c"];
+  assert.deepEqual(filterByGate(f, "G1,G4"), ["G1 a", "G4 c"]);
+  assert.deepEqual(filterByGate(f, "G1"), ["G1 a"], "a single gate still behaves exactly as before");
+  assert.deepEqual(filterByGate(f, null), f, "no gate named means no filtering");
+});
