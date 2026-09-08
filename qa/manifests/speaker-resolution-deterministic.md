@@ -9,7 +9,7 @@ amended by D-014).
 **Fix cycle:** 1 of max 3
 **Dual check:** no
 **Issues addressed:** none — new feature work.
-**Status:** ready-for-check
+**Status:** checked-PASS (cycle 1 — `qa/verdicts/speaker-resolution-deterministic.md`, commit `207bd03`)
 **Branch:** `lane/a-speakers` (separate git worktree, per the concurrency gate)
 
 ## Why this unit exists
@@ -125,3 +125,43 @@ Juben/Jubin defect, and C7 is the one preventing a coin-flip identity. Mutation-
 delete the `byName.size !== 1` guard and confirm C7's test reddens; delete the
 `(t.text ?? "").includes(name)` check and confirm C2's test still holds (it may not — the regex
 already guarantees it, so that line is belt-and-braces; say so if you find it redundant).
+
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 1** — 10/10 criteria, 4/4 invariants, `ISSUES-WRITTEN: none`. The checker authored
+`qa/contracts/speaker-resolution-deterministic.md`, adopting C1–C8 / I1–I3 and **tightening** with
+three additions it verified as already met: **C9** (unresolved labels reported explicitly),
+**C10** (the stated yield must be reproducible by re-running the module), **I4** (this unit
+persists nothing). Its rationale is fair: the manifest made those three commitments in prose while
+its own proposed criteria let anyone fail them silently.
+
+Both factual claims were independently re-derived from the data, not taken on trust: the
+Juben/Jubin discrepancy, and 78/494 (15.8%) with exactly 2 speakers across 11 sessions.
+
+### The maker was wrong, and this is the useful part
+
+I asked the checker whether `(t.text ?? "").includes(name)` was redundant belt-and-braces already
+guaranteed by the regex. **It is not — it is the belt.** `SELF_NAMING` separates its two capture
+groups with `\s+` (any whitespace run) while the name is reassembled with `join(" ")`, a single
+space. So a self-introduction whose name tokens are split by a newline, tab or double space yields
+a `displayName` that is **absent verbatim from the very turn cited as its evidence** — a direct C2
+violation, and entirely plausible in real diarization output where a turn wraps across lines.
+
+Re-verified independently before accepting it:
+
+| input | resolved | name verbatim in cited turn |
+|---|---|---|
+| `My name is Jubin Thakkar.` | 1 | true |
+| `My name is Jubin␣␣Thakkar.` | **0** | — (correctly refused) |
+| newline separator | **0** | — (correctly refused) |
+| tab separator | **0** | — (correctly refused) |
+
+Had I removed that line as "redundant", the module's single most important guarantee would have
+broken on whitespace alone.
+
+**The real gap:** mutation (b) — deleting that guard — reddens **nothing**. The suite does not pin
+the module's most important rule. Not filed as an issue (no criterion is unmet; the code as
+committed is correct), and deliberately **not** patched into this unit: editing an artifact after
+its PASS is the live-edit race that already cost a re-check earlier today. It lands as its own
+follow-up unit, `speaker-resolution-whitespace-guard`.
