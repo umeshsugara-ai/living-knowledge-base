@@ -53,6 +53,44 @@ collection accessors enforcing `coll(tenantId)`.
 7. **No regression:** `python schema/validate.py` exits 0 for all 18 schemas; `pnpm gen:types
    --check` clean; `pnpm -r test` still 4/4 (tree) + 6/6 (ask); `pnpm lint:structure` clean
    (including the new files' LOC/dir budgets).
+
+8. **`chunks` rows carry a usable embedding — enforced at WRITE time, checked at U1.3.** (Added by
+   amendment 2026-09-08 after the `chunk-schema-and-chunker` cycle-1 check, which ruled the
+   U1.2/U1.3 split correct *on condition that the deferred checks be recorded on disk rather than
+   left in a manifest's prose*.) `schema/chunks.schema.json` alone cannot close this: the checker
+   verified that `vector` and `dims` are **optional and uncorrelated** — a row with no `vector` at
+   all validates, and `{"vector": [0.1, 0.2, 0.3], "dims": 99}` validates. That is correct at U1.2,
+   where the chunker emits plans and no writer exists; it is the ISS-096 failure mode again at U1.3,
+   where a row with no vector or a lying `dims` would validate and then silently match nothing.
+   So the unit that wires `embed()` into `apps/api/src/indexing.ts` MUST evidence, over real rows:
+   (a) `chunks` non-empty for all 26 sessions; (b) `vector.length === dims` for **100%** of rows,
+   asserted in the write path (JSON Schema cannot express a cross-field length equality);
+   (c) every `turnRefs` id resolves to an existing `turns` row. (a) and (b) are plan §10 U1.2's own
+   verification clauses, carried forward — not dropped.
+
+   Also recorded so it is not re-litigated from the plan text: **plan §10 U1.2's `text` field on
+   `chunks` is STRUCK.** ADR-0001 decision 2 ("`media`/`chunks` reference `turns` by id only — never
+   duplicate text") governs, and plan §6c.1 already agreed with it. The checker verified that a
+   chunk's text is a byte-exact function of its `turnRefs` (`text === turns.map(trim).join(" ")`,
+   0 violations over 3024 generated shapes), so storing it would be pure duplication carrying a
+   drift hazard against ARCHITECTURE H3 and a second surface for D-008's gated purge. The stored
+   `vector` is **not** covered by that prohibition: it is an irreversible derived numeric artifact,
+   not a second copy of the source, and brute-force cosine (D-a) cannot read the retired
+   `embeddingRef` string pointer.
+
 ## Non-goals for T-018
 - No live Mongo connection wired into the app (T-019/T-020 use it). No provider code. No API
   routes. No actual data migration of the 23 TOC sessions (T-002).
+
+## Amendment log
+- 2026-09-08 · routine · added C8 (`chunks` rows carry a usable embedding; the `text` field struck)
+  after the `chunk-schema-and-chunker` cycle-1 check · TIGHTENING ONLY, nothing weakened. Two parts,
+  each recording something the checker verified itself rather than something it was told: (i) the
+  U1.2/U1.3 split was ruled correct *conditionally* — the two row-level checks plan §10 U1.2 asks for
+  ("chunks non-empty for all 26 sessions", "vector.length === dims for 100% of rows") are impossible
+  before U1.3's writer exists, but a criterion left in a manifest's prose is a criterion on its way to
+  being lost, so they are bound here to the unit that wires embed() into indexing.ts, together with a
+  gap the checker found while probing the schema directly (vector/dims are optional and uncorrelated,
+  so a row with no vector, or with a dims that disagrees with vector.length, validates cleanly);
+  (ii) plan §10 U1.2's `text` field is struck in favour of ADR-0001 decision 2, recorded here so
+  U1.4/U1.5 cannot re-litigate it from the plan text.
