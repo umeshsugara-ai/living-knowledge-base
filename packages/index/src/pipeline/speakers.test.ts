@@ -100,6 +100,50 @@ test("collects every turn the speaker self-names in as evidence, deduped and ord
   ]);
 });
 
+/**
+ * Pins the module's single most important guarantee, which the original suite did not cover:
+ * deleting the `(t.text ?? "").includes(name)` guard in speakers.ts reddened NOTHING (found by the
+ * cycle-1 checker via mutation testing).
+ *
+ * The hole is subtle. `SELF_NAMING` separates its two capture groups with `\s+` -- any whitespace
+ * run -- while the name is reassembled with `join(" ")`, a single space. So an introduction whose
+ * name tokens are split by a newline, tab or double space would yield a `displayName` that is
+ * ABSENT VERBATIM from the very turn cited as its evidence: a direct C2 violation, and entirely
+ * plausible in real diarization output where a turn wraps across lines. Refusing to resolve is the
+ * correct outcome -- "leave low-confidence speakers unresolved rather than guessing".
+ */
+for (const [label, text] of [
+  ["a double space", "My name is Jubin  Thakkar."],
+  ["a newline", "My name is Jubin\nThakkar."],
+  ["a tab", "My name is Jubin\tThakkar."],
+] as [string, string][]) {
+  test(`refuses to resolve when the name is split by ${label}`, () => {
+    const { resolved, unresolved } = resolveSpeakers([turn("t1", "spk:0", text)]);
+    assert.deepEqual(resolved, [], "a name it cannot cite verbatim must not be emitted");
+    assert.deepEqual(unresolved, ["spk:0"], "and the label stays honestly unresolved");
+  });
+}
+
+test("every emitted name is verbatim in EVERY turn it cites, across whitespace variants", () => {
+  const turns = [
+    turn("t1", "spk:0", "My name is Jubin Thakkar."),
+    turn("t2", "spk:1", "My name is Jubin  Thakkar."),
+    turn("t3", "spk:2", "My name is Ruby."),
+  ];
+  const { resolved } = resolveSpeakers(turns);
+  for (const s of resolved) {
+    for (const e of s.evidence) {
+      const cited = turns.find((t) => t._id === e.turnId);
+      assert.ok(cited, "evidence must cite a real turn");
+      assert.ok(
+        cited.text.includes(s.displayName),
+        `C2 violated: ${JSON.stringify(s.displayName)} is not verbatim in ${JSON.stringify(cited.text)}`,
+      );
+    }
+  }
+  assert.deepEqual(resolved.map((r) => r.speakerRef).sort(), ["spk:0", "spk:2"]);
+});
+
 test("empty input resolves nothing and reports nothing unresolved", () => {
   assert.deepEqual(resolveSpeakers([]), { resolved: [], unresolved: [] });
 });
