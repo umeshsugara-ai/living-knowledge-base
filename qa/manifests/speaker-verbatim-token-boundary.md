@@ -5,11 +5,11 @@ placed these two attacks as blocking criteria on the *apply* unit; I am closing 
 instead. Please amend C2 to require whole-word containment and a name-shaped `displayName`.
 **Goal task:** U2.4 / catalogue B3.
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** none filed — the cycle-1 checker recorded both in EXPLANATION, correctly
 declining to FAIL an artifact that met C2 *as written*.
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 **Branch:** `lane/a-speakers`
 
 ## Why
