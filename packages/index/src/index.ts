@@ -3,6 +3,7 @@
 // their own tasks (D-003).
 export { buildTree, treeIndexRootFilter, type Summarize } from "./tree/build.js";
 export { treeSearch } from "./tree/search.js";
+export { buildChunks, coversAllTurns, type ChunkPlan, type ChunkableTurn, type ChunkOptions } from "./chunk/build-chunks.js";
 export { extractTopicRefs, type ExtractTopicRefs } from "./tree/extract-topics.js";
 export { regenerate } from "./tree/regenerate.js";
 export { flattenTreeToGraph, type Graph, type GraphNode, type GraphEdge } from "./tree/flatten-graph.js";

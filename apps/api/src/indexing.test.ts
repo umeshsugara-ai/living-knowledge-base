@@ -234,3 +234,116 @@ test("a DEGRADED SUMMARIZE run does not take the claims write down with it — t
   const claimOps = calls.filter((c) => c.coll === "claims").map((c) => c.op);
   assert.deepEqual(claimOps, ["deleteMany", "insertMany"], "a summarize outage must not affect the claims write");
 });
+
+/* ─────────────────────────────── U1.3 — chunks + embeddings ───────────────────────────────
+ * The claims tests above exist because an unconditional delete + a conditional insert destroyed
+ * real data on a transient outage (ISS-056). Chunks carry the SAME shape with more force: a
+ * vector index is expensive to rebuild and its absence is invisible — a search just quietly
+ * returns less. So the delete must never run without a replacement in hand.
+ */
+const chunkOps = (calls: Call[]) => calls.filter((c) => c.coll === "chunks").map((c) => c.op);
+const embedOk = async (job: { texts: string[] }) => ({
+  vectors: job.texts.map(() => [0.1, 0.2, 0.3]),
+  dims: 3,
+  provider: "fake",
+  model: "fake-embed",
+});
+
+test("a FAILED embed must NOT delete the session's existing chunks (the ISS-056 shape)", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", {
+    complete: completeWith() as never,
+    embed: async () => { throw new Error("all providers failed"); },
+    db,
+  });
+  assert.deepEqual(chunkOps(calls), [], "no chunk write of any kind may happen when embedding failed");
+});
+
+test("a failed embed does not take the rest of indexing down with it", async () => {
+  // Rethrowing would turn "no vectors this run" into "no summary, no claims, no tree" — trading a
+  // recoverable gap for a total one.
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", {
+    complete: completeWith() as never,
+    embed: async () => { throw new Error("all providers failed"); },
+    db,
+  });
+  assert.ok(calls.some((c) => c.coll === "claims" && c.op === "insertMany"), "claims should still be written");
+  assert.ok(calls.some((c) => c.coll === "tree_index"), "the tree should still be updated");
+});
+
+test("no embed dep at all leaves chunks completely untouched — an install without embeddings still indexes", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, db });
+  assert.deepEqual(chunkOps(calls), []);
+  assert.ok(calls.some((c) => c.coll === "session_pages"), "every other stage must still run");
+});
+
+test("a SUCCESSFUL embed replaces the session's chunks — delete BEFORE insert, so re-indexing never doubles the corpus", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, embed: embedOk as never, db });
+  const ops = chunkOps(calls);
+  assert.ok(ops.includes("deleteMany") && ops.includes("insertMany"));
+  assert.equal(ops[0], "deleteMany", "delete must precede insert");
+});
+
+test("chunk rows carry a real vector, a matching dims, and turnRefs — never an embeddingRef pointer", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, embed: embedOk as never, db });
+  const insert = calls.find((c) => c.coll === "chunks" && c.op === "insertMany");
+  assert.ok(insert, "chunks should be inserted");
+  for (const doc of insert!.docs ?? []) {
+    assert.ok(Array.isArray(doc.vector) && (doc.vector as number[]).length > 0, "vector must hold numbers");
+    assert.equal((doc.vector as number[]).length, doc.dims, "dims must match the vector it describes");
+    assert.ok(Array.isArray(doc.turnRefs) && (doc.turnRefs as string[]).length > 0);
+    assert.equal(doc.tenantId, "t");
+    assert.equal(doc.sourceRef, "s1");
+    assert.ok(!("text" in doc), "ADR-0001: chunks must not duplicate turn text");
+    assert.ok(!("embeddingRef" in doc), "the retired string pointer must not reappear");
+  }
+});
+
+test("REFUSES a vector whose length contradicts the batch's dims — the correlation JSON Schema cannot express", async () => {
+  // The U1.2 verdict's finding: `vector` and `dims` are independently optional in the schema, so
+  // {vector: [3 items], dims: 99} validates cleanly. The write is the only place that sees both.
+  const { db } = fakeDb();
+  // One chunk is enough: a vector of 2 numbers against a batch claiming 3 dims is the exact
+  // {vector: [...], dims: N} contradiction the schema accepts.
+  const raggedEmbed = async (job: { texts: string[] }) => ({
+    vectors: job.texts.map(() => [0.1, 0.2]),
+    dims: 3,
+    provider: "fake",
+    model: "fake-embed",
+  });
+  await assert.rejects(
+    indexSession("t", "s1", { complete: completeWith() as never, embed: raggedEmbed as never, db }),
+    /dims, batch reports/,
+  );
+});
+
+test("REFUSES a batch that returns the wrong NUMBER of vectors, rather than pairing by index", async () => {
+  const { db } = fakeDb();
+  // Two vectors for one chunk — the count guard must fire rather than silently taking the first.
+  const shortEmbed = async () => ({
+    vectors: [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
+    dims: 3,
+    provider: "fake",
+    model: "fake-embed",
+  });
+  await assert.rejects(
+    indexSession("t", "s1", { complete: completeWith() as never, embed: shortEmbed as never, db }),
+    /vector\(s\) for/,
+  );
+});
+
+test("every chunk write is tenant-scoped — the same guard the claims path needed", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, embed: embedOk as never, db });
+  for (const c of calls.filter((x) => x.coll === "chunks")) {
+    if (c.op === "deleteMany") {
+      assert.equal(c.filter?.tenantId, "t", "an untenanted chunk delete can reach another tenant's rows");
+    }
+  }
+  const insert = calls.find((c) => c.coll === "chunks" && c.op === "insertMany");
+  for (const doc of insert!.docs ?? []) assert.equal(doc.tenantId, "t");
+});

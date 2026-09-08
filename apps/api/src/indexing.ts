@@ -17,8 +17,9 @@
 import { randomUUID } from "node:crypto";
 import type { Db } from "mongodb";
 import { getDb, scopedCollection } from "@lkb/db";
-import type { SessionPages, Claims, Sessions, TreeIndexRootDocument, Turns } from "@lkb/core";
-import { summarizeSession, extractClaims, buildTree, regenerate, treeIndexRootFilter, type SummarizeCompleteFn } from "@lkb/index";
+import type { SessionPages, Chunks, Claims, Sessions, TreeIndexRootDocument, Turns } from "@lkb/core";
+import { summarizeSession, extractClaims, buildChunks, buildTree, regenerate, treeIndexRootFilter, type SummarizeCompleteFn } from "@lkb/index";
+import type { EmbedJob, EmbedResult } from "@lkb/ai";
 
 /** `schema/{session_pages,claims}.schema.json` both declare `evidence.minItems: 1`, which the
  * generated types express as a non-empty tuple. Both callers below only ever build this from an
@@ -30,8 +31,16 @@ function toEvidenceTuple<T>(items: T[]): [T, ...T[]] {
   return items as [T, ...T[]];
 }
 
+/** Mirrors `SummarizeCompleteFn`: a bound call, so this file never knows about routing config. */
+export type IndexEmbedFn = (job: EmbedJob) => Promise<EmbedResult>;
+
 export interface IndexSessionDeps {
   complete: SummarizeCompleteFn;
+  /** OPTIONAL (U1.3). Absent — no configured embedding provider, or a caller that does not want a
+   * vector index — means chunk writing is skipped entirely and every other stage is unaffected.
+   * An install without embeddings must still be able to summarize, extract claims and build a
+   * tree; making this required would have turned a missing capability into a broken pipeline. */
+  embed?: IndexEmbedFn;
   /** Injectable so this function's WRITE decisions are testable without a live Mongo. Added for
    * ISS-056: the fix (don't delete a session's claims when extraction degraded) sat behind a
    * module-singleton `getDb()`, so reverting it left every test green — the same untested-guard
@@ -61,6 +70,7 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   const sessionsColl = scopedCollection<Sessions>(db as never, "sessions");
   const sessionPagesColl = scopedCollection<SessionPages>(db as never, "session_pages");
   const claimsColl = scopedCollection<Claims>(db as never, "claims");
+  const chunksColl = scopedCollection<Chunks>(db as never, "chunks");
 
   const turns = await turnsColl(tenantId).find({ sessionId }).toArray();
 
@@ -125,6 +135,65 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
       evidence: toEvidenceTuple(c.evidenceTurnIds.map((turnId) => ({ turnId, sessionId }))),
     }));
     await claimsColl(tenantId).insertMany(claimDocs);
+  }
+
+  // ---- chunks + embeddings (U1.3) -------------------------------------------------------------
+  //
+  // DEGRADE-SAFE, and that is the whole design here. ISS-056 was paid for on the claims path a few
+  // lines above: a provider outage returned an empty array indistinguishable from "nothing found",
+  // the unconditional delete ran, and a transient failure silently destroyed real extracted data.
+  // The same shape applies with more force to chunks, because a vector index is expensive to
+  // rebuild and its absence is INVISIBLE — a search just quietly returns less. So the delete only
+  // ever runs when a replacement is actually in hand.
+  if (deps.embed) {
+    const plans = buildChunks(turns);
+    if (plans.length === 0) {
+      console.warn(`indexSession(${tenantId}/${sessionId}): no chunkable turns — chunks left unchanged`);
+    } else {
+      let embedded: EmbedResult | null = null;
+      try {
+        embedded = await deps.embed({ kind: "embedding", texts: plans.map((p) => p.text), purpose: "document" });
+      } catch (err) {
+        // Never rethrow: the rest of indexing already succeeded, and failing the whole call would
+        // turn "no vectors this run" into "no summary, no claims, no tree" too.
+        console.warn(
+          `indexSession(${tenantId}/${sessionId}): embedding failed — chunks left unchanged: ` +
+            `${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+
+      if (embedded) {
+        // The correlation JSON Schema cannot express (the U1.2 verdict's finding): `vector` and
+        // `dims` are independently optional there, so `{vector: [3 items], dims: 99}` validates.
+        // Asserted at the only place that can see both — the write.
+        if (embedded.vectors.length !== plans.length) {
+          throw new Error(
+            `indexSession: embedder returned ${embedded.vectors.length} vector(s) for ${plans.length} chunk(s)`,
+          );
+        }
+        const chunkDocs: Chunks[] = plans.map((plan, i) => {
+          const vector = embedded.vectors[i] ?? [];
+          if (vector.length !== embedded.dims) {
+            throw new Error(
+              `indexSession: chunk ${plan.chunkIndex} has ${vector.length} dims, batch reports ${embedded.dims}`,
+            );
+          }
+          return {
+            _id: randomUUID(),
+            tenantId,
+            sourceRef: sessionId,
+            turnRefs: toEvidenceTuple(plan.turnRefs),
+            chunkIndex: plan.chunkIndex,
+            vector: toEvidenceTuple(vector),
+            dims: embedded.dims,
+            embeddingModel: embedded.model,
+          };
+        });
+        // Clean replace, never accumulate — a re-index must not double the corpus.
+        await chunksColl(tenantId).deleteMany({ sourceRef: sessionId } as never);
+        await chunksColl(tenantId).insertMany(chunkDocs);
+      }
+    }
   }
 
   const [allSessions, allPages, existingRoot] = await Promise.all([

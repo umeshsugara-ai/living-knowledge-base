@@ -8,7 +8,7 @@
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, OllamaProvider, type Provider } from "@lkb/ai";
+import { complete as routeComplete, embed as routeEmbed, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, OllamaProvider, type Provider } from "@lkb/ai";
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
 import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoCitationsDeps, createMongoHealthDeps, createMongoGraphReadDeps, createGwsCalendarReadDeps, createMeetingCandidatesDeps, createMongoKeysDeps } from "./store.js";
@@ -53,6 +53,13 @@ export function buildProductionDeps(): ServerDeps {
   const boundIndexer: BoundIndexer = (tenantId, sessionId) =>
     indexSession(tenantId, sessionId, {
       complete: (job) => routeComplete(job.kind, job, { chains, providers, write: jobWrite, tenantId }),
+      // Wired only when a chain is configured for it (U1.3). Passing an embedder unconditionally
+      // would make every index run fail on an install with no embedding provider, where today it
+      // simply indexes without a vector layer — `indexSession` treats the absent dep as "skip
+      // chunks" rather than as an error.
+      embed: chains.embedding
+        ? (job) => routeEmbed("embedding", job, { chains, providers, write: jobWrite, tenantId })
+        : undefined,
     });
 
   return {
