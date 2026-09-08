@@ -261,4 +261,43 @@ lint:structure order: … snapshot --check && pnpm test:lint && tracker-audit --
 topics = 0 · orgs = 0 · claims.topicRefs still empty on all 81 — still deliberately unwritten
 ```
 
-## Status: ready-for-check
+## Status: checked-PASS (recorded as U2.1-**partial**)
+
+**Verdict:** `qa/verdicts/promote-tree-entities.md` — **PASS**, cycle 3, committed `ba7cf7e`.
+`ISSUES-WRITTEN: ISS-C-CLAIMS-TARGETING-001 (high)`.
+
+All three cycle-2 items closed and each re-derived by the checker rather than read off this
+manifest: the `topicRefs` mutation now fails 138/1 by name; the scripts guard genuinely runs inside
+a real `pnpm lint:structure` on a dirty tree and still catches the U1.0c breakage **from inside the
+gate**; and the `PROGRESS.md` regeneration is proven score-neutral at byte level (one file, 2
+deletions, 0 insertions, and an identical md5 over every per-feature verdict row).
+
+### It found the NEXT unreachable path — which is the whole reason I asked it to look
+
+Two further mutations **survive at 139/139 green**: widening
+`.find({"evidence.sessionId": sessionId})` → `.find({})`, and `.updateOne({_id: c._id})` →
+`.updateOne({})`.
+
+My nine writer tests assert the update **body** and the call **count**, and nothing asserts what
+the writes are **aimed at** — even though `fakeDb` already records the filters. Worse, `fakeDb.find`
+ignores its filter entirely, so a scoping regression is *structurally invisible*, and my own new
+clearing test seeds a claim with `sessionId: "other"` and expects it visited — **encoding unscoped
+behaviour as the expected behaviour.** That is the third time in this unit I have written a test
+that looks like a guard and defends nothing.
+
+**Why it is a PASS and not a stall, in the checker's reasoning:** the shipped filters are
+*correct*; the gap is that a future edit is undefended. That is `.claude/CLAUDE.md`'s named
+non-security "unasserted fields" class, tenancy is separately safe (`scopedCollection` confines,
+and test 4 covers the body), and the path is inert while nothing runs a live backfill. So it filed
+the finding with a **hard precondition — it must be closed before U2.2/U2.3 enables any live entity
+backfill** — which binds harder than a fix cycle would, rather than stalling a unit that met every
+obligation it was set.
+
+### Two things still owed, and the checker is right to keep saying so
+
+1. **There is still no contract for this writer.** `tree-index-v2.md` has never described it, and a
+   checker has now graded a persistence layer against a plan bullet **three times**. This is the
+   same gap already raised for `packages/index/src/vector/` in
+   `qa/gates/vector-retrieval-contract.md`; it is broader than I recorded there.
+2. **D-015 by-issue-id reproduction reporting is absent from this manifest** (ISS-134). I reported
+   mutation counts, not per-issue reproduction counts against the ledger's own recorded cases.
