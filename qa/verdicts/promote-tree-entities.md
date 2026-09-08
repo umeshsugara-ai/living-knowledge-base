@@ -231,3 +231,270 @@ write nothing at all still leaves apps/api 130/130 green, so the persistence hal
 never executed. Credit where due and proven by mutation: the ISS-056 invariant genuinely holds,
 and the narrowed `DEGRADED SUMMARIZE` assertion still catches its own regression — that one is an
 honest clarification, not a loosening.
+
+---
+---
+
+# Verdict — promote-tree-entities (CYCLE 2)
+
+**Date:** 2026-09-08
+**Manifest:** `qa/manifests/promote-tree-entities.md`
+**Contract named:** `qa/contracts/tree-index-v2.md`
+**Cycle checked: 2**
+**Bound to:** `D:\KnowledgeBase`
+**Prior verdict:** cycle 1 = FAIL (3/6), preserved above byte-intact.
+
+Same coverage caveat as cycle 1: `tree-index-v2.md` does not describe a writer, the `topics`/`orgs`
+collections, or `claims.topicRefs`, and its Non-goals say "no live Mongo write". I judged against
+**plan §10 U2.1** and the three issues the cycle-1 FAIL raised. A promotion contract is still owed
+before U2.2/U2.3 build on this.
+
+---
+
+## VERDICT: FAIL
+
+**SCOREBOARD: 2/3 issues closed, 6/7 standing gates hold**
+
+- **ISS-127 — CLOSED.** The retraction is honest, complete, and better than what I would have
+  accepted.
+- **ISS-128 — CLOSED.** The deviation from my stated fix is **upheld**; the maker's version is the
+  better engineering call and I verified it against the real breakage.
+- **ISS-126 — STILL OPEN.** The three mutations the manifest names are genuinely killed — I
+  re-derived all three rather than reading the counts. But the issue's own recorded `fix_direction`
+  item (4) is half-implemented: **the `tagClaims: true` path is asserted nowhere, and cannot be**,
+  because `fakeDb`'s `find` returns `[]` for `claims`. I blanked the claims write to
+  `{ $set: { topicRefs: [] } }` and apps/api reported **137 pass / 0 fail**. ISS-126's premise — "a
+  mutation that makes the writer write nothing leaves apps/api green" — is still literally true of
+  the claims half of the same writer. That row's fix_direction even ends with the warning that was
+  not taken: *"fakeDb exposes only 7 collection methods, so extend it rather than assuming an
+  untested op is unreachable."*
+
+Standing gates: typecheck OK · `pnpm -r test` OK · lint-loc/dirsize/root/dupes/migrations OK ·
+snapshot `--check` OK · depcruise OK · `mutate.mjs assert-clean` OK · `tracker-audit --gate g1`
+FAILS (pre-existing, the concurrent lane's U2.4, ISS-117 — not this unit's).
+
+---
+
+## What I re-ran myself (nothing below is the maker's pasted output)
+
+| Command | My result |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm -r test` | exit 0 — `@lkb/api` **137/137**, `@lkb/index` **203/203** |
+| `node scripts/lint-loc.mjs` … `lint-migrations.mjs` (5 gates) | exit 0 each |
+| `node scripts/snapshot.mjs --check` | exit 0 — SNAPSHOT.md fresh |
+| `node scripts/tracker-audit.mjs --gate g1` | **exit 1** — 2 findings, both `U2.4` (other lane) |
+| `npx depcruise --config .dependency-cruiser.cjs packages apps workers` | exit 0 |
+| `node --test scripts/lint.test.mjs` | exit 0 — **12/12** |
+| `pnpm test:lint` | **exit 1** — see section 4, NOT this unit's fault |
+| `pnpm lint:structure` | exit 1, aborting at `tracker-audit --gate g1` |
+| `node scripts/lib/mutate.mjs assert-clean` (start and end) | `MUTATIONS CLEAN: none outstanding` |
+| Live Mongo `mongodb://13.202.206.101:27017`, TCP driver, no ping | `lkb`: **topics=0 · orgs=0 · claims=81 · claims with non-empty `topicRefs`=0** |
+
+Working tree left byte-identical to how I found it. `.goal/goal.json`, `TASKS.md`, `qa/.last-tick`,
+`qa/gates/*`, `qa/issues.jsonl` and every `speaker-*` path belong to the concurrent lane; I touched
+none of them. (I regenerated `docs/PROGRESS.md` while diagnosing section 4 and restored it with
+`git checkout --`.)
+
+---
+
+## 1. ISS-126 — three mutations re-derived by me, and a fourth that survives
+
+I did not accept the pasted counts. Each mutation was armed with `mutate.mjs apply`, applied,
+`apps/api` tested, then `mutate.mjs restore` + `assert-clean`.
+
+| Mutation | Manifest claims | **My result** |
+|---|---|---|
+| `{ upsert: true }` to `{ upsert: false }`, both sites | 136 / 1 | **136 pass / 1 fail** — killed by `ISS-126: topics and orgs are UPSERTED…` |
+| `sessionRefs: t.sessionRefs` to `[sessionId]` | 136 / 1 | **136 pass / 1 fail** — killed by `…carries the UNIONED sessionRefs…` |
+| tagClaims guard removed (`options.tagClaims === false ? 0 : …` to always tag) | 135 / 2 | **135 pass / 2 fail** — killed by the new `tagClaims:false` case *and* the existing ISS-056 case |
+
+All three counts are exactly reproducible. That is a real improvement over cycle 1 and it should be
+said plainly: the mutation that survived cycle 1 is dead, and the union behaviour the whole design
+rests on is now defended.
+
+I also checked two mutations the manifest does not name:
+
+- **`$set` drops `tenantId`** on the topic write — **killed** (136/1) by the unioned-sessionRefs
+  case, which also asserts `set.tenantId`. Good.
+- **`{ $set: { topicRefs: refs } }` to `{ $set: { topicRefs: [] } }`** in `tagClaimsForSession`
+  — **137 pass / 0 fail. SURVIVES.**
+
+### Why it survives, and why it is not a nit
+
+`testutils.ts:56-63` — `find()` returns `[TURN]` for `turns`, `[SESSION]` for `sessions`, and `[]`
+for everything else. So `tagClaimsForSession` sees **zero claims in every one of the 137 tests**,
+issues zero `updateOne`s, and its entire body is unreachable. Test 4 ("every write is tenant-scoped
+on filter and body") iterates `claims` calls that never exist. Test 6 asserts the `false` branch
+correctly; nothing asserts the `true` branch, and nothing can until `fakeDb` seeds a claim.
+
+The consequence is the same shape ISS-126 was opened for: `claims.topicRefs` is a **live data-write
+path inside `indexSession`** that could write the wrong value, or nothing, on every real ingest, and
+the suite would stay green. Under this repo's own severity gate (`.claude/CLAUDE.md`), "anything
+touching auth, tenancy, or **data writes**" gets full ceremony regardless of severity, so I am not
+waving this through as a medium.
+
+**Fix (small, and it is item (4) of ISS-126's existing fix_direction, not a new demand):** extend
+`fakeDb` so `find` on `claims` returns one or two seeded claim docs (or accept them via `opts`, the
+pattern `existingSessionPage` already establishes), then assert that `tagClaims` unset/`true`
+issues **one `updateOne` per claim** whose `$set.topicRefs` equals `topicRefsForSession`'s output —
+i.e. the mutation `topicRefs: refs` to `[]` must fail. ISS-126 stays **open**; no new issue id is
+minted (see section 5).
+
+### On coverage of the real risk surface, beyond the named mutations
+
+Asked to judge whether 7 cases cover the writer's risk surface or only the mutations named: mostly
+the former, with the one hole above. `deleteMany` **is** recorded by `fakeDb`, so the
+never-delete case (test 2) is meaningful rather than vacuous — I checked, because "assert zero
+calls to an op the fake cannot make" is the classic false green. The never-throws case is now
+a named assertion rather than cycle 1's incidental crash. The empty-tree case is a genuine
+boundary. Residual gaps I am **not** filing (EXPLANATION territory, not defensible as failures):
+`orgs` has no multi-session/union analogue because orgs carry no `sessionRefs`; nothing asserts the
+`updateOne` filter is `{ _id }` rather than something broader; and cycle 1's `WRITE_OPS`
+hand-maintained allow-list note still stands unaddressed but still harmless.
+
+## 2. ISS-127 — the retraction is honest and complete. Closed.
+
+I looked for a refuted claim still standing unmarked anywhere in the manifest and did not find one.
+
+- The original section "Why not running it is the right call" is **struck through in place** with a
+  `RETRACTED, cycle 2` block above it, and the manifest says explicitly why it was left visible
+  rather than rewritten. That is the right call and it is the harder one.
+- Disclosed item 1 ("the central judgement is mine and is contestable… `topics` is user-facing and
+  a misfiled person is worse than a blank page") is struck through and annotated **"OVERRULED IN
+  CYCLE 1 AND I WAS WRONG"** — with the correct distinction that the *action* was upheld and the
+  *reasoning* was not. It does not overstate what I ruled.
+- The new section "Cycle 2 — I was right to defer, and wrong about why" dismantles both arguments in
+  the maker's own words, correctly: it names all six collections the trap list actually lists, quotes
+  U2.1's "Write the rows" against itself, and concedes `topics` is not user-facing because
+  `flatten-graph.ts` to `routes/graph.ts` to BrainPage already ships all 137 slugs. *"My reasoning
+  had the comfortable shape of a principle and did not survive one grep"* is an accurate
+  self-assessment.
+- The deferral is now justified on the narrower ground I supplied — **do not stand up a second
+  authoritative surface before U2.2 measures precision** — and attributed rather than absorbed.
+
+**Catalogue NOT upgraded — verified, not accepted:** `docs/PROGRESS.md:52` `B9 … **MISSING** |
+collection topics (empty)`; line 55 `B12 … **MISSING** | no probe declared`. B10 is `PARTIAL` off
+`speakers` (2 docs), which is the other lane's, not this unit's. Nothing moved.
+
+**On "recorded as U2.1-partial":** substantively yes, literally no. `TASKS.md:103` and
+`.goal/goal.json` both carry `in_progress`, and the goal task's `evidence` field states the
+deferral in full ("backfill DELIBERATELY NOT RUN … Catalogue must NOT be upgraded"). I am **not**
+failing this: `partial` is not a valid status in this repo's tracker vocabulary — the very
+`tracker-audit` G1 finding that is red right now is *"U2.4 uses unknown status `partial` in
+TASKS.md — known: open, pending, in_progress, blocked, done"* — so demanding the literal string
+would demand a value the gate rejects. One thing genuinely missing and worth a line when D4/D5 are
+picked up: nothing on disk records that **D4/D5 are deferred to after U2.2 specifically**; the
+evidence field says they were not run, not when they return.
+
+## 3. ISS-128 — the deviation is UPHELD. Ruling, since I was asked for one explicitly.
+
+**I rule for the maker.** My cycle-1 fix ("spawn each `scripts/*.mjs` with `--dry-run`, assert exit
+0") was the worse instrument, and the maker's objection is factually correct, not a convenient
+excuse:
+
+- `node scripts/backfill.mjs --dry-run` is the exact command cycle 1 ran, and it returned real
+  corpus numbers (26 sessions / 1452 chunks) — meaning **dry-run connects to production Mongo**.
+  A `lint:structure` that opens a production connection on every invocation is a gate this project
+  would be right to disable, and it sits badly beside this repo's read-only-production discipline.
+- The import-resolution guard catches **precisely the class that bit** — a moved module still named
+  in an import specifier — which is the whole content of the U1.0c defect.
+- Adding it to `scripts/lint.test.mjs` instead of a new `scripts/smoke.test.mjs` correctly honours
+  D-018's "consolidate, don't widen".
+
+**And I verified it against the real breakage rather than trusting the claim:**
+
+```
+mutate.mjs apply scripts/backfill.mjs
+  "../apps/api/src/indexing/session.ts" -> "../apps/api/src/indexing.ts"   (the U1.0c path)
+node --test scripts/lint.test.mjs  ->  exit 1
+  x every scripts/*.mjs resolves its imports ...
+    +   'backfill.mjs -> ../apps/api/src/indexing.ts'
+mutate.mjs restore scripts/backfill.mjs
+node --test scripts/lint.test.mjs  ->  exit 0, pass 12 / fail 0
+```
+
+It catches it, by name, and goes green on restore. Disclosing a deviation and offering to be failed
+for it is how this should be done; the narrower guard that runs beats the thorough one that gets
+switched off.
+
+Two honest limits of the guard, recorded so nobody over-reads it later — neither a failure:
+it is a static regex over import specifiers, so a computed/template-literal path is invisible to
+it, and it verifies existence only, not that the imported *binding* exists (a renamed export still
+slips through). It is an import-resolution gate, which is what the maker says it is.
+
+## 4. `pnpm test:lint` currently exits 1 — diagnosed, and NOT attributable to this unit
+
+The manifest's cycle-2 output block says *"12/12 in `scripts/lint.test.mjs`, now inside
+`lint:structure`"*. `scripts/lint.test.mjs` alone is 12/12 (I ran it). But the `test:lint` script
+runs six files, and it exits 1 on two cases in `scripts/catalogue-cli.test.mjs`:
+
+```
+x baseline: `--check` exits 0 on a clean tree
+   STALE: docs/PROGRESS.md differs from a fresh regeneration
+x the suite leaves the repo clean - no tracked file is left modified
+```
+
+I traced the cause: regenerating produces a **two-line deletion** — removal of the banner
+"EDITED SINCE COMMIT — `.goal/catalogue.json` no longer matches the version in git".
+`.goal/catalogue.json` was uncommitted when PROGRESS.md was last generated and is committed now, so
+the banner is stale. That is the concurrent lane's state, not U2.1's, and the second failure is
+just the same lane's uncommitted `qa/` files. I restored PROGRESS.md and filed nothing.
+
+**One observation on the wiring, at medium, not a FAIL:** `pnpm test:lint` was appended **last** in
+`lint:structure`'s `&&` chain, behind `tracker-audit --gate g1`, which is red today. So
+`pnpm lint:structure` aborts before ever reaching the new guard — the gate the unit added to "make
+it actually gate" does not gate right now. Moving `pnpm test:lint` ahead of `tracker-audit` in that
+chain costs nothing and fixes it. Per this repo's severity gate a medium is a ledger line verified
+inside the next unit touching the file, not a pulled unit — and I am deliberately not letting it
+influence the verdict, which turns on section 1 alone.
+
+## 5. Regression check — clean, and the ledger
+
+`topics = 0`, `orgs = 0`, `claims = 81`, and **0 of 81** carry a non-empty `topicRefs`. Nothing was
+written while the manifest claims nothing was written. The manifest is honest about this for the
+second cycle running.
+
+**Ledger:** I minted **no new issue id**. The finding in section 1 is ISS-126's own recorded
+`fix_direction` item (4), unimplemented — so ISS-126 correctly stays `open` rather than being
+closed and immediately reopened under a fresh number. This also avoids allocating from the
+`max(existing)+1` counter while a concurrent lane holds it, which is the exact structural cause
+recorded in `qa/gates/ledger-id-collision.md` (ten findings silently replaced on the last merge).
+ISS-127 and ISS-128 are verifiably fixed by this unit; their status flip to `fixed` is stated here
+and left to the sweep to apply, for the same concurrency reason.
+
+Note for the record, since the sweep filed it against this very manifest today: **ISS-134** asks
+manifests to report reproductions **by issue id**. This manifest reports three mutation counts but
+never states them as `ISS-126: 3/4 recorded reproductions re-run`. Had it done so, item (4) would
+have been visibly missing before it reached me. That is D-015's whole point, and it is the second
+time on this unit that the measurement — not the code — is the defect.
+
+---
+
+## FAILURES
+
+- **[ISS-126] sev: high** · The `tagClaims: true` write path is unasserted and structurally
+  unreachable: `testutils.ts:56-63` returns `[]` from `find` on `claims`, so
+  `tagClaimsForSession` issues zero `updateOne`s in all 137 tests. Mutating the claims write to
+  `{ $set: { topicRefs: [] } }` leaves apps/api at **137 pass / 0 fail** — the same "a writer that
+  writes nothing is indistinguishable from the shipped one" defect ISS-126 was opened for, on a
+  live data-write path inside `indexSession`. This is item (4) of ISS-126's own recorded
+  fix_direction, and that row's closing warning ("extend fakeDb rather than assuming an untested op
+  is unreachable") names the exact reason it was missed. · **Fix:** seed one or two claim docs into
+  `fakeDb`'s `find` for `claims` (mirroring `opts.existingSessionPage`), then assert one `updateOne`
+  per claim with `$set.topicRefs` equal to `topicRefsForSession`'s output, so the
+  `refs` to `[]` mutation fails. · issue: **ISS-126 (stays open)**
+
+**ISSUES-WRITTEN: none** — ISS-126 remains open on its existing row; no new id minted (ledger-id
+collision gate).
+
+**EXPLANATION:** Two of the three cycle-1 issues are genuinely closed and I re-derived rather than
+read every claim: all three named mutations kill, the ISS-128 guard catches the real U1.0c
+breakage by name and goes green on restore, the retraction of ISS-127's reasoning is honest and
+complete, the catalogue was not upgraded, and live `topics`/`orgs` are still 0 with all 81 claims
+untagged. I rule **for** the maker on the ISS-128 deviation — its objection is factually right
+(`backfill.mjs --dry-run` really does open a production Mongo connection), and a narrow guard that
+runs beats a costly one that gets disabled. The unit fails on one thing only: a fourth mutation
+I derived myself blanks `claims.topicRefs` to `[]` on every write and leaves apps/api 137/137
+green, because `fakeDb.find` returns `[]` for `claims` and the `tagClaims: true` path — item (4)
+of ISS-126's own fix_direction — can never execute. One seeded fixture closes it.
