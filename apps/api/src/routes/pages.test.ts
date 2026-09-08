@@ -29,12 +29,13 @@ for (const path of PAGES) {
 }
 
 test("GET /docs-ui lists both a real live route and a real still-stubbed route", async () => {
+  // /search was un-stubbed (plan §10 U0.7) — /webhooks/register is the only genuine stub left.
   const server = await startTestServer(buildTestDeps());
   try {
     const res = await fetch(`${server.baseUrl}/docs-ui`);
     const text = await res.text();
     assert.match(text, /POST \/ask/);
-    assert.match(text, /GET \/search/);
+    assert.match(text, /POST \/webhooks\/register/);
     assert.match(text, /501 not_implemented/);
   } finally {
     await server.close();

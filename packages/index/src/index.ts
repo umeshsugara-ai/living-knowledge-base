@@ -10,5 +10,7 @@ export { flattenTreeToGraph, type Graph, type GraphNode, type GraphEdge } from "
 export { computeRecallAtK, type GoldenQuestion, type RetrieveFn, type RecallResult, type RecallMiss } from "./eval/recall.js";
 export { createHeuristicRetriever } from "./eval/heuristic-retriever.js";
 
+export { lexicalSearchTurns, type LexicalHit, type SearchableTurn } from "./search/lexical.js";
+
 export { summarizeSession, type SessionSummaryResult, type SummarizeResult, type SummarizeCompleteFn } from "./pipeline/summarize.js";
 export { extractClaims, type ExtractedClaim, type ClaimsCompleteFn } from "./pipeline/claims.js";

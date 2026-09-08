@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { complete as routeComplete, parseRoutingYaml, GeminiProvider, ClaudeCodeProvider, OllamaProvider, type Provider } from "@lkb/ai";
 import { treeSearch } from "@lkb/index";
 import type { ServerDeps } from "./server.js";
-import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoCitationsDeps, createMongoHealthDeps, createMongoGraphReadDeps, createGwsCalendarReadDeps, createMeetingCandidatesDeps, createMongoKeysDeps } from "./store.js";
+import { createMongoApiKeyStore, createMongoEvalRunStore, createMongoJobWriter, createMongoTreeStore, createMongoBrainReadDeps, createMongoCitationsDeps, createMongoHealthDeps, createMongoSearchDeps, createMongoGraphReadDeps, createGwsCalendarReadDeps, createMeetingCandidatesDeps, createMongoKeysDeps } from "./store.js";
 import { createMongoIngestDeps } from "./ingest-store.js";
 import { createMongoWhatsAppDeps } from "./whatsapp-store.js";
 import { realTransport } from "./ai-transport.js";
@@ -60,6 +60,7 @@ export function buildProductionDeps(): ServerDeps {
     brain: createMongoBrainReadDeps(),
     citations: createMongoCitationsDeps(),
     health: createMongoHealthDeps(),
+    search: createMongoSearchDeps(),
     graph: createMongoGraphReadDeps(),
     calendar: createGwsCalendarReadDeps(),
     meetingCandidates: createMeetingCandidatesDeps(),

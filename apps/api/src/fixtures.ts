@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationsDeps } from "./routes/citations.js";
 import type { HealthDeps, HealthReport } from "./routes/health.js";
+import type { SearchDeps, SearchHit } from "./routes/search.js";
 import type { GraphReadDeps } from "./routes/graph.js";
 import type { CalendarReadDeps, UpcomingMeeting } from "./routes/calendar.js";
 import type { MeetingCandidate, MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
@@ -133,6 +134,20 @@ export function fakeHealthDeps(overrides: Partial<HealthDeps> = {}): HealthDeps 
   const healthy: HealthReport = { db: "ok", collections: { sessions: 1, claims: 1 } };
   return {
     checkHealth: async () => healthy,
+    ...overrides,
+  };
+}
+
+/** An in-memory `SearchDeps` — tests never touch Mongo. Returns one fixture hit for the query
+ * "hello" (matching `fakeBrainReadDeps`' turn `t1`/"Hello."), none otherwise. */
+export function fakeSearchDeps(overrides: Partial<SearchDeps> = {}): SearchDeps {
+  const fixtureHit: SearchHit = {
+    turnId: "t1", sessionId: "session-1", score: 1,
+    turn: { _id: "t1", tenantId: "tenant-1", sessionId: "session-1", speakerRef: "spk:0", tStart: 0, tEnd: 5, text: "Hello." },
+    session: { _id: "session-1", tenantId: "tenant-1", sourceId: "source-1", title: "Fixture Session", date: "2026-01-15", status: { transcribe: "done", index: "done" } },
+  };
+  return {
+    search: async (_tenantId, query) => (query.toLowerCase().includes("hello") ? [fixtureHit] : []),
     ...overrides,
   };
 }
@@ -258,6 +273,7 @@ export function buildTestDeps(overrides: Partial<ServerDeps> = {}): ServerDeps {
     brain: fakeBrainReadDeps(),
     citations: fakeCitationsDeps(),
     health: fakeHealthDeps(),
+    search: fakeSearchDeps(),
     graph: fakeGraphReadDeps(),
     calendar: fakeCalendarReadDeps(),
     meetingCandidates: fakeMeetingCandidatesDeps(),

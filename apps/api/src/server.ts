@@ -14,6 +14,7 @@ import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
 import { createCitationsRouter, type CitationsDeps } from "./routes/citations.js";
 import { createHealthRouter, type HealthDeps } from "./routes/health.js";
+import { createSearchRouter, type SearchDeps } from "./routes/search.js";
 import { createGraphRouter, type GraphReadDeps } from "./routes/graph.js";
 import { createCalendarRouter, type CalendarReadDeps } from "./routes/calendar.js";
 import { createMeetingCandidatesRouter, type MeetingCandidatesDeps } from "./routes/meeting-candidates.js";
@@ -32,6 +33,7 @@ export interface ServerDeps {
   brain: BrainReadDeps;
   citations: CitationsDeps;
   health: HealthDeps;
+  search: SearchDeps;
   graph: GraphReadDeps;
   calendar: CalendarReadDeps;
   meetingCandidates: MeetingCandidatesDeps;
@@ -66,6 +68,7 @@ export function createServer(deps: ServerDeps): Express {
   app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
   app.use(createBrainRouter(deps.brain));
   app.use(createCitationsRouter(deps.citations));
+  app.use(createSearchRouter(deps.search));
   app.use(createGraphRouter(deps.graph));
   app.use(createCalendarRouter(deps.calendar));
   app.use(createMeetingCandidatesRouter(deps.meetingCandidates));

@@ -81,25 +81,22 @@ test("POST /ask with a valid key that lacks the ask scope returns 403, not 401",
 });
 
 test("a valid key hitting a stub route gets 501 (authorized but not built), never 403 or 200", async () => {
+  // /search was un-stubbed (plan §10 U0.7) — /webhooks/register is now the only remaining
+  // genuine stub, so it's the only route left that can prove this behavior.
   const server = await startTestServer(
     buildTestDeps({
-      keyStore: fakeKeyStore({ "sources-key": { tenantId: "tenant-1", scopes: ["search", "webhooks"] } }),
+      keyStore: fakeKeyStore({ "sources-key": { tenantId: "tenant-1", scopes: ["webhooks"] } }),
     }),
   );
   try {
-    const getRes = await fetch(`${server.baseUrl}/search`, {
-      headers: { authorization: "Bearer sources-key" },
-    });
-    assert.equal(getRes.status, 501);
-    const getBody = (await getRes.json()) as { error: string; message: string };
-    assert.equal(getBody.error, "not_implemented");
-    assert.match(getBody.message, /GET \/search is planned, not yet built/);
-
     const postRes = await fetch(`${server.baseUrl}/webhooks/register`, {
       method: "POST",
       headers: { authorization: "Bearer sources-key" },
     });
     assert.equal(postRes.status, 501);
+    const postBody = (await postRes.json()) as { error: string; message: string };
+    assert.equal(postBody.error, "not_implemented");
+    assert.match(postBody.message, /POST \/webhooks\/register is planned, not yet built/);
   } finally {
     await server.close();
   }
@@ -112,7 +109,7 @@ test("a valid key lacking a stub route's scope still gets 403 there (scope check
     }),
   );
   try {
-    const res = await fetch(`${server.baseUrl}/search`, { headers: { authorization: "Bearer ask-only-key" } });
+    const res = await fetch(`${server.baseUrl}/webhooks/register`, { method: "POST", headers: { authorization: "Bearer ask-only-key" } });
     assert.equal(res.status, 403);
   } finally {
     await server.close();
@@ -127,13 +124,16 @@ test("rate limit trips after N requests with 429 and a Retry-After header", asyn
     }),
   );
   try {
+    // /search is real now (plan §10 U0.7) — no `q` param means 400, not 501, but the rate
+    // limiter counts every request regardless of what the route itself would answer, which is
+    // exactly the ordering this test exists to prove.
     const headers = { authorization: "Bearer rl-key" };
     const first = await fetch(`${server.baseUrl}/search`, { headers });
     const second = await fetch(`${server.baseUrl}/search`, { headers });
     const third = await fetch(`${server.baseUrl}/search`, { headers });
 
-    assert.equal(first.status, 501);
-    assert.equal(second.status, 501);
+    assert.equal(first.status, 400);
+    assert.equal(second.status, 400);
     assert.equal(third.status, 429);
     assert.ok(third.headers.get("retry-after"), "429 response must carry a Retry-After header");
     const body = (await third.json()) as { error: string };
