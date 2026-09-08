@@ -258,4 +258,33 @@ No regeneration, no API spend, and the set the checker reviewed is byte-identica
    filter with a known-weak criterion is not acceptable even with the bias published.
 7. `ISSUES-WRITTEN: none` is a complete check.
 
-**Status: ready-for-check**
+**Status: checked-PASS** — PASS from `qa/verdicts/golden-set-regeneration.md` (Cycle checked: 2,
+matching Fix cycle 2), committed `a1fa870`. 3/3 in-scope gate conditions, 3/3 regression gates.
+
+**The checker verified the claims rather than the sentences.** For ISS-091 it deleted
+`golden-set-provenance.json` and re-ran, confirming the report degraded to *"UNKNOWN … treat the
+score as uninterpretable"* with no substituted claim — testing the failure mode, which is the only
+way to check a "fixed as a class" assertion. It confirmed `git diff` on the golden set is empty,
+so the set it sampled at cycle 1 is byte-identical and that reading still describes this artifact.
+
+**On the deferral, it argued against me before ruling for me** — the right shape for a judgment
+call. Re-deriving the rejection tokens itself, it found **13 of 17 rejections fire on ordinary or
+function words** (`should`, `will`, `you`×2, `people`, `paths`, `skills`, `living`), which is
+materially worse than the "page-unique vs rare-entity" framing I had accepted from cycle 1. It
+still ruled shipping acceptable, on grounds I had not fully articulated: fixing the criterion *is*
+a regeneration (invalidating the review and every number in the verdict); nothing yet depends on
+0.307 being unbiased because condition 4 is unexecuted; the cost is published as a recomputed
+figure rather than a caveat that can go stale; and the deliverable — a falsifiable metric — holds
+either side of the bias. It named what would flip the ruling, and filed **ISS-093 (high)** as
+**binding: it must close before gate condition 4 is executed**, so the deferral is tracked rather
+than trusted.
+
+**Two follow-ups it raised, both handled at close-out:**
+1. The condition-4 preconditions lived only in the manifest and verdict, not in the gate file that
+   whoever executes condition 4 will actually read. Now appended to
+   `qa/gates/golden-set-redesign.md` as a clearly-labelled progress note **below** the human'''s
+   answer, which is untouched — it records findings and asks for no new decision.
+2. **T-021 stays open, correctly.** Its `done_check` is still the unfailable `recall@5 >= 0.85`
+   the gate itself says must be re-set, and condition 4 is unexecuted; closing it would claim the
+   gate work is finished. `ISS-071` is flipped to `fixed` because the saturation it names is
+   genuinely gone — that is a narrower claim than the task being done.

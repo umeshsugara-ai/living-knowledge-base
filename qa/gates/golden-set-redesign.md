@@ -135,3 +135,43 @@ human authoring and no data-approval step, so it unblocks Phase 1 now. It is exp
 
 This gate is **not** closed by this answer. It closes when a unit satisfies conditions 1–4, or
 when condition 2 fails and the decision escalates to Option B.
+
+---
+
+## Progress against the conditions (appended 2026-09-08 by the maker — the answer above is untouched)
+
+**Conditions 1–3: satisfied**, by unit `golden-set-regeneration`
+(`qa/verdicts/golden-set-regeneration.md`, PASS cycle 2). Regenerated from
+`data/toc-migrated/<id>/turns.json` with `gemini-2.5-pro` (the summarizer is `gemini-2.5-flash`).
+
+**Condition 2, measured:** recall@5 **0.307** (23/75), **52 misses**, question-blind control
+**0.187**, `assessBaseline` verdict **`informative`** (was `saturated`). Strictly inside the
+(0.217, 1.000) band with a non-zero miss count — **not 1.000, so no Option B escalation.**
+**Condition 3:** unique-token pin rate 56.5% → **9.3%**; verbatim overlap vs the scored corpus
+1.000 → **0.071**.
+
+### ⚠️ TWO PRECONDITIONS ON CONDITION 4 — read before re-pointing U1.4/U1.5
+
+Condition 4 lets U1.4's "delta against baseline" and U1.5's "≥ 0.85" be re-pointed at the new set
+once 2 and 3 hold. They do. **But two defects found during the work would be inherited by those
+gates, and both need the same regeneration to fix**, so they are cheapest to fix together:
+
+1. **Sibling-session ambiguity.** An independent read of 12 questions found **~4 genuinely
+   answerable by more than one session**, driven by seven identically-formatted `uniaccess-*`
+   sessions — e.g. *"is the university in the city or a secluded campus?"* is answered by all of
+   them. A material share of the 52 misses are therefore **not** retriever failures, and a gate
+   pointed here would punish a retriever for questions that have no unique answer.
+2. **`ISS-093` (high) — the post-filter's pin criterion is too blunt.** It rejects tokens "unique
+   in the scored corpus", which catches ordinary words: **13 of 17 rejections fired on words like
+   `should`, `will`, `you`, `people`, `paths`, `skills`, `living`.** Because the criterion runs
+   over the corpus retrieval scores, it preferentially removes questions the retriever answers —
+   so **recall@5 = 0.307 is a downward-biased FLOOR, not an unbiased estimate**. Measured every
+   run as `filterBias` in `data/eval/recall-report.json`: kept **0.307** / rejected **0.765** /
+   combined **0.391**.
+
+**ISS-093 is recorded as blocking condition 4.** Nothing yet depends on 0.307 being unbiased,
+because condition 4 is unexecuted — which is exactly why it should be fixed before it is.
+
+**Answered: still Option C. This note adds no decision and asks for none** — it records what the
+work found, so whoever executes condition 4 reads it here rather than having to find it in a
+verdict file.
