@@ -24,7 +24,9 @@ import { flattenTreeToGraph, treeIndexRootFilter, type Graph } from "@lkb/index"
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
-import { createWatchedSource, listActive as listActiveWatchedSources } from "@lkb/db";
+import { createHash } from "node:crypto";
+import { createWatchedSource, listActive as listActiveWatchedSources, recordFetch as recordWatchedFetch } from "@lkb/db";
+import { createGuardedFetcher, resolveAll, httpRequest, runWatchedSources } from "@lkb/ingest";
 import type { WatchedSourceDeps } from "./routes/watched-sources.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
@@ -283,6 +285,20 @@ export function createMongoWatchedSourceDeps(): WatchedSourceDeps {
     },
     async listActive(tenantId) {
       return listActiveWatchedSources(tenantId);
+    },
+    async run(tenantId) {
+      // The GUARDED fetcher is injected here, and this is the only place it is composed with a
+      // real transport. Watched Sources fetches user-supplied URLs unattended on a timer, so this
+      // line is the feature's SSRF boundary: swap it for a bare fetch and every control in
+      // guarded-fetch.ts is bypassed while every test still passes.
+      const fetcher = createGuardedFetcher({ lookup: resolveAll, request: httpRequest });
+      return runWatchedSources(tenantId, {
+        listActive: listActiveWatchedSources,
+        fetcher,
+        hasher: (text: string) => createHash("sha256").update(text, "utf8").digest("hex"),
+        recordFetch: recordWatchedFetch,
+        now: () => new Date().toISOString(),
+      });
     },
   };
 }

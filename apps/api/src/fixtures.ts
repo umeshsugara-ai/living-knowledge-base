@@ -128,6 +128,7 @@ export function fakeWatchedSourceDeps(overrides: Partial<WatchedSourceDeps> = {}
       byTenant.set(tenantId, list);
     },
     listActive: async (tenantId) => (byTenant.get(tenantId) ?? []).filter((s) => s.active),
+    run: async () => ({ checked: 0, changed: 0, skipped: 0, failed: [] }),
     ...overrides,
   };
 }

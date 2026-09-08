@@ -19,9 +19,22 @@ import { Router, type Request, type Response } from "express";
 import type { WatchedSources } from "@lkb/core";
 import { requireScope } from "../auth.js";
 
+export interface WatchedRunSummary {
+  checked: number;
+  changed: number;
+  skipped: number;
+  failed: { id: string; url: string; reason: string }[];
+}
+
 export interface WatchedSourceDeps {
   create(tenantId: string, doc: Omit<WatchedSources, "tenantId">): Promise<void>;
   listActive(tenantId: string): Promise<WatchedSources[]>;
+  /**
+   * Run the due sources: listActive -> isDueForCheck -> guarded fetch -> recordFetch. This is the
+   * only thing that makes A13 a working feature rather than a stored intention -- rows prove
+   * someone asked for a URL to be watched, a run proves anything was ever watched.
+   */
+  run(tenantId: string): Promise<WatchedRunSummary>;
 }
 
 const TIERS = new Set(["official", "community", "blog"]);
@@ -80,6 +93,13 @@ export function createWatchedSourcesRouter(deps: WatchedSourceDeps): Router {
 
     await deps.create(req.auth!.tenantId, doc);
     res.status(201).json({ source: { ...doc, tenantId: req.auth!.tenantId } });
+  });
+
+  router.post("/watched-sources/run", requireScope("sources"), async (req: Request, res: Response) => {
+    // Per-source failures come back in the summary rather than as a 500: a blocked or dead target
+    // is the expected case for unattended fetches of user-supplied URLs, not an error of the run.
+    const summary = await deps.run(req.auth!.tenantId);
+    res.status(200).json(summary);
   });
 
   router.get("/watched-sources", requireScope("sources"), async (req: Request, res: Response) => {

@@ -167,3 +167,34 @@ test("the STORED url is the normalised one, not the raw input", async () => {
     await server.close();
   }
 });
+
+test("POST /watched-sources/run reports per-source failures instead of 500ing", async () => {
+  const server = await startTestServer(buildTestDeps({
+    keyStore: key(["sources"]),
+    watchedSources: {
+      create: async () => {},
+      listActive: async () => [],
+      run: async () => ({ checked: 1, changed: 1, skipped: 2, failed: [{ id: "ws-bad", url: "https://x/", reason: "blocked -- private address" }] }),
+    },
+  }));
+  try {
+    const res = await fetch(`${server.baseUrl}/watched-sources/run`, {
+      method: "POST", headers: { authorization: "Bearer ws-key" },
+    });
+    assert.equal(res.status, 200, "a blocked source is an expected outcome, not a server error");
+    const body = (await res.json()) as { checked: number; failed: { reason: string }[] };
+    assert.equal(body.checked, 1);
+    assert.equal(body.failed.length, 1);
+    assert.match(body.failed[0]?.reason ?? "", /blocked/);
+  } finally { await server.close(); }
+});
+
+test("POST /watched-sources/run 403s without the sources scope", async () => {
+  const server = await startTestServer(buildTestDeps({ keyStore: key(["ask"]) }));
+  try {
+    const res = await fetch(`${server.baseUrl}/watched-sources/run`, {
+      method: "POST", headers: { authorization: "Bearer ws-key" },
+    });
+    assert.equal(res.status, 403);
+  } finally { await server.close(); }
+});
