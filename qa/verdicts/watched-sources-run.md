@@ -286,3 +286,146 @@ this is cycle 2 of max 3, so all four listed failures must land together in cycl
 Ledger: ISS-C-UNRUN-WRITERS-011 and -016 moved open -> fixed with my re-derived evidence. -017,
 -018, -019, -020 stay open. Working tree left clean; every probe and mutation reverted and
 byte-verified.
+
+---
+
+# Verdict — watched-sources-run (cycle 3)
+
+**Date:** 2026-09-09
+**Cycle checked:** 3
+**Commit checked:** `534af4e`
+**Project root:** `D:/KnowledgeBase-lanes/c-unrun-writers` (bound; no other worktree or lane read or written)
+**Contract:** `qa/contracts/watched-sources-run.md` (already authored at cycle 1 — the manifest's
+request to author it is stale; nothing new was needed)
+
+```
+VERDICT: PASS
+SCOREBOARD: 11/11 criteria met, 5/5 invariants hold
+FAILURES: none against this contract
+ISSUES-WRITTEN: ISS-C-UNRUN-WRITERS-021 (high, structure-lint), ISS-C-UNRUN-WRITERS-022 (low, evidence accuracy); -017, -018, -019, -020 moved open -> fixed
+EXPLANATION: All four mediums carried from cycle 2 are genuinely landed. I wrote my own mutation
+harness and every one of the maker's four claimed kills reproduced, plus two mutants of my own
+invention (removing the brand's defineProperty; forcing `remaining` to 0) also died — so the new
+tests are load-bearing beyond the four they were written for. The unit meets every criterion of
+its own contract. Two findings are filed rather than failed: this cycle broke `pnpm
+lint:structure` (apps/api/src is now 31 files against a budget of 30, caused by the new
+watched-run-deps.test.ts), which belongs to `structure-lint.md`, not to this contract; and the
+manifest's ingest count of 98 is really 97. Neither touches a contract criterion, and stalling a
+unit whose every criterion is evidenced over a file-count budget would be ceremony.
+```
+
+## Baselines I re-ran myself, at `534af4e`, clean tree
+
+| Command | My result | Manifest claim |
+|---|---|---|
+| `pnpm --filter '@lkb/ingest' test` | tests **97** · pass 97 · fail 0 · cancelled 0 | claims **98** — **off by one** |
+| `pnpm --filter '@lkb/api' test` | tests 138 · pass 138 · fail 0 · cancelled 0 | matches |
+| `pnpm -r typecheck` | exit 0 | matches |
+| `pnpm lint:structure` | **exit 1** — `apps/api/src: 31 files (budget 30)` | **not claimed this cycle** |
+
+The ingest figure was re-run twice at this commit with an empty `git status --porcelain`; 97 is
+reproducible and 98 is not. `cancelled` is 0 in both suites and I grepped it beside `fail` in every
+mutation run below, so no mutant was hidden as a timeout.
+
+**On `lint:structure`.** Both prior cycles' Evidence blocks reported it green. Cycle 3's Evidence
+block is the first to omit it, and it is the first cycle in which it fails. `git ls-tree` puts
+`apps/api/src` at 31 files before this commit and 32 after, so `watched-run-deps.test.ts` — the
+ISS-017 fix itself — is the file that crossed the budget. I am not treating the omission as
+concealment: I cannot establish intent at the confidence a FAILURE line requires, and the maker
+disclosed four gaps unprompted in the same document, which is not the behaviour of someone hiding
+a result. But a red repo gate on the branch is a real regression this unit introduced and every
+later unit in this lane inherits, so it is filed high with a named remedy.
+
+## Mutation table — my own harness, not the maker's
+
+Written fresh in the scratchpad (pure Python), D-020 discipline throughout: every path scoped to
+this worktree, `subprocess.run(..., timeout=900)`, the original bytes restored in a `finally` that
+fires on timeout, assertion and exception alike, and **each restore asserted SHA256-identical to
+the pre-mutation file before the next mutation is applied**. Each anchor was asserted to occur
+exactly once before substitution, so a silent no-op mutation cannot masquerade as a survivor.
+
+| # | Mutation | pass / fail / cancelled | Killed? |
+|---|---|---|---|
+| M0 | **control** — comment appended to `run.ts` | 97 / 0 / 0 | — control clean |
+| M1 | `store.ts`: guarded fetcher → bare `fetch` | 137 / 1 / 0 | **yes** |
+| M2 | route: `deps.run(req.auth!.tenantId)` → `deps.run("other-tenant")` | 137 / 1 / 0 | **yes** |
+| M3 | `run.ts`: `if (!persisted)` → `if (false)` | 96 / 1 / 0 | **yes** |
+| M4 | `run.ts`: drop the cap/deadline guard | 95 / 2 / 0 | **yes** |
+| M5 | *(mine)* remove the brand's `Object.defineProperty` | 137 / 1 / 0 | **yes** |
+| M6 | *(mine)* `result.remaining = sources.length - index` → `= 0` | 95 / 2 / 0 | **yes** |
+
+All four of the maker's claimed kills reproduce. M5 and M6 are mutants the maker did not run: M5
+confirms the brand assertion fails if the brand stops being applied — the predicate is not vacuous
+in the direction that matters, complementing the maker's own test that a plain function and
+`globalThis.fetch` are unbranded — and M6 confirms `remaining` is asserted as a value, not merely
+as a field that exists. Tree verified clean afterwards; every restore reported `OK`.
+
+## The four cycle-2 findings, judged individually
+
+| Issue | Criterion | Verdict |
+|---|---|---|
+| ISS-017 | `[C8]` | **Closed.** `createWatchedRunDeps()` is a named export, `GUARDED = Symbol.for("lkb.guarded-fetcher")` brands the fetcher at `guarded-fetch.ts:282`, and `watched-run-deps.test.ts` asserts it. M1 and M5 both die. This is the stronger of the two options cycle 1 offered — structural at runtime, not only at test time |
+| ISS-018 | `[C9]` | **Closed.** `fixtures.ts:136` now takes `tenantId` and pushes to `ranFor`; `watched-sources.test.ts:221` asserts `["tenant-1"]`. M2 dies. The fake can now observe the argument, which is what entrypoint `[I1]` demanded |
+| ISS-019 | `[I3]` | **Closed.** `run.ts` treats `!persisted` as a per-source failure with a reason string, the same shape a throw gets. M3 dies |
+| ISS-020 | `[I5]` | **Closed for the clause that was ruled sufficient.** `maxSources` defaults to 25 and a 120s whole-run deadline is checked between sources; `remaining` reports the truncation, so a capped run is distinguishable from a complete one by the caller — which is more than the issue asked for. M4 and M6 die |
+
+**One residual on `[I5]`, stated so it is not lost.** The invariant's second clause — "two
+concurrent runs must not double-fetch the same sources" — is still unaddressed: there is no
+per-tenant in-flight lock, and two simultaneous `POST /watched-sources/run` calls will both fetch
+every due source. I am crediting `[I5]` because cycle 2's own ISS-020 named the remedy as "a
+max-sources cap or a run deadline" and the maker delivered both, and I will not move the goalposts
+under a maker at its last cycle. It is worth an issue in whichever unit adds the scheduler, at
+which point concurrent runs stop being hypothetical.
+
+## The four declared gaps
+
+**Gap 1 — A13 does not flip. Ruling: correct, and it must NOT have blocked this PASS.**
+This is the question the maker asked, and the answer is already written into the contracts, twice.
+`watched-sources-entrypoint.md` `[I5]` says A13 earns PARTIAL at most on reachability and that any
+probe scoring it REAL on row count is wrong. `watched-sources-run.md` `[I4]` says a reachable chain
+is not a run against live data and that a placeholder row written to move a probe is a falsified
+measurement. A13's flip therefore requires a **live-verify artifact** — a real `POST
+/watched-sources` followed by a real `POST /watched-sources/run` against live data — which is a
+Mode C live-validation unit, not something this unit could have produced without doing precisely
+the thing both contracts forbid. Refusing to write the row is the maker obeying the contract, and
+blocking a PASS on it would have been the checker punishing compliance. Queued below as the next
+unit instead.
+
+**Gap 4 — the brand is advisory. Ruling: accurately scoped, not a defect.**
+`isGuardedFetcher` is a `Symbol.for` brand, so anything can set it; it stops the accident, not an
+attacker who is already executing code in the composition root. But `[C8]` asks only that replacing
+the fetcher must fail a test, and M1 shows it does. The maker saying so plainly in its own manifest,
+rather than describing the brand as a security control, is the behaviour this contract's `[C6]`
+lineage (claims must match behaviour) exists to reward.
+
+**Gaps 2 and 3** — the missing TLS fixture and the unpinned `res.destroy()` — were both ruled on at
+cycle 2 (proven-on-disk and honest-hygiene respectively) and nothing at this commit changes either
+ruling. Carrying them forward unchanged and unembellished is correct.
+
+## Over-claim hunt
+
+Instructed to downgrade rather than accept, I checked every number and every claim in the cycle-3
+section. Findings: the ingest count is 98 claimed / 97 actual, and `lint:structure` is red and
+unreported. Everything else — the four mutation rows, the API count, the typecheck, the brand, the
+`ranFor` assertion, the `remaining` values, `WatchedRunSummary`'s new field — reproduced exactly
+under my own instruments. The narrative claims also hold: `createWatchedRunDeps` really is a named
+export, the fake really does record its tenant, and the cap really does stop the network calls
+rather than only the counter (M4 kills two tests, not one).
+
+Also worth recording, since the dispatch that sent me here said otherwise: **cycle 2 was a FAIL,
+not a PASS with four mediums carried forward.** The verdict above this one reads `VERDICT: FAIL,
+9/11`. The four mediums are the same either way and the maker's response to them was correct, so
+nothing about this check changes — but a dispatch summary that upgrades a FAIL to a PASS is the
+kind of drift that ends with a unit's history being read from prose instead of from the verdict
+file, so it is corrected here on disk.
+
+## Goal / A13
+
+A13 stays **unflipped**, correctly. `[I4]` and entrypoint `[I5]` both bind: it flips on a
+live-verify artifact, never on reachability and never on a row written to move a probe.
+
+**Recommended next unit:** a Mode C live validation of A13 — write one real watched source, run
+the chain against it, and record the result in a live-verify artifact. That, and not another
+round on this seam, is what moves the goal. Under this repo's class-based round cap, the
+non-security surface of `watched-sources-run` has now PASSed once; the cap is not reached, but
+there is nothing left on it worth pulling.
