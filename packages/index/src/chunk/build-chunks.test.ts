@@ -7,7 +7,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildChunks, coversAllTurns, type ChunkableTurn } from "./build-chunks.js";
+import { buildChunks, coversAllTurns, type ChunkableTurn, type ChunkOptions } from "./build-chunks.js";
 
 const turn = (id: string, chars: number, fill = "a"): ChunkableTurn => ({
   _id: id,
@@ -104,4 +104,75 @@ test("overlapTurns: 0 disables overlap without losing coverage", () => {
   assert.ok(coversAllTurns(turns, plans));
   const seen = plans.flatMap((p) => p.turnRefs);
   assert.equal(new Set(seen).size, seen.length, "no turn should repeat when overlap is disabled");
+});
+
+/**
+ * FUZZ — added at cycle 2. My nine hand-picked cases missed two real defects that a checker's 3024
+ * generated shapes found immediately (ISS-098 duplicate chunks, ISS-099 ceiling breach). Hand-built
+ * fixtures test the shapes you already imagined; the bugs live in the ones you did not. So the
+ * properties are now asserted over a generated space rather than over examples.
+ */
+function* shapes(): Generator<{ turns: ChunkableTurn[]; opts: ChunkOptions; label: string }> {
+  const lengths: Record<string, number[]> = {
+    "all-tiny": Array.from({ length: 20 }, () => 5),
+    "one-enormous": [5, 5, 5000, 5, 5],
+    alternating: [700, 50, 700, 50, 700, 50],
+    "at-threshold": [400, 400, 800, 800, 400],
+    "just-over": [401, 801, 399],
+    single: [300],
+    pair: [700, 500],
+    "pair-huge": [900, 900],
+    ramp: [50, 150, 300, 600, 1200],
+  };
+  const optionSets: ChunkOptions[] = [
+    {},
+    { overlapTurns: 0 },
+    { overlapTurns: 3 },
+    { targetChars: 100, maxChars: 200 },
+    { targetChars: 900, maxChars: 800 }, // target > max: contradictory, must still not corrupt
+  ];
+  for (const [label, lens] of Object.entries(lengths)) {
+    for (const opts of optionSets) {
+      yield {
+        label: `${label} ${JSON.stringify(opts)}`,
+        turns: lens.map((n, i) => turn(`t${i}`, n)),
+        opts,
+      };
+    }
+  }
+}
+
+test("FUZZ: no chunk is ever byte-identical to its predecessor (ISS-098)", () => {
+  for (const { turns, opts, label } of shapes()) {
+    const plans = buildChunks(turns, opts);
+    for (let i = 1; i < plans.length; i++) {
+      assert.notDeepEqual(plans[i]!.turnRefs, plans[i - 1]!.turnRefs, `${label}: chunk ${i} duplicates ${i - 1}`);
+    }
+  }
+});
+
+test("FUZZ: every chunk respects maxChars unless it is a single over-long turn (ISS-099)", () => {
+  for (const { turns, opts, label } of shapes()) {
+    const max = opts.maxChars ?? 800;
+    const plans = buildChunks(turns, opts);
+    for (const p of plans) {
+      if (p.turnRefs.length === 1) continue; // a lone over-long turn is allowed through by design
+      assert.ok(p.text.length <= max, `${label}: chunk of ${p.turnRefs.length} turns is ${p.text.length} > ${max}`);
+    }
+  }
+});
+
+test("FUZZ: coverage, no invented refs, dense ordering, never-split — across every shape", () => {
+  for (const { turns, opts, label } of shapes()) {
+    const plans = buildChunks(turns, opts);
+    assert.ok(coversAllTurns(turns, plans), `${label}: a turn is unreachable`);
+    const ids = new Set(turns.map((t) => t._id));
+    const byId = new Map(turns.map((t) => [t._id, t.text.length]));
+    plans.forEach((p, i) => {
+      assert.equal(p.chunkIndex, i, `${label}: chunkIndex not dense`);
+      for (const r of p.turnRefs) assert.ok(ids.has(r), `${label}: invented turnRef ${r}`);
+      const expected = p.turnRefs.reduce((n, r) => n + byId.get(r)!, 0) + (p.turnRefs.length - 1);
+      assert.equal(p.text.length, expected, `${label}: a turn was split`);
+    });
+  }
 });

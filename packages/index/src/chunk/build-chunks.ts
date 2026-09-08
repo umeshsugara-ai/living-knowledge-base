@@ -49,6 +49,11 @@ export interface ChunkOptions {
 
 const DEFAULTS = { targetChars: 400, maxChars: 800, overlapTurns: 1 };
 
+/** Exactly the length of the text these turns will be joined into — separators included. */
+function measure(turns: ChunkableTurn[]): number {
+  return turns.reduce((n, t) => n + t.text.trim().length, 0) + Math.max(0, turns.length - 1);
+}
+
 /**
  * @returns chunk plans in session order, `chunkIndex` dense from 0.
  *
@@ -62,42 +67,57 @@ export function buildChunks(turns: ChunkableTurn[], options: ChunkOptions = {}):
   if (usable.length === 0) return [];
 
   const plans: ChunkPlan[] = [];
+  const emitted = new Set<string>();
   let current: ChunkableTurn[] = [];
   let chars = 0;
 
+  /**
+   * Emits `current` as a chunk, then carries its tail forward as overlap.
+   *
+   * The `nothing new` guard is load-bearing (ISS-098). After a flush, `current` holds only turns
+   * that were already emitted; flushing again would publish a chunk byte-identical to its
+   * predecessor. That is not a cosmetic duplicate — it pays to embed the same text twice, and two
+   * identical rows crowd the top-k that U1.4's recall delta is measured on. The guard was
+   * originally applied to the final tail only; every interior flush needed it too.
+   */
   const flush = () => {
     if (current.length === 0) return;
+    if (!current.some((t) => !emitted.has(t._id))) return;
     plans.push({
       chunkIndex: plans.length,
       turnRefs: current.map((t) => t._id),
       text: current.map((t) => t.text.trim()).join(" "),
     });
+    for (const t of current) emitted.add(t._id);
     // Carry the tail forward so a boundary-straddling answer is reachable from both sides.
-    // `slice` on a shorter array is safe and simply carries everything, which is what a chunk of
-    // one long turn should do.
     current = overlapTurns > 0 ? current.slice(-overlapTurns) : [];
-    chars = current.reduce((n, t) => n + t.text.trim().length, 0);
+    chars = measure(current);
   };
 
   for (const turn of usable) {
-    const len = turn.text.trim().length;
-    // Close before adding, not after: adding first and then checking is what pushes a chunk past
-    // maxChars. The `current.length > 0` guard is what lets an over-long single turn through.
-    if (current.length > 0 && chars + len > maxChars) flush();
+    // The separator counts. `chars` must equal the length of the text that will actually be
+    // embedded, or the ceiling is silently off by one space per turn — measured as an 802-char
+    // chunk against an 800 ceiling before this was fixed.
+    const len = turn.text.trim().length + (current.length > 0 ? 1 : 0);
+    // Close before adding, never after: appending first and checking later is precisely what
+    // pushes a chunk past the ceiling.
+    if (chars + len > maxChars) {
+      flush();
+      // The flush may have been a no-op (nothing new) or may have carried overlap forward. If the
+      // carried overlap STILL cannot fit this turn, drop the overlap rather than breach the
+      // ceiling (ISS-099): losing one boundary link costs a little recall on that seam, while an
+      // unbounded chunk costs money on every embed and degrades every similarity score in it.
+      if (current.length > 0 && chars + len > maxChars) {
+        current = [];
+        chars = 0;
+      }
+    }
     current.push(turn);
     chars += len;
     if (chars >= targetChars) flush();
   }
 
-  // The tail after the final flush is overlap already emitted; only emit it if it holds new turns.
-  const emitted = new Set(plans.flatMap((p) => p.turnRefs));
-  if (current.some((t) => !emitted.has(t._id))) {
-    plans.push({
-      chunkIndex: plans.length,
-      turnRefs: current.map((t) => t._id),
-      text: current.map((t) => t.text.trim()).join(" "),
-    });
-  }
+  flush(); // the tail; a no-op when it holds only carried-over overlap
 
   return plans;
 }

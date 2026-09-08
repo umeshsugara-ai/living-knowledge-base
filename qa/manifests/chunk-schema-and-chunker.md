@@ -3,7 +3,7 @@
 **Contract:** qa/contracts/schema-v2.md (+ `ai-provider-seam.md` C9 for the ISS-096 half)
 **Goal task:** **U1.2** (plan §10 Phase 1)
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-096** (medium — the empty-vector floor, which the U1.1 verdict made
 binding before U1.3)
@@ -114,5 +114,100 @@ not from a live count.
 Additive schema fields on a collection with no writer and (per code) no rows; one new pure module;
 two provider guards that only ever turn a silent corruption into an error. No production behaviour
 calls any of it yet. `git revert` is clean.
+
+---
+
+# Fix cycle 2 — three FAILURES, and the method that found them
+
+Both rulings I asked for came back in my favour, and the unit still failed on three defects. That
+is the right outcome and the useful one.
+
+### ISS-098 + ISS-099 (medium) — one root cause, found by fuzzing, not by reading
+
+> *"buildChunks emits a chunk byte-identical to its predecessor on an input as small as two turns;
+> **1172/3024** fuzzed shapes affected"* · *"**37%** of multi-turn chunks exceed the documented
+> ceiling (22885/61352), worst **1790 vs 800**"*
+
+Accepted. I had named this exact hazard in a comment — *"emitting unconditionally duplicates a
+chunk, skipping unconditionally loses the tail"* — **and then guarded only the final tail.** Every
+interior flush needed the same test. The checker's diagnosis is precise: the `emitted` check at
+`:93` was never given a twin at `:86`.
+
+**The lesson is about method, not this function.** My nine hand-picked cases all passed. A
+generated space of 3024 shapes broke it in 39% of them. **Hand-built fixtures test the shapes you
+already imagined; the bugs live in the ones you did not.** So cycle 2 adds my own fuzz — 9 length
+profiles × 5 option sets, including `targetChars > maxChars` — asserting no-duplicate, ceiling,
+coverage, no-invented-refs, dense ordering and never-split across every shape.
+
+**And the fuzz immediately earned itself.** After fixing the duplicate, it failed on
+`{targetChars: 900, maxChars: 800}` with **802 > 800** — a second, independent bug the checker's
+report had not isolated: my `chars` counter summed *trimmed turn lengths* while the emitted text is
+those turns **joined by spaces**, so the ceiling was off by one separator per turn. `chars` now
+measures exactly what will be embedded. A ceiling that does not count what it bounds is not a
+ceiling.
+
+**On the ISS-099 tradeoff:** when carried overlap plus the next turn cannot fit, the overlap is now
+dropped rather than the ceiling breached. Losing one boundary link costs a little recall on that
+seam; an unbounded chunk costs money on every embed and dilutes every similarity score inside it.
+
+### ISS-100 (low) — my evidence was false, and that is the worse half
+
+> *"`pnpm lint:structure` exits 1 on tracker-audit G1, not 'clean'; depcruise never ran"*
+
+Correct, and it is the third time this pattern has caught me. I ran `lint:structure | grep -E
+"OK|violation"` and read the absence of a FAIL line as success. The `&&` chain had **short-circuited
+at tracker-audit**, so the depcruise line I cited *never executed* — I reported a number no run
+produced.
+
+**Fixed the claim and the habit:** all four gates are now verified by **exit code**, not by
+grepping output. `lint:structure` **EXIT=0**, `typecheck` **EXIT=0**, `pnpm -r test` **EXIT=0**,
+`schema/validate.py` **EXIT=0**.
+
+**The underlying divergence, worth recording:** G1 fired because the U1.1 checker closed
+`.goal/goal.json` but not `TASKS.md`. G1 exists precisely to catch that, and it did — but it means
+a checker's `/goal` close leaves the trackers divergent until the next maker touches them. Flipped
+`TASKS.md:94` to `done`; noting the pattern rather than filing it, since it belongs to the checker's
+close-out path, not to this unit.
+
+### The two rulings
+
+- **ADR-0001 upheld, and strengthened beyond my argument.** The checker proved chunk text is a
+  *byte-exact function* of `turnRefs` (0 violations / 3024 shapes), so a stored `text` is
+  duplication by definition — plus a drift hazard against ARCHITECTURE H3 (a corrected turn would
+  leave a citation showing text the source no longer contains) and a second surface D-008's gated
+  purge must reach. **Plan §10's `text` is struck**, recorded in the contract so U1.4/U1.5 cannot
+  re-litigate it from the plan.
+- **The split is correct — but it discharged the condition rather than trusting my prose.** The
+  deferred checks now live in contract **C8**, bound to U1.3, because *"a criterion living in
+  manifest prose is how acceptance criteria quietly evaporate."* It also found a gap I missed:
+  `vector` and `dims` are **optional and uncorrelated**, so a row with no vector, or
+  `{vector: [3], dims: 99}`, validates cleanly. JSON Schema cannot express that correlation — it
+  must be a write-time assertion in U1.3.
+
+## Cycle-2 evidence
+
+| check | result |
+|---|---|
+| `pnpm -r test` | **EXIT 0** — `@lkb/index` 80 → **83** (3 fuzz properties added) |
+| `pnpm lint:structure` | **EXIT 0** (was exiting 1 — the cycle-1 claim was false) |
+| `pnpm -r typecheck` | **EXIT 0** |
+| `python schema/validate.py` | **EXIT 0** |
+| fuzz: no duplicate chunk | holds across all 45 shapes |
+| fuzz: ceiling respected | holds across all 45 shapes (multi-turn chunks) |
+| fuzz: coverage / no invented refs / dense / never-split | holds across all 45 shapes |
+
+## How to verify (cycle 2)
+
+1. **Re-run your own 3024-shape fuzz.** Mine is 45 shapes; yours found what mine missed once
+   already. Duplicate-chunk and ceiling rates should both be **0**.
+2. **Check the separator fix specifically**: `{targetChars: 900, maxChars: 800}` on
+   `[700,50,700,50,700,50]` produced an 802-char chunk before it. Confirm `chars` now equals
+   `text.length` for every chunk.
+3. **Confirm the overlap-drop tradeoff is real and bounded** — when overlap + next turn exceeds the
+   ceiling the overlap is dropped, so those two chunks share no turn. Is that the right call
+   against breaching the ceiling?
+4. **Verify every gate by EXIT CODE**, not by reading output. That is what cycle 1 got wrong.
+5. Confirm `TASKS.md` and `goal.json` now agree on U1.1.
+6. `ISSUES-WRITTEN: none` is a complete check.
 
 **Status: ready-for-check**
