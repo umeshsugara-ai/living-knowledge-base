@@ -95,3 +95,36 @@ export interface Graph {
   nodes: GraphNode[];
   edges: GraphEdge[];
 }
+
+/**
+ * `POST /ask` response — mirrors `AskV2Result` from `@lkb/ask` (packages/ask/src/ask-v2.ts:47,
+ * extending `AskResult` at router.ts:23). Declared structurally here rather than imported so
+ * apps/web keeps no build-time dependency on the ask package; the shape is asserted against the
+ * real route in the unit's evidence manifest.
+ */
+export interface AskInternalSource {
+  node_id: string;
+  evidence?: { sessionRef?: string; [k: string]: unknown };
+}
+
+export interface AskWebSource {
+  [k: string]: unknown;
+}
+
+export interface AskScored {
+  node_id?: string;
+  score?: number;
+  reason?: string;
+  [k: string]: unknown;
+}
+
+export interface AskResponse {
+  answer: string;
+  verdict: string;
+  reason: string;
+  scored: AskScored[];
+  web_used: boolean;
+  insufficient_coverage: boolean;
+  sources: { internal: AskInternalSource[]; web: AskWebSource[] };
+  auditLog: { step: string; provider?: string; model?: string; costUsd?: number }[];
+}

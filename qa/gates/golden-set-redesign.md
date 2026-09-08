@@ -98,3 +98,40 @@ and keep the control in every report`. Then append below:
 *Raised by the maker on the 2026-09-08T01:35 tick and again on the 01:20 tick's report; recorded
 here on disk because a gate that lives only in chat gets re-asked every sweep (the D-006 loop
 this project already paid for once).*
+
+---
+
+**Answered: 2026-09-08 — Option C (regenerate from raw transcripts) — Umesh, in session; recorded
+here per the Gate record rule before any unit acts on it.**
+
+Chosen over A (hand-authored) and B (Pathlynks questions under D-007) on cost/latency: C needs no
+human authoring and no data-approval step, so it unblocks Phase 1 now. It is explicitly the
+*weakest* of the three on independence and is accepted as such, with the conditions below.
+
+**Scope of what C authorizes.** Rewrite `scripts/gen-golden-set.mjs` so questions are generated:
+- from the **raw transcripts** (`data/toc-migrated/<sessionId>/turns.json`), **not** from
+  `session_page.json`. The present leak is exact and visible at `gen-golden-set.mjs:39`
+  (`question: insight`): the question is a verbatim `keyInsights` string from the same
+  `session_page.json` document whose `summary` field retrieval then scores against — same author,
+  same pass, same rare named entities. That is the whole 1.000.
+- by a **different model and prompt** than the summarizer that produced `session_page.json`;
+- phrased as **actual questions** a student would ask, not declarative excerpts;
+- with **near-neighbour distractors** — sessions deliberately chosen to share topic vocabulary
+  with the target — so a single globally-unique token cannot pin the answer (it currently does in
+  29/46, 63%).
+
+**Acceptance conditions — binding on whoever runs this unit.**
+1. The report states plainly that C reduces but does **not** remove same-source vocabulary
+   leakage, and cites the question-blind control (**0.217**) beside every new score.
+2. Pass = a recall@5 **strictly between 0.217 and 1.000, with a non-zero miss count**.
+   **1.000 is a FAILURE of this remedy, not a success** — it is evidence the leak survived the
+   regeneration, and escalates to Option B rather than closing this gate.
+3. Re-run the sweep's two independent diagnostics on the new set before reporting: verbatim-overlap
+   (must stay ~0, i.e. still not a copy-detection tautology) and the single-unique-token pin rate
+   (must fall well below 63%).
+4. Only after (2) and (3) hold may U1.4's "delta against baseline" and U1.5's "≥ 0.85" be
+   re-pointed at the new set. Until then both Phase 1 exit gates remain unfailable and must not be
+   cited as passed.
+
+This gate is **not** closed by this answer. It closes when a unit satisfies conditions 1–4, or
+when condition 2 fails and the decision escalates to Option B.

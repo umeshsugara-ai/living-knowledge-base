@@ -30,6 +30,9 @@ export function DashboardIcon(props: IconProps): React.ReactElement {
 export function SessionsIcon(props: IconProps): React.ReactElement {
   return <Svg {...props}><path d="M4 5h16M4 12h16M4 19h10" /></Svg>;
 }
+export function AskIcon(props: IconProps): React.ReactElement {
+  return <Svg {...props}><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.9 8.9 0 0 1-3.8-.85L3 21l1.9-5.6A8.4 8.4 0 0 1 12.5 3 8.4 8.4 0 0 1 21 11.5Z" /><path d="M9.8 9.4a2.4 2.4 0 0 1 4.6.9c0 1.6-2.4 2-2.4 3.2" /><path d="M12 16.4h.01" /></Svg>;
+}
 export function BrainIcon(props: IconProps): React.ReactElement {
   return <Svg {...props}><circle cx="6" cy="6" r="2.2" /><circle cx="18" cy="6" r="2.2" /><circle cx="12" cy="14" r="2.6" /><circle cx="5" cy="17" r="2" /><path d="M7.6 7.2 10.4 12.3M16.4 7.2 13.6 12.3M9.6 15.6 6.7 16.5" /></Svg>;
 }

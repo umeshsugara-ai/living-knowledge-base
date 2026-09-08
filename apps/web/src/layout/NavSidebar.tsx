@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
-  DashboardIcon, SessionsIcon, BrainIcon, CalendarIcon, SourcesIcon,
+  DashboardIcon, SessionsIcon, AskIcon, BrainIcon, CalendarIcon, SourcesIcon,
   IngestIcon, MeetingBotIcon, WhatsAppIcon, SettingsIcon, ExternalLinkIcon, DocsIcon,
 } from "../components/icons.js";
 
@@ -21,6 +21,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Dashboard", icon: <DashboardIcon /> },
   { to: "/sessions", label: "Sessions", icon: <SessionsIcon /> },
+  { to: "/ask", label: "Ask", icon: <AskIcon /> },
   { to: "/brain", label: "Brain", icon: <BrainIcon /> },
   { to: "/calendar", label: "Calendar", icon: <CalendarIcon /> },
   { to: "/sources", label: "Sources", icon: <SourcesIcon /> },

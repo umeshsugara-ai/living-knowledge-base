@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage.js";
 import { SourcesPage } from "./pages/SourcesPage.js";
 import { SessionsListPage } from "./pages/sessions/SessionsListPage.js";
 import { SessionDetailPage } from "./pages/sessions/SessionDetailPage.js";
+import { AskPage } from "./pages/AskPage.js";
 import { BrainPage } from "./pages/BrainPage.js";
 import { CalendarPage } from "./pages/CalendarPage.js";
 import { SettingsPage } from "./pages/SettingsPage.js";
@@ -23,6 +24,7 @@ export function App(): React.ReactElement {
               <Route path="/" element={<DashboardPage />} />
               <Route path="/sessions" element={<SessionsListPage />} />
               <Route path="/sessions/:id" element={<SessionDetailPage />} />
+              <Route path="/ask" element={<AskPage />} />
               <Route path="/brain" element={<BrainPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/sources" element={<SourcesPage />} />
