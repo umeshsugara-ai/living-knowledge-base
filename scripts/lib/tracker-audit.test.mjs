@@ -114,6 +114,57 @@ test("G1 sees U#.# roadmap ids, not just T-### (the import that made the roadmap
   rmSync(root, { recursive: true, force: true });
 });
 
+test("G1 sees a LETTER-SUFFIXED U id (U1.0b), not just U#.# — the suffix applies to both id families", () => {
+  // The suffix was on `T-` only (`T-[0-9]+[a-z]?`), so `| U1.0b | done |` in TASKS.md simply did
+  // not match and G1 reported "in goal.json but not TASKS.md" for a row that was demonstrably
+  // present in the file — a divergence the tool INVENTED rather than found, which is worse than a
+  // missed one because the honest fix (add the row) cannot clear it. The repo has used letter
+  // suffixes since T-004b/T-009b/T-017b; U ids acquired one at U1.0b.
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-suffix-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({
+      tasks: [
+        { id: "U1.0", status: "done" },
+        { id: "U1.0b", status: "done" },
+        { id: "T-017b", status: "done" },
+      ],
+      progress: { total: 3, done: 3, percent: 100 },
+    }),
+  );
+  writeFileSync(
+    join(root, "TASKS.md"),
+    "| ID | Status | Task |\n|---|---|---|\n| U1.0 | done | u |\n| U1.0b | done | u |\n| T-017b | done | t |\n",
+  );
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.deepEqual(findings, [], `expected no G1 findings, got: ${findings.join(" | ")}`);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("G1 still catches a mismatch on a letter-suffixed U id — the widened suffix did not blind it", () => {
+  // The widening must not turn U1.0b into an id the gate merely ignores.
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-suffix-bad-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({ tasks: [{ id: "U1.0b", status: "done" }], progress: { total: 1, done: 1, percent: 100 } }),
+  );
+  writeFileSync(join(root, "TASKS.md"), "| ID | Status | Task |\n|---|---|---|\n| U1.0b | open | u |\n");
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.ok(
+    findings.some((f) => f.includes("U1.0b")),
+    `a real done/open divergence on U1.0b must still be caught, got: ${findings.join(" | ")}`,
+  );
+  rmSync(root, { recursive: true, force: true });
+});
+
 test("G1 still catches a genuine U-unit mismatch — the widened regex did not weaken the check", () => {
   const root = mkdtempSync(join(tmpdir(), "lkb-audit-u2-"));
   mkdirSync(join(root, ".goal"), { recursive: true });

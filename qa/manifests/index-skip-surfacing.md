@@ -88,4 +88,32 @@ git diff --quiet HEAD -- apps/api/src/indexing.ts  -> clean
 4. **`tracker-audit --gate g1` is still red at HEAD** (ISS-117, other lane's `U2.4` row), so
    `pnpm lint:structure` fails as a whole. Every other gate passes individually by exit code.
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/index-skip-surfacing.md` — PASS, cycle 1, 11/11 criteria, committed
+`a9f95a5`. `ISSUES-WRITTEN: ISS-118 (high), ISS-119 (low), ISS-120 (medium)`.
+
+**The checker declined the FAIL I invited on disclosure #2 — and then made the point better than I
+had.** Its reasoning for declining: the queue row asked for an operator **or** a test, the test half
+is now mutation-proven, no contract criterion requires a durable record, and the discard actually
+named in ISS-116 is gone. But it then ran a mutation I had not thought to run — **disabling the
+`console.warn` on both ingest paths simultaneously left the suite at 124/0.** So the operator surface
+is not merely "weak" as I described it; it is **untested and silently deletable**. That is a sharper
+and more useful finding than the FAIL would have been, and it is filed as **ISS-118 (high)** with the
+`gaps` row as the next unit.
+
+It also verified — rather than accepted — my reasoning about the third mutation test staying green:
+it asserts `skipped === null` **and** `written > 0`, and the mutation makes only the first trivially
+true, leaving the second load-bearing. Correct, not a hole.
+
+**ISS-120 was mine and is now fixed.** The checker found a *second* g1 failure that ISS-117's text
+does not cover: `U1.0` was in `goal.json` with no `TASKS.md` row — I created that divergence in this
+session by registering the task on one tracker only. Fixing it exposed a further defect in the audit
+tool itself: its row regex allowed a letter suffix on `T-###` but not on `U#.#`, so `| U1.0b |` in
+TASKS.md **did not match and G1 reported a divergence the tool had invented** — worse than a missed
+one, because the honest fix (add the row) cannot clear it. Regex widened, two tests added
+(`scripts/lib/tracker-audit.test.mjs`, 13/13).
+
+**`lint:structure` is still red, and only the other lane can clear it.** After my fixes, the sole
+remaining g1 findings are `U2.4`'s unknown status `"partial"` and its `pending`/`partial` divergence
+— `lane/a-speakers`' row, mid-cycle. ISS-117 stands.

@@ -56,7 +56,12 @@ export function audit(root = ROOT) {
   // A Map silently keeps the LAST row for a duplicated id, so a second U3.1 row hid a real
   // conflict and G1 stayed green (ISS-089). Count occurrences before the Map collapses them.
   const mdSeen = new Map();
-  for (const m of md.matchAll(/^\|\s*(T-[0-9]+[a-z]?|U[0-9]+\.[0-9]+)\s*\|\s*([a-z_]+)\s*\|/gim)) {
+  // The `[a-z]?` suffix applies to BOTH id families. It was on `T-` only, so a `U1.0b` row in
+  // TASKS.md was invisible here and G1 reported it as "in goal.json but not TASKS.md" — a
+  // divergence the tool invented rather than found. The repo has used letter suffixes since
+  // T-004b/T-009b/T-017b; U-ids acquired one at U1.0b. Found when G1 kept failing on a row that
+  // was demonstrably present in the file.
+  for (const m of md.matchAll(/^\|\s*(T-[0-9]+[a-z]?|U[0-9]+\.[0-9]+[a-z]?)\s*\|\s*([a-z_]+)\s*\|/gim)) {
     mdSeen.set(m[1], (mdSeen.get(m[1]) ?? 0) + 1);
     // An unknown status word normalises to `undefined`, which compares unequal to everything and
     // produces a confusing "is X but Y" finding instead of naming the real problem (`partial` was
