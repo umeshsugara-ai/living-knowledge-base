@@ -204,3 +204,21 @@ mutable, and must be redone every merge.
 > taken by the other loop before it could be appended. `append_decision.ps1` refused a
 > non-sequential id both times. That refusal is the whole difference between the two logs:
 > DECISIONS is guarded, `qa/issues.jsonl` accepts whatever it is handed.
+
+### Mutation-run safety (2026-09-08, authorized by D-020)
+
+Every mutation run — maker or checker — must:
+
+- **wrap the test command in a `timeout`**, and
+- **restore from a byte backup in a trap that fires on timeout, interrupt AND error**, never only on
+  the success path, then verify with `cmp`.
+
+**Why.** A hand-rolled harness in this session mutated a redirect loop to `hop = -1`, producing a
+genuinely infinite loop: the suite **hung rather than failed**, the run had to be killed manually,
+and **the mutant was left applied on disk** until it was restored from backup. A mutation harness
+that can leave a mutant in the working tree is the same hazard class as ISS-083 — the `score: 0.5`
+mutation that was found applied to production source, and the reason the pre-commit guard exists.
+
+`scripts/lib/mutate.mjs` already provides an arm/restore ledger that `assert-clean` checks against
+HEAD. Prefer it over hand-rolled `sed`/`python` mutation; if you hand-roll, the two rules above are
+the minimum.
