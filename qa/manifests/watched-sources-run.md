@@ -4,10 +4,10 @@
 Checker: please author `qa/contracts/watched-sources-run.md` for the composition.
 **Goal task:** T-027 / catalogue **A13**.
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** none new. **Closes the orphan:** the guarded fetcher had no caller.
-**Status:** ready-for-check
+**Status:** ready-for-check (cycle 2)
 **Branch:** `lane/c-unrun-writers`
 
 ## Why — and a course correction
@@ -88,3 +88,78 @@ it has the least coverage. Judge whether that is acceptable, or whether this uni
 HTTP server fixture proving `redirect: "manual"`, the size abort and the `AbortSignal` actually
 behave against real sockets. If you think so, FAIL it — I would rather find out now than after
 something is scheduled against it.
+
+---
+
+# Fix cycle 2 — responding to the cycle-1 FAIL
+
+FAILed 7/11. The serious finding is the one I flagged against myself and the checker confirmed was
+worse than I described.
+
+## ISS-011 (high) — the guard's decision was advisory, not binding
+
+`httpRequest` called `fetch(url)`, so **the OS resolved the hostname again**, independently of the
+addresses the guard had just vetted. The guard could approve `93.184.216.34` and the connection
+still land on `169.254.169.254`, because nothing carried the decision across. Reachable in
+production via `store.ts` → `production.ts`.
+
+**A control the next layer is free to ignore is advice.**
+
+**Fix:** the approved address now travels with the request (`opts.address`), and the transport uses
+`node:http`/`node:https` instead of `fetch` — for one reason: they accept a custom `lookup`, which
+is the supported way to say *connect to this address*. The hostname still travels in the `Host`
+header and in `servername`, so the server sees a normal request and **TLS still verifies against
+the name** — only the address is pinned.
+
+## ISS-016 (high) — the only network-touching code had no behavioural test
+
+Deleting `redirect: "manual"`, the size abort or the `AbortSignal` each left the suite green.
+Now tested against a **real socket** via `http.createServer`. The pin test is the interesting one:
+the URL names a host that does not resolve to the server, so the request can *only* arrive via the
+injected address — if pinning regresses, it cannot connect at all.
+
+## Evidence
+
+```
+$ pnpm --filter '@lkb/ingest' test   tests 93   pass 93   fail 0   cancelled 0
+$ pnpm -r test                       apps/api 134/0, meeting-bot 40/0 — all green
+$ pnpm -r typecheck                  exit 0
+$ pnpm lint:structure >/dev/null 2>&1; echo $?   → 0
+```
+
+**Mutation table** (baseline 93/0), pure-Python harness under D-020, restores asserted
+byte-identical:
+
+| mutation | result |
+|---|---|
+| **unpin — resolve the hostname instead** | **88 / 5** |
+| remove the size abort | 92 / 1 |
+| neuter the timeout | 92 / 1 |
+| **do not destroy the redirect body stream** | **93 / 0 — UNPINNED, see below** |
+| **no-op control** | **93 / 0** |
+
+### One line is not pinned, and I am not claiming it is
+
+`res.destroy()` on the redirect path survives mutation. My test asserts the returned body is empty,
+which holds either way because the body is never read into the response. So the `destroy()` is
+**resource hygiene, not a control** — without it the socket keeps draining a body nobody uses.
+
+I could have written a test that appears to cover it. Given ISS-137 two units ago — a fix declared
+with nothing enforcing it — stating it plainly is the honest option. Low severity; worth a line in
+whichever unit next touches this file.
+
+## Known gaps
+
+1. **`addresses[0]` is pinned, not all of them.** Every returned address is *checked*; the first is
+   *used*. That is correct and closes the window, but if the first is unreachable there is no
+   failover to the second — an availability limit, not a security one.
+2. **No TLS test.** The pin is exercised over plain HTTP; `servername`/certificate behaviour under
+   a pinned address is reasoned, not proven. A real HTTPS fixture needs a self-signed cert.
+3. **A13 still does not flip.** Nothing has run against live data, and no placeholder row will be
+   written to move a probe.
+
+## Note to the checker
+
+Gap 2 is where I would push: the whole point of `servername` is that TLS still validates the
+hostname while the address is pinned, and that is exactly the part not proven. If you think this
+unit needs a self-signed HTTPS fixture before anything is scheduled against it, FAIL it.

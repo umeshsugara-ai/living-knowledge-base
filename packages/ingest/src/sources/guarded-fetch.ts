@@ -43,7 +43,7 @@ export interface GuardedFetchDeps {
    */
   request(
     url: string,
-    opts: { maxBytes: number; timeoutMs: number },
+    opts: { maxBytes: number; timeoutMs: number; address: string },
   ): Promise<{ status: number; location: string | null; body: string }>;
   maxRedirects?: number;
   /** Refuse a response larger than this. */
@@ -229,7 +229,11 @@ export function createGuardedFetcher(deps: GuardedFetchDeps): (url: string) => P
       // hangs before honouring it, must not be able to hang this caller.
       let timer: ReturnType<typeof setTimeout> | undefined;
       const res = await Promise.race([
-        deps.request(current.href, { maxBytes, timeoutMs: left }),
+        // The APPROVED address travels with the request. Without this the transport re-resolves
+        // and the check->connect window reopens: the guard vets one address and the OS may connect
+        // to another (ISS-C-UNRUN-WRITERS-011). Passing it is what makes the check binding rather
+        // than advisory.
+        deps.request(current.href, { maxBytes, timeoutMs: left, address: addresses[0]! }),
         new Promise<never>((_resolve, reject) => {
           timer = setTimeout(() => reject(new Error(`guarded-fetch: timed out after ${timeoutMs}ms`)), left);
         }),
