@@ -148,3 +148,27 @@ nothing on a correct implementation has done its job. Low-severity observations 
 
 Redefined for this repo: no pending handshake, no open **critical/high/medium** issues, no TODO
 queue rows, sweep fresh. Open `low` issues do **not** keep the loop alive.
+
+### Measuring a fix against the ledger (2026-09-08, authorized by D-015)
+
+When a unit's stated purpose is to fix a filed issue:
+
+- Its standing regression test **re-runs that issue's own recorded reproductions verbatim** from
+  `qa/issues.jsonl`. The ledger's cases are the floor of the suite, not a starting point.
+- The manifest's Evidence section **reports the count against that corpus, by issue id** —
+  `ISS-093: 15/20 refused`. Authoring an additional corpus is encouraged; **substituting** one for
+  the ledger's recorded cases is not.
+- A recorded reproduction deliberately left open must be **named, with its reason**, not omitted
+  from the measurement.
+
+**Why.** Across three fix cycles of `speaker-verbatim-token-boundary`, cycle 3 responded to
+ISS-093, whose row recorded 20 attacks and whose `fix_direction` named the target set as
+"prepositions/particles **to/so/back/not**". The maker added `to`, `so`, `back`, missed `not`, then
+measured **12/12 against a 12-case corpus it authored that same cycle** and reported that. The
+ledger's own 20 give **15/20**, with `"I am Not sure about that."` still shipping `person:not` — a
+closed-class function word, inside the failing criterion, named by that exact word in the issue the
+unit existed to close.
+
+The defect is not the missing word, which is one line. It is the measurement habit: **a fix
+measured against a corpus its own author chose is marking homework with an easier exam**, and it is
+how a unit passes three cycles while its originating issue stays open.
