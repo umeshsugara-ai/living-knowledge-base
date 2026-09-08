@@ -150,12 +150,46 @@ and the `turns`/`sessions` accessors' own correctness (governed by `packages/db`
     instance is an injectable collection handle for `createMongoSearchDeps` (the shape
     `indexSession` gained for ISS-056) plus a structural assertion that the filter reaching Mongo
     equals `buildTurnPrefilter`'s own output. This clause adds a rule and weakens nothing.
+  - **BOTH gaps above are now CLOSED — for the `$or` dimension only** (added 2026-09-08,
+    `search-store-injectable-handle` cycle-1 check). The remedy the previous clause named was
+    built: `createMongoSearchDeps(deps: SearchStoreDeps = {})` takes `db?: Pick<Db, "collection">`
+    resolved **per call** (`deps.db ?? getDb()`), and `search-store.test.ts` asserts the filter
+    object captured from `find()`. All three ISS-076/077 bypass routes were replayed by this
+    checker and each now reddens exactly one test (101/102), including the central contrast: the
+    wrapper-module laundering still passes `search-prefilter-single-source.test.ts` **3/3** while
+    failing the object-level test. **The bound a future editor must not misread:** the object
+    Mongo receives has **two** top-level keys — `scopedCollection` merges `tenantId` in on top of
+    `$or` (verified empirically: captured keys `["$or","tenantId"]`) — and the test's
+    `asPrefilter()` helper reads `captured.$or` and discards the rest. The token half is pinned;
+    the tenant half is not, and removing `scopedCollection` from the turns handle was measured at
+    **102/102 green with `typecheck` exit 0 and `lint:structure` clean** (ISS-078, high). Nor is
+    anything downstream of `find()` pinned: ignoring `k` (ISS-079), misresolving every hit's turn
+    or session, and dropping the session-dedup `Set` (ISS-080) each also measured 102/102 green.
+    Those are disclosed, non-blocking coverage gaps — the shipped code is correct on all of them
+    and live parity is verified — but a green suite must not be read as [I6] plus [C10]/[I2]/[I7]
+    being enforced.
   - **Bounded exception (ISS-073, severity low, zero live occurrences).** The guarantee assumes
     JS `toLowerCase()` and Mongo's ASCII-only `$options: "i"` agree. They diverge for the few
     characters whose lowercase mapping crosses into ASCII (`U+0130` → `i`+`U+0307`, `U+212A` →
     `k`): such a turn can be scored by the JS tokenizer yet missed by the regex. Verified
     read-only against the real `toc` tenant that **0 of 2118 turns** contain either character.
     Recorded as a known bound on I6, not a defect to fix today.
+
+- **[I7] Every collection handle in `createMongoSearchDeps` goes through `scopedCollection`, and
+  the tenant scope survives the injection seam.** Added 2026-09-08 with the
+  `search-store-injectable-handle` unit, because that unit made the handle injectable and nothing
+  yet states the boundary the injection must not cross. Both `turns` and `sessions` must be
+  obtained as `scopedCollection<T>(db, name)` on **whatever handle is in use** — the injected one
+  in tests, `getDb()` in production — so `withTenant` merges `tenantId` into every filter and
+  `findOne`. Reaching `db.collection(name)` directly is a contract break **even though it
+  typechecks, keeps the `$or` superset property intact, and passes every test today**: it was
+  measured at 102/102 green with `typecheck` exit 0 and `lint:structure` clean (ISS-078), and its
+  live effect is that `/search` would score and return **every tenant's** turns to any
+  authenticated caller. Testability was the reason the seam exists; it is never a reason to move
+  the tenant merge. `packages/db/src/lib/tenantScope.test.ts` calls this boundary the one
+  invariant in this codebase whose failure is unrecoverable, and the enforcing assertion this
+  invariant is waiting for already exists one file away as `indexing.test.ts`'s
+  `assertAllCallsConfined`.
 
 ## Debatable-but-accepted tradeoff (recorded, not silently agreed)
 
@@ -213,6 +247,34 @@ constant-factor win. Plan §10's Phase-1 retrieval layer is still the real fix.
   without needing a contract amendment.
 
 ## Amendment log
+- 2026-09-08 · routine · `search-store-injectable-handle` cycle-1 check (PASS). **[I6] gains a
+  closure clause** recording that ISS-076 and ISS-077 are closed — for the `$or` dimension only —
+  and naming the four surfaces measured green anyway (tenant scope, `k`, hit resolution, session
+  dedup). **[I7] ADDED:** every collection handle must go through `scopedCollection` on whatever
+  db handle is in use, so the new injection seam cannot become a tenant-scope seam. Both are
+  **tightenings** — a rule a future edit can be judged against; nothing removed, no criterion
+  softened, and no rule moved because an artifact was failing it (the artifact passes). All
+  criteria re-derived this cycle by the checker: `pnpm --filter @lkb/api test` 102/102,
+  `pnpm --filter @lkb/index test` 59/59, `pnpm -r typecheck` exit 0 (10 projects),
+  `pnpm lint:structure` clean (depcruise 0 violations / 264 modules / 793 deps, SNAPSHOT fresh at
+  116 lines, tracker-audit G1 OK). All three ISS-076/077 bypasses replayed, each diff-confirmed
+  changed and restored SHA256-identical, each reddening exactly the new object-level test at
+  101/102 — with the wrapper-module route confirmed to pass the source pin 3/3 in isolation,
+  which is the unit's core claim. Six **checker-original** fifth-bypass attempts were executed:
+  five succeeded (tenant-scope removal, `k` ignored, turn misresolution, session misresolution,
+  dedup removal — all 102/102 green) and one was caught (duplicated hits). **The live read-only
+  Mongo parity run COMPLETED on the REAL `getDb()` path with NO injection** — the proof the new
+  default parameter did not change production behaviour: tenant `toc`, 2118 turns, 8 queries
+  including a single-short-token query, a zero-hit query, a pure-numeric query and a decimal
+  query, IDENTICAL on turnIds AND scores, `RESULT PARITY: YES`. **No latency figure added again
+  this cycle** — the maker's continued refusal to quote a headline number across five
+  measurements spanning ~9.8%–30% is judged correct, and its decision to flag the previous
+  checker's "commit to a floor" suggestion as a follow-on rather than adopt it silently is
+  endorsed; the follow-on is recorded as ISS-081 so it lives in the ledger rather than in a
+  manifest. **Keeping BOTH the source pin and the object-level test is endorsed**, though the
+  maker's stated reason is only half right: the pin catches `search-store.ts` being replaced by a
+  new file (its `readFileSync` throws) but does NOT catch `production.ts` being re-pointed at a
+  different deps factory — neither defence sees that, and it is uncovered today.
 - 2026-09-08 · routine · `search-prefilter-bypass-pin` cycle-1 check (PASS). **[I6] gains one
   clause** recording what the three test layers do and do not enforce, with the two measured
   structural gaps (ISS-076: a source-text pin cannot constrain the filter object — three bypass

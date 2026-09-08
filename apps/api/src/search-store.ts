@@ -4,7 +4,9 @@
  * `ingest-store.ts` and `whatsapp-store.ts` already follow, so this is the established shape
  * rather than a new one.
  */
-import { turns as turnsColl, sessions as sessionsColl } from "@lkb/db";
+import type { Db } from "mongodb";
+import type { Sessions, Turns } from "@lkb/core";
+import { getDb, scopedCollection } from "@lkb/db";
 import { lexicalSearchTurns } from "@lkb/index";
 import { buildTurnPrefilter } from "./search-prefilter.js";
 import type { SearchDeps, SearchHit } from "./routes/search.js";
@@ -36,9 +38,26 @@ import type { SearchDeps, SearchHit } from "./routes/search.js";
  * complexity. Plan §10's Phase-1 retrieval layer is where that gets fixed properly; this keeps
  * U1.5 from inheriting a silent 1.4s.
  */
-export function createMongoSearchDeps(): SearchDeps {
+export interface SearchStoreDeps {
+  /** Injectable so the FILTER OBJECT this function actually sends to Mongo is testable without a
+   * live database. Added for ISS-076: three separate bypasses (mutating the filter after building
+   * it, laundering it through a wrapper module, or breaking the builder itself) each kept every
+   * source-text assertion satisfied and left all 99 tests green — one of them measurably losing 6
+   * of 20 real hits against production. A source pin can only ever pin the previous attack's
+   * syntax; asserting on the object that reaches `find()` closes the class instead of the
+   * instance. Same shape `indexSession` gained for ISS-056, for the same reason. Defaults to the
+   * real db; production callers pass nothing. */
+  db?: Pick<Db, "collection">;
+}
+
+export function createMongoSearchDeps(deps: SearchStoreDeps = {}): SearchDeps {
   return {
     async search(tenantId, query, k): Promise<SearchHit[]> {
+      // Resolved per call, not at construction: production builds these deps at boot, before
+      // connect(). Tenant-scoping still runs through scopedCollection on the injected handle.
+      const db = deps.db ?? getDb();
+      const turnsColl = scopedCollection<Turns>(db as never, "turns");
+      const sessionsColl = scopedCollection<Sessions>(db as never, "sessions");
       // buildTurnPrefilter owns the superset invariant and is pinned by search-prefilter.test.ts
       // (ISS-072: this construction previously lived inline here, where no test could fail on it).
       const prefilter = buildTurnPrefilter(query);
