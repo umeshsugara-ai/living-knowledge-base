@@ -8,7 +8,7 @@
 **Dual check:** no
 **Issues addressed:** **ISS-C-UNRUN-WRITERS-002** (high, the SSRF control), and this cycle
 **-006** (high), **-007** (high), **-008** (medium), **-009** (medium), **-010** (high).
-**Status:** ready-for-check (cycle 3)
+**Status:** checked-PASS (cycle 3 — `qa/verdicts/guarded-fetcher.md`, commit `c8b0171`)
 **Branch:** `lane/c-unrun-writers`
 
 ## ISS-010 first: this manifest did not exist for cycle 1
@@ -185,3 +185,28 @@ transport that never settles keeps its handle alive until the process exits — 
 cannot cancel `deps.request`. Judge whether that is acceptable at this seam or whether `request`
 must take an `AbortSignal` now. Also worth probing: clock skew via `Date.now()`, and whether a
 `timeoutMs` of 0 or a negative value should be an error rather than an instant deadline.
+
+
+---
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 3** — 7/7 criteria, 3/3 invariants. ISS-009 closed. Two notes filed, neither blocking:
+ISS-014 (low, `timeoutMs > 2^31-1` collapses to ~1ms — still fails closed) and ISS-015 (medium,
+BLOCKING on the transport unit).
+
+**The checker corrected me upward.** I reported the infinite-deadline mutant as detected via a
+runner hang rather than a clean kill. It was a clean kill: exit 1 in 7 seconds, listed under
+`✖ failing tests` with `'test timed out after 5000ms'` from the test's own bound. Node counts a
+timed-out test under `cancelled`, so the summary line reads `fail 0` — and my mutation harness
+greps `ℹ (pass|fail)`, so **my own tooling hid a killed mutant as a hang.** The property under test
+is a duration bound, which can only be asserted as a timeout; it does count as pinned.
+
+On the un-cancellable race: acceptable here, because what leaks is a handle held by a transport
+that does not exist — cancellation is a property of the thing cancelled. Filed as ISS-015 blocking
+the transport unit, with the checker's honest asymmetry recorded: unlike a pinned address,
+`AbortSignal` has one standard shape, so adding it now would have been cheap.
+
+**This is a PASS on the primitive, not the feature.** `request` is still an empty seam and **A13
+does not move.** Three issues now stand between this and any transport accepted without pinning,
+cancellation or a real cap.
