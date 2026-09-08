@@ -6,6 +6,7 @@ export { treeSearch } from "./tree/search.js";
 export { buildChunks, coversAllTurns, type ChunkPlan, type ChunkableTurn, type ChunkOptions } from "./chunk/build-chunks.js";
 export { extractTopicRefs, type ExtractTopicRefs } from "./tree/extract-topics.js";
 export { regenerate } from "./tree/regenerate.js";
+export { promoteTreeEntities, topicRefsForSession, type PromotedEntities, type PromotedTopic, type PromotedOrg } from "./tree/promote-entities.js";
 export { flattenTreeToGraph, type Graph, type GraphNode, type GraphEdge } from "./tree/flatten-graph.js";
 
 export { cosineSimilarity, rankByCosine, rankSessionsByCosine, type ScorableChunk, type ScoredChunk } from "./vector/cosine.js";

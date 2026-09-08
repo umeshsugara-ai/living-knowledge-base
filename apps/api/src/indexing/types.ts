@@ -23,4 +23,7 @@ export interface ChunkWriteResult {
 export interface IndexSessionResult {
   sessionId: string;
   chunks: ChunkWriteResult;
+  /** U2.1 entity promotion. `null` when no tree root was produced, so there was nothing to promote
+   * — distinct from a promotion that ran and failed, which reports `skipped`. */
+  entities: { topics: number; orgs: number; claimsTagged: number; skipped: "promotion-failed" | null } | null;
 }

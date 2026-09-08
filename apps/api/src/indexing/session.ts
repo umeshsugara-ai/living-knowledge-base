@@ -20,6 +20,7 @@ import { getDb, scopedCollection } from "@lkb/db";
 import type { SessionPages, Chunks, Claims, Sessions, TreeIndexRootDocument, Turns } from "@lkb/core";
 import { summarizeSession, extractClaims, buildChunks, buildTree, regenerate, treeIndexRootFilter, type SummarizeCompleteFn } from "@lkb/index";
 import { recordVectorGap } from "./vector-gap.js";
+import { promoteAndPersistEntities, type PromotionResult } from "./promote-entities.js";
 import type { IndexEmbedFn, ChunkWriteResult, IndexSessionResult } from "./types.js";
 
 // Re-exported so existing importers keep one import site for the indexing surface.
@@ -231,6 +232,7 @@ export async function indexSession(
   // sessions (37% of the corpus) stayed out of the vector index while the index looked complete.
   // Returned rather than thrown: the degradation is deliberately non-fatal (see writeSessionChunks),
   // so the caller needs a value to inspect, not an exception to catch.
+  let entities: PromotionResult | null = null;
   const chunks = deps.embed
     ? await writeSessionChunks(tenantId, sessionId, turns, deps.embed, db)
     : { written: 0, skipped: "no-embedder" as const };
@@ -252,11 +254,18 @@ export async function indexSession(
     const rootDoc: TreeIndexRootDocument = { ...newRoot, tenantId };
     await db.collection<TreeIndexRootDocument>("tree_index")
       .replaceOne(treeIndexRootFilter(tenantId), rootDoc, { upsert: true });
+
+    // U2.1: the tree already holds topic and org nodes, so promoting them to entity rows needs no
+    // LLM and cannot hallucinate — every row is derived from a node that already survived the
+    // build. Placed AFTER the tree write and using the same `rootDoc`, so the entities can never
+    // describe a tree that was not persisted. Never throws (see the module's own note).
+    entities = await promoteAndPersistEntities(tenantId, sessionId, rootDoc, db,
+      { tagClaims: claimsDegraded === null });
   }
 
   await sessionsColl(tenantId).updateOne({ _id: sessionId }, { $set: { "status.index": "done" } });
 
-  return { sessionId, chunks };
+  return { sessionId, chunks, entities };
 }
 
 export type IndexSessionFn = typeof indexSession;

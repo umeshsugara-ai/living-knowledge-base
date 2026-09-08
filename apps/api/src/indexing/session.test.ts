@@ -137,8 +137,15 @@ test("a SUCCESSFUL summarize run always replaces the page, even when one already
 test("a DEGRADED SUMMARIZE run does not take the claims write down with it — the two paths are independent", async () => {
   const { db, calls } = fakeDb();
   await indexSession("t", "s1", { complete: completeWith({ summarizeFails: true }) as never, db });
-  const claimOps = calls.filter((c) => c.coll === "claims").map((c) => c.op);
-  assert.deepEqual(claimOps, ["deleteMany", "insertMany"], "a summarize outage must not affect the claims write");
+  // WRITES only, deliberately. U2.1's entity promotion issues a `find` over this session's claims
+  // to tag `topicRefs`, and this assertion previously compared the full op list, so a read made it
+  // fail. The test's own name and purpose are about the claims WRITE surviving a summarize outage
+  // — and a read cannot destroy data, which is the property the ISS-056 family of tests exists to
+  // protect. Narrowed to writes rather than appending "find" to the expected list, so the
+  // assertion keeps meaning the same thing if the reads around it change again.
+  const WRITE_OPS = new Set(["deleteMany", "insertMany", "insertOne", "updateOne", "replaceOne"]);
+  const claimWrites = calls.filter((c) => c.coll === "claims" && WRITE_OPS.has(c.op)).map((c) => c.op);
+  assert.deepEqual(claimWrites, ["deleteMany", "insertMany"], "a summarize outage must not affect the claims write");
 });
 
 /* ─────────────────────────────── U1.3 — chunks + embeddings ───────────────────────────────

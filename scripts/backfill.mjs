@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 /**
- * scripts/backfill-chunks.mjs — U1.0. Populates the `chunks` collection for sessions that were
+ * scripts/backfill.mjs — one home for "re-run a pipeline stage over content indexed before that
+ * stage existed". Subcommands: `chunks` (U1.0) and `entities` (U2.1); `chunks` is the default so
+ * every existing invocation keeps working.
+ *
+ * ONE SCRIPT, NOT TWO, deliberately: `scripts/` sits at its D-018 directory budget of 32, and that
+ * entry explicitly records that a THIRD raise must consolidate rather than widen. These two jobs
+ * are the same job — both exist because a capability shipped after the corpus was already indexed,
+ * which is a recurring shape here, not a one-off. Renamed from `backfill-chunks.mjs` (git mv, so
+ * history is preserved) rather than adding a second file beside it.
+ *
+ * `chunks` — U1.0. Populates the `chunks` collection for sessions that were
  * indexed BEFORE the vector layer existed.
  *
  * WHY THIS EXISTS. U1.1 (embed seam), U1.2 (chunker + schema) and U1.3 (embed-on-index) all
@@ -34,6 +44,11 @@ const args = process.argv.slice(2);
 const has = (f) => args.includes(f);
 const val = (f, d) => { const i = args.indexOf(f); return i >= 0 && args[i + 1] ? args[i + 1] : d; };
 
+const SUBCOMMAND = args[0] && !args[0].startsWith("--") ? args[0] : "chunks";
+if (!["chunks", "entities"].includes(SUBCOMMAND)) {
+  console.error(`backfill: unknown subcommand "${SUBCOMMAND}" — expected "chunks" or "entities"`);
+  process.exit(2);
+}
 const DRY_RUN = has("--dry-run");
 const TENANT = val("--tenant", "toc");
 const ONE_SESSION = val("--session", null);
@@ -43,7 +58,7 @@ const unregister = register();
 try {
   const { getDb, connect, close, scopedCollection } = await import("../packages/db/src/index.ts");
   const { buildChunks } = await import("../packages/index/src/index.ts");
-  const { writeSessionChunks } = await import("../apps/api/src/indexing.ts");
+  const { writeSessionChunks } = await import("../apps/api/src/indexing/session.ts");
   const { embed: routeEmbed } = await import("../packages/ai/src/index.ts");
   const { buildRouting } = await import("../apps/api/src/production.ts");
 
@@ -57,6 +72,57 @@ try {
   const filter = ONE_SESSION ? { _id: ONE_SESSION } : {};
   let sessions = await sessionsColl(TENANT).find(filter).toArray();
   if (LIMIT > 0) sessions = sessions.slice(0, LIMIT);
+
+  // ---- subcommand: entities (U2.1) -----------------------------------------------------------
+  // Promotion is derived from the WHOLE tree, not per session, so this is one pass rather than a
+  // loop: the tree already holds every topic and org node, and promoteTreeEntities unions their
+  // sessionRefs across the corpus. Claims are then tagged per session, since claims.topicRefs is
+  // a per-session fact.
+  if (SUBCOMMAND === "entities") {
+    const { promoteTreeEntities } = await import("../packages/index/src/index.ts");
+    const { promoteAndPersistEntities } = await import("../apps/api/src/indexing/promote-entities.ts");
+    const { treeIndexRootFilter } = await import("../packages/index/src/index.ts");
+
+    const root = await db.collection("tree_index").findOne(treeIndexRootFilter(TENANT));
+    if (!root) {
+      console.log(`tenant=${TENANT}: no tree_index root — nothing to promote (run indexing first)`);
+      await close();
+      process.exit(1);
+    }
+    const topicsColl = scopedCollection(db, "topics");
+    const orgsColl = scopedCollection(db, "orgs");
+    const tBefore = await topicsColl(TENANT).countDocuments({});
+    const oBefore = await orgsColl(TENANT).countDocuments({});
+    const planned = promoteTreeEntities(root);
+    console.log(`tenant=${TENANT} topics_before=${tBefore} orgs_before=${oBefore}${DRY_RUN ? "  [DRY RUN — no writes]" : ""}`);
+    console.log(`  would write: ${planned.topics.length} topic(s), ${planned.orgs.length} org(s)`);
+    if (DRY_RUN) {
+      for (const t of planned.topics.slice(0, 10)) console.log(`    topic ${t._id} <- ${t.sessionRefs.length} session(s)`);
+      console.log(`
+DRY RUN: nothing written.`);
+      await close();
+      process.exit(0);
+    }
+
+    let claimsTagged = 0;
+    const failures = [];
+    for (const sess of sessions) {
+      const res = await promoteAndPersistEntities(TENANT, sess._id, root, db);
+      claimsTagged += res.claimsTagged;
+      if (res.skipped) failures.push({ sessionId: sess._id, reason: res.skipped });
+    }
+    const tAfter = await topicsColl(TENANT).countDocuments({});
+    const oAfter = await orgsColl(TENANT).countDocuments({});
+    console.log(`
+topics ${tBefore} -> ${tAfter} | orgs ${oBefore} -> ${oAfter} | claims tagged: ${claimsTagged}`);
+    if (failures.length > 0) {
+      console.log(`
+${failures.length} session(s) failed promotion:`);
+      for (const f of failures) console.log(`  ${f.sessionId} — ${f.reason}`);
+    }
+    await close();
+    process.exit(failures.length > 0 ? 1 : 0);
+  }
 
   const before = await chunksColl(TENANT).countDocuments({});
   console.log(`tenant=${TENANT} sessions=${sessions.length} chunks_before=${before}${DRY_RUN ? "  [DRY RUN — no embedding calls, no writes]" : ""}`);
