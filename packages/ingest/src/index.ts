@@ -13,3 +13,5 @@ export * from "./sources/whatsapp.js";
 
 export * from "./watched/schedule.js";
 export * from "./watched/check.js";
+
+export { createGuardedFetcher, isBlockedAddress, type GuardedFetchDeps } from "./sources/guarded-fetch.js";
