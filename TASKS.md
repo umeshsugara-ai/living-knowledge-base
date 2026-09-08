@@ -31,8 +31,8 @@
 | T-004b | done | Tree topic/org child nodes + incremental regen (real T-002 data) | checker PASS 5/5, verdict `15e4ecf`; found real cross-session "New Zealand" topic |
 | T-004c | done | `regenerate()`: handle session year-migration cleanup + cross-year topic-evidence refresh | checker PASS 4/4, verdict `qa/verdicts/regenerate-year-migration.md`, commit `8ae94f4` |
 | T-006 | done | Recording-gap tracking (never silently drop) | checker PASS 7/7, verdict `819262a` |
-| T-021 | open | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | **Reverted from `done` 2026-09-07 (plan §10 U0.6).** The harness is real and checker-PASSed (`qa/verdicts/golden-set-recall.md`, commit `03fcf8d`), but it was only ever run against a heuristic (non-LLM) retriever, so `recall@5=1.000` is a property of the proxy and says nothing about the 0.85 target. ISS-015 (the invalid key that blocked it) is long resolved — the real run is simply outstanding. Not done until measured against the real provider chain. |
-| T-022 | open | Evaluator calibration on 30 hand-scored pairs | **Reverted from `done` 2026-09-07 (plan §10 U0.6).** depends T-021. Checker-PASSed cycle 1 (`qa/verdicts/evaluator-calibration.md`, commit `1d2ee71`), but with a heuristic scorer and a *derived* (not hand-scored) reference set — so the MAE-vs-human calibration this task exists to prove was never performed, and `mae=0.170` must not be read as calibrating the production LLM judge. Not done until run against the real judge with a genuinely hand-scored set. |
+| T-021 | blocked | Golden set (50–100 Qs) + recall@k report, target recall@5 ≥ 0.85 | **Reverted from `done` 2026-09-07 (plan §10 U0.6).** The harness is real and checker-PASSed (`qa/verdicts/golden-set-recall.md`, commit `03fcf8d`), but it was only ever run against a heuristic (non-LLM) retriever, so `recall@5=1.000` is a property of the proxy and says nothing about the 0.85 target. ISS-015 (the invalid key that blocked it) is long resolved — the real run is simply outstanding. Not done until measured against the real provider chain. |
+| T-022 | blocked | Evaluator calibration on 30 hand-scored pairs | **Reverted from `done` 2026-09-07 (plan §10 U0.6).** depends T-021. Checker-PASSed cycle 1 (`qa/verdicts/evaluator-calibration.md`, commit `1d2ee71`), but with a heuristic scorer and a *derived* (not hand-scored) reference set — so the MAE-vs-human calibration this task exists to prove was never performed, and `mae=0.170` must not be read as calibrating the production LLM judge. Not done until run against the real judge with a genuinely hand-scored set. |
 
 ## Phase A — Capture
 
@@ -76,3 +76,33 @@ T-003 row above) — 23/23 TOC sessions now genuinely real, independently re-ver
 **Maker picks next:**
 T-004c (regenerate edge cases, low urgency). T-010 done. T-028 stays deferred. Ingest +
 Meeting-Bot pages (apps/web) are open follow-up work, not yet started.
+
+## Phase 0-4 — the current roadmap (plan §10 U-units)
+
+> Imported 2026-09-08. These are the units the plan actually sequences; until now they existed
+> ONLY in the plan file, so the maker's roadmap tier could not see them and pulled self-generated
+> QA work instead. Statuses were verified on disk, not copied from the plan.
+
+| ID | Status | Task | Notes |
+|---|---|---|---|
+| U0.5 | done | Catalogue scorer + docs/PROGRESS.md (machine-derived verdicts) | plan §10 Phase 0 |
+| U0.6 | done | Tracker honesty: reconcile goal.json/TASKS.md, revert T-021/T-022 to partial | plan §10 Phase 0 |
+| U0.7 | done | GET /health + GET /search un-stub (lexical over turns) | plan §10 Phase 0 |
+| U0.8 | done | GET /citations/:claimId un-stub | plan §10 Phase 0 |
+| U0.9 | done | Five packages/db accessors (topics, speakers, decisions, orgs, graph-edges) | plan §10 Phase 0 |
+| U0.10 | blocked | Honest eval baseline against a real LLM (redo T-021/T-022) | BLOCKED by qa/gates/golden-set-redesign.md — the recall@5 metric is saturated at 1.000, so a real-LLM rerun would produce a second unfalsifiable number. Needs the human gate answered first. |
+| U1.1 | open | embed() on the Provider seam (Gemini + Ollama over existing Transport) | plan §10 Phase 1. packages/ai/src/provider.ts exists; zero embed references today. |
+| U1.2 | open | Chunking + real chunks rows (schema needs vector:number[] + dims) | embeddingRef is a string pointer; cosine needs the numbers in the doc |
+| U1.3 | open | Embed on index (apps/api/src/indexing.ts, delete-then-insert) |  |
+| U1.4 | open | Brute-force cosine retriever behind vectorSearchFn | D-a: Atlas Vector Search unavailable (self-hosted Mongo, no +srv). Its recall delta claim additionally needs U0.10. |
+| U1.5 | open | Hybrid merge (tree + vector + lexical, RRF) into askV2 | do NOT rewrite router.ts — ask() already takes candidates via a thunk |
+| U2.1 | open | Promote topics + orgs from the tree deterministically (no LLM) | cheapest real Phase 2 win; also backfills claims.topicRefs, which nothing has ever written |
+| U2.2 | open | Extraction-quality harness + golden set (built BEFORE the LLM extractors) | metrics incl. hallucination rate = cited id absent from turns |
+| U2.3 | open | LLM topic extractor via the existing extractFn seam | keep the regex heuristic as degradation fallback |
+| U2.4 | open | Speaker resolution (TOC turns are literally spk:0) | leave low-confidence speakers UNRESOLVED rather than guessing |
+| U2.5 | open | Decisions extraction (claims.ts template, different prompt) |  |
+| U2.6 | open | Real graph_edges rows + merge at the route boundary | do NOT reshape flatten-graph.ts — map in routes/graph.ts |
+| U3.1 | in_progress | Ask page in apps/web (POST /ask is unreachable from the UI today) | IN FLIGHT in a concurrent maker session: apps/web/src/pages/AskPage.tsx + api/ask.ts exist |
+| U3.2 | open | Search page / global search bar | builds on U0.7 + U1.5 |
+| U4.1 | open | Recording/file upload wired to a real transcribe worker | workers/transcribe is a 3-line placeholder; packages/ingest recording adapter is real but unwired |
+| U4.2 | open | ONE real meeting-bot joiner (browser/Meet); quarantine the other two | three stubs + a package imported by nothing is negative-value inventory |

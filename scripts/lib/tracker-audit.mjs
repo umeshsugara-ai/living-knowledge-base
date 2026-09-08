@@ -40,7 +40,11 @@ export function audit(root = ROOT) {
 
   // ---- G1: the two trackers must describe the same set of tasks, with the same meanings.
   const mdRows = new Map();
-  for (const m of md.matchAll(/^\|\s*(T-[0-9]+[a-z]?)\s*\|\s*([a-z_]+)\s*\|/gim)) mdRows.set(m[1], m[2]);
+  // Two id shapes, deliberately: `T-###` are the original foundation rows, `U#.#` are the plan
+  // §10 roadmap units imported 2026-09-08. Before that import the U-units lived ONLY in the plan
+  // file, so the maker's roadmap backlog tier could not see them and fell through to
+  // self-generated QA work — 84 of 85 ledger issues were filed by the loop about itself.
+  for (const m of md.matchAll(/^\|\s*(T-[0-9]+[a-z]?|U[0-9]+\.[0-9]+)\s*\|\s*([a-z_]+)\s*\|/gim)) mdRows.set(m[1], m[2]);
   const goalRows = new Map(goal.tasks.map((t) => [t.id, t.status]));
 
   const onlyMd = [...mdRows.keys()].filter((id) => !goalRows.has(id));

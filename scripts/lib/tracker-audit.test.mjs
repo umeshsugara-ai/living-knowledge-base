@@ -79,3 +79,58 @@ test("a clean fixture passes both the full audit and the g1 gate", () => {
     assert.deepEqual(audit(root), []);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test("G1 sees U#.# roadmap ids, not just T-### (the import that made the roadmap reachable)", () => {
+  // Before 2026-09-08 the row regex accepted only `T-[0-9]+`, so the plan §10 roadmap units
+  // (U0.5 … U4.2) could not be tracked at all: adding them to goal.json would have reported all
+  // 21 as "in goal.json but not TASKS.md" and failed the commit gate, while leaving them out kept
+  // the maker's roadmap backlog tier permanently empty — which is why the loop fed on its own
+  // findings instead. This asserts both id shapes parse and are compared on MEANING, so a
+  // regression to the old pattern fails here rather than silently emptying the roadmap again.
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-u-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({
+      tasks: [
+        { id: "T-001", status: "done" },
+        { id: "U0.5", status: "done" },
+        { id: "U1.1", status: "pending" }, // "pending" here vs "open" in TASKS.md — same meaning
+        { id: "U0.10", status: "blocked" }, // two-digit minor, and a status only the gate normalises
+      ],
+      progress: { total: 4, done: 2, percent: 50 },
+    }),
+  );
+  writeFileSync(
+    join(root, "TASKS.md"),
+    "| ID | Status | Task |\n|---|---|---|\n| T-001 | done | t |\n| U0.5 | done | u |\n" +
+      "| U1.1 | open | u |\n| U0.10 | blocked | u |\n",
+  );
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.deepEqual(findings, [], `expected no G1 findings, got: ${findings.join(" | ")}`);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("G1 still catches a genuine U-unit mismatch — the widened regex did not weaken the check", () => {
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-u2-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({
+      tasks: [{ id: "U1.1", status: "done" }],
+      progress: { total: 1, done: 1, percent: 100 },
+    }),
+  );
+  // Claimed done in goal.json, still open in TASKS.md — the exact drift G1 exists to catch.
+  writeFileSync(join(root, "TASKS.md"), "| ID | Status |\n|---|---|\n| U1.1 | open | u |\n");
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.equal(findings.length, 1, `expected exactly one G1 finding, got: ${findings.join(" | ")}`);
+  assert.match(findings[0], /U1\.1/);
+  rmSync(root, { recursive: true, force: true });
+});
