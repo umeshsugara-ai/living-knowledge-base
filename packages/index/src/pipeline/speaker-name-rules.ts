@@ -121,6 +121,10 @@ const NEVER_A_PERSON = new Set([
   // greetings, discourse markers, fillers
   "hi", "hello", "hey", "welcome", "thanks", "thank", "please", "sorry", "okay", "ok", "right",
   "yeah", "yes", "no", "well", "now", "so", "just", "actually", "basically", "great", "good",
+  // negation and intensifier particles -- ISS-095. ISS-093's fix_direction named the target set as
+  // "prepositions/particles to/so/back/not"; to/so/back went in and `not` did not, so
+  // "I am Not sure about that." still shipped person:not through the `i am` cue.
+  "not", "nor", "never", "very", "really", "quite", "too", "also", "still", "even",
   "morning", "afternoon", "evening", "night", "back", "again", "here", "there", "today",
   "tomorrow", "yesterday", "next", "last", "first", "second",
   // determiners, prepositions, conjunctions

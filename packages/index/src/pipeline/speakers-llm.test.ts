@@ -354,6 +354,64 @@ test("ISS-093: a demonstrative alone does not name a SINGLE-token candidate", as
   assert.equal(strong.resolved.length, 1, "a two-token name keeps the demonstrative cue");
 });
 
+/**
+ * ISS-093's OWN recorded corpus, transcribed verbatim from its `qa/issues.jsonl` evidence field.
+ *
+ * Required by D-015. Cycle 3 of this seam added the discourse denylist, measured 12/12 against a
+ * corpus the maker authored that same cycle, and reported it -- while ISS-093's own 20 cases gave
+ * 15/20 and still shipped `person:not` from "I am Not sure about that.". `not` was named by that
+ * exact word in the issue's fix_direction. A fix measured against a corpus its own author chose is
+ * marking homework with an easier exam.
+ *
+ * Four cases are deliberately NOT closed and are asserted as still-shipping so the number stays
+ * honest: India, Mumbai, Google, English are proper nouns, not discourse words. No pattern
+ * separates a city or a company from a person -- that needs a gazetteer, and the model, not this
+ * module, is the layer that should decline to propose them. They are carried to the apply unit.
+ *
+ * Current standing: ISS-093: 16/20 refused, 4 open (all gazetteer-class).
+ */
+const ISS_093_CORPUS: [string, string][] = [
+  ["Hello Everyone, thanks for joining.", "Everyone"],
+  ["Welcome Everyone to the session.", "Everyone"],
+  ["Hey Everyone welcome aboard.", "Everyone"],
+  ["Thanks All for being here.", "All"],
+  ["Hi Guys, let us start.", "Guys"],
+  ["Hi There, can you hear me?", "There"],
+  ["Welcome Back to the second session.", "Back"],
+  ["Welcome To the annual conference.", "To"],
+  ["Thank you So much everyone.", "So"],
+  ["I'm Sorry about the delay.", "Sorry"],
+  ["I am Not sure about that.", "Not"],
+  ["That's Great news for us.", "Great"],
+  ["This is Important for all of you.", "Important"],
+  ["Thank you Monday for the slot.", "Monday"],
+  ["Monday with us marks the deadline.", "Monday"],
+  ["Welcome Diwali celebrations this week.", "Diwali"],
+  ["This is India speaking on the panel.", "India"],
+  ["Coming up next, Mumbai from the west zone.", "Mumbai"],
+  ["Google here has an announcement.", "Google"],
+  ["English speaking students may apply.", "English"],
+];
+
+/** The four ISS-093 cases that remain open by design -- proper nouns, not discourse words. */
+const ISS_093_GAZETTEER = new Set(["India", "Mumbai", "Google", "English"]);
+
+for (const [text, name] of ISS_093_CORPUS) {
+  const expectedRefusal = !ISS_093_GAZETTEER.has(name);
+  test(`ISS-093 corpus: ${JSON.stringify(name)} in ${JSON.stringify(text)} is ${expectedRefusal ? "refused" : "a known gazetteer residue"}`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    if (expectedRefusal) {
+      assert.deepEqual(resolved, [], `${JSON.stringify(name)} is a discourse word, not a person`);
+    } else {
+      // Asserted as still-shipping ON PURPOSE. If a later unit closes it, this test fails and
+      // forces the count in the manifest to be corrected upward -- the number cannot silently rot.
+      assert.equal(resolved.length, 1, `${JSON.stringify(name)} is a documented open residue; if it now refuses, update the ISS-093 count`);
+    }
+  });
+}
+
 test("empty input never calls the provider", async () => {
   const boom: SpeakersCompleteFn = async () => { throw new Error("must not be called"); };
   const r = await extractSpeakers([], boom);
