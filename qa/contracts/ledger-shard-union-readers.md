@@ -25,6 +25,11 @@ what the rule requires rather than what the submission happens to contain.
   union's row count, the lane row count, and the visibility of `ISS-C-UNRUN-WRITERS-005` (cited by
   D-020) are all demonstrated, and the shard is removed afterwards.
 - **[C6]** No new file in `scripts/`, and the tests live in the file that owns the module under test.
+  *(Clarified 2026-09-08, cycle 2 — see the amendment log.)* "Owns the module under test" means the
+  module's own directory and its own test file; a further split is acceptable **only** when a
+  measured lint budget forbids the single file, the split is stated with its measurement, and the
+  seam is a real division of subject rather than a location of convenience. Placement invented from
+  an unmeasured budget (ISS-140) remains a violation.
 - **[C7]** The second reader, `.claude/hooks/mc-sessionstart.ps1`, is an enforcement path and is
   **left untouched**, with a well-formed HUMAN_GATE record naming the question, the exact change, and
   the options.
@@ -51,3 +56,9 @@ what the rule requires rather than what the submission happens to contain.
 
 - 2026-09-08 · initial (START) · authored by the checker at the maker's request in the cycle-1
   manifest · no prior contract existed for this unit.
+- 2026-09-08 · routine (record edge case) · clarified [C6]'s "the file that owns the module under
+  test" to permit a budget-forced split · cycle 1 wrote [C6] against the maker's D-017 rationale,
+  which the same check then proved false (ISS-140). Cycle 2 hit the real constraint: the module's
+  own test file is 285 non-blank lines against `loc.max` 300 and cannot absorb 112 more. The
+  criterion is not weakened — the verdict for this cycle is FAIL on other grounds, so this
+  clarification passes nothing — it only stops [C6] forbidding the correct fix for [ISS-140].
