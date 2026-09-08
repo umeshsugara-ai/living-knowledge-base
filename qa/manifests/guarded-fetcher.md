@@ -4,11 +4,11 @@
 `watched-sources-entrypoint.md` invariant **[I3]**.
 **Goal task:** T-027 / catalogue A13.
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-C-UNRUN-WRITERS-002** (high, the SSRF control), and this cycle
 **-006** (high), **-007** (high), **-008** (medium), **-009** (medium), **-010** (high).
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 **Branch:** `lane/c-unrun-writers`
 
 ## ISS-010 first: this manifest did not exist for cycle 1
@@ -110,3 +110,78 @@ Attack the new parser rather than the old table: malformed `::` (`1::2::3`), ove
 than 8 groups, `::ffff:` with a bad tail, an all-zero 6to4, and IPv4-in-IPv6 spellings I have not
 thought of. Also rule on gap 1 — is stating the check-to-connect window acceptable here, or must
 `request` take the pinned address now, before the seam has callers?
+
+---
+
+# Fix cycle 3 — responding to the cycle-2 FAIL (ISS-009)
+
+FAILed 6/7. One finding, and it lands on something I should not have shipped: **there was no
+duration bound at all** on a fetcher whose entire purpose is to run unattended on a timer — in a
+repo that has D-020 *because* an unbounded hang killed its test suite, a rule I wrote earlier the
+same day.
+
+Worse than the omission: **my manifest listed ISS-009 under "Issues addressed" while its own
+Known-gaps section admitted the timeout was unfixed.** Only the redirect-hop third was done. A
+manifest that contradicts itself is a worse defect than the missing feature, because it is the
+document a checker is entitled to trust.
+
+## What changed
+
+- **One TOTAL deadline for the whole fetch**, redirects included. Not per request — N hops must not
+  buy N timeouts, or a redirect chain quietly reinstates the unbounded wait.
+- Each hop is given the **remaining** budget, and the transport is **raced** against it, so a
+  transport that ignores its own `timeoutMs` still cannot hang the caller.
+- **`maxBytes` is handed to the transport** in `opts` rather than only measured afterwards.
+  Measuring `body.length` proves the oversized response was already allocated; a transport that
+  knows the cap can abort the stream.
+
+## The test file needed the same lesson applied to itself
+
+Writing this cycle, my first "a hanging request is abandoned" test **hung the suite** — no
+implementation existed yet, so the never-settling fake ran unbounded and the run had to be killed
+manually. A test asserting *must not hang* that itself hangs is useless. Every cycle-3 test now
+carries an explicit `{ timeout }`, so a missing implementation **fails** rather than hangs. **D-020
+applies to test harnesses, not only to mutation runs** — I had read it as a mutation-only rule.
+
+## Evidence
+
+```
+$ pnpm --filter '@lkb/ingest' test   tests 79   pass 79   fail 0   (75 + 4 new)
+$ pnpm -r test                       apps/api 132/0, meeting-bot 40/0, all green
+$ pnpm -r typecheck                  exit 0
+$ pnpm lint:structure                green; depcruise 281 modules / 0 violations
+```
+
+**Mutation table** (baseline 79/0), under D-020 — `timeout` per mutation, restore in a trap on
+EXIT/INT/TERM/ERR, `cmp`-verified:
+
+| mutation | result |
+|---|---|
+| make the deadline effectively infinite | **detected — the run TIMED OUT** (see below) |
+| renew the budget every hop (per-hop, not total) | **77 / 2** |
+| stop handing `maxBytes` to the transport | **78 / 1** |
+| **no-op control** | **79 / 0** |
+
+**Stated precisely:** the first mutant was caught as a **runner timeout, not a clean assertion
+failure.** Removing the deadline lets the never-settling fake outlive even the per-test bound and
+stall the runner. That is genuine detection — the suite does not pass — but it is weaker evidence
+than a red assertion, and I am not going to write it up as a clean kill.
+
+## Known gaps
+
+1. **The check-to-connect window remains** — now tracked as **ISS-011, BLOCKING on the transport
+   unit**, so it cannot be closed by editing a docstring. The checker's ruling: pinning is a
+   *transport* contract (pinned address + original Host + SNI + cert validation) and guessing that
+   signature blind is what causes the migration the "fix seams early" argument tries to avoid.
+2. **No real transport.** `request` is still an injected seam. **A13 does not move.**
+3. **`::ffff:0:0:0/96`** (RFC 2765 v4-translated) is allowed; not in the contract's enumerated set
+   and no live bypass was demonstrated. ISS-012, low.
+4. **No allowlist mode.** Deny-by-range only.
+
+## Note to the checker
+
+The deadline is the thing to attack: a `Promise.race` leaves the losing promise running, so a
+transport that never settles keeps its handle alive until the process exits — I clear the timer but
+cannot cancel `deps.request`. Judge whether that is acceptable at this seam or whether `request`
+must take an `AbortSignal` now. Also worth probing: clock skew via `Date.now()`, and whether a
+`timeoutMs` of 0 or a negative value should be an error rather than an instant deadline.

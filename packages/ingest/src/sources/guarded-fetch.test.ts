@@ -205,3 +205,72 @@ test("ISS-009: an oversized body is refused on a REDIRECT hop too, not only the 
   });
   await assert.rejects(() => f("https://a.example/"), /too large|size/i);
 });
+
+/**
+ * Fix cycle 3. Every test below carries its own `{ timeout }`: a test asserting "must not hang"
+ * that itself hangs is useless, and writing exactly that is how this cycle started — the suite had
+ * to be killed manually before the implementation existed. D-020 applies to test harnesses too.
+ *
+ * ISS-009 was only a third fixed: redirect hops got a size check, but `maxBytes` was
+ * still measured on an already-materialised string, and there was NO duration bound at all — on a
+ * fetcher whose entire purpose is to run unattended on a timer, in a repo that has D-020 precisely
+ * because an unbounded hang killed its test suite. I listed ISS-009 as addressed while my own
+ * known-gaps admitted the timeout was missing; that contradiction is the real defect here.
+ *
+ * The deadline is TOTAL, not per-request: N redirect hops must not buy N timeouts.
+ */
+test("ISS-009: a hanging request is abandoned, not waited on forever", { timeout: 5000 }, async () => {
+  const f = createGuardedFetcher({
+    lookup: async () => ["93.184.216.34"],
+    request: () => new Promise(() => { /* never settles */ }),
+    timeoutMs: 50,
+  });
+  await assert.rejects(() => f("https://slow.example/"), /timed out|deadline/i);
+});
+
+test("ISS-009: the deadline is TOTAL across redirects, not renewed per hop", { timeout: 5000 }, async () => {
+  let hops = 0;
+  const f = createGuardedFetcher({
+    lookup: async () => ["93.184.216.34"],
+    request: async () => {
+      hops++;
+      await new Promise((r) => setTimeout(r, 30));
+      return { status: 302, location: `https://a.example/${hops}`, body: "" };
+    },
+    maxRedirects: 50,
+    timeoutMs: 100,
+  });
+  await assert.rejects(() => f("https://a.example/"), /timed out|deadline/i);
+  assert.ok(hops < 50, `stopped on the deadline after ${hops} hops, not on the redirect cap`);
+});
+
+test("ISS-009: the size limit is handed to the transport, not just measured afterwards", { timeout: 5000 }, async () => {
+  const seen: { maxBytes?: number; timeoutMs?: number }[] = [];
+  const f = createGuardedFetcher({
+    lookup: async () => ["93.184.216.34"],
+    request: async (_url, opts) => { seen.push(opts); return { status: 200, location: null, body: "ok" }; },
+    maxBytes: 1234,
+    timeoutMs: 5000,
+  });
+  assert.equal(await f("https://x.example/"), "ok");
+  assert.equal(seen[0]?.maxBytes, 1234, "the transport must be told the cap so it can abort the stream");
+  assert.ok((seen[0]?.timeoutMs ?? 0) > 0 && (seen[0]?.timeoutMs ?? 0) <= 5000, "and the remaining time");
+});
+
+test("ISS-009: a later hop gets LESS remaining time than the first", { timeout: 5000 }, async () => {
+  const budgets: number[] = [];
+  const f = createGuardedFetcher({
+    lookup: async () => ["93.184.216.34"],
+    request: async (url, opts) => {
+      budgets.push(opts.timeoutMs);
+      await new Promise((r) => setTimeout(r, 25));
+      return url.endsWith("/2")
+        ? { status: 200, location: null, body: "done" }
+        : { status: 302, location: "https://a.example/2", body: "" };
+    },
+    timeoutMs: 2000,
+  });
+  assert.equal(await f("https://a.example/1"), "done");
+  assert.equal(budgets.length, 2);
+  assert.ok((budgets[1] ?? 0) < (budgets[0] ?? 0), `remaining time must shrink: ${budgets.join(" -> ")}`);
+});

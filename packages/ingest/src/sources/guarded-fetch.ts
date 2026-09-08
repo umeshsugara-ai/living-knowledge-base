@@ -36,14 +36,28 @@ export interface GuardedFetchDeps {
    * returned address and connecting to another is not a control.
    */
   lookup(hostname: string): Promise<string[]>;
-  request(url: string): Promise<{ status: number; location: string | null; body: string }>;
+  /**
+   * Issue one request. `opts` carries the caps rather than leaving them to be checked afterwards:
+   * a transport that knows `maxBytes` can abort the stream, where measuring `body.length` only
+   * proves the oversized response was already allocated (ISS-C-UNRUN-WRITERS-009).
+   */
+  request(
+    url: string,
+    opts: { maxBytes: number; timeoutMs: number },
+  ): Promise<{ status: number; location: string | null; body: string }>;
   maxRedirects?: number;
-  maxBytes?: number;
   /** Refuse a response larger than this. */
+  maxBytes?: number;
+  /**
+   * TOTAL wall-clock budget for the whole fetch, redirects included -- not per request. N hops must
+   * not buy N timeouts, or a redirect chain reinstates the unbounded wait this exists to close.
+   */
+  timeoutMs?: number;
 }
 
 const DEFAULT_MAX_REDIRECTS = 5;
 const DEFAULT_MAX_BYTES = 5_000_000;
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 function parseIpv4(value: string): number[] | null {
   const parts = value.split(".");
@@ -179,10 +193,16 @@ function httpUrlOrNull(value: string, base?: string): URL | null {
 export function createGuardedFetcher(deps: GuardedFetchDeps): (url: string) => Promise<string> {
   const maxRedirects = deps.maxRedirects ?? DEFAULT_MAX_REDIRECTS;
   const maxBytes = deps.maxBytes ?? DEFAULT_MAX_BYTES;
+  const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   return async function guardedFetch(startUrl: string): Promise<string> {
     let current = httpUrlOrNull(startUrl);
     if (!current) throw new Error(`guarded-fetch: not an http(s) url: ${startUrl}`);
+
+    // ONE deadline for the whole fetch. This module runs unattended on a timer, so an unbounded
+    // wait does not fail loudly -- it silently occupies the scheduler forever. D-020 exists in this
+    // repo because exactly that killed the test suite.
+    const deadline = Date.now() + timeoutMs;
 
     for (let hop = 0; hop <= maxRedirects; hop++) {
       // Resolve and check IMMEDIATELY before the request, every hop, no caching. Caching the
@@ -202,7 +222,18 @@ export function createGuardedFetcher(deps: GuardedFetchDeps): (url: string) => P
         throw new Error(`guarded-fetch: blocked -- ${current.hostname} resolves to a private or reserved address (${bad})`);
       }
 
-      const res = await deps.request(current.href);
+      const left = deadline - Date.now();
+      if (left <= 0) throw new Error(`guarded-fetch: timed out after ${timeoutMs}ms (deadline reached before ${current.href})`);
+
+      // Race the transport against the remaining budget: a transport that ignores its timeoutMs, or
+      // hangs before honouring it, must not be able to hang this caller.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const res = await Promise.race([
+        deps.request(current.href, { maxBytes, timeoutMs: left }),
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(() => reject(new Error(`guarded-fetch: timed out after ${timeoutMs}ms`)), left);
+        }),
+      ]).finally(() => { if (timer !== undefined) clearTimeout(timer); });
 
       // Size is checked on EVERY hop, redirects included. ISS-C-UNRUN-WRITERS-009: it used to be
       // asserted only on the final response, so a redirect chain could stream unbounded bodies.
