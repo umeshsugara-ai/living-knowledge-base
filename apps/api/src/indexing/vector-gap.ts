@@ -29,6 +29,21 @@ import type { ChunkWriteResult } from "./types.js";
  * that outlives the problem it described. Both directions are one `updateOne` upsert on a derived
  * id, so there is no read-then-write race.
  */
+/**
+ * The gap row's id.
+ *
+ * TENANT-NAMESPACED (ISS-121). It was `vector-pending:<sessionId>`, which is globally unique while
+ * the *filter* around it is tenant-merged — so a second tenant recording a gap for the same
+ * sessionId hit a duplicate-key error instead of getting its own row. That is reachable rather
+ * than theoretical: `whatsapp-store.ts` derives `sessionId` from a sha256 of `(groupJid,
+ * ownerUserId)` with no tenant in it, so two tenants archiving the same WhatsApp group collide.
+ * Isolation never broke — the loser simply could not write — but see the catch below for why that
+ * mattered more than it sounds.
+ */
+export function vectorGapId(tenantId: string, sessionId: string): string {
+  return `vector-pending:${tenantId}:${sessionId}`;
+}
+
 export async function recordVectorGap(
   tenantId: string,
   sessionId: string,
@@ -36,28 +51,42 @@ export async function recordVectorGap(
   db: Pick<Db, "collection">,
 ): Promise<void> {
   const gapsColl = scopedCollection<Gaps>(db as never, "gaps");
-  const _id = `vector-pending:${sessionId}`;
-  if (chunks.skipped) {
+  const _id = vectorGapId(tenantId, sessionId);
+  // NEVER THROWS (ISS-121, the half that actually bit). This runs inside `indexSession` BEFORE the
+  // tree_index update and the `status.index` flip, so the duplicate-key error escaped upward and
+  // left the session `"pending"` forever while ingest still returned 201 — a silent indexing
+  // failure introduced by the unit whose entire purpose was to end a silent indexing failure.
+  // Bookkeeping about a degradation must never be able to cause a worse one, so this is the same
+  // degrade-safe stance `writeSessionChunks` already takes. Fixing only the id would have left the
+  // next unforeseen write error with the same power to strand a session.
+  try {
+    if (chunks.skipped) {
+      await gapsColl(tenantId).updateOne(
+        { _id } as never,
+        {
+          $set: {
+            tenantId,
+            kind: "vector-pending",
+            status: "open",
+            sourceRef: sessionId,
+            requestedAt: new Date().toISOString(),
+            description: `Session ${sessionId} indexed but has no embedding vectors (${chunks.skipped}); it is absent from vector search.`,
+          },
+        } as never,
+        { upsert: true },
+      );
+      return;
+    }
+    // Resolved. `updateOne` without upsert: a session that never failed must not gain a
+    // "received" gap row describing a problem it never had.
     await gapsColl(tenantId).updateOne(
-      { _id } as never,
-      {
-        $set: {
-          tenantId,
-          kind: "vector-pending",
-          status: "open",
-          sourceRef: sessionId,
-          requestedAt: new Date().toISOString(),
-          description: `Session ${sessionId} indexed but has no embedding vectors (${chunks.skipped}); it is absent from vector search.`,
-        },
-      } as never,
-      { upsert: true },
+      { _id, status: "open" } as never,
+      { $set: { status: "received" } } as never,
     );
-    return;
+  } catch (err) {
+    console.warn(
+      `recordVectorGap(${tenantId}/${sessionId}): gap bookkeeping failed, indexing continues: ` +
+        `${err instanceof Error ? err.message : String(err)}`,
+    );
   }
-  // Resolved. `updateOne` without upsert: a session that never failed must not gain a
-  // "received" gap row describing a problem it never had.
-  await gapsColl(tenantId).updateOne(
-    { _id, status: "open" } as never,
-    { $set: { status: "received" } } as never,
-  );
 }

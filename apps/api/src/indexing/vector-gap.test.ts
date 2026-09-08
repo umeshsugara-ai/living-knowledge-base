@@ -45,7 +45,7 @@ test("ISS-118: the gap row is UPSERTED on a derived id, so a re-index cannot acc
   });
   const g = gapCalls(calls)[0]!;
   assert.equal(g.op, "updateOne", "must be an upsert, never an insert that can duplicate");
-  assert.equal((g.filter as Record<string, unknown>)._id, "vector-pending:s1", "id derived from the session");
+  assert.equal((g.filter as Record<string, unknown>)._id, "vector-pending:t:s1", "id derived from tenant AND session (ISS-121)");
   assert.deepEqual(g.options, { upsert: true });
 });
 
@@ -73,4 +73,45 @@ test("ISS-118: the gap write is tenant-confined on both filter and body", async 
   });
   const g = gapCalls(calls)[0]!;
   assertUpdateBodyConfined(g, "t");
+});
+
+/* ── ISS-121: the id must be tenant-namespaced, and bookkeeping must never strand a session ────
+ * Found live by the U1.0c checker. `_id` was `vector-pending:<sessionId>` — globally unique while
+ * the filter around it is tenant-merged — so a second tenant recording a gap for the SAME
+ * sessionId got a duplicate-key error rather than its own row. Reachable, not theoretical:
+ * whatsapp-store derives sessionId from a sha256 of (groupJid, ownerUserId) with no tenant in it.
+ */
+test("ISS-121: two tenants recording a gap for the same sessionId use DIFFERENT ids", async () => {
+  const a = fakeDb();
+  const b = fakeDb();
+  const failing = async () => { throw new Error("down"); };
+  await indexSession("tenant-a", "s1", { complete: completeWith() as never, embed: failing, db: a.db });
+  await indexSession("tenant-b", "s1", { complete: completeWith() as never, embed: failing, db: b.db });
+  const idA = (a.calls.find((c) => c.coll === "gaps")!.filter as Record<string, unknown>)._id;
+  const idB = (b.calls.find((c) => c.coll === "gaps")!.filter as Record<string, unknown>)._id;
+  assert.notEqual(idA, idB, "a globally-unique id makes the second tenant's write a duplicate-key error");
+  assert.equal(idA, "vector-pending:tenant-a:s1");
+  assert.equal(idB, "vector-pending:tenant-b:s1");
+});
+
+test("ISS-121: a FAILING gap write must not strand the session — the tree and status flip still run", async () => {
+  // This is the half that actually bit. recordVectorGap runs BEFORE the tree_index update and the
+  // status.index flip, so a throw left the session "pending" forever while ingest returned 201 —
+  // a silent indexing failure created by the unit meant to END silent indexing failures.
+  const { db, calls } = fakeDb();
+  const exploding = {
+    collection(name: string) {
+      const real = (db as unknown as { collection: (n: string) => Record<string, unknown> }).collection(name);
+      if (name !== "gaps") return real;
+      return { ...real, updateOne: async () => { throw new Error("E11000 duplicate key"); } };
+    },
+  } as never;
+  await indexSession("t", "s1", {
+    complete: completeWith() as never,
+    embed: async () => { throw new Error("down"); },
+    db: exploding,
+  });
+  assert.ok(calls.some((c) => c.coll === "tree_index"), "the tree must still be updated");
+  const flip = calls.find((c) => c.coll === "sessions" && c.op === "updateOne");
+  assert.ok(flip, "status.index must still be flipped — a stranded session is worse than a missing gap row");
 });
