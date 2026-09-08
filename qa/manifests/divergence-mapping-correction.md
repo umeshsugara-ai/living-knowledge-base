@@ -7,7 +7,7 @@
 **Fix cycle:** 1 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-132** (high). Flags the ISS-101/ISS-111 duplicate.
-**Status:** ready-for-check (cycle 1)
+**Status:** checked-PASS (cycle 1)
 
 ## Why
 
@@ -98,3 +98,39 @@ ISS-096 -> ISS-107 [displaced]      ISS-103 -> ISS-115 [displaced]
 Gap 3 is where I would push. This unit's own thesis is that hand-maintained records rot, and its
 remedy still ends in a hand-pasted table. If you think the correction is not real until something
 re-derives it automatically, FAIL it — that would be consistent with the argument I just made.
+
+
+---
+
+# Close-out — PASS at cycle 1
+
+Verdict `qa/verdicts/divergence-mapping-correction.md` (`Cycle checked: 1`, commit `3dbbde8`):
+**PASS, 8/8 verification items, 3/3 invariants.** The checker re-derived all three disputed points
+with its **own** script rather than re-running the module under test, and confirmed the maker wins
+all three; it then verified all **12/12** pairs by title identity via an independent all-branch
+allocation walk. 8/8 mutants killed with a green no-op control; the kills are specific rather than
+blanket (M6 reddens only the D-019 union test).
+
+**A wrinkle it found that strengthens the case, which I had missed:** `ISS-093` was allocated
+**twice on different branches** — also at `a1fa870` in the golden-set lane. The `speaker` commit
+filter is what disambiguates them, correctly but *incidentally*. That is a real limit of the
+derivation: it is right here because the filter happens to separate two same-id allocations, not
+because the method distinguishes them.
+
+**Gap 3 (the invited FAIL) was declined on the merits**, and the reasoning is better than mine: the
+twelve pairs are pinned in the test suite, so drift in either the ledger or the derivation now goes
+red — the *silent* rot the unit targets is gone. The residual is narrower than I stated (the gate
+table is a copy of the pin, so the two can drift), which is ISS-145, a medium.
+
+**Three new mediums, one of which is mine and undisclosed: ISS-144.** The commit silently
+re-encoded **46 unrelated ledger rows** to backslash-u escapes — semantically null, but it repoints
+`git blame` on 46 audit rows at this commit rather than at the checks that filed them. That is the
+same provenance harm this unit exists to repair, committed by the unit repairing it. Cause: my
+rewrite used Python's `json.dumps` default `ensure_ascii=True`. Fixed in the next unit.
+
+**One open decision for the Approver.** The checker **declined** to author
+`qa/contracts/audit-trail-integrity.md` even though this manifest delegated it, on the ground that
+initial contract creation is always human-approved and the maker is not the human — in a repo
+measured at 26k lines of governance prose against 10k of source, a self-authorised contract is
+exactly what the D-013 override exists to stop. It recommended a four-criterion version to Umesh in
+the verdict instead. I think it was right to refuse.
