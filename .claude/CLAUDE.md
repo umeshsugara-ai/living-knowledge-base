@@ -172,3 +172,35 @@ unit existed to close.
 The defect is not the missing word, which is one line. It is the measurement habit: **a fix
 measured against a corpus its own author chose is marking homework with an easier exam**, and it is
 how a unit passes three cycles while its originating issue stays open.
+
+### Per-lane issue ledgers (2026-09-08, authorized by D-019)
+
+Two concurrent maker loops must not draw issue ids from one sequence.
+
+- A lane working in a git worktree writes to **`qa/issues.<lane>.jsonl`** and allocates ids
+  **`ISS-<LANE>-NNN`** (`<LANE>` = the worktree/branch suffix, uppercase), counting from 001 within
+  that file alone. `qa/issues.jsonl` keeps its meaning and numbering for main-tree work.
+- **Every reader treats the union of `qa/issues.jsonl` and `qa/issues.*.jsonl` as the ledger** — the
+  checker sweep, the tracker audit, any open-issue count. A lane file is a shard, not a private copy.
+- **Lane ids are never renumbered on merge.** That permanence is the point: it is what keeps every
+  manifest, verdict and commit message that cites an id correct forever.
+
+**Why.** Worktrees stopped concurrent loops colliding on files and did nothing for the shared
+counter. In one day: both loops allocated **ISS-100**; then both allocated **ISS-102 and ISS-103**;
+and — worst — the two loops gave *different ids to the same findings*, so the speaker-seam issues
+filed in `lane/a-speakers` as ISS-093/095/097/098 live in the canonical ledger as
+ISS-104/106/108+111/109. Nothing was lost, but a reader following
+`qa/manifests/speaker-denylist-ledger-corpus.md` to ISS-093 lands on another lane's golden-set issue.
+
+That is not cosmetic. **D-015 requires a fix to be measured against its issue's own recorded
+reproductions, and that rule is only as strong as the id resolving to the right row.** An audit
+trail whose references silently repoint is worse than an incomplete one, because it still looks
+correct.
+
+Renumbering on merge was rejected: it rewrites ids other lanes may cite, makes the canonical record
+mutable, and must be redone every merge.
+
+> The same thing happened to this decision while it was being written — D-016 and D-018 were both
+> taken by the other loop before it could be appended. `append_decision.ps1` refused a
+> non-sequential id both times. That refusal is the whole difference between the two logs:
+> DECISIONS is guarded, `qa/issues.jsonl` accepts whatever it is handed.
