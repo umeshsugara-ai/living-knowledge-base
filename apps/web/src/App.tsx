@@ -32,6 +32,7 @@ export function App(): React.ReactElement {
               <Route path="/ingest" element={<IngestPage />} />
               <Route path="/meeting-bot" element={<MeetingBotPage />} />
               <Route path="/whatsapp" element={<WhatsAppPage />} />
+              <Route path="/ask" element={<DashboardPage />} />
             </Routes>
           </AppShell>
         </BrowserRouter>

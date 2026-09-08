@@ -12,6 +12,7 @@ import { createAskRouter, type AskRouteDeps } from "./routes/ask.js";
 import { createCompeteRouter, type EvalRunStore } from "./routes/compete.js";
 import { createCompetePageRouter } from "./routes/compete-page.js";
 import { createBrainRouter, type BrainReadDeps } from "./routes/brain.js";
+import { createWatchedSourcesRouter, type WatchedSourceDeps } from "./routes/watched-sources.js";
 import { createCitationsRouter, type CitationsDeps } from "./routes/citations.js";
 import { createHealthRouter, type HealthDeps } from "./routes/health.js";
 import { createSearchRouter, type SearchDeps } from "./routes/search.js";
@@ -31,6 +32,7 @@ export interface ServerDeps {
   ask: AskRouteDeps;
   evalRuns: EvalRunStore;
   brain: BrainReadDeps;
+  watchedSources: WatchedSourceDeps;
   citations: CitationsDeps;
   health: HealthDeps;
   search: SearchDeps;
@@ -67,6 +69,7 @@ export function createServer(deps: ServerDeps): Express {
   app.use(createAskRouter(deps.ask));
   app.use(createCompeteRouter({ ...deps.ask, evalRuns: deps.evalRuns }));
   app.use(createBrainRouter(deps.brain));
+  app.use(createWatchedSourcesRouter(deps.watchedSources));
   app.use(createCitationsRouter(deps.citations));
   app.use(createSearchRouter(deps.search));
   app.use(createGraphRouter(deps.graph));

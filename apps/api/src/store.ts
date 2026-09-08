@@ -24,6 +24,10 @@ import { flattenTreeToGraph, treeIndexRootFilter, type Graph } from "@lkb/index"
 import type { ApiKeyStore, VerifiedKey } from "./auth.js";
 import type { TreeStore } from "./routes/ask.js";
 import type { EvalRunStore } from "./routes/compete.js";
+import { createHash } from "node:crypto";
+import { createWatchedSource, listActive as listActiveWatchedSources, recordFetch as recordWatchedFetch } from "@lkb/db";
+import { createGuardedFetcher, resolveAll, httpRequest, runWatchedSources, type WatchedRunDeps } from "@lkb/ingest";
+import type { WatchedSourceDeps } from "./routes/watched-sources.js";
 import type { BrainReadDeps, SessionDetail } from "./routes/brain.js";
 import type { Citation, CitationEvidence, CitationsDeps } from "./routes/citations.js";
 import type { HealthDeps } from "./routes/health.js";
@@ -266,5 +270,43 @@ export function createMongoHealthDeps(): HealthDeps {
           return collections;
         },
       ),
+  };
+}
+
+/**
+ * A13. Delegates to the tenant-scoped accessors T-027 already shipped and checker-PASSed
+ * (`createWatchedSource`, `listActive`) rather than reaching Mongo directly — this file supplies
+ * the wiring the feature was missing, not a second implementation of it.
+ */
+/**
+ * The production `WatchedRunDeps`, built as a NAMED value rather than inline in the handler.
+ *
+ * ISS-C-UNRUN-WRITERS-017: while this object was constructed inside `run`, replacing the guarded
+ * fetcher with a bare one left the whole suite green — nothing could reach the composition to
+ * assert on it. Exported, `watched-run-deps.test.ts` can assert `isGuardedFetcher(deps.fetcher)`,
+ * so that mutant dies. This is the feature's SSRF boundary: every control in guarded-fetch.ts is
+ * bypassed if this one line changes.
+ */
+export function createWatchedRunDeps(): WatchedRunDeps {
+  return {
+    listActive: listActiveWatchedSources,
+    fetcher: createGuardedFetcher({ lookup: resolveAll, request: httpRequest }),
+    hasher: (text: string) => createHash("sha256").update(text, "utf8").digest("hex"),
+    recordFetch: recordWatchedFetch,
+    now: () => new Date().toISOString(),
+  };
+}
+
+export function createMongoWatchedSourceDeps(): WatchedSourceDeps {
+  return {
+    async create(tenantId, doc) {
+      await createWatchedSource(tenantId, doc);
+    },
+    async listActive(tenantId) {
+      return listActiveWatchedSources(tenantId);
+    },
+    async run(tenantId) {
+      return runWatchedSources(tenantId, createWatchedRunDeps());
+    },
   };
 }

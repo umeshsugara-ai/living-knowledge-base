@@ -44,3 +44,5 @@ reference/kb-deck-screens/*.png
 # ~2MB of binaries per run would bloat the repo for evidence anyone can reproduce on demand.
 qa/evidence/live-*/pages/
 qa/evidence/live-*/api/
+
+apps/api/src/routes/ghost.ts
