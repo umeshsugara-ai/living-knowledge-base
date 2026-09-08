@@ -416,3 +416,199 @@ neither needs changing, and neither may be softened because the artifact fails o
 **Fix cycle 2 of max 3.** If cycle 3 lands a candidate-level discourse rejection alongside the cue,
 widens the cue list to cover greeting/vocative/handover, and pins both with the two tables above,
 this passes.
+
+---
+
+# Cycle 3 verdict — 2026-09-08
+
+**Cycle checked: 3** · commit `62c4637` · manifest `qa/manifests/speaker-verbatim-token-boundary.md`
+· contract `qa/contracts/speaker-resolution-llm.md` · worktree `D:\KnowledgeBase-lanes\a-speakers`
+(branch `lane/a-speakers`).
+
+```
+VERDICT: FAIL
+SCOREBOARD: 14/15 criteria met, 4/4 invariants hold
+```
+
+## What I re-ran myself
+
+| command | my result | manifest claim |
+|---|---|---|
+| `pnpm --filter '@lkb/index' test` | tests 122 · pass 122 · fail 0 | 122/122 ✔ |
+| `pnpm -r typecheck` | exit 0, all 6 packages Done | exit 0 ✔ |
+| `pnpm lint:structure` | lint-loc OK (250 files), dirsize/root/dupes/migrations OK, SNAPSHOT matches, tracker-audit G1 OK, depcruise 272 modules / 0 violations | green ✔ |
+
+**Mutation table, re-derived** (baseline 122/0; every mutation reverted with `cmp` against a byte
+backup, final `cmp` clean, suite back to 122/0):
+
+| mutation | my result | manifest |
+|---|---|---|
+| `isDiscourseOnly` → `false` | **120 / 2** | 120/2 ✔ |
+| un-tier the demonstrative (drop `multiToken &&`) | **120 / 2** | 120/2 ✔ |
+| `addressed` → `true` (drop the address comma) | **121 / 1** | 121/1 ✔ |
+| `looksLikeAName` → `true` | **120 / 2** | 120/2 ✔ |
+| cue rule → plain `nameOccurrences().length > 0` | **118 / 4** | 118/4 ✔ |
+| empty `NAME_JOINERS` (cycle-2 guard, still pinned) | **121 / 1** | — |
+| **no-op control** (byte-identical rewrite) | **122 / 0** | 122/0 ✔ |
+
+Every guard is independently pinned and none subsumes another. The control is honest. My first
+attempt at the address-comma and joiner mutations silently failed to match (perl escaping) and read
+122/0 — I caught that by grepping the mutated line before trusting the number, and both reproduce the
+manifest once actually applied. Worth stating, because a mutation that did not apply looks exactly
+like a guard the suite does not pin.
+
+**C13 re-derived over the real corpus** (my own script over `data/toc-migrated/*/turns.json`, not the
+maker's): `{sessions: 23, sessionsWithPositional: 11, positionalTurns: 494, resolvedTurns: 78,
+pct: 15.8, names: ["Ruby", "Jubin Thakkar"]}`. Exactly the manifest's figures, including the corrected
+"11 of 23" phrasing and the two speakers.
+
+**[I2] holds — `speakers.ts` is byte-untouched.** `git diff 57f4e99^ HEAD -- packages/index/src/pipeline/speakers.ts`
+is empty; the file was last touched at `1983c82`, before this unit began. The whole unit's diff is
+4 files: `index.ts` (+1), `speaker-name-rules.ts` (+217, new), `speakers-llm.test.ts` (+233/-3),
+`speakers-llm.ts` (+10/-3).
+
+## ISS-094 — CLOSED
+
+Re-probed with the four reproductions recorded in the row itself. 3 of 4 now ship:
+`"Good morning Prasanti, please go ahead."` ✔, `"Prasanti, what do you think about this?"` (the
+contract's own probe A3) ✔, `"Our next presenter is Nilesh Gotecha."` ✔. The fourth,
+`"Prasanti said the deadline is Friday."`, is still refused — but that is a bare third-party mention
+with no naming cue, i.e. the general recall cost the manifest declares openly, not the
+greeting/handover/address class the contract exists to admit. The three headline classes are back.
+I also confirmed the surrounding class independently: mononym self-naming, `"Ruby here again."`,
+`"Rahul Mehta speaking."`, `"Prasanti, over to you."`, `"My name is Ruby-Anne Smith."`,
+`"This is Sean D'Souza speaking."`, `"This is Makrand Rajadhyaksha."`, `"My name is A. R. Rahman."` —
+all ship. **The comma discriminator does real work and it did not cost the address class.** Marked
+`fixed` in the ledger.
+
+## ISS-093 — NOT CLOSED. 15 of its 20 recorded attacks refuse; 5 still ship
+
+The manifest's headline is **"12/12 fabrications refused"**, and that is true — of a 12-case corpus
+the maker authored this cycle. ISS-093's ledger row records **20** reproduced attacks, and I re-ran
+those twenty verbatim against `62c4637`:
+
+```
+refused x15   SHIPPED x5:
+  "I am Not sure about that."                  / "Not"     -> person:not
+  "This is India speaking on the panel."       / "India"   -> person:india
+  "Coming up next, Mumbai from the west zone." / "Mumbai"  -> person:mumbai
+  "Google here has an announcement."           / "Google"  -> person:google
+  "English speaking students may apply."       / "English" -> person:english
+```
+
+Four of those five are the gazetteer class — place, org and language proper nouns — and I am **not**
+charging them. `"India"`, `"Mumbai"`, `"Google"` are not discourse words; C2b's class is "an ordinary
+English word functioning as discourse rather than as an identity", and no pattern separates a city
+from a person without world knowledge. The maker states this as honest limit 1 and it is honest. My
+own additional probes in the same family (`"Our next presenter is Microsoft."`,
+`"Please welcome Tata Consultancy Services."`, `"My name is Bangalore."`, `"Over to Singapore for the
+update."`, `"Good morning Marketing, please go ahead."`, `"Chairman, what do you think?"`) all ship
+too, for the same irreducible reason. **Scoping note, not a failure** — but it must become a named
+open question on the apply/persist unit, because that is the unit where a fabricated `person:microsoft`
+would actually land in a document.
+
+**`"Not"` is different, and it is the FAIL.** It is a negation particle: a closed-class English
+function word, squarely inside the class the maker enumerated and squarely inside C2b. It is not a
+gazetteer problem — it needs no world knowledge, only one more entry in `NEVER_A_PERSON`. And it was
+named **by that exact word** in ISS-093's own fix direction ("prepositions/particles `to`/`so`/`back`/
+`not`"): `to`, `so` and `back` are all in the list; `not` is not. `person:not` ships today from a
+sentence a real transcript contains.
+
+Related, and the reason the residue was missed: the manifest's account of the demonstrative demotion
+overclaims. It says `"This is India calling."` was the one attack a pattern could not reach and was
+closed by demoting the bare demonstrative for single-token candidates. That closes *that sentence*,
+but the demotion applies only to `DEMONSTRATIVE_CUES` — `"This is India speaking on the panel."` ships,
+because `speaking` is a `NAMING_CUES_AFTER` cue and the after-cues were never tiered. The guard is
+narrower than the prose claims it is.
+
+## Criteria
+
+- **[C2b] fails** — one reproduced case (`"Not"`). Every other criterion is met and re-derived by me,
+  not read: C1 (evidence deduplicated, in transcript order, `turnId` paired with its own `sessionId`),
+  C2 / C2a (Rubykumar, Ruby-Anne, Ruby_k all refused), C3, C4, C5, C6, C7 (the two-name contradiction
+  still lands in `unresolved`), C8, C9, C10, C11, C12 (five independent mutations, each reproducible),
+  C13 (re-derived above).
+- All four invariants hold. Earlier verdicts in this file counted 14 criteria; the contract as it now
+  stands carries 15 (`C1, C2, C2a, C2b, C3–C13`), which is why the denominator moved.
+
+## The three fixture rewrites — audited across all three commits, nothing weakened
+
+I diffed `speakers-llm.test.ts` at `57f4e99`, `ff8ef8d` and `e226276`. **Every removed line across all
+three commits is a fixture string. Not one assertion was deleted, relaxed or renamed**; the removals
+are exactly:
+
+```
+ff8ef8d  - "Ruby again here."   - "Actually Rahul Mehta."   - "That would be Ruby"
+e226276  - "This is Ruby again."
+```
+
+and each rewritten test still exercises what it claims:
+
+- *partial evidence survival* — still cites `["t1","t404","t2"]` and still asserts both real turns
+  survive and the invented one does not.
+- *contradiction* — still two distinct names on one label, still asserts `resolved: []` +
+  `unresolved: ["spk:0"]`.
+- *offset arithmetic at both edges* — still one fixture with the name **first** (`"Ruby speaking."`)
+  and one with it **last** (`"Over to Ruby"`). The edge property is intact; only the cue changed.
+
+Three rewrites in three cycles is a pattern worth naming, and I looked hard at it. It is **not**
+masking anything here: each rewrite was forced by a guard the checker demanded, each was disclosed in
+the manifest before I looked, and the assertion side is byte-stable. What it *does* mask is coverage
+drift — the maker found this itself in cycle 2 ("the suite had stopped pinning two guards") — so the
+mutation table, not the pass count, is what keeps these tests honest. Keep running it every cycle.
+
+## `speaker-name-rules.ts` — legitimate split
+
+The seam is real: the four exported guards answer a question about names and text and import nothing
+from providers, jobs, or `speakers.ts`. `lint-loc` passes for the right reason — `speakers-llm.ts` is
+genuinely 160 lines of extraction and the rules are 218 lines of rules, not a 321-line file cut at
+line 300 to satisfy a budget. Nothing duplicates `speakers.ts`, which keeps only `personIdFor` and its
+own regex self-naming pass — a different concern.
+
+One real duplication **inside the new file**: `containsNameVerbatim` and `nameOccurrences` carry
+byte-identical `isNameChar` predicates and identical scan loops, and `containsNameVerbatim` now has
+**no production caller** — it is re-exported from `index.ts` and referenced only in a test comment.
+Two copies of a boundary rule is precisely the shape of the ISS-092 defect (two definitions of where a
+name ends, drifting apart). Low severity, filed as a note, not a failure.
+
+## Notes, not failures
+
+- **A real mononym that collides with the calendar list is refused.** `"My name is May."` → refused;
+  `"My name is June."` likewise. The maker deliberately kept `Grace`/`Hope`/`Summer` out of the
+  denylist but months are in it, and `May`/`June`/`April` are real given names. `"This is April
+  Summers."` ships only because `isDiscourseOnly` requires *every* token to be discourse. This is a
+  recall cost in the safe direction and C2b authorises the drop, so it is not a violation — but it is
+  a named limit the manifest does not state, and the measurement unit should count it.
+- **`"J"` from `"My name is J. Smith."` still ships as `person:j`** — carried from cycle 2, disclosed
+  by the maker as limit 4, and I am again not charging it: C2a enumerates hyphen, apostrophe and
+  letter boundaries and deliberately excludes the period for a sound reason. A minimum length of two
+  characters for a single-token candidate would close it at no cost. Must be blocking on the apply unit.
+- Non-Latin scripts still refused wholesale by `\p{Lu}`; the 4-token cap still refuses a genuine
+  five-part name. Both stated correctly by the maker as fail-closed limits.
+- The manifest is otherwise accurate. Every number in it that I could re-derive, I re-derived, and
+  every one matched.
+
+## Ledger
+
+- **ISS-094** → `fixed` (3/4 recorded reproductions now ship; the fourth is the declared no-cue
+  recall cost, not this class).
+- **ISS-093** → stays `open`, with a cycle-3 `checker_note`: 15/20 refused, 4 residual are the
+  uncharged gazetteer class, 1 is chargeable.
+- **ISS-095** (medium, new) — the chargeable residue: `"Not"` ships as `person:not`.
+- **ISS-096** (low, new) — duplicated boundary predicate + uncalled `containsNameVerbatim` export.
+
+No contract amendment this cycle. C2b as written is exactly the criterion that caught this and needs
+no change; nothing was softened.
+
+## What cycle 3 failing means, stated plainly
+
+This unit is **three fix cycles in and now materially correct**: 20 of the checker's 24 combined
+attacks refuse, all three of the contract's headline evidence classes are back, five guards are
+independently mutation-pinned, and `speakers.ts` never moved. It fails on **one closed-class word**
+that the issue it claims to close names explicitly. Per the max-3 rule this unit is now **STALLED**
+and escalates to the Approver — and the escalation should say what it is: not a design failure, a
+one-line omission plus a measurement-scope habit. The remedy is `"not"` (and, while there,
+`"nor"`, `"never"`, `"very"`, `"really"`, `"quite"`) added to `NEVER_A_PERSON` with a pin, plus one
+standing rule for the next cycle: **the closure corpus is the ledger row's, not a fresh one.** The
+maker measured 12/12 against attacks it chose; had it re-run the 20 in ISS-093, it would have found
+this itself.
