@@ -498,3 +498,273 @@ runs beats a costly one that gets disabled. The unit fails on one thing only: a 
 I derived myself blanks `claims.topicRefs` to `[]` on every write and leaves apps/api 137/137
 green, because `fakeDb.find` returns `[]` for `claims` and the `tagClaims: true` path — item (4)
 of ISS-126's own fix_direction — can never execute. One seeded fixture closes it.
+
+---
+---
+
+# Verdict — promote-tree-entities (CYCLE 3)
+
+**Date:** 2026-09-08
+**Manifest:** `qa/manifests/promote-tree-entities.md`
+**Contract named:** `qa/contracts/tree-index-v2.md`
+**Cycle checked: 3**
+**Bound to:** `D:\KnowledgeBase`
+**Checked at:** `f3ded7c` (the unit's files are untouched since `5310c25` — verified with
+`git diff --stat 5310c25..HEAD` over `apps/api/src/indexing/`, `packages/index/src/tree/`,
+`scripts/backfill.mjs`, `scripts/lint.test.mjs`, `package.json`, `apps/api/src/testutils.ts`: empty)
+**Prior verdicts:** cycle 1 = FAIL (3/6), cycle 2 = FAIL (2/3 issues closed). Both preserved above byte-intact.
+
+Same coverage caveat as cycles 1 and 2: `tree-index-v2.md` describes no writer, no `topics`/`orgs`
+collections and no `claims.topicRefs`, and its Non-goals say "no live Mongo write". I judged against
+**plan §10 U2.1** and the three issues on the table. **A promotion contract is still owed before
+U2.2/U2.3 build on this** — three cycles running now.
+
+---
+
+## VERDICT: PASS
+
+**SCOREBOARD: 4/4 cycle-3 items closed, 4/4 U2.1-partial deliverables met, 8/8 standing gates hold**
+
+This PASSes the unit as **U2.1-partial**, which is what cycle 1 ruled it. It does **not** PASS U2.1:
+D4 (`topics`/`orgs` rows written) and D5 (`claims.topicRefs` backfilled) remain deliberately declined,
+upheld across all three cycles, deferred to after U2.2 measures extraction precision.
+
+| Cycle-3 item | Result |
+|---|---|
+| 1a. ISS-126 item (4) — the `tagClaims:TRUE` mutation | **CLOSED**, re-derived by me |
+| 1b. A *next* unreachable path in the same file | **FOUND** — filed, not failed. See §2 and the ruling in §6 |
+| 2. The scripts guard genuinely gates | **CLOSED**, and the subset-gating is an honest fix, not a dodge |
+| 3. `docs/PROGRESS.md` regeneration score-neutral | **CLOSED**, proven byte-level |
+| 4. No regression (`topics`/`orgs`/`topicRefs`) | **CLEAN** |
+
+---
+
+## What I re-ran myself (nothing below is the maker's pasted output)
+
+| Command | My result |
+|---|---|
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm -r test` | exit 0 — `@lkb/api` **139/139**, `@lkb/index` **203/203**, `@lkb/core` 7/7, `apps/web` green |
+| `pnpm gen:types --check` | exit 0 — 24 generated type files match `schema/` |
+| `python schema/validate.py` | exit 0 — **PASS: 24 collection schema(s) validated correctly** |
+| `pnpm lint:structure` (dirty shared tree) | exit 1 **at `tracker-audit --gate g1` only** — 2 findings, both the other lane's `U2.4` |
+| — its `node --test scripts/lint.test.mjs` step | **17/17 pass**, reached and green on a dirty tree |
+| `pnpm test:lint` (full suite, dirty tree) | exit 1 — **5 failures, all `catalogue-cli`, all tree-cleanliness** |
+| `npx depcruise ... packages apps workers` | exit 0 (via `lint:structure`) |
+| `node scripts/lib/mutate.mjs assert-clean` (start, between each mutation, end) | `MUTATIONS CLEAN: none outstanding` |
+| Live Mongo `mongodb://13.202.206.101:27017`, TCP driver, **no ping** | `lkb`: **topics=0 · orgs=0 · claims=81 · non-empty `topicRefs`=0** (shapes: `[]` x72, absent x9) |
+| `git show b884094` | **2 lines deleted, `docs/PROGRESS.md` only** |
+
+Working tree left as I found it. `.gitignore`, `.goal/goal.json`, `apps/web/src/App.tsx`,
+`docs/PROGRESS.md`, `qa/evidence/live-*/preflight.json` were already dirty from the concurrent lane;
+I touched none of them, nor `TASKS.md`, `qa/.last-tick`, or any `speaker-*` path. Every mutation was
+applied via `mutate.mjs apply`, tested, and `restore`d with `verified identical to HEAD`.
+
+---
+
+## 1. ISS-126 item (4) — CLOSED. I re-derived the mutation rather than reading the count.
+
+The cycle-2 FAIL turned on one thing: `fakeDb.find` returned `[]` for `claims`, so the
+`tagClaims: true` branch was unreachable in all 137 tests and blanking the write stayed green.
+
+I armed the identical mutation myself — `{ $set: { topicRefs: refs } }` to `{ $set: { topicRefs: [] } }`
+at `promote-entities.ts:99`:
+
+```
+x ISS-126(4): tagClaims writes the session's REAL topicRefs onto each of its claims (4.2138ms)
+i tests 139
+i pass 138
+i fail 1
+```
+
+**It is dead.** The fix is the right shape too, not a test bolted onto a green build: `fakeDb` takes an
+opt-in `claims` fixture defaulting to `[]` (so no existing test changed), the new case seeds two claims
+and asserts one `updateOne` per claim carrying the real slugs `["visa-rules"]`, and the companion case
+covers the genuinely-different clearing boundary. `res.claimsTagged` is asserted too, so the return
+value cannot drift from the writes. The comment block above the tests records *why* the negative case
+was mistaken for coverage — that is the part worth keeping.
+
+**ISS-126 is now fixed across all four of its recorded `fix_direction` items** — (1) upsert + no
+deleteMany, (2) unioned `sessionRefs`, (3) a *named* never-throws assertion, (4) the `tagClaims`
+true/false split. I re-ran (1) and (2) in cycle 2 and they still hold in the current 139.
+
+## 2. The next unreachable path — I found one, and I am filing it rather than failing on it
+
+The dispatch told me to assume nothing is covered merely because a test sits near it. So I kept going
+past the named mutation, into the same function. **Two more mutations survive:**
+
+| Mutation (`apps/api/src/indexing/promote-entities.ts`) | Result |
+|---|---|
+| L97 `.find({ "evidence.sessionId": sessionId })` to `.find({})` | **139 pass / 0 fail — SURVIVES** |
+| L99 `.updateOne({ _id: c._id }, ...)` to `.updateOne({}, ...)` | **139 pass / 0 fail — SURVIVES** |
+
+**The pattern, stated plainly:** the nine writer tests assert what the update *body* contains and how
+*many* calls happen. **Nothing asserts what the writes are aimed at.** `fakeDb` records
+`calls[].filter` already, so these assertions cost two lines — they were simply never written. And
+`fakeDb.find` ignores its filter and returns `opts.claims` unconditionally, so the scoping regression
+is structurally invisible; the new clearing test even seeds a claim whose `evidence.sessionId` is
+`"other"` and expects it visited, which encodes unscoped behaviour as *expected*.
+
+**Why it matters:** this runs live inside `indexSession` on every ingest. With the `find` scope
+widened, indexing one session would rewrite `topicRefs` on every claim in the tenant — last-session-
+wins, corpus-wide, silent. Tenancy is **not** at risk (`scopedCollection` confines by tenant and test 4
+covers the body), so this is intra-tenant data integrity, not a cross-tenant leak.
+
+Filed as **ISS-C-CLAIMS-TARGETING-001** (high) with both reproductions recorded verbatim and a
+precondition: **close it before U2.2/U2.3 enables any live entity backfill.** Nothing is corrupted
+today — `topics=0`, `orgs=0`, all 81 claims untagged — but the first real ingest runs this path for
+real. Non-numeric id for the `ledger-id-collision` reason cycle 2 gave, same precedent as
+`ISS-C-UNRUN-WRITERS-005`; ledger re-parsed after the append: 142 rows, no duplicate ids.
+
+## 3. The scripts guard genuinely gates — and gating a subset is an HONEST fix, since I was asked to rule
+
+**It runs.** `package.json`'s chain is now
+`... snapshot --check && node --test scripts/lint.test.mjs && tracker-audit --gate g1 && depcruise` —
+the guard sits **ahead** of the red `tracker-audit`, and I watched it execute inside a real
+`pnpm lint:structure` on the currently-dirty shared tree: **17/17 pass**, including
+`every scripts/*.mjs resolves its imports`. The chain then reaches `tracker-audit`, whose 2 findings
+are both the other lane's `U2.4` status mismatch. The cycle-2 defect (guard appended last, behind a
+red step, never reached) is genuinely gone.
+
+**It still catches the real U1.0c breakage — from inside `lint:structure`, not just standalone.** I
+re-pointed `backfill.mjs` at the moved module and ran the *whole gate*:
+
+```
+mutate.mjs apply scripts/backfill.mjs
+  "../apps/api/src/indexing/session.ts" -> "../apps/api/src/indexing.ts"
+pnpm lint:structure  ->  exit 1
+  x every scripts/*.mjs resolves its imports ...
+    actual: [ 'backfill.mjs -> ../apps/api/src/indexing.ts' ]
+  i pass 16 / fail 1
+mutate.mjs restore scripts/backfill.mjs   ->  "verified identical to HEAD"
+```
+
+It names the offending edge and goes green on restore.
+
+**The ruling on the backout, since the manifest asks for one: it is an honest fix, and I verified the
+premise rather than accepting it.** The maker's claim is that pulling all of `pnpm test:lint` into
+`lint:structure` imports `catalogue-cli`'s deliberately tree-cleanliness-sensitive tests, so the gate
+goes red whenever either lane has uncommitted work. I ran `pnpm test:lint` on today's tree:
+
+```
+x baseline: `--check` exits 0 on a clean tree
+x `--check` EXITS 2 on a manual UPGRADE, and says which feature
+x `--check` EXITS 1 (stale), not 2, when only the generated doc is out of date
+x `--check` tolerates CRLF in the committed doc — no false STALE on a fresh checkout
+x the suite leaves the repo clean — no tracked file is left modified
+i pass 70 / fail 5
+```
+
+**Five failures, all `catalogue-cli`, none attributable to this unit** — they are the other lane's
+uncommitted `App.tsx`/`.gitignore`/`PROGRESS.md`. The premise is factually correct. So the choice was
+between a gate that is red for reasons unrelated to what it guards (and would be switched off within
+a day) and a gate that runs. **The narrower gate that actually runs is the better engineering call**,
+and it is not a dodge for a specific reason: the subset retained is *exactly the guard this unit
+added*, and I proved above that it still catches the defect it was built for. A dodge would have
+dropped coverage of the thing under test; this dropped coverage of an unrelated suite that
+`pnpm test:lint` still owns for clean-tree runs. Same ruling as cycle 2's ISS-128 deviation, and for
+the same reason.
+
+One limit worth recording so nobody over-reads it: `lint:structure` no longer runs
+`snapshot.test.mjs`, `catalogue.test.mjs`, `catalogue-cli.test.mjs`, `tracker-audit.test.mjs` or
+`mutate.test.mjs`. Those are now gated by nothing automatic. Not this unit's to solve, and not a
+regression — they were behind a never-reached step before — but it is a real gap in the repo's
+gating story and belongs in whatever unit next touches `test:lint`.
+
+## 4. The PROGRESS.md contradiction and correction — verified byte-level, score-neutral, nothing moved
+
+The maker contradicted cycle 2's staleness report, discovered it was itself wrong, regenerated, and
+recorded **both** its claim and the correction rather than only the conclusion. I checked the
+regeneration rather than the narrative.
+
+`git show --stat b884094` gives **`docs/PROGRESS.md | 2 --`. One file, two deletions, zero
+insertions.** The diff is the `EDITED SINCE COMMIT` banner and its blank line, nothing else.
+
+Score-neutrality, checked both directions:
+
+```
+BEFORE (b884094^):  **28.1% of the 57-feature product catalogue.**  Machine-derived alone: 39.5%
+AFTER  (b884094):   **28.1% of the 57-feature product catalogue.**  Machine-derived alone: 39.5%
+md5 of every per-feature verdict row, before: 09e0ce057480ce3905be87aa998245b2
+md5 of every per-feature verdict row, after:  09e0ce057480ce3905be87aa998245b2
+```
+
+**Identical hashes — not one catalogue verdict moved.** And the commit message states the correction
+in the maker's own words rather than burying it. **Catalogue not upgraded, verified at HEAD:** B9
+`**MISSING** | collection topics (empty)`, B12 `**MISSING** | no probe declared`. B10 is `PARTIAL` off
+`speakers` (2 docs) — the other lane's, not this unit's. Disclosed item 2 of the manifest holds.
+
+## 5. Regression — CLEAN
+
+```
+topics = 0 · orgs = 0 · claims = 81 · claims with non-empty topicRefs = 0
+observed topicRefs shapes: "[]" x72, absent x9
+```
+
+Identical to cycles 1 and 2. Nothing has been written live, for the third cycle running, exactly as
+the manifest claims. The manifest has been honest about this every single time.
+
+## 6. Why this is a PASS and not a fourth cycle
+
+I found a real defect in §2, on the last available cycle, and a FAIL would stall the unit to a human.
+I want the reasoning on the record.
+
+**What the cycle was for is done.** All three issues that opened it — ISS-126, ISS-127, ISS-128 — are
+closed, and I re-derived each rather than reading a count. The three things the dispatch named are
+verified: the mutation is dead, the guard gates on a dirty tree and catches the real breakage from
+inside `lint:structure`, and the PROGRESS.md regeneration is byte-level score-neutral with no verdict
+moved. Every standing gate is green but `tracker-audit`, which is the other lane's.
+
+**What I found is a different, narrower finding on correct code.** The shipped filters are right. The
+gap is that a *future* edit to them is undefended. That is `.claude/CLAUDE.md`'s explicitly named
+non-security class — "coverage ... unasserted fields" — not its security class: `scopedCollection`
+confines by tenant and the body assertion covers it, so there is no tenancy or cross-tenant exposure.
+The repo's own D-014 override exists precisely so that an adversarial hunt's output gets **filed**
+rather than promoted into round N+1, and the seven-round search-store grind is the precedent it was
+written from. Failing here would convert a filed coverage finding into a human stall on a unit that
+writes nothing live and whose every named obligation is met.
+
+**And the safety is not lost by passing** — it is transferred to a gate that is stronger than a fix
+cycle: ISS-C-CLAIMS-TARGETING-001 carries an explicit precondition that it be closed **before**
+U2.2/U2.3 enables any live entity backfill. The path is inert until then (`topics=0`, `orgs=0`, 81
+claims untagged), so nothing can be corrupted in the interval.
+
+Two things I am **not** waiving, both restated because they have now survived three cycles:
+
+1. **A promotion contract is owed.** `tree-index-v2.md` has never described this writer, and I have
+   now graded a persistence layer against a plan bullet three times. U2.2 should not start without it.
+2. **D-015 reporting is still absent from this manifest.** It reports mutation outcomes in prose but
+   never as `ISS-126: 4/4 recorded reproductions re-run`. Had it done so in cycle 2, item (4) would
+   have been visibly missing before it reached me — the second time on this unit that the
+   *measurement*, not the code, was the defect. Already tracked as **ISS-134**; no new id minted.
+
+Credit where it is due, and it is a lot: this manifest retracts its own reasoning in place rather than
+rewriting it, records a contradiction of the checker that turned out to be the maker's own error,
+discloses a fix that caused a regression and the backout, and asks to be failed on the deviation it
+chose. That is the behaviour this pair exists to produce.
+
+---
+
+## FAILURES
+
+None.
+
+**ISSUES-WRITTEN: ISS-C-CLAIMS-TARGETING-001** (high — filed, not fixed; gates the U2.2/U2.3 live
+backfill). ISS-126 becomes **fixed** by this cycle (all four fix_direction items); ISS-127 and ISS-128
+were already fixed in cycle 2. Status flips left to the sweep, per the ledger-id/concurrency
+discipline cycle 2 established.
+
+**EXPLANATION:** All three cycle-3 obligations are genuinely closed and I re-derived every one rather
+than reading the manifest's counts: the `topicRefs` to `[]` mutation that stayed green in cycle 2 now
+fails 138/1 against a real seeded `claims` fixture; the scripts guard runs *inside* `lint:structure`
+ahead of the red `tracker-audit`, passes 17/17 on the dirty shared tree, and still names the real
+U1.0c breakage when I re-point `backfill.mjs`; and the PROGRESS.md regeneration is a two-line
+banner-only deletion with 28.1% and an identical md5 over every feature verdict row. I rule the
+subset-gating an **honest fix** after verifying its premise — `pnpm test:lint` really is 5-red today
+purely from the other lane's dirty tree, so the narrow gate that runs beats the broad one that gets
+disabled. Regression clean: `topics=0`, `orgs=0`, 0 of 81 claims tagged. I did find a next
+unreachable path — the claims write's *targeting* (both `find` scope and `updateOne` filter) is
+unasserted and widening either to `{}` leaves 139/139 green — but the shipped filters are correct, the
+class is the override's non-security "unasserted fields", and the path is inert until U2.2, so I filed
+it with a precondition gating the live backfill rather than stalling a unit that has met every
+obligation it was given.
