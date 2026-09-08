@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T18:05:45",
+  "updated": "2026-09-08T18:46:08",
   "progress": {
     "total": 60,
-    "done": 38,
+    "done": 39,
     "in_progress": 1,
     "blocked": 0,
-    "pending": 21,
+    "pending": 20,
     "current": "U3.1",
-    "percent": 63
+    "percent": 65
   },
   "tasks": [
     {
@@ -528,14 +528,14 @@
     {
       "id": "U1.4",
       "title": "Brute-force cosine retriever behind vectorSearchFn",
-      "status": "in_progress",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [
         "U1.3"
       ],
       "criticality": "low",
       "note": "D-a: Atlas Vector Search unavailable (self-hosted Mongo, no +srv). Its recall delta claim additionally needs U0.10.",
-      "evidence": "ready-for-check. recall@5 0.935 (86/92) vs heuristic 0.391, control 0.217, delta +0.543, INFORMATIVE (not saturated)."
+      "evidence": "qa/verdicts/vector-cosine-retriever.md - PASS 7/7 cycle 2 (6d4b397). recall@5 0.935 (86/92) vs heuristic 0.391, control 0.217; p95 62ms. FLOOR only - may not settle U1.5's >=0.85 while sibling ambiguity is open."
     },
     {
       "id": "U1.5",
@@ -711,8 +711,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 4.03,
-    "eta_days": 5.5
+    "velocity_per_day": 4.01,
+    "eta_days": 5.2
   },
-  "last_deterministic_tick": "2026-09-08T18:05:45"
+  "last_deterministic_tick": "2026-09-08T18:46:08"
 }

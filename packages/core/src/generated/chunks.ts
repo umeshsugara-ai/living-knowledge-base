@@ -5,7 +5,7 @@
  */
 
 /**
- * H1 unstructured vector index. Chunks reference turns by id only — text is derived from turns at embed time, never duplicated (ADR-0001). The embedding VECTOR is stored inline because brute-force cosine (D-a) must read the numbers; `embeddingRef`, a string pointer, could never be compared and is retired. Storing the vector is not a text duplication: it is a derived numeric artifact, not a second copy of the source.
+ * H1 unstructured vector index. Chunks reference turns by id only — text is derived from turns at embed time, never duplicated (ADR-0001). The embedding VECTOR is stored inline because brute-force cosine (D-021) must read the numbers; `embeddingRef`, a string pointer, could never be compared and is retired. Storing the vector is not a text duplication: it is a derived numeric artifact, not a second copy of the source.
  */
 export interface Chunks {
   _id: string;

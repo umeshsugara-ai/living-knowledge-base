@@ -179,4 +179,51 @@ recall@5 = 0.935 (86/92) — unchanged, as expected: no retriever code changed
 latency: p50 28.84 · p95 62.35 · max 127.55 ms
 ```
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/vector-cosine-retriever.md` — **PASS**, cycle 2, 7/7 criteria, 6/6
+invariants, committed `6d4b397`. `ISSUES-WRITTEN: ISS-125 (medium, ledger row only)`.
+
+The checker verified each fix **against its own recorded reproduction** rather than against my
+account of it, and checked the D-021 scoping by *effect* rather than wording: `ARCHITECTURE.md` Q2
+still reads "CLOSED by D-003: TS pnpm monorepo", untouched — so D-003's stack answer is still
+attributed to D-003 and standing, which is the thing a badly-scoped supersession would have
+silently broken. `docs/DECISIONS.md` took 8 added lines and **zero deletions**; the Q5 block is the
+only ARCHITECTURE hunk and `Changes-authorized` names it.
+
+It also corroborated the D-019 collision from git independently (`05b93cc`/`6a57bae` predate this
+unit's commit) and noted that **a maker bypassing the append guard would never have hit its id
+allocator at all** — the refusal is itself evidence the entry went through the proper write path
+before the edit.
+
+**No regression, proven with git rather than by reading:** `git diff 6da5251 HEAD --
+packages/index/src/vector/` is one file where every changed line begins with ` *` — entirely inside
+a block comment, no executable line moved. So cycle 1's 6/6 mutation kills still describe the
+shipped artifact. recall@5 = 0.935 with the **identical six misses and identical ordered top-5
+lists**; the heuristic baseline is intact at 0.391.
+
+**Its p95 re-run came out at 78.11 ms against my 62.35 ms — and it was right to expect that.**
+Unlike the ranking (deterministic, byte-identical), wall-clock timing is not reproducible to two
+decimal places. Both are ~6× inside D-021's 500 ms revisit threshold. It ruled excluding the
+batched embed **honest rather than convenient** — it is what ISS-123's own `fix_direction`
+demanded, the embed term cancels between the brute-force and ANN arms the number exists to compare,
+and the exclusion is stamped into the report, the code comment and this manifest. **Boundary it
+attached: this is not end-to-end `/ask` latency and U1.5 must not inherit it as such.**
+
+### Carried into the PASS so it travels with the number
+
+- **0.935 is citable only as a floor with disclosure 1 attached.** It may **not** close golden-set
+  gate condition 4, nor settle U1.5's ≥0.85 exit criterion, while sibling-session ambiguity is open.
+- **ISS-125:** `"D-a"` still survives in `schema/chunks.schema.json` and its generated type. Not
+  charged — it predates this unit (U1.2, `821341b`) and ISS-124's recorded reproduction named three
+  artefacts, all three closed. Fixed immediately anyway rather than deferred, since it is one word
+  and D-003 makes the JSON Schemas the single source of truth.
+- **A stale token in D-021 itself:** its `Changes-authorized` field ends "...replace the 'D-a'
+  citation with **D-019**", the refused attempt's id showing through. The checker recorded it and
+  deliberately did **not** request a fix, and I agree: `DECISIONS.md` is append-only, so appending a
+  whole new decision to correct one stale token would be worse governance than leaving it visible.
+  Every other field in the entry says D-021 and the scope is correct.
+- **`packages/index/src/vector/` still has no contract**, and the recommendation is now stronger
+  than at cycle 1: U1.5 inherits 0.935 as the input to a ≥0.85 exit criterion while the directory it
+  depends on has no criteria of its own. Raised as a HUMAN_GATE — contract creation belongs to the
+  checker and the human, never the maker.
