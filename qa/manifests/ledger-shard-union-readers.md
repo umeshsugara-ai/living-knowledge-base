@@ -3,10 +3,10 @@
 **Contract:** none yet — checker, please author `qa/contracts/ledger-shard-union-readers.md`.
 **Goal task:** none (sweep-driven, `qa/QUEUE.md` row 1).
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-129** (high). Partially **ISS-130** — see the gate.
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 
 ## Why — a rule I wrote today that nothing implemented
 
@@ -143,9 +143,12 @@ test that discriminates: the canonical file must come **first** even though `iss
 ```
 $ node --test scripts/lib/tracker-audit.test.mjs scripts/lib/ledger-union.test.mjs
   tests 23   pass 23   fail 0   cancelled 0
-$ pnpm lint:structure >/dev/null 2>&1; echo $?
-  0                     ← the exit code, not the readable prefix
+
+$ node scripts/lint-loc.mjs && node scripts/lint-dirsize.mjs && node scripts/lint-dupes.mjs
+  exit 0        ← the sub-steps this unit can actually affect
 ```
+
+**The full `pnpm lint:structure` chain is NOT quoted here, and that is the correction.** See below.
 
 **Mutation table** (baseline 23/0), under D-020 — every run in a subprocess with a timeout, restore
 from a byte backup after each, and the restore asserted byte-identical:
@@ -168,3 +171,50 @@ Windows' default codepage was mangling Node's `ℹ` marker into unparseable outp
 The **session-start hook** is untouched — enforcement path, gate record at
 `qa/gates/ledger-shard-union-hook.md`. **ISS-129 therefore stays open**: one of two readers
 implements the rule, which is the exact condition ISS-129 describes.
+
+
+---
+
+# Fix cycle 3 — ISS-136, and why it took three cycles to state one number honestly
+
+No code changed. One paragraph did, and the reason is worth more than the paragraph.
+
+## What I asserted, twice, and what was true
+
+- **Cycle 1:** I quoted five `OK` lines under `$ pnpm lint:structure` for a chain that exits 1. I
+  had read the passing linters and never checked the exit code.
+- **Cycle 2:** I "fixed" that by quoting the stronger form — `pnpm lint:structure >/dev/null 2>&1;
+  echo $?` → `0`. **At commit `b9159cf` that command returns `1`.** The checker proved it in a
+  pristine `git archive` extraction, so it was not a dirty-tree artefact.
+
+So I did not stop quoting it. I quoted a *more rigorous-looking* form of the same false claim.
+
+## Why my run said 0 and my commit says 1
+
+The cause I named in cycle 2 — `U2.4 partial` — really was gone. A **different** G1 divergence was
+live at my commit: `progress.done says 39, 40 tasks are done`, introduced by **`b6d0e89`**, another
+maker loop's commit, one before mine. When I ran the chain it passed; by the time the commit was
+graded it did not; and as of this cycle the other loop has corrected its own counter, so the live
+tree returns `0` again.
+
+**That is the whole lesson.** In a shared working tree with a second loop committing underneath,
+*"I ran it and saw 0"* is not evidence — it is a statement about a moment. Evidence has to be
+reproducible **at the submitted commit**, which is the only thing a checker can extract and re-run.
+Three cycles of this unit went to learning that, on the exact chain the issue was about.
+
+## What this cycle does instead
+
+Quotes only the sub-steps this unit can affect — `lint-loc`, `lint-dirsize`, `lint-dupes` — and
+says plainly that the full chain is not quoted. **The chain's exit code is not this unit's to
+assert**, because `tracker-audit --gate g1` reads trackers another loop writes, and it can flip
+between my run and my commit without a line of my code changing.
+
+I did not "fix" the G1 counter to make my own evidence green. It was `.goal/goal.json`'s
+`progress.done`, mid-flight in another lane; editing it to clear my number would have been the
+purest form of the thing this manifest keeps getting caught doing.
+
+## Unchanged
+
+23/23, mutation table 22/1 · 22/1 · 22/1 · 19/4 with the control at 23/0 — all four reproduced
+independently by the checker. ISS-137/138/139/140 fixed. **ISS-129 stays open**: the session-start
+hook is an enforcement path behind `qa/gates/ledger-shard-union-hook.md`.
