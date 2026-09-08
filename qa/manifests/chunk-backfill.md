@@ -117,4 +117,27 @@ total turn count**, so every turn in the corpus is now reachable from the vector
 5. **Cost:** 1452 real Gemini embedding calls' worth of text across 29 batched requests. Re-running
    the backfill is idempotent per session (delete-then-insert) but re-bills.
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/chunk-backfill.md` — PASS, cycle 1, 8/8 criteria, `ISSUES-WRITTEN: none`
+(committed `226fa06`). The checker reproduced every claim under its own instruments and, rather
+than reading the new tests, **proved them by mutation**: raising `MAX_BATCH` kills 3 of the 4
+Gemini tests and reversing the batch concatenation kills the 4th; nulling `skipped` kills 2
+return-contract tests; swapping `scopedCollection` for the raw handle kills the tenant-scoping
+test — so the extraction demonstrably preserves ISS-112 and ISS-060/3a. It wrote its own driver
+probe over all 1452 rows and discharged **C8(a), which the preceding sweep had measured failing at
+23/26**. ISS-116 and ISS-113 flipped to `fixed`.
+
+**Rulings carried forward:**
+- **D-018 accepted**, exercising the review right D-017 reserved — with a bound now recorded by the
+  checker rather than merely intended by me: **a third raise must consolidate, not widen.**
+- **ISS-117 confirmed genuinely pre-existing** (`"partial"` entered `TASKS.md` at `388edf0`; this
+  unit's commit touches neither tracker), but the checker rightly pressed that a permanently-red
+  definition-of-done gate deserves more urgency than its `medium` label, since `pnpm lint:structure`
+  is red for *every* session until it closes.
+- Three low notes recorded, not filed, per the severity gate: a dead `chunksColl` binding left at
+  `apps/api/src/indexing.ts:157` by the extraction; the contract's stale ping-based Mongo
+  disclosure; and this manifest citing C8 against `ingest-indexing-pipeline.md` when C8 actually
+  lives in `schema-v2.md`. **The dead binding is cleaned up immediately** rather than deferred to
+  "the next unit touching this file" — the checker's own standing point is that such a deferral,
+  with no such unit scheduled, is how a defect becomes permanent.

@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T15:57:11",
+  "updated": "2026-09-08T16:59:49",
   "progress": {
-    "total": 56,
-    "done": 33,
+    "total": 57,
+    "done": 35,
     "in_progress": 1,
     "blocked": 0,
-    "pending": 22,
+    "pending": 21,
     "current": "U3.1",
-    "percent": 59
+    "percent": 61
   },
   "tasks": [
     {
@@ -473,12 +473,25 @@
     {
       "id": "U1.3",
       "title": "Embed on index (apps/api/src/indexing.ts, delete-then-insert)",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [
         "U1.2"
       ],
-      "criticality": "critical"
+      "criticality": "critical",
+      "completed": "2026-09-08T16:12:28"
+    },
+    {
+      "id": "U1.0",
+      "title": "Backfill chunks for pre-vector-layer sessions (+ fix Gemini 100-per-batch embed limit)",
+      "status": "done",
+      "base_criticality": "high",
+      "deps": [
+        "U1.1",
+        "U1.2",
+        "U1.3"
+      ],
+      "evidence": "qa/verdicts/chunk-backfill.md - PASS 8/8 cycle 1 (226fa06). Live: chunks 0 -> 1452, 26/26 sessions, 0 dim mismatches, 2118/2118 turnRefs resolve. Discharges C8 + ISS-113; fixes ISS-116."
     },
     {
       "id": "U1.4",
@@ -651,8 +664,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 3.73,
-    "eta_days": 6.4
+    "velocity_per_day": 4.07,
+    "eta_days": 5.4
   },
-  "last_deterministic_tick": "2026-09-08T15:56:01"
+  "last_deterministic_tick": "2026-09-08T16:59:49"
 }

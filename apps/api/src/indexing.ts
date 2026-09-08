@@ -154,7 +154,6 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   const sessionsColl = scopedCollection<Sessions>(db as never, "sessions");
   const sessionPagesColl = scopedCollection<SessionPages>(db as never, "session_pages");
   const claimsColl = scopedCollection<Claims>(db as never, "claims");
-  const chunksColl = scopedCollection<Chunks>(db as never, "chunks");
 
   const turns = await turnsColl(tenantId).find({ sessionId }).toArray();
 
