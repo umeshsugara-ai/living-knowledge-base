@@ -159,3 +159,64 @@ pair(
   },
   /packages\/a\/src\/migrate-fix\.py[\s\S]*scripts\/migrate-2026-09-03-patch\.mjs/,
 );
+
+/* ── ISS-128: scripts/ is neither typechecked nor in `pnpm -r test` ───────────────────────────
+ * A stale `apps/api/src/indexing.ts` import left the chunks backfill DEAD from the U1.0c file move
+ * until a maker happened to run it — a whole script broken, in a repo with 500+ green tests and a
+ * clean typecheck, because `scripts/` sits outside both. `pnpm -r` only walks workspace packages,
+ * and these are loose .mjs files.
+ *
+ * This is the cheapest guard that would have caught it: import each script's module graph and
+ * assert it RESOLVES. It deliberately does not execute them — several connect to Mongo or spend
+ * API budget — so it catches broken imports and syntax, not behaviour. That is exactly the class
+ * that bit, and a narrow guard that runs beats a thorough one that cannot.
+ *
+ * Added to this existing file rather than as `scripts/smoke.test.mjs` because `scripts/` is at its
+ * D-018 directory cap of 32, and that entry records that a third raise must CONSOLIDATE, not widen.
+ */
+test("every scripts/*.mjs resolves its imports — scripts are outside typecheck and pnpm -r test", async () => {
+  const { readdirSync } = await import("node:fs");
+  const { pathToFileURL } = await import("node:url");
+  const { join, dirname, resolve } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const { spawnSync } = await import("node:child_process");
+
+  const scriptsDir = dirname(fileURLToPath(import.meta.url));
+  const root = resolve(scriptsDir, "..");
+  const files = readdirSync(scriptsDir).filter((f) => f.endsWith(".mjs") && !f.endsWith(".test.mjs"));
+  assert.ok(files.length > 20, `expected the real scripts dir, found ${files.length} file(s)`);
+
+  const broken = [];
+  for (const f of files) {
+    // A child process per file: these register tsx hooks and import workspace TS, which must not
+    // leak into this test runner. `--check` parses without executing; the tsx-registered dynamic
+    // imports inside main() are covered by the resolve pass below.
+    const parse = spawnSync(process.execPath, ["--check", join(scriptsDir, f)], { encoding: "utf8" });
+    if (parse.status !== 0) broken.push(`${f}: syntax — ${(parse.stderr || "").split("\n")[0]}`);
+  }
+  assert.deepEqual(broken, [], `scripts failed to parse:\n${broken.join("\n")}`);
+
+  // Static-import resolution: catches exactly the U1.0c breakage class (a moved module still
+  // named in an import specifier) for every top-level import in every script.
+  const { readFileSync, existsSync } = await import("node:fs");
+  const unresolved = [];
+  for (const f of files) {
+    const src = readFileSync(join(scriptsDir, f), "utf8");
+    for (const m of src.matchAll(/(?:^|\s)(?:import|await import\()\s*["']([^"']+)["']/g)) {
+      const spec = m[1];
+      if (!spec.startsWith(".")) continue; // bare specifiers are resolved by node_modules
+      const abs = resolve(scriptsDir, spec);
+      // A `.js` specifier pointing at TypeScript source is the tsx/ESM convention used throughout
+      // this repo (`packages/db/src/client.js` -> `client.ts`), so accept either extension. The
+      // check that matters is whether SOMETHING is there — the U1.0c breakage was a path with no
+      // file behind it under any extension.
+      const candidates = [abs];
+      if (abs.endsWith(".js")) candidates.push(abs.slice(0, -3) + ".ts");
+      if (!abs.match(/\.[a-z]+$/)) candidates.push(abs + ".ts", abs + ".mjs", abs + ".js", join(abs, "index.ts"));
+      if (!candidates.some((c) => existsSync(c))) unresolved.push(`${f} -> ${spec}`);
+    }
+  }
+  assert.deepEqual(unresolved, [],
+    `a script imports a path that does not exist (the U1.0c breakage class):\n${unresolved.join("\n")}`);
+  assert.ok(pathToFileURL(root));
+});

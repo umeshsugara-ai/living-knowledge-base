@@ -2,9 +2,9 @@
 **Contract:** qa/contracts/tree-index-v2.md
 **Goal task:** U2.1 (plan §10 — roadmap tier 3)
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** none — roadmap feature work
+**Issues addressed:** ISS-126 (high), ISS-127 (high), ISS-128 (high) — all raised by the cycle-1 FAIL
 
 ## THE HEADLINE: I built this unit and then decided NOT to run its backfill
 
@@ -119,5 +119,78 @@ topics collection           : 0 rows (unchanged, deliberately)
    work; U2.3 is.
 5. **Only 1 org across 26 sessions**, because `session.org` is unset on almost all of them. That is
    a data gap, not a promotion bug, and it is not this unit's to fix.
+
+## Cycle 2 — I was right to defer, and wrong about why
+
+**Verdict:** FAIL, cycle 1, 3/6 deliverables. The checker verified every number independently off
+the live tree and confirmed nothing had been written. Then it **dismantled both of my arguments**,
+and it was correct on both. I am recording that plainly rather than quietly swapping the reasoning.
+
+### My argument 1 was false: the trap list does not cover these collections
+
+I cited plan §10's *"filling collections to raise the catalogue score is metric-gaming"*. Read
+back, that line names **six specific collections — `media`, `programs`, `tenants`,
+`consent_policies`, `features_event`, `watched_sources`** — and `topics`/`orgs` are in **neither**
+that list nor its spirit, because U2.1 in the same document explicitly instructs *"Write the
+rows"*. I applied a rule to the exact case it was written to exclude.
+
+### My argument 2 was false, and checkably so: `topics` is not the user-facing surface
+
+I wrote *"a misfiled person is worse than a blank page"*. But `flatten-graph.ts` →
+`routes/graph.ts` → the Brain page **already renders all 137 slugs, `anju-jayraj` included**,
+straight off the tree — and **nothing anywhere reads the `topics` collection** (verified: the only
+match is its own accessor). So refusing to write protects nobody; the exposure already exists on a
+surface I had not checked. My reasoning had the comfortable shape of a principle and did not
+survive one grep.
+
+### The deferral survives on the narrower, true ground
+
+The checker upheld it and supplied the reason that actually holds: **do not stand up a second
+authoritative surface before U2.2 measures its precision.** `/graph` deriving noisy topics live is
+one thing; a persisted `topics` collection is a claim of record that other code will start trusting.
+That is a real argument. Mine was not.
+
+## What cycle 2 changed
+
+- **ISS-126 (high) — the writer had NO test.** The checker mutated `{upsert: true}` → `{upsert:
+  false}` at both sites, making promotion a **total no-op**, and `apps/api` still reported 130/130.
+  With no live write either, the persistence half had never executed against anything. I had
+  tested the *pure* function thoroughly (10 cases) and left the part that touches the database
+  unasserted — this project's own repeated untested-guard shape. Added
+  `apps/api/src/indexing/promote-entities.test.ts`, 7 cases. **Three mutations, all now killed:**
+
+  ```
+  upsert: true -> false              (the one that survived cycle 1)   -> 136 pass / 1 fail
+  sessionRefs: union -> [sessionId]                                    -> 136 pass / 1 fail
+  tagClaims guard removed (ISS-056)                                    -> 135 pass / 2 fail
+  restored byte-identical · assert-clean: none outstanding             -> 137 pass / 0 fail
+  ```
+
+- **ISS-127 (high) — justification corrected** above, deferral kept, recorded as U2.1-partial.
+
+- **ISS-128 (high) — the `scripts/` blind spot.** Added a guard to `scripts/lint.test.mjs` that
+  parses every `scripts/*.mjs` and resolves every relative import. **Proven against the real
+  breakage:** re-pointing `backfill.mjs` at the moved `apps/api/src/indexing.ts` makes it fail
+  (`backfill.mjs -> ../apps/api/src/indexing.ts`), and restoring makes it pass. Also **wired
+  `pnpm test:lint` into `pnpm lint:structure`**, so it actually gates rather than waiting for
+  someone to run it.
+
+  **Deviation from the checker's stated fix, disclosed:** it asked for a `--dry-run` smoke-spawn of
+  each script asserting exit 0. I did import-resolution instead, because several scripts connect to
+  production Mongo or spend Gemini budget even in dry-run, and a gate that costs money or touches
+  the database on every `lint:structure` would get disabled. This catches the class that actually
+  bit (a moved module still named in an import) and not behaviour. **If you want the stronger
+  version, that is a fair FAIL** — but it needs an allowlist of which scripts are safe to spawn.
+  Added to `lint.test.mjs` rather than a new file: `scripts/` is at its D-018 cap of 32, and that
+  entry says a third raise must consolidate.
+
+## Cycle 2 outputs
+
+```
+pnpm -r typecheck = 0 · pnpm -r test = 0   (@lkb/api 137, @lkb/index 203)
+scripts guard: 12/12 in scripts/lint.test.mjs, now inside lint:structure
+lint:structure exits 1 ONLY on the pre-existing tracker-audit G1 (other lane's U2.4, ISS-117)
+topics = 0 rows · orgs = 0 rows · claims.topicRefs still [] — still deliberately unwritten
+```
 
 ## Status: ready-for-check
