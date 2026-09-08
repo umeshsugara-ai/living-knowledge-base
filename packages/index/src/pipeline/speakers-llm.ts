@@ -44,6 +44,56 @@ const SPEAKERS_SYSTEM_PROMPT = [
   "be identified, respond with an empty array [].",
 ].join(" ");
 
+/**
+ * Name particles that are legitimately lowercase INSIDE a name ("van der Berg", "de Souza").
+ * Never valid as the first token, which is why `looksLikeAName` only allows them at i > 0.
+ */
+const NAME_PARTICLES = new Set([
+  "van", "von", "der", "den", "de", "del", "della", "di", "da", "dos", "du", "la", "le",
+  "bin", "binte", "ibn", "al", "el",
+]);
+
+/**
+ * Is this string shaped like a person's name at all?
+ *
+ * The model supplies `displayName`, so "it appears in the transcript" is not sufficient -- a
+ * greeting appears in the transcript too. The cycle-1 checker got `"Good morning"` shipped as
+ * `person:good-morning` on exactly that gap. Requiring each token to be capitalised (bar interior
+ * particles) rejects prose while keeping real names.
+ *
+ * Deliberately conservative, consistent with "leave low-confidence speakers unresolved rather than
+ * guessing": an all-lowercase real name, or one longer than four tokens, is refused not guessed.
+ */
+export function looksLikeAName(name: string): boolean {
+  const tokens = name.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0 || tokens.length > 4) return false;
+  return tokens.every((tok, i) => {
+    if (/^\p{Lu}[\p{L}'’.-]*$/u.test(tok)) return true;
+    return i > 0 && i < tokens.length - 1 && NAME_PARTICLES.has(tok.toLowerCase());
+  });
+}
+
+/**
+ * Does `text` contain `name` as WHOLE WORDS?
+ *
+ * A bare `includes()` let `"Ruby"` match `"My name is Rubykumar Shah."` and ship as `person:ruby`
+ * -- a different real person. Unicode-aware lookarounds are used rather than ``, which is
+ * ASCII-only and would misjudge non-Latin scripts.
+ */
+export function containsNameVerbatim(text: string, name: string): boolean {
+  // Deliberately not a RegExp: building one from a model-supplied string means escaping it
+  // correctly every time, and a mis-escape here fails OPEN (it would widen what counts as a
+  // match). indexOf plus an explicit boundary test has no escaping surface at all.
+  const isWordChar = (ch: string | undefined): boolean =>
+    ch !== undefined && /[\p{L}\p{N}]/u.test(ch);
+  for (let from = 0; ; ) {
+    const at = text.indexOf(name, from);
+    if (at === -1) return false;
+    if (!isWordChar(text[at - 1]) && !isWordChar(text[at + name.length])) return true;
+    from = at + 1;
+  }
+}
+
 function buildCitableTranscript(turns: Turns[]): string {
   return turns.map((t) => `[id:${t._id}] [${t.speakerRef}] ${t.text}`).join("\n");
 }
@@ -115,6 +165,9 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
     const displayName = entry.displayName;
     if (typeof displayName !== "string" || displayName.trim() === "") continue;
     const name = displayName.trim();
+    // Shape check BEFORE containment: a greeting can be verbatim in the transcript and still not
+    // be a name. Cheaper too -- it rejects without touching any turn.
+    if (!looksLikeAName(name)) continue;
 
     const cited = Array.isArray(entry.turnIds) ? entry.turnIds : [];
     const evidence: { turnId: string; sessionId: string }[] = [];
@@ -122,7 +175,9 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
       if (typeof id !== "string") continue;
       const t = byId.get(id);
       if (!t) continue;                                  // fabricated turn id
-      if (!(t.text ?? "").includes(name)) continue;      // THE RULE: name must be verbatim in its evidence
+      // THE RULE: the name must appear in its evidence as whole words, never as a substring
+      // buried inside a longer word ("Ruby" inside "Rubykumar" is a different person).
+      if (!containsNameVerbatim(t.text ?? "", name)) continue;
       if (evidence.some((e) => e.turnId === id)) continue;
       evidence.push({ turnId: id, sessionId: t.sessionId });
     }

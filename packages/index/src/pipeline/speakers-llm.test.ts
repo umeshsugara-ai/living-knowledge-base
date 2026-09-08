@@ -125,6 +125,65 @@ test("sends the citable transcript and the speakers jobKind", async () => {
   assert.match(userMessage.content, /\[spk:0\]/);
 });
 
+/**
+ * C2 hardening. The cycle-1 checker got two attacks past the verbatim rule, which was a bare
+ * substring test with no token boundary and no name-shape constraint:
+ *
+ *   "Ruby"         against "My name is Rubykumar Shah."  -> shipped as person:ruby
+ *   "Good morning" against "Good morning everyone."      -> shipped as person:good-morning
+ *
+ * Both are anti-fabrication failures: a model supplies the string, so "it appeared in the text"
+ * is not enough -- it has to have appeared AS A NAME. These pin the fix.
+ */
+test("refuses a name that only appears INSIDE a longer word", async () => {
+  const turns = [turn("t1", "spk:0", "My name is Rubykumar Shah.")];
+  const { resolved } = await extractSpeakers(turns, replies([
+    { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
+  ]));
+  assert.deepEqual(resolved, [], "'Ruby' inside 'Rubykumar' is not a verbatim mention of Ruby");
+});
+
+test("refuses a lowercase phrase that happens to be in the transcript", async () => {
+  const turns = [turn("t1", "spk:0", "Good morning everyone.")];
+  const { resolved } = await extractSpeakers(turns, replies([
+    { speakerRef: "spk:0", displayName: "Good morning", turnIds: ["t1"] },
+  ]));
+  assert.deepEqual(resolved, [], "a greeting is not a name");
+});
+
+test("still accepts the legitimate names the hardening must not break", async () => {
+  for (const [text, name, expected] of [
+    ["My name is Ruby.", "Ruby", "person:ruby"],
+    ["My name is Jubin Thakkar.", "Jubin Thakkar", "person:jubin-thakkar"],
+    ["I am Amrita Mhapankar, and welcome.", "Amrita Mhapankar", "person:amrita-mhapankar"],
+    ["This is Makrand Rajadhyaksha speaking.", "Makrand Rajadhyaksha", "person:makrand-rajadhyaksha"],
+    ["Hello, D'Souza here.", "D'Souza", "person:d-souza"],
+  ] as [string, string, string][]) {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.equal(resolved.length, 1, `${name} must still resolve`);
+    assert.equal(resolved[0]?.personId, expected);
+  }
+});
+
+test("accepts a name at the very start and very end of a turn", async () => {
+  for (const text of ["Ruby speaking.", "That would be Ruby"]) {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
+    ]));
+    assert.equal(resolved.length, 1, `boundary case failed for: ${text}`);
+  }
+});
+
+test("refuses an absurdly long 'name' -- a sentence is not an identity", async () => {
+  const text = "Thank You All For Joining Us Today In This Session";
+  const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+    { speakerRef: "spk:0", displayName: text, turnIds: ["t1"] },
+  ]));
+  assert.deepEqual(resolved, []);
+});
+
 test("empty input never calls the provider", async () => {
   const boom: SpeakersCompleteFn = async () => { throw new Error("must not be called"); };
   const r = await extractSpeakers([], boom);
