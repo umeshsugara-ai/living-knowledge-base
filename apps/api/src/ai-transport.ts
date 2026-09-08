@@ -7,6 +7,8 @@
  * import this file.
  */
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { delimiter, join } from "node:path";
 import type { Transport, TransportRequest, TransportResponse } from "@lkb/ai";
 
 function tryParseJson(text: string): unknown {
@@ -37,7 +39,24 @@ async function httpTransport(req: TransportRequest): Promise<TransportResponse> 
  */
 function resolveCliCommand(command: string): string {
   if (process.platform !== "win32" || /\.(cmd|exe|bat)$/i.test(command)) return command;
-  return `${command}.cmd`;
+  // Probe PATH for what is ACTUALLY installed rather than assuming the npm `.cmd` shim. On this
+  // machine `claude` ships as a native `claude.exe`, and unconditionally appending `.cmd` made
+  // spawn throw EINVAL — Node >=20 refuses to spawn `.cmd`/`.bat` without a shell, so the guess
+  // failed loudly for a file that never existed. That killed EVERY claude-code job on Windows,
+  // including `/ask`'s configured fallback (`ask: [gemini, claude-code]`), with no test covering
+  // it because tests use the fake transport.
+  //
+  // `.exe` is tried before `.cmd` deliberately: a real executable needs no shell, which preserves
+  // the shell:false property this function exists to protect.
+  const dirs = (process.env.PATH ?? "").split(delimiter).filter(Boolean);
+  const exts = (process.env.PATHEXT ?? ".EXE;.CMD;.BAT").split(";").filter(Boolean);
+  for (const ext of [".exe", ".cmd", ".bat"]) {
+    if (!exts.some((e) => e.toLowerCase() === ext)) continue;
+    for (const dir of dirs) {
+      if (existsSync(join(dir, `${command}${ext}`))) return `${command}${ext}`;
+    }
+  }
+  return `${command}.cmd`; // nothing found: keep the previous behaviour so the error is unchanged
 }
 
 function cliTransport(req: TransportRequest): Promise<TransportResponse> {

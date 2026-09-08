@@ -36,7 +36,6 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { register } from "tsx/esm/api";
-import { realUploadTransport } from "./lib/real-upload-transport.mjs";
 import { tokenize, globallyUniqueTokens, verbatimOverlap } from "./lib/golden-set-diagnostics.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -117,6 +116,9 @@ function parseQuestions(text) {
 
 async function main() {
   const { AnthropicProvider } = await import("../packages/ai/src/providers/anthropic.ts");
+  // Reused, not rewritten: this is the workspace's only real Transport, and it already routes
+  // `kind: "cli"` through a shell-less spawn (deliberately — transcript text reaches argv).
+  const { realTransport } = await import("../apps/api/src/ai-transport.ts");
 
   const sessionIds = readdirSync(DATA_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory())
@@ -143,13 +145,18 @@ async function main() {
   // a token is only a shortcut if the retriever can see it.
   const unique = globallyUniqueTokens(pageText);
 
+  // OAuth (the `claude` CLI), not an API key: `.env` carries ANTHROPIC_API_KEY as a bare name
+  // with no value, so the api-key path throws at construction. The OAuth adapter D-008 already
+  // provides needs no key, and D-005 routes exactly this shape of work — one-off, bulk, not
+  // user-facing — to Claude Code's flat rate rather than metered spend.
+  //
+  // Vendor matters here beyond convenience: the gate requires a model DIFFERENT from the
+  // summarizer, and the summarize jobKind is Gemini-first in config/ai-routing.yaml. Generating
+  // with any Gemini model would leave the same vendor's phrasing habits on both sides of the
+  // eval, which is the leakage this regeneration exists to reduce.
   const provider = DRY_RUN
     ? null
-    : new AnthropicProvider(realUploadTransport, {
-        mode: "api-key",
-        apiKey: process.env.ANTHROPIC_API_KEY,
-        model: "claude-sonnet-4-5-20250929",
-      });
+    : new AnthropicProvider(realTransport, { mode: "oauth", model: "claude-sonnet-4-5-20250929" });
 
   const questions = [];
   const rejected = [];
