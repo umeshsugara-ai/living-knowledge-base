@@ -58,7 +58,7 @@ keep flagging the batch size each tick rather than letting it become background 
 
 **I have not tried to restart anything.** Infrastructure changes are outward-facing and yours.
 
-**Answered:** _(pending)_
+**Answered:** 2026-09-08 — SELF-RESOLVED (see the close-out note above). Left no longer pending.
 
 **Answered:** 2026-09-08 — SELF-RESOLVED, no human decision was needed — maker tick, verified by
 re-probe. TCP :27017 connects in ~31 ms and the driver reads all 23 `lkb` collections; the host
