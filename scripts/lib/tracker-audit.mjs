@@ -23,10 +23,56 @@
  * neither is something the current commit can single-handedly fix, and a gate that blocks on
  * someone else acting is a gate people learn to bypass.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+
+/**
+ * Every ledger file: canonical `qa/issues.jsonl` first, then each lane shard
+ * `qa/issues.<lane>.jsonl` alphabetically.
+ *
+ * ISS-129. D-019 declared that every reader treats this union as the ledger, and then no reader
+ * did -- both production readers opened the single file by name, so a lane shard whose id is CITED
+ * BY D-020 was counted by nothing and surfaced by nothing. A shard nobody reads is worse than no
+ * shard: it looks like tracking while counting zero.
+ *
+ * Root cause worth keeping where it will be re-read: D-019's own `Changes-authorized` named only
+ * `.claude/CLAUDE.md`, so the mechanism the rule required was never scoped to a file it was
+ * allowed to touch. A governance rule whose mechanism sits outside its own authorization is a rule
+ * that cannot be implemented.
+ */
+export function ledgerFiles(root) {
+  const dir = join(root, "qa");
+  const canonical = join(dir, "issues.jsonl");
+  let shards = [];
+  try {
+    shards = readdirSync(dir)
+      .filter((f) => /^issues\..+\.jsonl$/.test(f))
+      .sort()
+      .map((f) => join(dir, f));
+  } catch (err) {
+    // Only "the directory is not there" is an expected outcome. A bare `catch {}` here previously
+    // swallowed a ReferenceError from a MISSING IMPORT and returned zero shards, so the union
+    // silently read nothing while every call site looked correct -- the same silent-failure class
+    // this audit exists to catch.
+    if (err?.code !== "ENOENT") throw err;
+  }
+  return [...(existsSync(canonical) ? [canonical] : []), ...shards];
+}
+
+/** Every row across the ledger union, plus a count of lines no consumer could parse. */
+export function readLedgerRows(root) {
+  const rows = [];
+  let unparseable = 0;
+  for (const file of ledgerFiles(root)) {
+    for (const line of readFileSync(file, "utf8").split("\n")) {
+      if (!line.trim()) continue;
+      try { rows.push(JSON.parse(line)); } catch { unparseable++; }
+    }
+  }
+  return { rows, unparseable };
+}
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -92,16 +138,10 @@ export function audit(root = ROOT) {
   if (goal.progress?.percent !== pct) findings.push(`G1 progress.percent says ${goal.progress?.percent}%, the rows give ${pct}%`);
 
   // ---- G2: a fix nobody verified is not a fix.
-  const ledger = join(root, "qa", "issues.jsonl");
-  if (existsSync(ledger)) {
-    const unverified = [];
-    let unparseable = 0;
-    for (const line of readFileSync(ledger, "utf8").split("\n")) {
-      if (!line.trim()) continue;
-      let r;
-      try { r = JSON.parse(line); } catch { unparseable++; continue; }
-      if (r.status === "fixed" && !r.verified_date) unverified.push(r.id);
-    }
+  const ledgerPaths = ledgerFiles(root);
+  if (ledgerPaths.length > 0) {
+    const { rows, unparseable } = readLedgerRows(root);
+    const unverified = rows.filter((r) => r.status === "fixed" && !r.verified_date).map((r) => r.id);
     if (unparseable > 0) findings.push(`G2 ledger: ${unparseable} unparseable line(s) — a line-by-line consumer skips or crashes on them`);
     if (unverified.length > 0) {
       findings.push(`G2 unverified: ${unverified.length} issue(s) are "fixed" with no verified_date — ${unverified.slice(0, 8).join(", ")}${unverified.length > 8 ? ", …" : ""}`);

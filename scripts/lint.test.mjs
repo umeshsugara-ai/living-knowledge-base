@@ -6,11 +6,13 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+import { ledgerFiles, readLedgerRows } from "./lib/tracker-audit.mjs";
 
 const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const CONFIG = JSON.parse(readFileSync(join(SCRIPTS, "..", "structure.config.json"), "utf8"));
@@ -219,4 +221,81 @@ test("every scripts/*.mjs resolves its imports — scripts are outside typecheck
   assert.deepEqual(unresolved, [],
     `a script imports a path that does not exist (the U1.0c breakage class):\n${unresolved.join("\n")}`);
   assert.ok(pathToFileURL(root));
+});
+
+// ---------------------------------------------------------------------------
+// ISS-129 — the ledger UNION declared by D-019.
+//
+// D-019 said "every reader treats the union of qa/issues.jsonl and qa/issues.*.jsonl as the
+// ledger", and then no reader did: both production readers opened the single file by name, so a
+// lane shard whose id is CITED BY D-020 was counted by nothing and surfaced by nothing.
+//
+// Root cause worth keeping: D-019's own `Changes-authorized` named only `.claude/CLAUDE.md`, so
+// the mechanism the rule required was never scoped to a file it was allowed to touch. A governance
+// rule whose mechanism sits outside its own authorization cannot be implemented.
+//
+// Folded into this file rather than added as a 32nd script: D-017 said the next arrival should
+// consolidate rather than trigger another budget increment.
+// ---------------------------------------------------------------------------
+
+function ledgerFixture(files) {
+  const root = mkdtempSync(join(tmpdir(), "lkb-ledger-"));
+  mkdirSync(join(root, "qa"), { recursive: true });
+  for (const [name, rows] of Object.entries(files)) {
+    writeFileSync(join(root, "qa", name), rows.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  }
+  return root;
+}
+
+test("ledger: reads the canonical file when there are no shards", () => {
+  const root = ledgerFixture({ "issues.jsonl": [{ id: "ISS-1", status: "open" }] });
+  try {
+    assert.deepEqual(ledgerFiles(root).map((f) => basename(f)), ["issues.jsonl"]);
+    assert.equal(readLedgerRows(root).rows.length, 1);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("ledger: reads the UNION of the canonical file and every lane shard", () => {
+  const root = ledgerFixture({
+    "issues.jsonl": [{ id: "ISS-1", status: "open" }],
+    "issues.c-unrun-writers.jsonl": [{ id: "ISS-C-UNRUN-WRITERS-005", status: "open" }],
+    "issues.a-speakers.jsonl": [{ id: "ISS-A-SPEAKERS-001", status: "fixed" }],
+  });
+  try {
+    const ids = readLedgerRows(root).rows.map((r) => r.id).sort();
+    assert.deepEqual(ids, ["ISS-1", "ISS-A-SPEAKERS-001", "ISS-C-UNRUN-WRITERS-005"],
+      "a shard nobody reads is worse than no shard");
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("ledger: G2 sees a shard's unverified rows, not just the canonical file's", () => {
+  const root = ledgerFixture({
+    "issues.jsonl": [{ id: "ISS-1", status: "open" }],
+    "issues.lane.jsonl": [{ id: "ISS-LANE-001", status: "fixed" }],
+  });
+  try {
+    const unverified = readLedgerRows(root).rows
+      .filter((r) => r.status === "fixed" && !r.verified_date).map((r) => r.id);
+    assert.deepEqual(unverified, ["ISS-LANE-001"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("ledger: an unparseable line in a SHARD is reported, not swallowed", () => {
+  const root = ledgerFixture({ "issues.jsonl": [{ id: "ISS-1", status: "open" }] });
+  writeFileSync(join(root, "qa", "issues.broken.jsonl"), "{not json\n");
+  try {
+    assert.equal(readLedgerRows(root).unparseable, 1);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("ledger: shards read in a stable order so findings do not reshuffle between runs", () => {
+  const root = ledgerFixture({
+    "issues.jsonl": [{ id: "ISS-1", status: "open" }],
+    "issues.zeta.jsonl": [{ id: "Z", status: "open" }],
+    "issues.alpha.jsonl": [{ id: "A", status: "open" }],
+  });
+  try {
+    assert.deepEqual(ledgerFiles(root).map((f) => basename(f)),
+      ["issues.jsonl", "issues.alpha.jsonl", "issues.zeta.jsonl"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
