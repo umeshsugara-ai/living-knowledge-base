@@ -90,4 +90,39 @@ both tripping on one shared symptom.
 4. `tracker-audit --gate g1` remains red on the other lane's `U2.4` (ISS-117); every other gate is
    green individually.
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/vector-gap-tenant-id.md` — PASS, cycle 1, 11/11 criteria, committed
+`2817fd2`. `ISSUES-WRITTEN: ISS-122 (medium)`.
+
+**Disclosure #3 was ruled on, and both halves of it turned out to be true.** The checker kept the
+trade — a stranded session is the exact ISS-116 state this work exists to end, whereas a swallowed
+error costs one bookkeeping row about a condition still discoverable through the returned
+`ChunkWriteResult` and the `chunks` collection. But it then measured the concern instead of
+dismissing it: emptying the **entire catch body** — deleting the whole operator-facing surface of a
+gap-write failure — yields **130 pass / 0 fail with `tsc` at exit 0**. That is byte-for-byte the
+reproduction ISS-118 used to prove a `console.warn` is not a guarantee, now sitting inside the
+record-keeper ISS-118 introduced. Filed as ISS-122 with a fix direction that explicitly says *do
+not remove the catch*.
+
+It declined to FAIL on it, with reasoning worth keeping: no criterion requires that surface, and
+failing a unit on a rule that does not exist would be **inventing the criterion and charging for it
+in the same breath**.
+
+**Verified live, cross-tenant, on the real path** — two tenants recording a gap for the same
+`sessionId` each get their own row; zero cross-tenant rows through either accessor; zero
+tenant-less rows; upsert still idempotent; per-tenant resolution intact. It also **re-derived the
+pre-fix `E11000` on that same live path**, so the green is attributable to this change rather than
+to the environment. Scratch rows deleted and the deletion read back.
+
+**The stranding fixture is genuine, and it proved it rather than asserting it:** mutation 2 fails
+with `Error: E11000 duplicate key`, a string that exists nowhere in the repo except that fixture's
+own injected `updateOne` — so the exploding method really is invoked and the catch is the only
+thing stopping the throw.
+
+**ROUND CAP — this seam is now CLOSED.** This is the second PASS on `vector-gap.ts`. Under
+`.claude/CLAUDE.md`'s class-based cap, ISS-122 is explicitly **outside** the security class
+(availability/observability of bookkeeping — no tenancy, auth, disclosure or data-loss
+consequence), so the never-capped clause does not apply and **ISS-122 must not become a round-3
+unit**. It is verified inside the next unit that touches `vector-gap.ts` for an independent reason.
+Recorded here so the next tick cannot quietly re-open the seam.

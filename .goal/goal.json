@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T17:54:44",
+  "updated": "2026-09-08T18:05:45",
   "progress": {
     "total": 60,
-    "done": 37,
-    "in_progress": 2,
+    "done": 38,
+    "in_progress": 1,
     "blocked": 0,
     "pending": 21,
-    "current": "U1.0d",
-    "percent": 62
+    "current": "U3.1",
+    "percent": 63
   },
   "tasks": [
     {
@@ -517,12 +517,12 @@
     {
       "id": "U1.0d",
       "title": "Tenant-namespace the vector-gap id + never strand a session (ISS-121)",
-      "status": "in_progress",
+      "status": "done",
       "base_criticality": "high",
       "deps": [
         "U1.0c"
       ],
-      "evidence": "ready-for-check, checker dispatched",
+      "evidence": "qa/verdicts/vector-gap-tenant-id.md - PASS 11/11 cycle 1 (2817fd2). Verified live cross-tenant; pre-fix E11000 re-derived on the same path. Seam now at 2 PASSes = CLOSED per the class-based round cap.",
       "criticality": "high"
     },
     {
@@ -710,8 +710,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 4.04,
-    "eta_days": 5.7
+    "velocity_per_day": 4.03,
+    "eta_days": 5.5
   },
-  "last_deterministic_tick": "2026-09-08T17:54:44"
+  "last_deterministic_tick": "2026-09-08T18:05:45"
 }
