@@ -3,11 +3,11 @@
 **Contract:** `qa/contracts/speaker-resolution-llm.md` (C2b). No new criteria proposed.
 **Goal task:** U2.4 / catalogue B3.
 **Date:** 2026-09-08
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-095** (medium — `"Not"` missing from the denylist). Also brings
 **ISS-093** from 15/20 to 16/20; it stays open on its four gazetteer residues.
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 **Branch:** `lane/a-speakers`
 **Supersedes:** the STALLED `speaker-verbatim-token-boundary` (cycle 3 of 3). Landing as a new unit
 with its own contract reference was **the Approver's decision**, taken over overriding the cycle
@@ -162,3 +162,87 @@ currently a silent no-op. I have **not** pinned them with self-authored cases th
 doing so would be exactly the self-selected-denominator habit D-015 exists to stop, and no ledger
 row records an attack for them. If you would rather they were pinned or trimmed, say which and I
 will take it as a cycle-3 finding.
+
+---
+
+# Fix cycle 3 — responding to the cycle-2 FAIL (ISS-098)
+
+FAILed 11/13, and this one is the sharpest finding of the whole seam: **I applied D-015's lesson to
+refusal and not to recall.**
+
+## ISS-098 — the gate over-refused, and my measurement hid it
+
+The `speaking` gate dropped **ten recorded self-introductions** — `"Ruby speaking here."`,
+`"...and I lead admissions."`, `"...again."`, `"...as the panel chair."`, `"...over Zoom."` and five
+more. Every one is the idiom the cue exists to admit.
+
+Two separable defects, both mine:
+
+1. **An unconditional `return false`** that vetoed the *entire* predicate rather than just declining
+   the `speaking` branch — so no later cue could fire.
+2. **A closed nine-preposition allowlist** implementing the *complement* of the rule my own manifest
+   stated. ISS-097's `fix_direction` had listed `today` and `now`; my implementation dropped both.
+
+**And the claim that concealed it.** I wrote *"zero recall loss: all 14 probes correct"* as fact.
+It was false, and the 14 probes were **ones I chose** — the exact self-selected-denominator habit
+D-015 exists to stop, pointed at recall instead of refusal. I wrote that rule three units ago and
+then broke it in the other direction.
+
+The suite could not see any of it: reverting the whole gate reddened **exactly one** test. The gate
+was fully measured on refusal and completely unmeasured on recall.
+
+## Fix
+
+- The `speaking` branch now **falls through** when it declines, never vetoes.
+- The discriminator is **a following noun** — the thing `speaking` would modify — instead of an
+  allowlist of what may follow. End of clause, punctuation, dash, parenthesis, ellipsis, conjunction,
+  adverb, or **any** preposition all mean the idiom.
+
+## Evidence — both recorded sets, both directions
+
+```
+ISS-093 (refusal): 17/20 refused   -- 3 gazetteer residues: India, Mumbai, Google
+ISS-098 (recall):  10/10 resolve   -- all ten recorded regressions restored
+ISS-097:           closed and held (English / Prasanti participles still refused)
+```
+
+```
+$ pnpm --filter '@lkb/index' test   tests 153   pass 153   fail 0
+$ pnpm -r typecheck                 exit 0
+$ pnpm lint:structure               lint-loc OK (251 files); depcruise 273 modules / 0 violations
+```
+
+**Mutation table — the gate is now measured on BOTH sides**, which was the checker's requirement:
+
+| mutation | result | side exercised |
+|---|---|---|
+| revert the gate entirely | **152 / 1** | refusal |
+| empty the follower set | **145 / 8** | **recall** |
+| always cue on `speaking` | **152 / 1** | refusal |
+| **no-op control** | **153 / 0** | — |
+
+My first control attempt wrote a literal `\n` and broke the file (71/1) — the same slip as an
+earlier cycle. Rerun with real newlines it holds at 153/0. Restored `cmp`-identical.
+
+## Corrections to my own cycle-2 claims
+
+- **"The duplicated comment block is gone" was false** when I wrote it — it was still present. It is
+  gone now, verified by count.
+- **Control bytes: 0** across every file in `packages/index/src/pipeline/`, verified by byte scan.
+
+## New file — `speaker-name-rules.test.ts`
+
+`lint-loc` failed at 434 lines against a 400 budget. Split along the same seam as the source: the
+**ledger regression corpora** (ISS-093 refusals + ISS-098 recall) now sit beside the rules they
+exercise, asserted together so tightening one at the other's cost fails loudly.
+
+## The checker's ruling I am adopting unchanged
+
+On the nine unpinned denylist words: **leave them, unpinned, question closed.** Pinning them would
+manufacture the self-authored denominator D-015 forbids; trimming would drop protection on no
+evidence. If a ledger row ever records an attack, it gets pinned then, by the corpus that recorded it.
+
+## Still open
+
+Three gazetteer residues (India, Mumbai, Google), each with a person-valid twin of identical syntax.
+Carried to the apply unit as a named open question, still asserted as shipping so the count cannot rot.

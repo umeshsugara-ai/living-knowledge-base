@@ -180,6 +180,23 @@ const NAMING_CUES_AFTER = ["here", "speaking", "from", "with us", "joining us"];
 const ADDRESS_FOLLOWERS = ["what", "how", "would", "could", "do you", "can you", "any", "your", "please", "over to you"];
 
 /** Is the occurrence of `name` at `at` a person-directed act of naming, not a passing mention? */
+/**
+ * Words that may follow `speaking` in the self-identification idiom: prepositions, conjunctions
+ * and adverbs. Anything NOT here and not punctuation is taken to be a noun that `speaking` is
+ * modifying, which makes it a participle rather than a cue (ISS-097 / ISS-098).
+ *
+ * Stated as the complement on purpose: the first attempt allowlisted what may follow and refused
+ * the rest, which is the opposite rule and cost ten recorded introductions.
+ */
+const FUNCTION_FOLLOWERS = new Set([
+  "from", "on", "at", "for", "with", "to", "in", "of", "about", "as", "over", "after", "before",
+  "during", "via", "by", "into", "through", "under", "across", "per", "behalf", "alongside",
+  "and", "or", "but", "so", "yet", "then",
+  "here", "now", "today", "tonight", "again", "also", "too", "still", "just", "currently",
+  "live", "remotely", "briefly", "finally", "actually", "obviously",
+  "i", "we", "you", "my", "our", "this", "that",
+]);
+
 function hasNamingCue(text: string, name: string, at: number): boolean {
   const rawBefore = text.slice(Math.max(0, at - 40), at);
   const before = rawBefore.toLowerCase().replace(/[\s,:;."'\u2019()\u2014-]+$/u, "");
@@ -190,22 +207,26 @@ function hasNamingCue(text: string, name: string, at: number): boolean {
   const rawAfter = text.slice(at + name.length, at + name.length + 28);
   const after = rawAfter.toLowerCase().replace(/^[\s,:;."'\u2019()\u2014-]+/u, "");
   if (NAMING_CUES_AFTER.some((cue) => cue !== "speaking" && after.startsWith(cue))) return true;
-  // `speaking` is the self-identification idiom -- "Ruby speaking." -- but it is also a plain
-  // participial modifier: "English speaking students may apply." ships person:english otherwise.
-  // ISS-097. The distinction is syntactic and candidate-independent ("Prasanti speaking students
-  // may apply." is not a naming construction either), so it is decided on what FOLLOWS `speaking`:
-  // end of clause, or a preposition, but never a noun it is modifying.
-  // `speaking` is the self-identification idiom -- "Ruby speaking." -- but it is also a plain
-  // participial modifier: "English speaking students may apply." would otherwise ship
+  // `speaking` is the self-identification idiom -- Ruby speaking. -- but it is also a plain
+  // participial modifier: English speaking students may apply would otherwise ship
   // person:english (ISS-097). The distinction is syntactic and candidate-independent:
-  // "Prasanti speaking students may apply." is not a naming construction either. So it is
-  // decided on what FOLLOWS `speaking` -- end of clause, or a preposition, never a noun it is
-  // modifying. Matched in one pass over the raw tail rather than by slicing, so no separate
-  // strip step can disagree about where the word starts.
-  const SPEAKING_NAMES = /^[\s,:;.'"()\u2019-]*speaking(?:\s*$|\s*[.,!?;:]|\s+(?:from|on|at|for|with|to|in|of|about)\b)/iu;
-  const SPEAKING_ANY = /^[\s,:;.'"()\u2019-]*speaking\b/iu;
-  if (SPEAKING_NAMES.test(rawAfter)) return true;
-  if (SPEAKING_ANY.test(rawAfter)) return false;
+  // Prasanti speaking students may apply is not a naming construction either.
+  //
+  // ISS-098: the first attempt inverted the rule. It ALLOWLISTED nine prepositions and refused
+  // everything else, dropping ten recorded self-introductions -- speaking here, speaking and I
+  // lead admissions, speaking again, speaking as the panel chair, speaking over Zoom -- and it
+  // did so with an unconditional early return that vetoed every LATER cue branch too.
+  //
+  // Both were wrong. The discriminator is a following NOUN (the thing speaking would modify);
+  // end of clause, punctuation, a conjunction, an adverb or ANY preposition all mean the idiom.
+  // And a non-match must fall through, never veto the predicate.
+  const SPEAKING_AT = /^[\s,:;.'"()\u2019-]*speaking\b/iu;
+  if (SPEAKING_AT.test(rawAfter)) {
+    const tail = rawAfter.replace(SPEAKING_AT, "");
+    const nextWord = /^\s*([\p{L}']+)/u.exec(tail);
+    if (!nextWord || FUNCTION_FOLLOWERS.has(nextWord[1]!.toLowerCase())) return true;
+    // A bare noun follows: participle, not a cue. Fall through; a later branch may supply one.
+  }
 
   // Direct address takes a comma the greeting-of-an-object form does not: "Good morning Prasanti,"
   // is an address; "Welcome Diwali celebrations" is not. The comma is doing real work here.
