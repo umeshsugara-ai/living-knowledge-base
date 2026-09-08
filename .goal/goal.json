@@ -4,11 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-08T13:06:02",
+  "updated": "2026-09-08T14:58:30",
   "progress": {
     "total": 56,
-    "done": 31,
-    "percent": 55
+    "done": 32,
+    "in_progress": 1,
+    "blocked": 0,
+    "pending": 23,
+    "current": "U3.1",
+    "percent": 57
   },
   "tasks": [
     {
@@ -447,11 +451,12 @@
     {
       "id": "U1.1",
       "title": "embed() on the Provider seam (Gemini + Ollama over existing Transport)",
-      "status": "pending",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [],
       "criticality": "low",
-      "note": "plan §10 Phase 1. packages/ai/src/provider.ts exists; zero embed references today."
+      "note": "plan §10 Phase 1. packages/ai/src/provider.ts exists; zero embed references today.",
+      "completed": "2026-09-08T14:58:30"
     },
     {
       "id": "U1.2",
@@ -645,8 +650,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 3.62,
-    "eta_days": 6.9
+    "velocity_per_day": 3.57,
+    "eta_days": 7.0
   },
-  "last_deterministic_tick": "2026-09-08T13:06:02"
+  "last_deterministic_tick": "2026-09-08T14:56:01"
 }

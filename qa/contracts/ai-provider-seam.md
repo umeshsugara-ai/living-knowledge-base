@@ -57,6 +57,30 @@ fakes, matching the pattern already used in `packages/ask` (injectable `score_fn
    `packages/ai` tests green), `pnpm gen:types --check`, `python schema/validate.py`,
    `pnpm lint:structure` all clean.
 
+9. **Embedding sub-seam** (plan §10 U1.1, added by amendment 2026-09-08 after the
+   `embed-provider-seam` check): `embed?(job: EmbedJob) => Promise<EmbedResult>` is an **optional**
+   method on `Provider`, declared once in `provider.ts` alongside `EmbedJob`/`EmbedResult`, with a
+   `canEmbed(p)` narrowing helper so callers test capability instead of duck-typing. Adapters that
+   have an embedding endpoint (gemini via `batchEmbedContents`, ollama via `/api/embed`) implement
+   it over the **existing** `Transport` — no second seam. Each implementation MUST:
+   - send **one transport call per batch** of N texts (not N calls), and **zero** calls for
+     `texts: []`, returning an empty result rather than throwing — an empty array must never reach
+     a paid endpoint;
+   - **refuse rather than pair by index** when the response carries a different number of vectors
+     than there were texts (short OR long), and refuse a **ragged** set whose vectors differ in
+     length. A silently mispaired batch attaches one chunk's meaning to another chunk's id and
+     corrupts every later similarity search invisibly, so these are throws, not warnings;
+   - preserve input order, one vector per text.
+   `router.embed(jobKind, job, config)` reuses `route()` and the same ledger, with one deliberate
+   difference from `complete`: a chain member **without** `embed()` is **skipped, not failed** (a
+   skip is not a job and is not written to the ledger), while a chain with **no** capable member
+   throws `AllProvidersFailedError` — never an empty result, which would be indistinguishable from
+   an empty corpus. An unknown provider NAME still throws in `route()` before capability is
+   consulted, so a typo cannot be absorbed as a skip.
+   Observed by the checker 2026-09-08 against the live API: `gemini-embedding-001` returns
+   **3072 dims**; `purpose: "query"|"document"` maps to `RETRIEVAL_QUERY`/`RETRIEVAL_DOCUMENT`
+   (unset ⇒ document). U1.2's schema must match that width.
+
 ## Non-goals for T-019
 - No real API keys are called. No HTTP server/routes (T-009). No cost-budget enforcement /
   throttling (explicitly dropped per D-005/D-008 — "no budget-guard work now"). No web-search
@@ -72,6 +96,11 @@ fakes, matching the pattern already used in `packages/ask` (injectable `score_fn
   `jobs` ledger via the injectable `write` function — a silent, unlogged call is a violation
   (C5, C7).
 
+- **[I4] A batch is never silently mispaired.** No `embed()` implementation may return vectors it
+  cannot pair one-to-one, in order, with its input texts. Count mismatch and ragged lengths are
+  throws; an empty input is the only case that legitimately returns an empty result, and it costs
+  zero transport calls (C9).
+
 ## Amendment log
 - 2026-09-03 · routine · checker adopts this maker-drafted contract as-is (T-019 cycle-1 check) ·
   verified faithful to D-005 (Gemini-first, Claude via OAuth not API keys, Anthropic Messages API
@@ -81,3 +110,13 @@ fakes, matching the pattern already used in `packages/ask` (injectable `score_fn
   already-stated Scope/Criteria text (injectable-transport-only, single Provider interface, every
   call logged) — no new requirement introduced, only structure per the checker SKILL's "Contract
   file shape" · ISS-007 housekeeping
+- 2026-09-08 · routine · added C9 (embedding sub-seam) + [I4] (a batch is never silently mispaired),
+  after the `embed-provider-seam` cycle-1 PASS · the contract predated the embedding seam and said
+  nothing about it, so U1.2-U1.5 — which all depend on it — would have been checked against a
+  contract blind to their foundation. Every clause records behaviour the checker verified itself
+  (nine mispairing refusals across both adapters, 1 call per batch / 0 for an empty batch,
+  skip-not-fail with typo'd names still throwing in route(), and 3072 dims observed live from
+  gemini-embedding-001). Additive only; nothing weakened. Deliberately NOT added: a `dims > 0`
+  floor — that gap is real and filed as ISS-096, but writing a criterion for the purpose of failing
+  the unit in front of the amendment would distort the gate as surely as softening one would; it
+  becomes a criterion when U1.3 wires embed() into indexing.
