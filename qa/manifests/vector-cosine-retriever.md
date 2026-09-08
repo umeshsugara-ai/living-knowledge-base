@@ -20,9 +20,11 @@ retains headroom, so it is still a usable ruler after the win.
 ## What changed
 
 - `packages/index/src/vector/cosine.ts` (new) — `cosineSimilarity`, `rankByCosine`,
-  `rankSessionsByCosine`. Pure, no I/O. Brute force per **D-a**: Atlas Vector Search does not exist
+  `rankSessionsByCosine`. Pure, no I/O. Brute force per **D-021** (cycle 2 — cycle 1 wrongly cited
+  "D-a", a plan-local shorthand that was never a DECISIONS id): Atlas Vector Search does not exist
   on a self-hosted Mongo reached by raw IP (no `+srv`), and at 1452 × 3072 an exhaustive scan is
-  milliseconds and **exact**, where an ANN index would be approximate and slower to build.
+  **exact** at a measured p95 of 62 ms, where an ANN index would be approximate and slower to
+  build.
 - `packages/index/src/vector/retriever.ts` (new) — `createVectorRetriever`, satisfying the existing
   `RetrieveFn` so it drops into the recall harness with **no change to the harness**.
 - `scripts/eval-recall.mjs` — extended in place with `--retriever vector` (no new script file;
@@ -90,13 +92,15 @@ pnpm -r typecheck = 0 · pnpm -r test = 0
    **mislabelled ground truth rather than retrieval failures** — which means 0.935 is arguably a
    *floor*. I am not claiming the higher number; I am flagging that the gate's open precondition
    directly limits how precisely this result can be read.
-2. **Single measurement, one embedding model.** No repeat run, no seed variation, no second
-   provider. The ranking is deterministic (there is a test), but the *embedding* is a live API call
-   and I have not verified run-to-run stability.
+2. ~~**Single measurement, one embedding model.**~~ **The checker resolved this and the result was
+   better than I claimed:** a re-run produced byte-identical misses *including every miss's full
+   ordered top-5*; only `generatedAt` changed. One embedding model is still the only one tested.
 3. **Not wired into `/ask`.** This is the retriever only. `vectorSearchFn` injection at the
    composition root and the hybrid merge are U1.5, deliberately not smuggled in here.
-4. **No latency measurement.** The plan asks for p95. I measured correctness, not speed; 1452 × 3072
-   was visibly fast but I did not instrument it, so I make no performance claim.
+4. ~~**No latency measurement.**~~ **RESOLVED IN CYCLE 2 — and it was a requirement, not a
+   caveat.** I framed this as a disclosure; the checker correctly ruled that plan §10's *Verify:*
+   line names p95 outright, and that my brute-force-over-ANN argument rested on it. Measured:
+   **p50 28.84 ms · p95 62.35 ms · max 127.55 ms.** See the cycle-2 section.
 5. **The dedupe-before-truncate behaviour changes what "k" means** versus a chunk-level ranking.
    That is intentional and tested, but it is a semantic choice a reviewer should agree with rather
    than inherit.
