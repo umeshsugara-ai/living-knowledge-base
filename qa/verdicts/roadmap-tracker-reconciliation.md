@@ -1,176 +1,207 @@
 # Verdict — roadmap-tracker-reconciliation
 
-**Cycle checked:** 2
+**Cycle checked:** 3
 **Date:** 2026-09-08
 **Contract:** qa/contracts/tracker-integrity.md
 **Mode:** A (unit check), bound to `D:/KnowledgeBase`
-**Verdict: FAIL** — 7/7 criteria met, 5/6 invariants hold ([I3] still violated)
+**Verdict: PASS** — 7/7 criteria met, 6/6 invariants hold
 
-ISS-089 is **genuinely and completely fixed**, and the class was closed with two new G1 checks that
-I proved fire rather than reading. ISS-090 is **fixed in `.goal/goal.json` and not fixed in
-`TASKS.md`**. The three rewritten notes in `goal.json` are accurate against the gate file — I
-checked every clause the dispatch flagged and found no drift. But `TASKS.md` still carries
-`T-021`/`T-022`/`U0.10` as `blocked`, and `U0.10`'s note still contains, verbatim, the false
-sentence the manifest states is "gone": *"Needs the human gate answered first."*
+ISS-090 is fixed in **both** trackers, not one. I re-derived every claim below myself; nothing here
+is the maker's pasted output. The structural change that came with the fix — making `blocked` its
+own `NORMALISE` class — is a correct fix rather than scope creep, and I verified independently that
+it did not make blockage unrepresentable.
 
-The manifest's cycle-2 claim is **"All three now `pending`, `blocked_by` removed, and the notes
-rewritten from the gate file."** That is true of one tracker out of two, in a unit whose entire
-subject is that the two trackers must agree and must not assert untrue things.
+*(Cycles 1 and 2 both FAILed. Their verdict text is superseded by this file; the findings history
+lives in the ledger rows for ISS-089 and ISS-090 and in the manifest's per-cycle sections.)*
 
 ---
 
-## What I re-ran myself (nothing below is the maker's pasted output)
+## What I re-ran myself
 
 | command | my result |
 |---|---|
-| `node --test scripts/lib/tracker-audit.test.mjs` | **9 pass / 0 fail** — matches the claimed 9 |
+| `node --test scripts/lib/tracker-audit.test.mjs` | **11 pass / 0 fail** — matches the claimed 11 |
 | `node scripts/tracker-audit.mjs --gate g1` | `tracker-audit: OK (gate G1)`, exit 0 |
 | `pnpm lint:structure` | exit 0 — loc 245, dirsize 75, root 15, dupes 255, migrations 1169, SNAPSHOT fresh (113/200), `tracker-audit: OK (gate G1)`, depcruise 0 violations / 267 modules |
 | `pnpm -r typecheck` | exit 0, all packages Done |
-| duplicate-id grep | `uniq -d` on the id column — **empty** |
-| `grep -c blocked_by` | `.goal/goal.json` **0**, `TASKS.md` **0** |
+| `grep -cve '^\s*$' scripts/lib/tracker-audit.mjs` | **125** non-blank LOC (C7 budget 300) |
 
-**Headline is arithmetic, not typed.** I recomputed independently from `tasks[]`: 56 tasks,
-31 `done`, `round(31/56*100) = 55`. `progress` reads `{total:56, done:31, percent:55}`. C3 holds,
-and the headline is unchanged from cycle 1 as claimed.
-
-## ISS-089 — FIXED, and the class is closed (verified by mutation, not by reading)
-
-`git show 56c75da -- TASKS.md` shows the unit's only TASKS.md edits are the two U3.1 lines: the
-thin `in_progress` row this unit had added is deleted, and the pre-existing richer row survives
-with its note byte-identical and its status changed `partial` → `in_progress`. That is exactly the
-fix direction cycle 1 gave, and it kept the row carrying the real exit-criterion evidence.
-
-**Both new checks are load-bearing. I armed the mutation guard first** (the cycle-1 checker did
-not, which the dispatch is right to call out):
-
-- `node scripts/lib/mutate.mjs apply TASKS.md` → `MUTATION ARMED`
-- injected a second `U3.1` row → `--gate g1` **exit 1**,
-  `G1 duplicate rows in TASKS.md — U3.1×2 (a Map keeps only the last, so a conflicting row can hide)`
-  — it names `U3.1×2` exactly as the manifest promises.
-- `restore` (`verified identical to HEAD`), re-armed, set `U3.1`'s status to `partial` →
-  `--gate g1` **exit 1**,
-  `G1 status: U3.1 uses unknown status "partial" in TASKS.md — known: open, pending, blocked, in_progress, done`
-- `restore` → `verified identical to HEAD`; `assert-clean` → `MUTATIONS CLEAN: none outstanding`;
-  `git diff -- TASKS.md` **empty**. No mutation is armed as I write this.
-
-Both checks fire on real conditions and neither is a tautology. **Ruling: ISS-089 fixed, marked
-`fixed` in the ledger with this evidence.**
-
-## The gate-derived notes — I read `qa/gates/golden-set-redesign.md` myself, clause by clause
-
-The dispatch flagged this as the high-risk item because cycle 1's failure was a paraphrase of a
-stale note. I checked every claim in `goal.json`'s three rewritten notes against the gate file. **No
-drift. All of it is right, including the parts most likely to be softened in a paraphrase:**
-
-| claim in the note | gate file | agrees? |
-|---|---|---|
-| regeneration source `data/toc-migrated/<sessionId>/turns.json` | gate, "Scope of what C authorizes": *"from the raw transcripts (`data/toc-migrated/<sessionId>/turns.json`), not from `session_page.json`"* | yes, and it correctly names `session_page.json` as the thing NOT to use |
-| different model **and** prompt than the summarizer | same section, verbatim | yes |
-| phrased as real student questions | same section | yes |
-| near-neighbour distractors | same section | yes |
-| cite the **0.217** question-blind control beside every score | acceptance condition 1 | yes, exact number |
-| **PASS = recall@5 STRICTLY between 0.217 and 1.000 with a non-zero miss count** | condition 2, verbatim | yes |
-| **1.000 is a FAILURE of the remedy and escalates to Option B** | condition 2: *"1.000 is a FAILURE of this remedy, not a success … escalates to Option B rather than closing this gate"* | yes — the inversion is preserved, not flattened into "must be ≥ some number" |
-| re-run verbatim-overlap + single-unique-token pin diagnostics, pin rate well below 63% | condition 3 (63% = 29/46) | yes |
-| `T-022` NOT gate-blocked; blocked only by its `T-021` dep | gate lines 7–10: *"NOT blocked: the judge-agreement half (T-022)"* | yes — cycle 1's contradiction is gone |
-| `U0.10` note: condition 4 — U1.4/U1.5 exit criteria may not be re-pointed at the new set until conditions 2–3 hold, and must not be cited as passed until then | condition 4, verbatim in substance | yes |
-| **"The gate is answered but NOT closed"** | gate's last line: *"This gate is not closed by this answer. It closes when a unit satisfies conditions 1–4, or when condition 2 fails…"* | yes |
-
-**Nothing in the manifest, `goal.json`, or `TASKS.md` claims the gate is CLOSED.** I grepped for it.
-The answered/closed distinction is stated correctly in `goal.json`'s `T-021` note and in the
-manifest. That distinction is load-bearing and the maker got it right.
-
-So the *content* of the correction is sound. What is wrong is where it was written.
+**Headline is arithmetic on the rows, not typed.** Recomputed from `tasks[]` independently:
+56 tasks, 31 `done`, `round(31/56*100) = 55`. `progress` reads `{total:56, done:31, percent:55}`.
+**C3 holds.**
 
 ---
 
-## FAILURES
+## 1. The greps the dispatch demanded — run on BOTH trackers, and the rows read, not just the fields
 
-### [I3] F1 · sev: high · ISS-090 is fixed in `.goal/goal.json` only; `TASKS.md` still carries all three rows as `blocked`, with the false sentence intact
-
-`git show 56c75da -- TASKS.md` — the commit's **only** TASKS.md hunks are the two U3.1 lines. The
-three rows are absent from the diff entirely. Live at HEAD:
+The cycle-2 failure was a `blocked_by`-field grep returning 0 over a file that stated its blockage
+in prose. So I ran the field grep **and** read the rows.
 
 ```
-TASKS.md:34 | T-021 | blocked | Golden set (50–100 Qs) + recall@k report …
-TASKS.md:35 | T-022 | blocked | Evaluator calibration on 30 hand-scored pairs …
-TASKS.md:93 | U0.10 | blocked | … BLOCKED by qa/gates/golden-set-redesign.md — the recall@5 metric
-             is saturated at 1.000 … Needs the human gate answered first.
+$ grep -c "BLOCKED by qa/gates" TASKS.md                    → 0
+$ grep -c "Needs the human gate answered first" TASKS.md    → 0
+$ grep -cE '^\| \S+ \| blocked \|' TASKS.md                 → 0
+$ grep -n -i "blocked" TASKS.md                             → 4 hits, all benign (below)
+$ grep -n "blocked_by" .goal/goal.json TASKS.md             → no matches in either file
+goal.json tasks with status "blocked"                       → []   (enumerated in JS, not grepped)
+goal.json tasks carrying a blocked_by key                   → []   (`'blocked_by' in t`)
 ```
 
-Against `goal.json`, where the same three rows read `pending` with notes that open
-*"UNBLOCKED 2026-09-08: the gate is ANSWERED (Option C)"* and, for `U0.10`, explicitly retract the
-sentence that is still sitting in `TASKS.md`. The two trackers now assert opposite things about
-whether a human has answered a gate.
+The four surviving `blocked` occurrences in `TASKS.md` are **not** status assertions, and I read
+each one:
 
-Three consequences, in ascending order of how much they matter:
+- **:34 `| T-021 | open |`** — the word appears only inside `UNBLOCKED 2026-09-08: …`.
+- **:35 `| T-022 | open |`** — *"NOT gate-blocked - the gate file says so explicitly. Blocked only
+  by its dependency."* Correct, and it now agrees with the gate instead of contradicting it.
+- **:74** — unrelated prose in a different section (a diarization `"structurally blocked" symptom`).
+- **:93 `| U0.10 | open |`** — the retracted sentence is gone; the note explicitly records that the
+  earlier claim *"was written from a stale read and is false."*
 
-1. **The manifest's own claim is false as written.** "All three now `pending`, `blocked_by`
-   removed, and the notes rewritten from the gate file" describes one tracker. The cycle-2 evidence
-   line *"Rows carrying `blocked_by`: **none**"* is true only literally — `TASKS.md` states the
-   blockage in prose rather than in a `blocked_by:` field, so a grep for the field name returns
-   clean over a file that still says `BLOCKED by qa/gates/golden-set-redesign.md`. I reproduced
-   that grep myself and it does return 0; the number is right and the conclusion drawn from it is
-   not.
-2. **G1 cannot see this, and that is the same structural blindness as ISS-089.** C2 compares
-   statuses *in meaning*, and `NORMALISE` maps both `blocked` and `pending` to `not-done`. So the
-   gate stays green over two trackers that disagree in fact. Cycle 1 found a duplicate-id class G1
-   was blind to; this is a second blind class in the same file, found the same way — by reading
-   the rows instead of the gate's exit code. I am not asking for a G1 check for it here (a gate on
-   note prose is not obviously buildable), but the maker should not read green as agreement.
-3. **It is the same root cause as cycle 1, one layer in.** Cycle 1: the maker reasoned about the
-   gate from a stale note instead of reading the gate file. Cycle 2: the maker corrected the
-   tracker it was thinking about and did not re-read the other one it had itself written those rows
-   into 42 minutes earlier. In both cases the *reasoning* was right and the *re-derivation across
-   all affected surfaces* was not. Contract **[I3]**: *"Before a status is changed, the underlying
-   reality is counted … not inferred."* Here the correction was applied where it was remembered.
+The three rows read `open` in `TASKS.md` and `pending` in `goal.json`. Both normalise to
+`not-done`, which is C2's deliberate design (the contract's Out-of-scope section says vocabulary
+choice itself is not a finding), and the *meaning* is now the same in both files.
+**ISS-090's finding does not reproduce. C1, C2 hold.**
 
-Direction is conservative (`TASKS.md` understates readiness rather than overstating it), so **[I4]
-is not additionally engaged** — but readiness is computed from `goal.json`, so the practical effect
-is that a human reading `TASKS.md` is told a gate is unanswered that was answered.
+## 2. The three notes against `qa/gates/golden-set-redesign.md` — the gate file, not goal.json
 
-**Fix direction:** apply the same three corrections to `TASKS.md` rows 34, 35, 93 — status
-`blocked` → `pending`, and rewrite `U0.10`'s note from the gate file exactly as `goal.json`'s
-already is (delete *"Needs the human gate answered first"*, record Option C and the four
-acceptance conditions). Then re-run the `uniq -d` and a grep for `BLOCKED by` before claiming it.
-**ISS-090 stays `open`;** I appended the cycle-2 evidence to its row rather than opening a new id,
-because this is the same finding not a new one.
+I read the gate file myself, clause by clause, and checked the `TASKS.md` note text against it.
+The dispatch is right that the inversion in condition 2 is the easiest thing to flatten while
+paraphrasing. **It is not flattened.** `TASKS.md:34` carries, verbatim in substance:
+
+> *"PASS = recall@5 STRICTLY between 0.217 and 1.000 with a non-zero miss count - 1.000 is a
+> FAILURE of the remedy and escalates to Option B"*
+
+against gate condition 2: *"Pass = a recall@5 **strictly between 0.217 and 1.000, with a non-zero
+miss count**. **1.000 is a FAILURE of this remedy, not a success** … escalates to Option B rather
+than closing this gate."* The direction of the failure is preserved, not softened into a
+one-sided "≥ some number".
+
+| claim in the TASKS.md note | gate file | agrees? |
+|---|---|---|
+| Option C = regenerate from `data/toc-migrated/<sessionId>/turns.json` | "Scope of what C authorizes" | yes |
+| different model **and** prompt than the summarizer | same section | yes |
+| phrased as real student questions; near-neighbour distractors | same section | yes |
+| cite the **0.217** question-blind control beside every score | condition 1 | yes, exact number |
+| **strictly between 0.217 and 1.000, non-zero miss count; 1.000 = FAILURE → Option B** | condition 2 | yes — inversion intact |
+| re-run verbatim-overlap + single-unique-token pin diagnostics, pin rate well below **63%** | condition 3 (63% = 29/46) | yes |
+| `T-022` NOT gate-blocked, blocked only by its `T-021` dep | gate lines 7–10, *"NOT blocked: the judge-agreement half (T-022)"* | yes |
+| `U0.10`: condition 4 — U1.4/U1.5 exit criteria not re-pointed at the new set until conditions 2–3 hold, and not cited as passed until then | condition 4 | yes |
+| *"The gate is answered but NOT closed"* | gate's last line | yes |
+
+I grepped for any claim that the gate is **closed** across `TASKS.md`, `goal.json` and the
+manifest: **none**. The answered/closed distinction is load-bearing and it is stated correctly in
+both trackers. **[I3] now holds** — the correction was re-derived from the gate file and applied to
+every surface, which is exactly what cycles 1 and 2 failed to do.
+
+## 3. Mutation proof, replayed — and armed first
+
+```
+$ node scripts/lib/mutate.mjs apply TASKS.md
+  MUTATION ARMED: TASKS.md (restore with: mutate.mjs restore)
+$ sed -i 's/^| T-021 | open |/| T-021 | blocked |/' TASKS.md      ← the literal cycle-2 state
+$ node scripts/tracker-audit.mjs --gate g1
+  tracker-audit --gate G1: 1 finding(s)
+    G1 status: T-021 is "pending" in goal.json but "blocked" in TASKS.md
+  exit=1
+$ node scripts/lib/mutate.mjs restore TASKS.md
+  RESTORED: TASKS.md (verified identical to HEAD)
+$ git diff --stat -- TASKS.md      → empty
+$ node scripts/lib/mutate.mjs assert-clean
+  MUTATIONS CLEAN: none outstanding
+$ node scripts/tracker-audit.mjs --gate g1      → OK, exit 0
+```
+
+The finding names the pending/blocked mismatch exactly as the manifest promises, and it is the
+check that was **structurally impossible** before this cycle. No mutation is armed as I write this;
+`.claude/hooks/mc-precommit.ps1:22` delegates to `assert-clean`, so the commit below could not have
+landed over an armed mutation. **C6 holds.**
+
+## 4. Ruling on the scope call — the `NORMALISE` change is correct, not scope creep
+
+The cycle-2 verdict asked only for three `TASKS.md` rows. The maker also changed
+`tracker-audit.mjs:43` so `blocked` maps to its own class instead of collapsing into `not-done`.
+**Ruling: correct, and it is the more important half of this cycle.**
+
+- It is **causal, not adjacent.** The cycle-2 verdict's own second consequence said the gate stayed
+  green over two trackers that disagreed in fact *because* both words normalised to `not-done`.
+  Fixing only the three rows would have left the mechanism that hid them intact — and this unit has
+  now had the same class of defect recur twice for exactly that reason. Repairing data while
+  leaving the blind check is what makes a finding come back a third time.
+- It is **contained.** `git log --name-only` on `683f043`: `TASKS.md`,
+  `scripts/lib/tracker-audit.mjs`, `scripts/lib/tracker-audit.test.mjs`. No product code, no
+  contract, no ledger, no manifest-adjacent surface. `apps/`, `packages/`, `workers/` untouched;
+  typecheck and depcruise clean.
+- **Blockage is still representable — I confirmed this independently, not from test 11.** I copied
+  `TASKS.md` + `goal.json` to a scratch root, set `T-021` to `blocked` on **both** sides, and ran
+  `audit(root)` against it: **zero G1 findings.** Agreeing `blocked` rows pass. The new class
+  distinguishes disagreement; it does not outlaw the state. So this is not one lie traded for
+  another.
+- Test 11 (`G1 still accepts agreeing blocked rows — the new class did not make blockage
+  unrepresentable`) is the right test to have written alongside it, and it is the test I would have
+  demanded had it been missing.
+
+The narrow reading — "a final fix cycle should change only what the verdict named" — would have
+been the wrong call here, because the verdict named a symptom whose cause was one line away in the
+same file the fix already had open.
+
+## 5. Contract sweep
+
+| | |
+|---|---|
+| **[C1]** row-set parity | holds — `--gate g1` clean; 56 ids on both sides |
+| **[C2]** status agreement in meaning | holds — the three rows agree; `open`/`pending` is the contract's own permitted vocabulary spread |
+| **[C3]** arithmetic headline | holds — recomputed 31/56 → 55%, matches `progress` |
+| **[C4]** G2 unverified fixes | not engaged by this unit (see Notes) |
+| **[C5]** G3 sweep freshness | not engaged by this unit |
+| **[C6]** gate exercised, not asserted | holds — mutation fired and restored, armed |
+| **[C7]** budget | holds — 125 non-blank LOC (≤300), `lint:structure` exit 0 |
+
+| | |
+|---|---|
+| **[I1]** no `done` on weak evidence | holds — no row changed `done` state this cycle |
+| **[I2]** one id, one scope | holds — `uniq -d` on the id column empty; no duplicate rows |
+| **[I3]** corrections re-derived, not assumed | **holds now** — notes rewritten from the gate file, and I re-read the gate rather than the notes to confirm it |
+| **[I4]** flattering direction audited hardest | holds — the change raises readiness (`blocked`→`open`), and each row carries its evidence inline (the gate path, Option C, the four conditions). `percent` unchanged at 55%; denominator unchanged at 56 |
+| **[I5]** the ledger is the checker's | holds — `683f043` touches no `qa/issues.jsonl`, no `qa/.last-sweep`, no verdict file |
+| **[I6]** `fixed → verified` needs a later independent re-check | holds — ISS-090 goes to `fixed`, not `verified`; ISS-089 stays `fixed` |
 
 ---
 
 ## Notes that are NOT failures
 
-- **A small overclaim, worth one line and not a finding.** The manifest says G1 "names an unknown
-  status word **instead of** emitting a confusing mismatch". It emits **both** — my `partial`
-  mutation produced the unknown-word finding *and* `G1 status: U3.1 is "in_progress" in goal.json
-  but "partial" in TASKS.md`. The useful line is present and first, which is what matters; the
-  word "instead" is inaccurate. No fix required.
-- I did not hunt a third finding. F1 came directly out of check 3 in the dispatch ("confirm no row
-  still carries blocked_by") — the `blocked_by` grep was clean, so I read the rows themselves, and
-  the rows are what is wrong. `ISSUES-WRITTEN: none` is the correct ledger outcome for this cycle:
-  ISS-089 → `fixed`, ISS-090 → stays `open` with new evidence.
-- The restraint ruling from cycle 1 stands and the maker's acceptance of it is accurate, including
-  its acknowledgement that its second reason was stale. Nothing to re-litigate.
-- No product code was touched this cycle. `apps/`, `packages/`, `workers/` unchanged; typecheck and
-  depcruise both clean.
-- No goal task matches this unit slug (`Goal task: none`), so no `/goal` close — and the verdict is
-  FAIL, so none would be.
+- **The G2 backlog is real but out of this unit's scope.** The full audit (no `--gate`) exits 1 with
+  *"35 issue(s) are `fixed` with no `verified_date`"*. That is C4, which the contract's own
+  amendment log deliberately keeps out of `lint:structure` as checker-owned, and it predates this
+  unit. Not charged here; it belongs to a sweep.
+- **A residual trace of the cycle-2 overclaim.** The manifest corrected its "names an unknown status
+  word **instead of** a mismatch" wording, but the *test name* at
+  `tracker-audit.test.mjs` still reads `G1 names an unknown status word instead of emitting a
+  confusing mismatch`. It emits both. Cosmetic, one line, no fix required.
+- **`.goal/goal.json` is dirty in the working tree, and it is not this unit's.** `git diff` shows
+  only `updated`/`last_deterministic_tick` timestamps and four added `progress` counters
+  (`in_progress`, `blocked: 0`, `pending`, `current`) written by the concurrent monitor tick. It
+  also dropped the file's trailing newline. Neither affects any criterion — `progress.total/done/
+  percent` still verify as arithmetic — and I did not touch it.
+- **I did not hunt a finding.** Every item the dispatch told me to press on came back clean under a
+  check I ran myself, including the two designed to catch a flattering paraphrase (the gate's
+  1.000-is-a-failure inversion, and whether the new `blocked` class quietly outlawed a legitimate
+  state). `ISSUES-WRITTEN: none` is the correct outcome.
+- No goal task matches this unit slug (`Goal task: none`), so no `/goal` close is performed.
 
 ## Ledger
 
-- **ISS-089** → `status: fixed`, `fixed_date: 2026-09-08`, with the mutation evidence above.
-  Not `verified` — per [I6] that needs a later independent re-check, not this one.
-- **ISS-090** → stays `open`, evidence extended with the cycle-2 finding.
+- **ISS-090** → `status: fixed`, `fixed_date: 2026-09-08`, with the cycle-3 evidence above recorded
+  in `fixed_evidence`. Not `verified` — per [I6] that needs a later, independent re-check that
+  re-executes the defect.
+- **ISS-089** → unchanged at `fixed` (closed in cycle 2).
 - No new issue ids written.
 
 ---
 
 ```
-VERDICT: FAIL
-SCOREBOARD: 7/7 criteria met, 5/6 invariants hold
-FAILURES:
-- [I3] sev: high · ISS-090 fixed in .goal/goal.json only — TASKS.md rows 34/35/93 still read `blocked` and U0.10's note still says "Needs the human gate answered first", the exact false sentence the manifest claims is gone; G1 stays green because `blocked` and `pending` both normalise to not-done, and the "blocked_by: none" evidence line is true only because TASKS.md states the blockage in prose · apply the same three corrections to TASKS.md rows 34/35/93 and re-grep for "BLOCKED by" before claiming it · issue: ISS-090 (stays open)
+VERDICT: PASS
+SCOREBOARD: 7/7 criteria met, 6/6 invariants hold
+FAILURES: none
 ISSUES-WRITTEN: none
-EXPLANATION: ISS-089 is completely fixed and its class closed — I armed mutate.mjs and proved both new G1 checks fire (a second U3.1 row yields "G1 duplicate rows in TASKS.md — U3.1×2"; a `partial` status yields the unknown-status finding naming the word), restoring byte-identical each time, with 9/9 tests, --gate g1 OK, lint:structure exit 0, typecheck exit 0 and the 55% headline recomputed as arithmetic on 31/56. I also read qa/gates/golden-set-redesign.md myself clause by clause: the three rewritten notes in goal.json carry no drift — the turns.json source, the strictly-between-0.217-and-1.000 PASS band with a non-zero miss count, 1.000 as a FAILURE escalating to Option B, T-022 as not gate-blocked, and condition 4's constraint on U1.4/U1.5 are all exact, and nothing anywhere claims the gate is closed. The unit fails because that correction was written to only one of the two trackers: TASKS.md still marks all three rows blocked and still contains the retracted sentence, so the same class of untrue tracker assertion the unit exists to remove survives in the file the maker did not re-read — cycle 1's root cause, one layer in.
+EXPLANATION: ISS-090 is fixed in both trackers. I re-grepped TASKS.md and goal.json myself and read the rows rather than trusting a blocked_by field grep — the grep that produced the cycle-2 failure: "BLOCKED by qa/gates" 0, "Needs the human gate answered first" 0, blocked-status rows 0, no blocked_by key in either file, and the four surviving "blocked" strings in TASKS.md are all benign (an UNBLOCKED prefix, the gate's own "NOT gate-blocked" line, unrelated prose, and an explicit retraction). I read qa/gates/golden-set-redesign.md rather than goal.json to verify the three notes: the PASS band is still stated as recall@5 strictly between 0.217 and 1.000 with a non-zero miss count, 1.000 is still a FAILURE escalating to Option B, the 63% pin-rate diagnostic and condition 4 are intact, and nothing claims the gate is closed. The mutation proof replays exactly as written — armed via mutate.mjs, a reintroduced `| T-021 | blocked |` yields "G1 status: T-021 is pending in goal.json but blocked in TASKS.md" exit 1, restore verified identical to HEAD, git diff empty, assert-clean CLEAN. On the scope call I rule the NORMALISE change correct rather than creep: the collapse of blocked into not-done is why G1 could not see the divergence, the diff is three files with no product code, and blockage stays representable — I confirmed that independently by running audit() over a scratch copy with T-021 set blocked on BOTH sides, which yields zero G1 findings. 11/11 tests, --gate g1 exit 0, lint:structure exit 0, typecheck exit 0, and the 55% headline recomputed as arithmetic on 31/56 rows.
 ```
