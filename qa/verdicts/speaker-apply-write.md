@@ -261,3 +261,234 @@ Only [C9] and [I1]. Do not touch the merge rule, the confidence drop, the collis
 override mechanism, or the B10 downgrade — all four rulings above are in the maker's favour and
 re-litigating them would waste the cycle. Re-submit at `Fix cycle: 2` with the write branch
 exercised by a test.
+
+---
+
+# Verdict — speaker-apply-write (cycle 2)
+
+**Date:** 2026-09-08
+**Cycle checked:** 2
+**Contract:** `qa/contracts/speaker-apply-write.md`
+**Commit checked:** `1d2e77e` on `lane/a-speakers`
+**Bound root:** `D:\KnowledgeBase-lanes\a-speakers` (worktree; `D:\KnowledgeBase` untouched)
+**Mode:** A
+
+```
+VERDICT: PASS
+SCOREBOARD: 12/12 criteria met, 6/6 invariants hold
+FAILURES: none
+ISSUES-WRITTEN: none
+EXPLANATION: ISS-102 and ISS-103 are both closed, and closed structurally rather than patched. I
+tested ISS-103's own stated acceptance in BOTH directions myself and both redden `pnpm -r typecheck`
+at the exact lines the maker quoted. I independently re-derived the two documents from the corpus,
+pushed them through `writeSpeakerDocs` against a target modelled on the real `scopedCollection`
+source, and validated the persisted result against `schema/speakers.schema.json` with Python
+`jsonschema`: both documents validate and both carry `tenantId` — the bare-replace trap is genuinely
+closed, not renamed. Delete-by-`personId` is correct rather than a mismatch, because `_id` is
+`<tenantId>-<personId>` deterministically and `deleteMany` is tenant-merged, so the two keys select
+the same single row; a second identical run left 2 documents, not 4. The deferral of the `contested`
+marker is accepted as a low note but its stated reasoning is wrong, and I say so below.
+```
+
+## The two directions of ISS-103's acceptance — I ran both
+
+ISS-103's acceptance was: *"reintroducing ISS-102's exact line must redden a command that runs in
+CI, not merely fail when a human triggers a live write."*
+
+**Direction 1 — reintroduce `replaceOne` in `writeSpeakerDocs`.** I replaced the
+`deleteMany`+`insertOne` pair in `packages/index/src/pipeline/speaker-docs.ts` with
+`await target.replaceOne({ personId: doc.personId }, rest, { upsert: true });` and ran
+`pnpm -r typecheck`:
+
+```
+packages/index typecheck: src/pipeline/speaker-docs.ts(145,18): error TS2339:
+  Property 'replaceOne' does not exist on type 'SpeakerWriteTarget'.
+packages/index typecheck: Failed
+```
+
+**Direction 2 — remove `deleteMany` from `scopedCollection`.** I deleted the `deleteMany` line from
+`packages/db/src/lib/tenantScope.ts` and ran `pnpm --filter '@lkb/db' typecheck`:
+
+```
+src/collections/tenantScope.typecheck-test.ts(65,79): error TS2339:
+  Property 'deleteMany' does not exist on type '{ find: ...; insertOne: ...; }'
+src/lib/tenantScope.test.ts(53,24) / (60,24) / (68,24): same
+```
+
+Both are the exact errors the manifest quotes, at the exact lines. Each file was restored from a
+pre-mutation copy and confirmed with `cmp` (`RESTORED_OK`), and `git status --porcelain` was empty
+after every mutation. The mechanism is real and lives in CI, not in a comment.
+
+## Does `writeSpeakerDocs` actually persist a schema-valid, tenant-carrying document?
+
+Yes, and I did not take the maker's test's word for it. I built my own harness that re-derives the
+corpus through `resolveSpeakers` + `buildSpeakerDocs`, pushes the result through the real
+`writeSpeakerDocs`, and logs exactly what reaches `insertOne`:
+
+```
+DETERMINISTIC: true
+insertOne receives keys: _id,personId,aliases,confidence,evidence      <- tenantId stripped
+```
+
+That stripped document is then handed to the scoped accessor, whose source
+(`packages/db/src/lib/tenantScope.ts`) reads `insertOne: (doc) => raw.insertOne({ ...doc, tenantId })`
+— it re-attaches the tenant. I modelled that re-attachment in the harness and validated the
+resulting stored documents against the **real** `schema/speakers.schema.json` with Python
+`jsonschema` (which, unlike the repo's `scripts/lib/mini-schema.mjs`, does implement `minItems`):
+
+```
+VALID toc-person:jubin-thakkar tenantId= toc
+VALID toc-person:ruby         tenantId= toc
+```
+
+**[I1] holds.** The bare-replace trap I named at cycle 1 is closed by routing through the one
+accessor method that re-injects the tenant — the strip is only safe because of that, and the maker
+states that reason in the source comment rather than leaving it as folklore.
+
+## Is the delete-then-insert idempotent, and does it delete by the right key?
+
+Yes to both, and the `personId`/`_id` question I asked has a clean answer rather than a latent bug.
+
+- `_id` is `<tenantId>-<personId>`, derived deterministically in `buildSpeakerDocs`, and
+  `deleteMany` is tenant-merged by the accessor. So `{ tenantId, personId }` and
+  `{ _id: "<tenantId>-<personId>" }` select the **same single row**. There is no key by which a
+  delete could miss the row the subsequent insert then duplicates, and none by which it could reach
+  another tenant's row.
+- Empirically, running `writeSpeakerDocs` twice over the real corpus:
+  `write1 {before:0,written:2,after:2}` then `write2 {before:2,written:2,after:2}`, stored length 2.
+  No accumulation, no orphan.
+- `personId` is in fact the more robust of the two keys: it would still find and replace a row whose
+  `_id` was produced by an older derivation, where an `_id` filter would silently insert a duplicate.
+  Choosing it was right.
+
+**[C9] is met.** Every operation invoked — `countDocuments`, `deleteMany`, `insertOne` — exists on
+`scopedCollection` (I read the source, I did not infer it); the collision gate blocks the live write
+unless `--allow-collisions` is passed (`scripts/sync-speakers.mjs`, before any Mongo import); the
+write is idempotent.
+
+## Do the four new tests use a faithful fake, or a convenient one?
+
+Faithful, and structurally prevented from being convenient. The fake is **typed as
+`SpeakerWriteTarget`**, so it cannot offer a method the production accessor lacks — the exact
+permissiveness that produced ISS-102 is now a compile error inside the test file too. I checked its
+three methods against `tenantScope.ts` line by line: `insertOne` spreads `{ ...doc, tenantId }` in
+both; `deleteMany` matches on the filter and returns `deletedCount` in both; `countDocuments`
+returns a count in both. My own independent harness, written without reading their fake, reproduced
+identical behaviour.
+
+I did **not** simply accept the four tests. Mutation testing of `writeSpeakerDocs`, with a no-op
+control:
+
+| Mutant | `@lkb/index` result |
+|---|---|
+| M0 control — comment only, no behaviour change | 178 pass / 0 fail — **control clean; the suite is not vacuous** |
+| M1 — drop the `deleteMany` call | 178 tests, **2 fail** |
+| M2 — drop the `insertOne` call | 178 tests, **3 fail** |
+| M3 — pass the whole `doc` instead of the stripped `rest` | 178 pass / 0 fail — survives |
+| M4 — delete by `{ _id: doc._id }` instead of `{ personId }` | 178 pass / 0 fail — survives |
+
+M3 and M4 survive, and neither is a defect: passing the unstripped document to a scoped `insertOne`
+yields the identical stored document (`{ ...doc, tenantId }` where `doc.tenantId` is already that
+same tenant), and M4 selects the same row as shown above. They are equivalent mutants, not blind
+spots — but they do mark the honest limit of what these four tests can distinguish, which is worth
+knowing before someone treats the tenantId assertion as broader than it is (low note 1).
+
+Every mutation was reverted from a pre-mutation copy and confirmed with `cmp`; the working tree was
+clean after each.
+
+## The declared verify suite, re-run in full
+
+| Command | Result |
+|---|---|
+| `pnpm -r test` | core 7, db 13, ai 70, ingest 41, ask 32, **index 178**, meeting-bot 40, apps/api 109 — **490 pass / 0 fail** |
+| `pnpm -r typecheck` | exit 0, 10 projects Done |
+| `pnpm lint:structure` | green; lint-root OK, lint-dupes OK, lint-migrations OK (884 files), SNAPSHOT fresh, tracker-audit G1 OK, depcruise 277 modules / 0 violations |
+| `node --test scripts/lint.test.mjs` | 11 pass / 0 fail |
+| `node scripts/sync-speakers.mjs --dry-run` | 23 sessions, 494 positional, 78 (15.8 %), 2 docs, no collisions — unchanged, matches the manifest |
+
+No live write was run. **[C10] reproduces exactly**; every number in the cycle-2 evidence block is
+one I produced myself.
+
+**[C7] re-verified by instrumentation, not by reading control flow** (the write path changed, so the
+cycle-1 result does not carry over automatically). I monkey-patched `net.createConnection`,
+`net.connect`, `tls.connect`, `dns.lookup` and `dns.promises.lookup` before importing the script
+under `--dry-run`:
+
+```
+NETWORK CALLS: 1 [ 'net.createConnection "\\?\pipe\...\tsx-Lenovo\14564.pipe"' ]
+```
+
+The single call is a local Windows named pipe opened by the `tsx` loader itself — not a socket, not
+a DNS lookup, and not attributable to the script. The `@lkb/db` client and the `speakers` collection
+are both `await import`ed **after** the `--dry-run` early return.
+
+## The `contested` marker: the deferral is accepted, the reasoning is not
+
+I am ruling on this plainly because the maker asked for it plainly.
+
+**The deferral itself is fine.** The `contested` marker was a low note, not a criterion. [C5] and
+[I4] are satisfied without it: collisions are returned alongside the docs, the confidence drops from
+0.9 to 0.6, and a live run blocks unless `--allow-collisions` is passed. Ambiguity survives. Nothing
+in the contract obliges the field, and no collision exists in the corpus.
+
+**The reasoning offered for it is wrong, and I do not want it becoming precedent.** The maker argues
+that adding the field "would be the same mistake as the `replaceOne` path: shipping code no test and
+no run has touched." That is not what ISS-102 was. `replaceOne` was unexercised **because it was
+structurally unexercisable** — it lived in a `.mjs` file outside every typecheck and every test, and
+the only thing that could have run it was a live production write. A `contested: true` flag on a
+cross-session merge is the opposite case: it sits in typechecked source, on a code path that
+**already has three passing unit tests** (`merges the same person across sessions`, `a cross-session
+merge lowers confidence`, `two speakers in ONE session...`), and could be asserted today in a test
+that needs no Mongo, no live run and no approval. The `speakers` schema is
+`additionalProperties: true`, so it is schema-legal now.
+
+So: correct call, wrong reason. "No test can reach it" was the ISS-102 lesson; "no data exercises it
+yet" is a different and much weaker argument, and citing the first to justify the second would let a
+genuinely testable gap be deferred under the authority of a lesson about untestable code. Deferring
+until the first real collision is a reasonable product judgement on its own merits — it does not need
+the analogy, and the analogy does not hold.
+
+## Low notes (not failures — none of these blocks the PASS)
+
+1. **The tenantId test asserts a composition, not the function alone.** `the stored document carries
+   its tenantId` passes because the *fake* re-attaches the tenant, exactly as the real accessor does.
+   It is a valid test of `strip + scoped insert`, and I verified the fake's fidelity against
+   `tenantScope.ts` myself — but M3 above shows it cannot detect a change to the strip itself. Read
+   it as pinning the contract with the accessor, not the internals of `writeSpeakerDocs`.
+2. **`insertOne` is pinned for existence, not for shape.** In `tenantScope.typecheck-test.ts`,
+   `_count` and `_delete` carry explicit type annotations; `const _insert = coll.insertOne;` does
+   not. The manifest says all three are pinned "with the right shapes" — for `insertOne` that is an
+   overclaim. Removing it still reddens typecheck, so the acceptance holds; a signature change is
+   caught only incidentally, by the five other `collections/*.ts` call sites (I confirmed this by
+   adding a required second parameter: five errors, none of them at line 65). One annotation would
+   close it.
+3. **Delete-then-insert is not atomic.** A crash between `deleteMany` and `insertOne` loses that
+   speaker's row until the next sync. This is the precedent's behaviour (`sync-real-turns.mjs`) and
+   acceptable for a re-runnable sync over a derived collection — recorded so it is a known property
+   rather than a discovery.
+4. **The sync is authoritative-by-replacement.** `deleteMany({ personId })` will discard a richer
+   document (an `org`, a `role`, a hand-corrected alias) written by any future unit or human,
+   replacing it with the deterministic-only version. Correct for an empty collection and for today's
+   single writer; it becomes a real question the moment a second writer touches `speakers`.
+
+## Ledger
+
+- **ISS-102** to `fixed` (2026-09-08). Verified by direction-1 mutation: the line cannot be
+  reintroduced without failing `pnpm -r typecheck`.
+- **ISS-103** to `fixed` (2026-09-08). Verified by direction-2 mutation: accessor drift reddens the
+  db package's typecheck at the source of the drift. Note the fix is narrower than the issue's
+  primary suggestion — `scripts/*.mjs` is still outside typecheck; what changed is that the *write
+  logic* is no longer in a `.mjs` file, and the accessor surface it depends on is pinned where it is
+  owned. That satisfies the stated acceptance for this seam. Any future `.mjs` entrypoint that
+  reaches the accessor directly reopens the shape, which is why the issue's own
+  `scripts/tsconfig.json` remedy is still worth doing on its own merits.
+
+Neither is `verified` yet: that requires a later re-check, and for ISS-102 the honest final
+confirmation is the first live write actually completing.
+
+## Not in scope of this PASS
+
+No live write has been performed; catalogue **B3** and **B10** have not flipped and must not be
+flipped on this verdict. The maker's expectation that B10 needs a human downgrade to PARTIAL stands
+and was already endorsed at cycle 1. The unit remains deterministic-only at 78/494 (15.8 %) and two
+speakers, which the contract accepts as a stated limitation, not a defect.
