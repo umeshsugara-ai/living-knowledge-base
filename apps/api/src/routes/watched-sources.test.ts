@@ -140,3 +140,30 @@ test("one tenant never sees another tenant's watched sources", async () => {
     await server.close();
   }
 });
+
+/**
+ * ISS-C-UNRUN-WRITERS-001. The route validated a PARSED url and stored the RAW string, so the
+ * value approved and the value stored could differ under a different parser. That gap matters
+ * precisely because this row is a future outbound fetch target: whatever the fetcher re-parses
+ * must be the thing this check actually approved, not a string that merely normalises to it here.
+ */
+test("the STORED url is the normalised one, not the raw input", async () => {
+  const server = await startTestServer(buildTestDeps({ keyStore: key(["sources"]) }));
+  try {
+    const res = await fetch(`${server.baseUrl}/watched-sources`, {
+      method: "POST",
+      headers: { authorization: "Bearer ws-key", "content-type": "application/json" },
+      body: JSON.stringify({ url: "HTTPS://Example.AC.uk/fees?b=2&a=1", reputationTier: "official", checkIntervalHours: 6 }),
+    });
+    assert.equal(res.status, 201);
+    const body = (await res.json()) as { source: { url: string } };
+    assert.equal(body.source.url, new URL("HTTPS://Example.AC.uk/fees?b=2&a=1").href,
+      "what is stored must be exactly what was parsed and approved");
+
+    const list = await fetch(`${server.baseUrl}/watched-sources`, { headers: { authorization: "Bearer ws-key" } });
+    const listed = (await list.json()) as { sources: { url: string }[] };
+    assert.equal(listed.sources[0]?.url, body.source.url, "and the same value must come back out");
+  } finally {
+    await server.close();
+  }
+});

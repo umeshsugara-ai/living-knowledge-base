@@ -26,14 +26,23 @@ export interface WatchedSourceDeps {
 
 const TIERS = new Set(["official", "community", "blog"]);
 
-/** http(s) only. A stored URL is a future outbound fetch target, not just a string. */
-function isHttpUrl(value: unknown): value is string {
-  if (typeof value !== "string" || value.trim() === "") return false;
+/**
+ * http(s) only, returning the NORMALISED url rather than a boolean.
+ *
+ * ISS-C-UNRUN-WRITERS-001: the first version validated a parsed URL and stored the raw string, so
+ * the value approved and the value stored could differ under a different parser. That matters
+ * precisely because this row is a future outbound fetch target — whatever the fetcher re-parses
+ * must be the thing this check actually approved. Returning the parsed `href` makes the two the
+ * same object rather than two strings that happen to agree today.
+ */
+function normalisedHttpUrl(value: unknown): string | null {
+  if (typeof value !== "string" || value.trim() === "") return null;
   try {
-    const { protocol } = new URL(value);
-    return protocol === "http:" || protocol === "https:";
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+    return parsed.href;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -43,7 +52,8 @@ export function createWatchedSourcesRouter(deps: WatchedSourceDeps): Router {
   router.post("/watched-sources", requireScope("sources"), async (req: Request, res: Response) => {
     const body = (req.body ?? {}) as Record<string, unknown>;
 
-    if (!isHttpUrl(body.url)) {
+    const url = normalisedHttpUrl(body.url);
+    if (url === null) {
       res.status(400).json({ error: "bad_request", message: "url must be an absolute http(s) URL" });
       return;
     }
@@ -61,7 +71,7 @@ export function createWatchedSourcesRouter(deps: WatchedSourceDeps): Router {
 
     const doc: Omit<WatchedSources, "tenantId"> = {
       _id: `ws-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-      url: body.url,
+      url,
       reputationTier: body.reputationTier as WatchedSources["reputationTier"],
       checkIntervalHours: hours,
       active: true,
