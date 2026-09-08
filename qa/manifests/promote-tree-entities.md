@@ -228,14 +228,30 @@ waiting for someone to run it"* and that sentence was false the moment I wrote i
 ISS-100 lesson (an `&&` chain short-circuits) recurring in a unit where I had already cited
 ISS-100 in my own verification notes.** Moved ahead of `tracker-audit`; the scripts guard now runs.
 
-### On the checker's third observation — it was my dirt, not the other lane's
+### 3. The checker's third observation — I contradicted it, and I was wrong
 
-It reported `pnpm test:lint` failing on `catalogue-cli` cases and attributed them to a stale
-`docs/PROGRESS.md` banner left by the concurrent lane. Checked: the failures are
-`catalogue-score --check` **refusing on a dirty working tree** — my own uncommitted cycle-3 files —
-which is the scorer behaving exactly as designed so a score stays reproducible by someone else.
-Not the other lane, and not a defect. Recording it because an unexamined attribution to another
-lane is how a real problem gets parked as somebody else's.
+It reported `test:lint` failing on `catalogue-cli` and attributed it to a stale `docs/PROGRESS.md`.
+I checked with a dirty tree, saw `catalogue-score --check` refusing on uncommitted files, and
+concluded it was my own dirt rather than real staleness.
+
+**Then I committed and re-ran: the staleness was real.** `PROGRESS.md` carried an
+`EDITED SINCE COMMIT` banner emitted while `.goal/catalogue.json` was uncommitted, untrue once it
+was committed. Regenerated — score-neutral, 28.1% either way, the banner is the only diff. The
+checker was right and my correction was wrong; I am leaving both on the record rather than only
+the conclusion.
+
+### 4. …and my own fix then caused a regression, which I also had to back out
+
+Moving `pnpm test:lint` ahead of `tracker-audit` made the scripts guard gate — and also imported
+`catalogue-cli`'s **deliberately tree-cleanliness-sensitive** tests into `lint:structure`. In a
+shared two-lane checkout somebody is almost always mid-edit, so `lint:structure` went red whenever
+*either* lane had uncommitted work (confirmed live: the other lane's `App.tsx` and `.gitignore`
+edits reproduced it). That is worse than the problem I set out to fix.
+
+Corrected: `lint:structure` now runs **`node --test scripts/lint.test.mjs`** — the scripts guard
+alone — rather than the whole `test:lint` suite. Verified against the currently-dirty shared tree:
+17/17 pass, and the chain now reaches `tracker-audit`, whose two findings are the pre-existing
+other-lane `U2.4` rows. `pnpm test:lint` keeps its full suite for a clean-tree run.
 
 ## Cycle 3 outputs
 
