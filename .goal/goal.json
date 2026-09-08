@@ -559,6 +559,16 @@
       "evidence": "qa/verdicts/promote-tree-entities.md - PASS cycle 3 (ba7cf7e), recorded U2.1-PARTIAL. Mechanism shipped+tested; live backfill deliberately NOT run (131/137 topic slugs single-session, several are person names). topics/orgs still 0 rows, catalogue NOT upgraded. Blocked follow-up: ISS-C-CLAIMS-TARGETING-001 must close before U2.2/U2.3 enables a live backfill."
     },
     {
+      "id": "U2.1b",
+      "title": "Assert claims/topics/orgs write TARGETING (ISS-C-CLAIMS-TARGETING-001)",
+      "status": "in_progress",
+      "base_criticality": "high",
+      "deps": [
+        "U2.1"
+      ],
+      "evidence": "ready-for-check; precondition on U2.2/U2.3 live backfill"
+    },
+    {
       "id": "U2.2",
       "title": "Extraction-quality harness + golden set (built BEFORE the LLM extractors)",
       "status": "pending",
