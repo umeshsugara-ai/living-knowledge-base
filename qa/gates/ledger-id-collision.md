@@ -75,4 +75,20 @@ reduces to "two sessions filing within the same few seconds".
 Reply with the option number(s). I will append `Answered:` here before acting, then build it as a
 normal unit.
 
+## One recovered finding is CRITICAL, and it was invisible while erased
+
+**ISS-104** (originally `lane/a-speakers`' ISS-093) is **critical and open**: a naming cue adjacent
+to any capitalised non-name still ships a fabricated person — *"Welcome Everyone to the session."*
+→ `person:everyone`, with **20/20 checker attacks resolving**. Fabricated people entering speaker
+attribution is exactly the class `goal.md` treats as unrecoverable ("who said it, when").
+
+For the window between the merge and this recovery it **did not exist** — its id described a
+golden-set provenance bug instead. The speaker lane's own loop could not have pulled it, because
+its tier-2 scan reads this ledger.
+
+**I have not touched it.** It is that lane's file (`packages/index/src/pipeline/speaker-name-rules.ts`),
+their loop is actively cycling on it, and grabbing it is the collision this gate exists to describe.
+The recovery is enough to re-arm them: with the row open and critical again, their next tick's
+tier-2 priority pulls it ahead of everything else.
+
 **Answered:** _(pending)_
