@@ -16,7 +16,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -112,4 +112,23 @@ test("(e) double-arming the same file is refused", () => {
   const r = run(dir, "apply", "src/prod.js");
   assert.equal(r.code, 1);
   assert.match(r.out, /already recorded/);
+});
+
+test("(f) restore REFUSES a file that was never armed — it must not silently git-checkout work away", () => {
+  // This cost real work on 2026-09-08. An `apply` was correctly refused because the file held
+  // uncommitted edits; the operator continued the sequence anyway, and the trailing `restore`
+  // ran `git checkout --` and discarded them. The `apply` precondition had done its job and the
+  // paired operation undid it — a guard on only one end of a pair guards nothing.
+  const dir = sandbox();
+  writeFileSync(join(dir, "src/prod.js"), "export const score = REAL_UNCOMMITTED_WORK;\n");
+
+  const r = run(dir, "restore", "src/prod.js");
+  assert.equal(r.code, 1, "restoring an unarmed file must be refused");
+  assert.match(r.out, /not armed/);
+  assert.equal(
+    readFileSync(join(dir, "src/prod.js"), "utf8"),
+    "export const score = REAL_UNCOMMITTED_WORK;\n",
+    "the refusal must leave the file untouched — this is the whole point",
+  );
+  rmSync(dir, { recursive: true, force: true });
 });

@@ -97,6 +97,21 @@ function restore(paths) {
   let rows = readLedger();
   for (const p of paths) {
     const r = rel(p);
+    // REFUSE to restore a file this tool never armed. `restore` runs `git checkout --`, which
+    // silently discards uncommitted work; without this check the command is an unguarded
+    // destructive operation wearing a safety tool's name.
+    //
+    // Found the hard way on 2026-09-08: an `apply` was correctly refused (the file was dirty with
+    // real edits), the operator continued the sequence anyway, and the trailing `restore` threw
+    // away ~40 lines of uncommitted work — the exact loss the `apply` precondition had just
+    // prevented. A guard that only protects the entry to a paired operation protects nothing.
+    if (!rows.some((x) => x.path === r)) {
+      fail(
+        `${r} is not armed. 'restore' runs 'git checkout -- <path>' and would DISCARD any ` +
+          `uncommitted changes. Arm it first with 'mutate.mjs apply ${r}', or if you meant to ` +
+          `throw the changes away, run git checkout yourself so the intent is explicit.`,
+      );
+    }
     execFileSync("git", ["checkout", "--", r], { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"] });
     const trust = trustOf(ROOT, r);
     // Verify AFTER restoring rather than trusting the checkout's exit code -- the 2026-09-08

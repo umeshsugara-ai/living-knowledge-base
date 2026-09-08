@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T08:49:14.489Z",
+  "generatedAt": "2026-09-08T09:01:27.518Z",
   "k": 5,
   "retriever": "heuristic",
   "recallAtK": 0.391304347826087,
@@ -696,7 +696,7 @@
     "reason": "0.391 vs a 0.217 question-blind control (+0.174), with 56 miss(es) left to move"
   },
   "goldenSetProvenance": {
-    "generatedAt": "2026-09-08T08:49:14.309Z",
+    "generatedAt": "2026-09-08T09:01:27.115Z",
     "recordedAfterTheFact": true,
     "generator": "scripts/gen-golden-set.mjs",
     "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
@@ -704,8 +704,8 @@
     "summarizerModel": "gemini-2.5-flash",
     "independence": "different model from the summarizer (gemini-2.5-flash), but the SAME vendor and family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
     "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
-    "postFilter": "rejects any candidate carrying a token unique to its own session within the SCORED corpus (session_page summary+keyInsights), or overlapping the transcript past 0.5",
-    "postFilterBiasWarning": "the pin check runs over the same corpus the retriever scores, so it preferentially removes questions the retriever would answer — the resulting recall is a DOWNWARD-BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
+    "postFilter": "rejects a candidate carrying a token unique to its own session in the turns (raw transcripts, ~218k words) corpus AND present in that session's page text, or overlapping the transcript past 0.5",
+    "postFilterBiasWarning": "no candidate was rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run",
     "kept": 92,
     "rejected": 0,
     "sessions": 23

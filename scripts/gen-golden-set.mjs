@@ -34,6 +34,9 @@
  *   --dry-run          build prompts and report the neighbour selection; make no API call.
  *   --provenance-only  rewrite golden-set-provenance.json from the set already on disk; no API call.
  *   --refilter         re-apply the CURRENT filter to the candidates already on disk; no API call.
+ *   --self-test        run the REAL generation loop against a stub provider; no API call, no writes.
+ *                      Exists because ISS-095 shipped a ReferenceError in this loop: it was the only
+ *                      path that costs money, and therefore the only one never exercised.
  */
 import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -41,7 +44,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { register } from "tsx/esm/api";
 import { tokenize } from "./lib/golden-set-diagnostics.mjs";
-import { loadCorpora, buildPinTokens, writeProvenance, refilter } from "./lib/golden-set-build.mjs";
+import { loadCorpora, buildPinTokens, writeProvenance, refilter, judgeCandidate } from "./lib/golden-set-build.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_DIR = join(ROOT, "data", "toc-migrated");
@@ -52,12 +55,12 @@ const PER_SESSION = Number(process.argv.find((a) => a.startsWith("--per-session=
 const DRY_RUN = process.argv.includes("--dry-run");
 const PROVENANCE_ONLY = process.argv.includes("--provenance-only");
 const REFILTER = process.argv.includes("--refilter");
+const SELF_TEST = process.argv.includes("--self-test");
 const NEIGHBOURS = 3;
 const MAX_TRANSCRIPT_CHARS = 40_000;
 const GENERATION_MODEL = "gemini-2.5-pro";
 /** Gemini's DEFAULT_MODEL — what the summarize jobKind resolves to, i.e. what wrote session_page. */
 const SUMMARIZER_MODEL = "gemini-2.5-flash";
-const MAX_OVERLAP = 0.5; // a question sharing a >=50% token run with the transcript is a copy
 
 register();
 
@@ -161,13 +164,18 @@ async function main() {
   // the reduction the gate itself already calls partial. The diagnostics below are what decide
   // whether that mattered — pin rate and overlap are measured, not assumed, and a recall@5 of
   // 1.000 still means the remedy FAILED and escalates to Option B.
-  const provider = DRY_RUN
-    ? null
-    : new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY, model: GENERATION_MODEL });
+  // A stub stands in for the paid provider so `--self-test` executes every line of the loop below
+  // — prompt build, completion, parse, filter — with no network and no spend. ISS-095 was a plain
+  // ReferenceError in this loop that survived three green CLI paths because none of them ran it.
+  const provider = SELF_TEST
+    ? { complete: async () => ({ text: '["What funding options are open to me?", "How long does a decision take?"]' }) }
+    : DRY_RUN
+      ? null
+      : new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY, model: GENERATION_MODEL });
 
   const questions = [];
   const rejected = [];
-  for (const id of sessionIds) {
+  for (const id of SELF_TEST ? sessionIds.slice(0, 2) : sessionIds) {
     const neighbours = nearestNeighbours(id, vocab, NEIGHBOURS);
     const prompt = buildPrompt(
       id,
@@ -188,14 +196,9 @@ async function main() {
     for (const q of candidates) {
       // ENFORCE what the prompt only requested. A model asked to avoid unique tokens still emits
       // them; without this filter the set would look regenerated and behave exactly as before.
-      const pinToken = [...new Set(tokenize(q))].find((t) => unique.get(t) === id);
-      const overlap = verbatimOverlap(q, turnsText.get(id));
-      if (pinToken) {
-        rejected.push({ sessionId: id, question: q, reason: `pinned by unique token "${pinToken}"` });
-        continue;
-      }
-      if (overlap > MAX_OVERLAP) {
-        rejected.push({ sessionId: id, question: q, reason: `verbatim overlap ${overlap.toFixed(2)}` });
+      const verdict = judgeCandidate(q, id, unique, turnsText.get(id));
+      if (!verdict.ok) {
+        rejected.push({ sessionId: id, question: q, reason: verdict.reason });
         continue;
       }
       kept++;
@@ -209,6 +212,10 @@ async function main() {
   }
 
   if (DRY_RUN) return;
+  if (SELF_TEST) {
+    console.log(`self-test OK: generation loop ran for 2 session(s), ${questions.length} kept, ${rejected.length} rejected, no writes`);
+    return;
+  }
 
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(questions, null, 2) + "\n", "utf8");

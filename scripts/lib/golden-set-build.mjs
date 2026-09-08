@@ -22,6 +22,24 @@ const GENERATION_MODEL = "gemini-2.5-pro";
 /** Gemini's DEFAULT_MODEL — what the summarize jobKind resolves to, i.e. what wrote session_page. */
 const SUMMARIZER_MODEL = "gemini-2.5-flash";
 const MAX_OVERLAP = 0.5; // a question sharing a >=50% token run with the transcript is a copy
+/** Named once so the provenance record cannot describe a corpus the criterion no longer uses. */
+const PIN_CORPUS = "turns (raw transcripts, ~218k words)";
+
+/**
+ * The single filter decision, shared by generation and re-filtering.
+ *
+ * Extracted after ISS-095: the two paths had SEPARATE copies of this predicate, and a file split
+ * narrowed an import so the generation copy referenced an unbound `verbatimOverlap` — the paid
+ * path threw after the first API call, while `--refilter` stayed green because it had its own
+ * copy. Duplicated logic is what made a partial fix possible; one definition removes the class.
+ */
+export function judgeCandidate(question, sessionId, pins, transcript) {
+  const pin = [...new Set(tokenize(question))].find((t) => pins.get(t) === sessionId);
+  if (pin) return { ok: false, reason: `pinned by rare token "${pin}"` };
+  const overlap = verbatimOverlap(question, transcript ?? "");
+  if (overlap > MAX_OVERLAP) return { ok: false, reason: `verbatim overlap ${overlap.toFixed(2)}` };
+  return { ok: true, reason: null };
+}
 
 /**
  * Provenance is WRITTEN BY THE GENERATOR, so it cannot describe a set the generator did not
@@ -53,12 +71,20 @@ export function writeProvenance(kept, rejectedCount, sessionCount, afterTheFact)
         promptStrategy:
           "real student questions, near-neighbour sessions named so wording must fit them too",
         postFilter:
-          "rejects any candidate carrying a token unique to its own session within the SCORED " +
-          `corpus (session_page summary+keyInsights), or overlapping the transcript past ${MAX_OVERLAP}`,
+          `rejects a candidate carrying a token unique to its own session in the ${PIN_CORPUS} ` +
+          "corpus AND present in that session's page text, or overlapping the transcript past " +
+          `${MAX_OVERLAP}`,
+        // Conditional, not a constant. Shipping a fixed warning is how ISS-091 happened INSIDE the
+        // function written to prevent it (ISS-094): the counts were derived while the prose stayed
+        // hardcoded, so it went on describing a criterion the code no longer used.
         postFilterBiasWarning:
-          "the pin check runs over the same corpus the retriever scores, so it preferentially " +
-          "removes questions the retriever would answer — the resulting recall is a DOWNWARD-" +
-          "BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
+          rejectedCount === 0
+            ? "no candidate was rejected, so the kept set IS the candidate set and the filter " +
+              "introduces no selection bias on this run"
+            : `${rejectedCount} candidate(s) rejected. The pin criterion requires the token to be ` +
+              "present in the page text the retriever scores, so rejection is correlated with " +
+              "retrievability and the resulting recall is a DOWNWARD-BIASED FLOOR. " +
+              "eval-recall.mjs measures the size of that bias.",
         kept,
         rejected: rejectedCount,
         sessions: sessionCount,
@@ -143,14 +169,9 @@ export function refilter() {
   const kept = [];
   const rejected = [];
   for (const c of candidates) {
-    const pin = [...new Set(tokenize(c.question))].find((t) => pins.get(t) === c.sessionId);
-    const overlap = verbatimOverlap(c.question, turnsText.get(c.sessionId) ?? "");
-    if (pin) {
-      rejected.push({ ...c, reason: `pinned by rare token "${pin}"` });
-      continue;
-    }
-    if (overlap > MAX_OVERLAP) {
-      rejected.push({ ...c, reason: `verbatim overlap ${overlap.toFixed(2)}` });
+    const verdict = judgeCandidate(c.question, c.sessionId, pins, turnsText.get(c.sessionId));
+    if (!verdict.ok) {
+      rejected.push({ ...c, reason: verdict.reason });
       continue;
     }
     const n = (bySession.get(c.sessionId) ?? 0) + 1;

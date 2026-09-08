@@ -5,7 +5,7 @@
 gate condition 4**, so this unit is a precondition for re-pointing U1.4/U1.5.
 **Goal task:** T-021 (stays open — see below)
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-093** (high)
 
@@ -130,5 +130,101 @@ All three CLI paths re-run after the file split: `--dry-run`, `--refilter`, `--p
 
 No API spend, no question text changed, no product code touched. `git revert` restores the 75-item
 set and the old criterion.
+
+---
+
+# Fix cycle 2 — both FAILURES, plus a defect I caused while fixing them
+
+Cycle 1's verdict confirmed the thesis (*"correct and I could not break it"*) and failed the unit on
+its own deliverables. Both accepted.
+
+### ISS-095 (high) — the paid path threw, and only the paid path
+
+> *"the file split narrowed the import at `gen-golden-set.mjs:43` to `tokenize` only, but line 192
+> still calls `verbatimOverlap(...)` … The **paid generation path throws ReferenceError after the
+> first API call**. The manifest's 'all three CLI paths re-run' is accurate and is exactly why it
+> escaped — the fourth path is the only one that costs money and the only one untested."*
+
+That diagnosis is the finding, more than the bug. My evidence line was **true and useless**: I
+listed the three paths I could run for free and let that stand for coverage.
+
+**Fixed structurally, not with an import.** The filter predicate existed in **two copies** — one in
+the generation loop, one in `refilter` — which is *why* a partial fix was possible: `--refilter`
+stayed green on its own copy while the generator's was broken. Both now call one exported
+`judgeCandidate()`. There is no second copy to diverge.
+
+**And the untested-path class is closed:** `--self-test` runs the **real** generation loop against a
+stub provider — prompt build, completion, parse, filter — with no network and no writes.
+
+**Proven against the actual defect class** (armed via `mutate.mjs`): reintroducing an unbound
+reference in the loop makes `--self-test` **throw at `gen-golden-set.mjs:199`**, while `--dry-run`
+stays **green and blind to it**. That contrast is the unit's core claim, demonstrated rather than
+asserted.
+
+### ISS-094 (high) — ISS-091 recurred *inside the function written to prevent it*
+
+> *"`postFilter` still says … 'within the SCORED corpus (session_page summary+keyInsights)' and
+> still carries the 'DOWNWARD-BIASED FLOOR' warning. Both are false as shipped … the counts are
+> derived from disk, but these two fields are still hardcoded literals."*
+
+Exactly right, and the sharpest way to put it: I fixed ISS-091 by deriving the **counts** and left
+the **prose** hardcoded, so the record kept describing a criterion the code no longer used. Deriving
+part of a record does not make the record derived.
+
+- `postFilter` is now built from `PIN_CORPUS`, the same constant the criterion is documented
+  against, so the description cannot name a corpus the filter does not use.
+- `postFilterBiasWarning` is **conditional on `rejectedCount`**, not a constant. Now reads:
+  *"no candidate was rejected, so the kept set IS the candidate set and the filter introduces no
+  selection bias on this run."*
+
+### The defect I caused mid-fix, reported because it cost real work
+
+While demonstrating the ISS-095 proof I ran `mutate.mjs apply` on a file holding uncommitted edits.
+`apply` **correctly refused**. I let the sequence continue anyway, and the trailing
+`mutate.mjs restore` ran `git checkout --` and **discarded ~40 lines of my own uncommitted work** —
+the precise loss the `apply` precondition had just prevented.
+
+**That is a hole in the guard, not just operator error.** `restore` is a destructive operation
+wearing a safety tool's name: it never checked whether the file was armed. A guard on one end of a
+paired operation guards nothing.
+
+`restore` now **refuses any file not in the ledger**, telling the caller to arm it or run
+`git checkout` themselves so the intent is explicit. Test `(f)` covers it and asserts the file is
+left **byte-identical** on refusal. Cost me the redo; it will not cost the next person.
+
+### Recorded, not fixed (cycle-1 judgement calls I agree with)
+
+- **~1/3 of the 159 pin tokens are still ordinary words** unique only across 23 transcripts
+  (`capped`, `permit`, `stamp`, `spouse`, `48`). Better than 921, not clean. Costs nothing at 0
+  rejections and errs toward keeping questions.
+- **Unigram pinning cannot catch a rare multi-word entity** whose parts are individually common.
+  Pre-existing; not introduced here.
+
+## Cycle-2 evidence
+
+| check | result |
+|---|---|
+| `--self-test` | generation loop ran, 4 kept / 0 rejected, no writes |
+| **mutation proof** | unbound ref in the loop → `--self-test` **throws**; `--dry-run` **still green** |
+| `--refilter` → `eval-recall` | 92 kept, recall@5 **0.391** (36/92), control **0.217**, **INFORMATIVE**, 56 misses |
+| provenance `postFilter` | now names *"the turns (raw transcripts, ~218k words) corpus AND present in that session's page text"* |
+| provenance `biasWarning` | now *"no candidate was rejected … no selection bias on this run"* |
+| `node --test scripts/lib/*.test.mjs` | **17/17** (mutate 6 incl. the new (f), tracker-audit 11) |
+| `pnpm --filter @lkb/api test` | 109/109 · typecheck exit 0 · lint:structure clean, depcruise 0/269 |
+
+## How to verify (cycle 2)
+
+1. **Replay the ISS-095 proof**: arm `gen-golden-set.mjs`, reintroduce an unbound reference inside
+   the generation loop, confirm `--self-test` throws while `--dry-run` passes. Restore.
+2. **Confirm one predicate, not two** — `judgeCandidate` is the only filter decision, used by both
+   the generation loop and `refilter`.
+3. **Check the provenance is derived**: change `PIN_CORPUS`, re-run `--provenance-only`, confirm
+   `postFilter` follows. Then confirm `postFilterBiasWarning` changes when `rejectedCount > 0`
+   (easiest via a sandbox or by reasoning from the branch — do not fabricate rejections).
+4. **Verify the `restore` fix**: on a file with uncommitted edits that was never armed,
+   `mutate.mjs restore` must refuse **and leave the file untouched**.
+5. Numbers unchanged: 0.391 / 0.217 / INFORMATIVE / 56 misses; condition 2 still holds.
+6. Confirm condition 4 is still **not** claimed unblocked — sibling-session ambiguity stands.
+7. `ISSUES-WRITTEN: none` is a complete check.
 
 **Status: ready-for-check**
