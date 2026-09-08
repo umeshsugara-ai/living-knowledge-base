@@ -27,6 +27,7 @@ async function main() {
   const { buildTree } = await import("../packages/index/src/tree/build.ts");
   const { computeRecallAtK } = await import("../packages/index/src/eval/recall.ts");
   const { createHeuristicRetriever } = await import("../packages/index/src/eval/heuristic-retriever.ts");
+  const { createNullRetriever, assessBaseline } = await import("../packages/index/src/eval/baseline.ts");
 
   const sessionDirs = readdirSync(DATA_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory()).map((d) => d.name);
@@ -49,7 +50,17 @@ async function main() {
   const retrieve = createHeuristicRetriever(tree);
   const result = computeRecallAtK(questions, retrieve, K);
 
+  // The control (plan §10 U0.10): a question-blind retriever over the same golden set. A recall
+  // number with no control cannot be read — it says nothing about whether the retriever is good
+  // or the task is trivial. The session id list comes from the same real sessions the tree was
+  // built from, so the control faces exactly the candidate pool the real retriever does.
+  const controlIds = sessions.map((s) => s._id);
+  const control = computeRecallAtK(questions, createNullRetriever(controlIds), K);
+  const assessment = assessBaseline(result, control, controlIds.length);
+
   console.log(`recall@${K} = ${result.recallAtK.toFixed(3)} (${result.hits}/${result.total} hits)`);
+  console.log(`control (question-blind) = ${control.recallAtK.toFixed(3)} | chance floor = ${assessment.chanceFloor.toFixed(3)}`);
+  console.log(`VERDICT: ${assessment.verdict.toUpperCase()} — ${assessment.reason}`);
   if (result.misses.length > 0) {
     console.log(`${result.misses.length} miss(es):`);
     for (const m of result.misses) {
@@ -65,6 +76,13 @@ async function main() {
     total: result.total,
     hits: result.hits,
     misses: result.misses,
+    // Without these three the recallAtK above is not interpretable — see baseline.ts's header.
+    control: { retriever: "null (question-blind)", recallAtK: control.recallAtK, hits: control.hits },
+    assessment,
+    goldenSetProvenance:
+      "questions are verbatim session_page.keyInsights excerpts (see scripts/gen-golden-set.mjs), " +
+      "i.e. machine-generated statements drawn from the same pipeline and document as the retrieval " +
+      "target — not independently authored user questions",
   };
   writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");
   console.log(`wrote ${REPORT_PATH}`);

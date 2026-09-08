@@ -1,9 +1,26 @@
 {
-  "generatedAt": "2026-09-03T07:55:29.165Z",
+  "generatedAt": "2026-09-08T01:21:45.075Z",
   "k": 5,
   "retriever": "heuristic",
   "recallAtK": 1,
   "total": 46,
   "hits": 46,
-  "misses": []
+  "misses": [],
+  "control": {
+    "retriever": "null (question-blind)",
+    "recallAtK": 0.21739130434782608,
+    "hits": 10
+  },
+  "assessment": {
+    "k": 5,
+    "sessionCount": 23,
+    "chanceFloor": 0.21739130434782608,
+    "measuredRecall": 1,
+    "controlRecall": 0.21739130434782608,
+    "liftOverControl": 0.782608695652174,
+    "saturated": true,
+    "verdict": "saturated",
+    "reason": "46/46 with zero misses — the metric is pinned at its ceiling, so it can register a regression but can never demonstrate an improvement; a harder or independently-authored question set is needed before this number can support a claim"
+  },
+  "goldenSetProvenance": "questions are verbatim session_page.keyInsights excerpts (see scripts/gen-golden-set.mjs), i.e. machine-generated statements drawn from the same pipeline and document as the retrieval target — not independently authored user questions"
 }
