@@ -7,7 +7,7 @@
 **Dual check:** no
 **Issues addressed:** **ISS-095** (medium — `"Not"` missing from the denylist). Also brings
 **ISS-093** from 15/20 to 16/20; it stays open on its four gazetteer residues.
-**Status:** ready-for-check (cycle 3)
+**Status:** checked-PASS (cycle 3 — `qa/verdicts/speaker-denylist-ledger-corpus.md`, commit `ed01bbf`)
 **Branch:** `lane/a-speakers`
 **Supersedes:** the STALLED `speaker-verbatim-token-boundary` (cycle 3 of 3). Landing as a new unit
 with its own contract reference was **the Approver's decision**, taken over overriding the cycle
@@ -246,3 +246,55 @@ evidence. If a ledger row ever records an attack, it gets pinned then, by the co
 
 Three gazetteer residues (India, Mumbai, Google), each with a person-valid twin of identical syntax.
 Carried to the apply unit as a named open question, still asserted as shipping so the count cannot rot.
+
+
+---
+
+## Close-out (2026-09-08)
+
+**PASS, cycle 3** — 13/13 criteria, 4/4 invariants. `ISSUES-WRITTEN: ISS-099 (medium), ISS-100
+(low)`, both explicitly non-blocking and both found by probes the checker authored **alongside**
+the recorded sets, which is the arrangement D-015 asks for.
+
+The checker re-ran both corpora against the real module rather than my transcription, and diffed my
+test arrays against the ledger's evidence fields: **20/20 and 10/10 byte-identical, in order.**
+ISS-093 holds at 17/20 with the same three residues and `English` still refused — so the recall fix
+reopened no refusal. That trade is the one I got wrong in **both** directions across cycles 1 and 2;
+it is right now, and it took an external check to get there.
+
+### ISS-099 — my description of the fix was inaccurate
+
+I wrote that the discriminator is "a following **NOUN** … instead of an allowlist". It is not. It is
+a ~45-word `FUNCTION_FOLLOWERS` allowlist with everything outside it *read as* a noun — **the same
+shape as the cycle-2 nine-preposition allowlist, enlarged, with the default flipped to fall-through**.
+
+That flip is the substantive fix and it is real: the failure mode is now refusal rather than
+fabrication. But describing an enlarged allowlist as a noun test overstates what changed, and the
+residuals prove it — `"Ruby speaking very briefly."` and `"Ruby speaking first, then Nilesh."` still
+refuse because those words are simply absent from the list. Correcting the claim here rather than
+letting the commit message stand as the record.
+
+### ISS-100 — one of my pins is nominal
+
+Re-inserting the exact cycle-2 unconditional veto reddens **zero** tests. The test I named as its
+pin never enters the `speaking` branch, so the fall-through is structurally unreachable for that
+occurrence. The defensive code is correct; the pin is not a pin. Recorded, not papered over.
+
+### Not fixing either here — the seam is closed
+
+This seam has now run six checker rounds across four units. ISS-099 and ISS-100 are both
+non-blocking, both err toward refusal, and neither can fabricate an identity. Under D-014's
+class-based round cap, and by the same argument I made about the search-store seam earlier today,
+continuing to harden here is exactly the pattern the cap exists to interrupt. **Both carry to the
+apply unit** with the three gazetteer residues.
+
+### Scoreboard for the seam
+
+| | |
+|---|---|
+| ISS-093 (refusal, recorded) | **17/20** — 3 gazetteer residues |
+| ISS-098 (recall, recorded) | **10/10** |
+| ISS-095, ISS-097, ISS-098 | closed |
+| ISS-099, ISS-100 | open, non-blocking, carried |
+| Deterministic yield | 78/494 (15.8%), unchanged |
+| Persisted | **nothing** — B3/B10 do not flip |
