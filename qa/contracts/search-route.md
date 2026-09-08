@@ -132,6 +132,24 @@ and the `turns`/`sessions` accessors' own correctness (governed by `packages/db`
     non-unicode `\W+`, tokens can only contain `[A-Za-z0-9_]`, none of which are metacharacters —
     but the escaping must stay, because it is what makes the property survive a future
     tokenizer change.
+  - **What the current tests do and do NOT enforce here (added 2026-09-08, `search-prefilter-bypass-pin`
+    cycle-1 check).** Three layers now guard this invariant — `lexical.test.ts`'s `PROPERTY:` test
+    (the tokenizer), `search-prefilter.test.ts` (the derivation), and
+    `search-prefilter-single-source.test.ts` (the delegation) — and a green suite must not be read
+    as the invariant being enforced. Two structural gaps are measured and open:
+    **(i) a source-text pin constrains the SOURCE TEXT of `search-store.ts`, never the FILTER
+    OBJECT handed to `find()`** — everything between `buildTurnPrefilter`'s `return` and
+    `turnsColl().find()` is unconstrained, so mutating the returned filter in place
+    (`prefilter.$or = prefilter.$or.slice(0, 1)`), ignoring it and querying `{}`, or laundering a
+    narrowing through a third module all satisfy every assertion and were **measured at 99/99 with
+    `typecheck` exit 0** (ISS-076). **(ii) `search-prefilter.test.ts` is example-based over six
+    hard-coded queries**, so a token-removing defect aimed at a token shape those six do not
+    contain also passes 99/99 — and was measured against real Mongo to lose **6 of 20 real hits on
+    `"2026 intake"`** (ISS-077). Consequence for a future editor and for U1.5: **do not add a
+    fourth string assertion.** The only remedy that closes the class rather than the current
+    instance is an injectable collection handle for `createMongoSearchDeps` (the shape
+    `indexSession` gained for ISS-056) plus a structural assertion that the filter reaching Mongo
+    equals `buildTurnPrefilter`'s own output. This clause adds a rule and weakens nothing.
   - **Bounded exception (ISS-073, severity low, zero live occurrences).** The guarantee assumes
     JS `toLowerCase()` and Mongo's ASCII-only `$options: "i"` agree. They diverge for the few
     characters whose lowercase mapping crosses into ASCII (`U+0130` → `i`+`U+0307`, `U+212A` →
@@ -195,6 +213,30 @@ constant-factor win. Plan §10's Phase-1 retrieval layer is still the real fix.
   without needing a contract amendment.
 
 ## Amendment log
+- 2026-09-08 · routine · `search-prefilter-bypass-pin` cycle-1 check (PASS). **[I6] gains one
+  clause** recording what the three test layers do and do not enforce, with the two measured
+  structural gaps (ISS-076: a source-text pin cannot constrain the filter object — three bypass
+  routes measured green at 99/99 with typecheck exit 0; ISS-077: the `PROPERTY:` test is
+  example-based over six queries — a numeric-token-dropping defect measured green at 99/99 and
+  measured to lose 6 of 20 real hits on `"2026 intake"` against live Mongo). A **tightening**:
+  it adds a rule a future edit can be judged against and explicitly directs the next unit away
+  from a fourth string assertion toward an injectable collection handle; nothing is removed and
+  no criterion is softened. All criteria re-derived this cycle by the checker:
+  `pnpm --filter @lkb/api test` 99/99, `pnpm --filter @lkb/index test` 59/59, `pnpm -r typecheck`
+  exit 0 (10 projects), `pnpm lint:structure` clean (depcruise 0 violations / 263 modules,
+  SNAPSHOT fresh at 116 lines, tracker-audit G1 OK), both manifest bypasses replayed with the
+  predicted signatures (97/99 with tests 1+2 red; 98/99 with only test 3 red — confirming the
+  three tests discriminate), every mutation confirmed changed by backup-diff and restored
+  SHA256-identical, and — unlike the previous cycle, which could not reach the host — **the live
+  read-only Mongo parity run COMPLETED this cycle**: tenant `toc`, 2118 turns, 9 queries (the
+  manifest's 6 plus a single-short-token, a zero-hit and a numeric-token query), IDENTICAL on
+  turnIds AND scores, `RESULT PARITY: YES`. ISS-073's premise independently re-verified live: **0
+  occurrences of U+0130/U+212A in 2118 turns** — the bound stands and stays open. ISS-075's
+  brute-force claim independently reproduced (0 non-word tokens across codepoints 0x0000–0x2FFF)
+  and its keep-the-code decision endorsed. **No latency figure added to this contract this cycle**
+  — the manifest's refusal to quote a headline number is judged correct, not evasive: four
+  measurements span 9.8%–30% because the metric is network-dominated (transfer 1064ms vs compute
+  38ms) and the magnitude is not a stable constant, while the direction and the mechanism are.
 - 2026-09-08 · routine · `search-prefilter` cycle-1 check. (a) **C9 reworded** — its substance
   ("exactly one `turns` query per request") is unchanged and still holds; only the literal
   `find({})` text and the `store.ts` file reference went stale when the unit replaced the

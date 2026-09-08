@@ -28,9 +28,20 @@ export interface TurnPrefilter {
   $or: { text: { $regex: string; $options: string } }[];
 }
 
-/** Escapes regex metacharacters so a query like "c++" or "what?" builds a literal match rather
- * than a broken or unintended pattern. Mongo compiles `$regex` as a real expression, so an
- * unescaped user token is both a correctness and a denial-of-service surface. */
+/**
+ * Escapes regex metacharacters so a token builds a literal match rather than a pattern.
+ *
+ * **Currently unreachable defence-in-depth, not an active guard** (ISS-075 — an earlier version
+ * of this comment claimed unescaped tokens were "a correctness and denial-of-service surface",
+ * which contradicted `search-prefilter.test.ts`'s own finding). `tokenize` splits on `\W+`, so
+ * every token reaching here already matches `^[A-Za-z0-9_]+$` and contains nothing to escape —
+ * verified by brute-forcing codepoints 0x0000–0x2FFF: zero tokens carry a non-word character.
+ *
+ * It stays because the guarantee is the TOKENIZER's, not this function's. The day tokenization
+ * changes to preserve punctuation — a plausible change, since preserving "c++" as one token would
+ * improve search — unescaped input reaches Mongo's regex compiler with no other warning. Deleting
+ * it would move a live safety property into a future editor's blind spot.
+ */
 export function escapeRegex(literal: string): string {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
