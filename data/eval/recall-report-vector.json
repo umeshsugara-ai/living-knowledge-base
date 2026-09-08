@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-09-08T12:41:52.829Z",
+  "k": 5,
+  "retriever": "vector (brute-force cosine, gemini-embedding-001, 1452 chunks)",
+  "recallAtK": 0.9347826086956522,
+  "total": 92,
+  "hits": 86,
+  "misses": [
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "question": "What kind of support is available for students looking for internships?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-07-22-uniaccess-cept-university",
+        "2026-05-28-in-focus-1",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-15-creative-futures"
+      ]
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq03",
+      "question": "Does the teaching style follow an international model or is it more traditional for the region?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-06-25-in-focus-2",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-08-27-in-focus-4",
+        "2026-07-30-in-focus-3",
+        "2026-07-15-creative-futures"
+      ]
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq03",
+      "question": "My family lives in a smaller town, not a major city. Are there options for students to participate remotely or is everything on-site?",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "got": [
+        "2026-07-15-creative-futures",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-08-27-in-focus-4",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-06-25-in-focus-2"
+      ]
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq01",
+      "question": "Is it better to pick a top-ranked college even if it's for a less popular course, or should I prioritize the course I want at a lower-ranked institution?",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "got": [
+        "2026-08-24-uniaccess-leeds-arts-university",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-07-03-inside-the-uc-session"
+      ]
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq01",
+      "question": "What's the relative importance of high school grades compared to standardized test scores when you calculate a final merit score for admission?",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "got": [
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-07-03-inside-the-uc-session",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-08-12-uniaccess-ashoka-university",
+        "2026-07-15-creative-futures"
+      ]
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq04",
+      "question": "If there's an aptitude test as part of the process, what kind of skills does it measure?",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "got": [
+        "2026-07-22-uniaccess-cept-university",
+        "2026-05-28-in-focus-1",
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-07-15-creative-futures",
+        "2026-08-27-in-focus-4"
+      ]
+    }
+  ],
+  "control": {
+    "retriever": "null (question-blind)",
+    "recallAtK": 0.21739130434782608,
+    "hits": 20
+  },
+  "assessment": {
+    "k": 5,
+    "sessionCount": 23,
+    "chanceFloor": 0.21739130434782608,
+    "measuredRecall": 0.9347826086956522,
+    "controlRecall": 0.21739130434782608,
+    "liftOverControl": 0.7173913043478262,
+    "saturated": false,
+    "verdict": "informative",
+    "reason": "0.935 vs a 0.217 question-blind control (+0.717), with 6 miss(es) left to move"
+  },
+  "goldenSetProvenance": {
+    "generatedAt": "2026-09-08T09:01:27.115Z",
+    "recordedAfterTheFact": true,
+    "generator": "scripts/gen-golden-set.mjs",
+    "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
+    "model": "gemini-2.5-pro",
+    "summarizerModel": "gemini-2.5-flash",
+    "independence": "different model from the summarizer (gemini-2.5-flash), but the SAME vendor and family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
+    "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
+    "postFilter": "rejects a candidate carrying a token unique to its own session in the turns (raw transcripts, ~218k words) corpus AND present in that session's page text, or overlapping the transcript past 0.5",
+    "postFilterBiasWarning": "no candidate was rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run",
+    "kept": 92,
+    "rejected": 0,
+    "sessions": 23
+  },
+  "filterBias": {
+    "note": "0 candidates rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run — kept === combined by construction",
+    "kept": {
+      "n": 92,
+      "recallAtK": 0.9347826086956522
+    },
+    "rejected": {
+      "n": 0,
+      "recallAtK": null
+    },
+    "combined": {
+      "n": 92,
+      "recallAtK": 0.9347826086956522
+    }
+  }
+}

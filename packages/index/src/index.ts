@@ -8,6 +8,9 @@ export { extractTopicRefs, type ExtractTopicRefs } from "./tree/extract-topics.j
 export { regenerate } from "./tree/regenerate.js";
 export { flattenTreeToGraph, type Graph, type GraphNode, type GraphEdge } from "./tree/flatten-graph.js";
 
+export { cosineSimilarity, rankByCosine, rankSessionsByCosine, type ScorableChunk, type ScoredChunk } from "./vector/cosine.js";
+export { createVectorRetriever, type VectorRetrieverOptions } from "./vector/retriever.js";
+
 export { computeRecallAtK, type GoldenQuestion, type RetrieveFn, type RecallResult, type RecallMiss } from "./eval/recall.js";
 export { createHeuristicRetriever } from "./eval/heuristic-retriever.js";
 export { createNullRetriever, assessBaseline, type BaselineAssessment, type BaselineVerdict } from "./eval/baseline.js";

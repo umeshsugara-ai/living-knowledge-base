@@ -6,6 +6,9 @@
  * heuristic (non-LLM) retriever, prints recall@5 + every miss, and writes
  * `data/eval/recall-report.json`. No live network call, no live Mongo — local files only.
  */
+// dotenv: the vector mode needs MONGODB_URL and GEMINI_API_KEY. Without it `connect()` silently
+// fell back to localhost and failed with ECONNREFUSED against a host that was never the target.
+import "dotenv/config";
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,7 +17,12 @@ import { register } from "tsx/esm/api";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_DIR = join(ROOT, "data", "toc-migrated");
 const GOLDEN_SET_PATH = join(ROOT, "data", "eval", "golden-set.json");
+// One report file PER RETRIEVER. The vector run previously wrote over
+// `recall-report.json` — i.e. it destroyed the heuristic baseline that its own delta is measured
+// against, so a second run would have had nothing left to compare to. Separate files keep both
+// numbers on disk and comparable.
 const REPORT_PATH = join(ROOT, "data", "eval", "recall-report.json");
+const VECTOR_REPORT_PATH = join(ROOT, "data", "eval", "recall-report-vector.json");
 const PROVENANCE_PATH = join(ROOT, "data", "eval", "golden-set-provenance.json");
 const REJECTED_PATH = join(ROOT, "data", "eval", "golden-set-rejected.json");
 const K = 5;
@@ -23,6 +31,41 @@ register(); // let subsequent dynamic import()s of packages/index's .ts sources 
 
 function loadJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
+}
+
+/**
+ * Embeds every golden-set question in ONE batched call and loads the tenant's real chunk rows.
+ *
+ * Hoisted out of the retriever deliberately: `RetrieveFn` is synchronous, so the network call
+ * cannot live inside it. Doing it here also means 92 questions cost one batched request rather
+ * than 92, and the `chunks` come from the live collection rather than a fixture — the whole point
+ * of U1.4 is that its number is measured against real vectors.
+ */
+async function embedQuestionsAndLoadChunks(questions, tenantId) {
+  const { connect, close, getDb, scopedCollection } = await import("../packages/db/src/index.ts");
+  const { embed: routeEmbed } = await import("../packages/ai/src/index.ts");
+  const { buildRouting } = await import("../apps/api/src/production.ts");
+
+  await connect(process.env.MONGODB_URL || "mongodb://localhost:27017", process.env.MONGODB_DB || "lkb");
+  try {
+    const chunks = await scopedCollection(getDb(), "chunks")(tenantId).find({}).toArray();
+    if (chunks.length === 0) {
+      throw new Error(`eval-recall --retriever vector: tenant "${tenantId}" has no chunks; run scripts/backfill-chunks.mjs first`);
+    }
+    const { chains, providers, jobWrite } = buildRouting();
+    const texts = questions.map((q) => q.question);
+    // purpose "query", not "document": Gemini embeds the two asymmetrically, and embedding a
+    // question as a document is a real (silent) recall regression.
+    const embedded = await routeEmbed("embedding", { kind: "embedding", texts, purpose: "query" },
+      { chains, providers, write: jobWrite, tenantId });
+    if (embedded.vectors.length !== texts.length) {
+      throw new Error(`eval-recall: embedder returned ${embedded.vectors.length} vectors for ${texts.length} questions`);
+    }
+    const questionVectors = new Map(texts.map((t, i) => [t, embedded.vectors[i]]));
+    return { questionVectors, chunks, model: embedded.model };
+  } finally {
+    await close();
+  }
 }
 
 async function main() {
@@ -49,7 +92,21 @@ async function main() {
   if (!tree) throw new Error(`eval-recall: no tree built for tenantId "${tenantId}"`);
 
   const questions = loadJson(GOLDEN_SET_PATH);
-  const retrieve = createHeuristicRetriever(tree);
+
+  // `--retriever vector` (U1.4) scores the brute-force cosine retriever over the REAL `chunks`
+  // rows instead of the tree heuristic, so both numbers come out of the same harness, the same
+  // golden set and the same control — which is the only way the delta means anything. Everything
+  // below this point is retriever-agnostic and deliberately untouched.
+  const useVector = process.argv.includes("--retriever") &&
+    process.argv[process.argv.indexOf("--retriever") + 1] === "vector";
+  let retrieverName = "heuristic";
+  let retrieve = createHeuristicRetriever(tree);
+  if (useVector) {
+    const { createVectorRetriever } = await import("../packages/index/src/vector/retriever.ts");
+    const { questionVectors, chunks, model } = await embedQuestionsAndLoadChunks(questions, tenantId);
+    retrieve = createVectorRetriever(questionVectors, chunks);
+    retrieverName = `vector (brute-force cosine, ${model}, ${chunks.length} chunks)`;
+  }
   const result = computeRecallAtK(questions, retrieve, K);
 
   // The control (plan §10 U0.10): a question-blind retriever over the same golden set. A recall
@@ -126,7 +183,7 @@ async function main() {
   const report = {
     generatedAt: new Date().toISOString(),
     k: K,
-    retriever: "heuristic",
+    retriever: retrieverName,
     recallAtK: result.recallAtK,
     total: result.total,
     hits: result.hits,
@@ -146,8 +203,8 @@ async function main() {
         "uninterpretable until provenance exists.",
     filterBias,
   };
-  writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");
-  console.log(`wrote ${REPORT_PATH}`);
+  writeFileSync(useVector ? VECTOR_REPORT_PATH : REPORT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");
+  console.log(`wrote ${useVector ? VECTOR_REPORT_PATH : REPORT_PATH}`);
 }
 
 main().catch((err) => {
