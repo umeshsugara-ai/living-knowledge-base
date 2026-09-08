@@ -136,3 +136,53 @@ them from scratch.
 **Changes-authorized:** .claude/CLAUDE.md (append one new section "Backlog priority override" after the existing "Maker-checker discipline" section; no existing line in that file is modified or removed)
 **Approved-by:** Umesh
 **Links:** T-011, T-021; ISS-071; qa/gates/golden-set-redesign.md; qa/.last-sweep; qa/QUEUE.md; maker/SKILL.md:243-246; checker/SKILL.md:127
+
+## D-014 | 2026-09-08 | type: decision | status: ACTIVE
+
+**What:** Restate D-013's maker-checker backlog override with ONE rule corrected: the round cap
+becomes CLASS-based, not count-based. A contract seam closes after 2 PASSes for ordinary findings
+(coverage, cost, style, doc accuracy, N+1, unasserted fields), but findings in the SECURITY CLASS
+(tenancy, auth, cross-tenant read, data write, credential handling) are NEVER capped and always
+open a unit at any round count. Everything else in D-013 is carried forward verbatim: the backlog
+priority order with the roadmap as tier 3, the severity gate, the verdict rule that
+"ISSUES-WRITTEN: none" is a complete check, and the redefined BACKLOG_EMPTY.
+Additionally authorizes a single narrow DENY path in .claude/hooks/mc-precommit.ps1: refuse a
+git commit while qa/.mutations-active is non-empty. The hook stays WARN-only for everything else
+and must still never emit "allow".
+
+**Why:** D-013's cap said "a seam that has already PASSed twice is CLOSED". Measured against what
+actually happened on this repo, that rule would have shipped a high-severity data leak. ISS-078,
+the cross-tenant read disclosure that let any authenticated caller read every tenant's verbatim
+transcript text, was first found at ROUND 5 of the search seam, after FOUR consecutive PASSes on
+that same seam, and it had survived 102 green tests and a clean typecheck. A count-based cap
+assumes severity decays with round count; the one time it mattered here, severity spiked at round
+5. The class-based cap keeps D-013's real benefit (it stops the 7-round grind on unasserted test
+fields) without the failure mode that would have closed the seam two rounds before the leak was
+found. Separately, D-013's stated root cause that checker/SKILL.md:127 requires every check to
+emit issues is factually wrong: line 127 is the output field "ISSUES-WRITTEN: <ISS-ids | none>",
+which explicitly permits none. No rule ever demanded issues. The real cause of 84 self-generated
+issues was the maker's own checker dispatch prompts repeatedly instructing checkers to "then try
+to find a fifth/eighth bypass" - a prompt defect, fixed in the dispatch template, not by
+overriding a rule that does not exist. The deny path is authorized because a mutation
+(score: 0.5) was found applied to production source in apps/api/src/search-store.ts AFTER its
+checker had verified the restore as byte-identical; nothing in the repo would have caught it, and
+git log --all -S confirms it was caught before any commit only by timing.
+
+**Result:** .claude/CLAUDE.md's "Backlog priority override" section is replaced by the same content
+with the class-based cap. mc-precommit.ps1 gains one deny branch guarded on qa/.mutations-active.
+The mutation helper reuses the existing, tested scripts/lib/evidence.mjs (trustOf /
+untrustedAmong) rather than adding new git logic.
+
+**Changes-authorized:** .claude/hooks/mc-precommit.ps1 (add one narrow deny branch on a non-empty
+qa/.mutations-active; no other behavior change) . .claude/CLAUDE.md (replace the round-cap
+paragraph inside the existing "Backlog priority override" section; the rest of that section is
+unchanged)
+
+**Approved-by:** Umesh
+
+**Supersedes:** D-013 -- D-013's count-based round cap would have closed the search seam after
+round 4, two rounds before ISS-078 (a cross-tenant read disclosure) was found at round 5 following
+four consecutive PASSes; this entry keeps every other part of D-013 and replaces only that cap
+with a class-based rule that never caps security-class findings.
+
+**Links:** qa/issues.jsonl ISS-078 . qa/issues.jsonl ISS-085 . qa/manifests/search-store-injectable-handle.md . qa/gates/concurrent-maker-sessions.md . qa/feedback-inbox.md
