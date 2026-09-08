@@ -30,8 +30,17 @@ import { execFileSync } from "node:child_process";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-/** TASKS.md and goal.json use different words for the same thing; compare meaning, not spelling. */
-const NORMALISE = { open: "not-done", pending: "not-done", blocked: "not-done", in_progress: "not-done", done: "done" };
+/**
+ * TASKS.md and goal.json use different words for the same thing; compare meaning, not spelling.
+ *
+ * `blocked` is deliberately its OWN class rather than another spelling of not-done (ISS-090).
+ * Collapsing it hid a real divergence twice: a correction was written to goal.json (`pending`)
+ * and not to TASKS.md (`blocked`), and G1 stayed green because both sides normalised to
+ * "not-done". But the two words do not mean the same thing to a reader or to the backlog — one
+ * says "available to pull", the other says "cannot be pulled" — so a tracker claiming both at
+ * once is exactly the untruth this gate exists to catch.
+ */
+const NORMALISE = { open: "not-done", pending: "not-done", in_progress: "not-done", blocked: "blocked", done: "done" };
 
 export function audit(root = ROOT) {
   const findings = [];

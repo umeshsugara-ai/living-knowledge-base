@@ -181,3 +181,39 @@ test("G1 names an unknown status word instead of emitting a confusing mismatch",
   );
   rmSync(root, { recursive: true, force: true });
 });
+
+test("G1 treats `blocked` as its own class — a pending/blocked split is a real divergence (ISS-090)", () => {
+  // Found twice in one unit: a correction landed in goal.json (`pending`) and not in TASKS.md
+  // (`blocked`), and G1 stayed GREEN because both normalised to "not-done". The words do not mean
+  // the same thing — one says the row is available to pull, the other says it cannot be — so a
+  // tracker asserting both at once is precisely the untruth this gate exists to catch.
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-blocked-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({ tasks: [{ id: "T-021", status: "pending" }], progress: { total: 1, done: 0, percent: 0 } }),
+  );
+  writeFileSync(join(root, "TASKS.md"), "| ID | Status |\n|---|---|\n| T-021 | blocked | x |\n");
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  const findings = filterByGate(audit(root), "G1");
+  assert.equal(findings.length, 1, `expected the split to be reported, got: ${findings.join(" | ")}`);
+  assert.match(findings[0], /T-021 is "pending" in goal\.json but "blocked" in TASKS\.md/);
+  rmSync(root, { recursive: true, force: true });
+});
+
+test("G1 still accepts agreeing `blocked` rows — the new class did not make blockage unrepresentable", () => {
+  const root = mkdtempSync(join(tmpdir(), "lkb-audit-blocked2-"));
+  mkdirSync(join(root, ".goal"), { recursive: true });
+  mkdirSync(join(root, "qa"), { recursive: true });
+  writeFileSync(
+    join(root, ".goal", "goal.json"),
+    JSON.stringify({ tasks: [{ id: "T-021", status: "blocked" }], progress: { total: 1, done: 0, percent: 0 } }),
+  );
+  writeFileSync(join(root, "TASKS.md"), "| ID | Status |\n|---|---|\n| T-021 | blocked | x |\n");
+  writeFileSync(join(root, "qa", "issues.jsonl"), "");
+
+  assert.deepEqual(filterByGate(audit(root), "G1"), []);
+  rmSync(root, { recursive: true, force: true });
+});
