@@ -12,8 +12,10 @@
  *
  * WHAT THIS DOES INSTEAD, per the gate's four binding conditions:
  *   - generates from the RAW TRANSCRIPT (`turns.json`), never `session_page.json`;
- *   - uses a DIFFERENT MODEL from the summarizer (that pipeline is Gemini-first per
- *     config/ai-routing.yaml; this is Anthropic) and a different prompt;
+ *   - uses a DIFFERENT MODEL from the summarizer and a different prompt. The summarize jobKind
+ *     resolves to Gemini's DEFAULT_MODEL `gemini-2.5-flash`, so `session_page.json` came from
+ *     Flash and this generates with `gemini-2.5-pro` (Umesh, 2026-09-08). Literally a different
+ *     model, but the SAME vendor and family — see the disclosure at the provider construction;
  *   - asks for questions a student would actually ask, not declarative excerpts;
  *   - names NEAR-NEIGHBOUR sessions (chosen for shared topic vocabulary) in the prompt and
  *     requires wording that would also fit them, so a single globally-unique token cannot pin
@@ -29,7 +31,8 @@
  * It is the weakest of the three options on independence and was chosen on cost/latency.
  *
  * Usage: node scripts/gen-golden-set.mjs [--dry-run] [--per-session N]
- *   --dry-run  build prompts and report the neighbour selection; make no API call.
+ *   --dry-run          build prompts and report the neighbour selection; make no API call.
+ *   --provenance-only  rewrite golden-set-provenance.json from the set already on disk; no API call.
  */
 import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
@@ -45,8 +48,12 @@ const OUT_PATH = join(OUT_DIR, "golden-set.json");
 
 const PER_SESSION = Number(process.argv.find((a) => a.startsWith("--per-session="))?.split("=")[1] ?? 4);
 const DRY_RUN = process.argv.includes("--dry-run");
+const PROVENANCE_ONLY = process.argv.includes("--provenance-only");
 const NEIGHBOURS = 3;
 const MAX_TRANSCRIPT_CHARS = 40_000;
+const GENERATION_MODEL = "gemini-2.5-pro";
+/** Gemini's DEFAULT_MODEL — what the summarize jobKind resolves to, i.e. what wrote session_page. */
+const SUMMARIZER_MODEL = "gemini-2.5-flash";
 const MAX_OVERLAP = 0.5; // a question sharing a >=50% token run with the transcript is a copy
 
 register();
@@ -103,6 +110,54 @@ ${transcript}
 Return ONLY a JSON array of ${perSession} strings. No prose, no markdown fence.`;
 }
 
+/**
+ * Provenance is WRITTEN BY THE GENERATOR, so it cannot describe a set the generator did not
+ * produce. It used to be a hardcoded string inside `eval-recall.mjs`; when this unit replaced the
+ * golden set, that string went on asserting the OLD set's properties — a field whose entire
+ * purpose is honesty became the report's one false statement (ISS-091). A derived record cannot
+ * drift from its subject, which is the actual fix; correcting the sentence would only have reset
+ * the clock on the same failure.
+ *
+ * `afterTheFact` marks a record rebuilt by `--provenance-only` from artifacts already on disk. It
+ * is honest but weaker: the counts are read from the real files, while the model and filter fields
+ * describe what THIS code does now, which is only the truth if the code has not changed since.
+ */
+function writeProvenance(kept, rejectedCount, sessionCount, afterTheFact) {
+  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
+  writeFileSync(
+    join(OUT_DIR, "golden-set-provenance.json"),
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        recordedAfterTheFact: afterTheFact,
+        generator: "scripts/gen-golden-set.mjs",
+        source: "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
+        model: GENERATION_MODEL,
+        summarizerModel: SUMMARIZER_MODEL,
+        independence:
+          `different model from the summarizer (${SUMMARIZER_MODEL}), but the SAME vendor and ` +
+          "family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
+        promptStrategy:
+          "real student questions, near-neighbour sessions named so wording must fit them too",
+        postFilter:
+          "rejects any candidate carrying a token unique to its own session within the SCORED " +
+          `corpus (session_page summary+keyInsights), or overlapping the transcript past ${MAX_OVERLAP}`,
+        postFilterBiasWarning:
+          "the pin check runs over the same corpus the retriever scores, so it preferentially " +
+          "removes questions the retriever would answer — the resulting recall is a DOWNWARD-" +
+          "BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
+        kept,
+        rejected: rejectedCount,
+        sessions: sessionCount,
+      },
+      null,
+      2,
+    ) + "\n",
+    "utf8",
+  );
+  console.log(`wrote golden-set-provenance.json (afterTheFact=${afterTheFact})`);
+}
+
 function parseQuestions(text) {
   const m = text.match(/\[[\s\S]*\]/);
   if (!m) return [];
@@ -115,6 +170,18 @@ function parseQuestions(text) {
 }
 
 async function main() {
+  // Rebuild provenance for a set already on disk, with NO API call — so a missing or stale record
+  // can be repaired without regenerating (which would cost spend and, being non-deterministic,
+  // would produce a different set and invalidate any review already done against this one).
+  if (PROVENANCE_ONLY) {
+    const kept = loadJson(OUT_PATH).length;
+    const rejectedPath = join(OUT_DIR, "golden-set-rejected.json");
+    const rejectedCount = existsSync(rejectedPath) ? loadJson(rejectedPath).length : 0;
+    const sessions = new Set(loadJson(OUT_PATH).map((q) => q.expectedSessionId)).size;
+    writeProvenance(kept, rejectedCount, sessions, true);
+    return;
+  }
+
   const { GeminiProvider } = await import("../packages/ai/src/providers/gemini.ts");
   // Reused, not rewritten: this is the workspace's only real Transport.
   const { realTransport } = await import("../apps/api/src/ai-transport.ts");
@@ -157,7 +224,7 @@ async function main() {
   // 1.000 still means the remedy FAILED and escalates to Option B.
   const provider = DRY_RUN
     ? null
-    : new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY, model: "gemini-2.5-pro" });
+    : new GeminiProvider(realTransport, { apiKey: process.env.GEMINI_API_KEY, model: GENERATION_MODEL });
 
   const questions = [];
   const rejected = [];
@@ -207,6 +274,8 @@ async function main() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   writeFileSync(OUT_PATH, JSON.stringify(questions, null, 2) + "\n", "utf8");
   writeFileSync(join(OUT_DIR, "golden-set-rejected.json"), JSON.stringify(rejected, null, 2) + "\n", "utf8");
+
+  writeProvenance(questions.length, rejected.length, sessionIds.length, false);
 
   const covered = new Set(questions.map((q) => q.expectedSessionId)).size;
   console.log(`\nwrote ${questions.length} questions spanning ${covered}/${sessionIds.length} sessions -> ${OUT_PATH}`);

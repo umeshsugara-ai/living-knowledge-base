@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-09-08T08:30:53.512Z",
+  "recordedAfterTheFact": true,
+  "generator": "scripts/gen-golden-set.mjs",
+  "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
+  "model": "gemini-2.5-pro",
+  "summarizerModel": "gemini-2.5-flash",
+  "independence": "different model from the summarizer (gemini-2.5-flash), but the SAME vendor and family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
+  "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
+  "postFilter": "rejects any candidate carrying a token unique to its own session within the SCORED corpus (session_page summary+keyInsights), or overlapping the transcript past 0.5",
+  "postFilterBiasWarning": "the pin check runs over the same corpus the retriever scores, so it preferentially removes questions the retriever would answer — the resulting recall is a DOWNWARD-BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
+  "kept": 75,
+  "rejected": 17,
+  "sessions": 23
+}

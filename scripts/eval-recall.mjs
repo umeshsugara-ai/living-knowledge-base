@@ -15,6 +15,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_DIR = join(ROOT, "data", "toc-migrated");
 const GOLDEN_SET_PATH = join(ROOT, "data", "eval", "golden-set.json");
 const REPORT_PATH = join(ROOT, "data", "eval", "recall-report.json");
+const PROVENANCE_PATH = join(ROOT, "data", "eval", "golden-set-provenance.json");
+const REJECTED_PATH = join(ROOT, "data", "eval", "golden-set-rejected.json");
 const K = 5;
 
 register(); // let subsequent dynamic import()s of packages/index's .ts sources resolve
@@ -58,6 +60,47 @@ async function main() {
   const control = computeRecallAtK(questions, createNullRetriever(controlIds), K);
   const assessment = assessBaseline(result, control, controlIds.length);
 
+  /**
+   * MEASURE THE POST-FILTER'S BIAS, because it is not neutral (ISS-092).
+   *
+   * The generator's pin check rejects any question containing a token unique to its own session
+   * *within the corpus the retriever scores*. That is the right criterion for stopping keyword
+   * shortcuts — and it means the filter preferentially removes exactly the questions this
+   * retriever finds easy. The kept-set recall is therefore a DOWNWARD-BIASED FLOOR, not an
+   * unbiased estimate of retrieval quality.
+   *
+   * Reporting the floor alone would understate the retriever and, worse, hide that the number
+   * moves with the filter. So score the rejected questions too and publish all three. This turns
+   * a reviewer's one-off observation into a figure that is recomputed on every run.
+   */
+  let filterBias = null;
+  if (existsSync(REJECTED_PATH)) {
+    const rejectedRaw = loadJson(REJECTED_PATH);
+    const rejectedQs = rejectedRaw.map((r, i) => ({
+      id: `rejected-${String(i + 1).padStart(3, "0")}`,
+      question: r.question,
+      expectedSessionId: r.sessionId,
+    }));
+    if (rejectedQs.length > 0) {
+      const rejectedResult = computeRecallAtK(rejectedQs, retrieve, K);
+      const combined = computeRecallAtK([...questions, ...rejectedQs], retrieve, K);
+      filterBias = {
+        note:
+          "the post-filter removes questions the retriever tends to answer, so `kept` is a " +
+          "downward-biased floor; `combined` is the pre-filter figure",
+        kept: { n: result.total, recallAtK: result.recallAtK },
+        rejected: { n: rejectedResult.total, recallAtK: rejectedResult.recallAtK },
+        combined: { n: combined.total, recallAtK: combined.recallAtK },
+      };
+      console.log(
+        `filter bias: kept ${result.recallAtK.toFixed(3)} (n=${result.total}) | ` +
+          `rejected ${rejectedResult.recallAtK.toFixed(3)} (n=${rejectedResult.total}) | ` +
+          `combined ${combined.recallAtK.toFixed(3)} (n=${combined.total}) ` +
+          `— kept is a FLOOR, not an unbiased estimate`,
+      );
+    }
+  }
+
   console.log(`recall@${K} = ${result.recallAtK.toFixed(3)} (${result.hits}/${result.total} hits)`);
   console.log(`control (question-blind) = ${control.recallAtK.toFixed(3)} | chance floor = ${assessment.chanceFloor.toFixed(3)}`);
   console.log(`VERDICT: ${assessment.verdict.toUpperCase()} — ${assessment.reason}`);
@@ -79,10 +122,17 @@ async function main() {
     // Without these three the recallAtK above is not interpretable — see baseline.ts's header.
     control: { retriever: "null (question-blind)", recallAtK: control.recallAtK, hits: control.hits },
     assessment,
-    goldenSetProvenance:
-      "questions are verbatim session_page.keyInsights excerpts (see scripts/gen-golden-set.mjs), " +
-      "i.e. machine-generated statements drawn from the same pipeline and document as the retrieval " +
-      "target — not independently authored user questions",
+    // READ, never asserted (ISS-091). This was a hardcoded string describing the set as "verbatim
+    // session_page.keyInsights excerpts"; when the set was regenerated the string stayed, so a
+    // field whose only purpose is honesty became the report's one false statement. The generator
+    // now writes its own provenance and this reads it — a claim about the data, written by
+    // whatever produced the data. If it is absent, say so; never substitute a guess.
+    goldenSetProvenance: existsSync(PROVENANCE_PATH)
+      ? loadJson(PROVENANCE_PATH)
+      : "UNKNOWN — data/eval/golden-set-provenance.json is absent, so nothing here describes how " +
+        "this golden set was built. Re-run scripts/gen-golden-set.mjs. Treat the score as " +
+        "uninterpretable until provenance exists.",
+    filterBias,
   };
   writeFileSync(REPORT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");
   console.log(`wrote ${REPORT_PATH}`);

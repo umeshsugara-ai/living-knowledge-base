@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-08T08:19:02.689Z",
+  "generatedAt": "2026-09-08T08:30:53.851Z",
   "k": 5,
   "retriever": "heuristic",
   "recallAtK": 0.30666666666666664,
@@ -647,5 +647,34 @@
     "verdict": "informative",
     "reason": "0.307 vs a 0.187 question-blind control (+0.120), with 52 miss(es) left to move"
   },
-  "goldenSetProvenance": "questions are verbatim session_page.keyInsights excerpts (see scripts/gen-golden-set.mjs), i.e. machine-generated statements drawn from the same pipeline and document as the retrieval target — not independently authored user questions"
+  "goldenSetProvenance": {
+    "generatedAt": "2026-09-08T08:30:53.512Z",
+    "recordedAfterTheFact": true,
+    "generator": "scripts/gen-golden-set.mjs",
+    "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
+    "model": "gemini-2.5-pro",
+    "summarizerModel": "gemini-2.5-flash",
+    "independence": "different model from the summarizer (gemini-2.5-flash), but the SAME vendor and family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
+    "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
+    "postFilter": "rejects any candidate carrying a token unique to its own session within the SCORED corpus (session_page summary+keyInsights), or overlapping the transcript past 0.5",
+    "postFilterBiasWarning": "the pin check runs over the same corpus the retriever scores, so it preferentially removes questions the retriever would answer — the resulting recall is a DOWNWARD-BIASED FLOOR, not an unbiased estimate. eval-recall.mjs measures the size of that bias.",
+    "kept": 75,
+    "rejected": 17,
+    "sessions": 23
+  },
+  "filterBias": {
+    "note": "the post-filter removes questions the retriever tends to answer, so `kept` is a downward-biased floor; `combined` is the pre-filter figure",
+    "kept": {
+      "n": 75,
+      "recallAtK": 0.30666666666666664
+    },
+    "rejected": {
+      "n": 17,
+      "recallAtK": 0.7647058823529411
+    },
+    "combined": {
+      "n": 92,
+      "recallAtK": 0.391304347826087
+    }
+  }
 }
