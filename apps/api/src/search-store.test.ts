@@ -169,6 +169,37 @@ test("each hit carries ITS OWN turn and session, not another hit's (ISS-080)", a
   }
 });
 
+test("hit.score matches what the scorer independently computes for that turn (ISS-083)", async () => {
+  // A sixth-bypass hunt found this uncaught: `score: 0.5` hardcoded on every hit left 107/107
+  // green, because no test read the field. Cross-checks against a SEPARATE lexicalSearchTurns
+  // call over the same corpus, so the store cannot pass a value it merely copied from itself.
+  for (const q of ["visa", "2026", "counselling"]) {
+    const { db } = capturingDb();
+    const hits = await createMongoSearchDeps({ db }).search("toc", q, 10);
+    const independent = new Map(lexicalSearchTurns(q, OWN, OWN.length).map((h) => [h.turnId, h.score]));
+    for (const h of hits) {
+      assert.equal(h.score, independent.get(h.turnId), `"${q}" hit ${h.turnId} carries score ${h.score}, scorer independently computed ${independent.get(h.turnId)}`);
+    }
+  }
+});
+
+test("each hit's (turnId, sessionId) pair matches what the scorer actually ranked at that position (ISS-084)", async () => {
+  // A sixth-bypass hunt found this uncaught too: rotating turnId/sessionId/turn/session together
+  // across hits (each internally self-consistent) left 107/107 green, because prior assertions
+  // only checked a hit against ITSELF, never against the scorer's own independent ranking.
+  for (const q of ["visa", "2026", "counselling"]) {
+    const { db } = capturingDb();
+    const hits = await createMongoSearchDeps({ db }).search("toc", q, 10);
+    const independent = lexicalSearchTurns(q, OWN, OWN.length);
+    const bySessionId = new Map(OWN.map((t) => [t._id, t.sessionId]));
+    assert.equal(hits.length, independent.length, `"${q}" returned ${hits.length} hits, scorer independently ranked ${independent.length}`);
+    for (let i = 0; i < hits.length; i++) {
+      assert.equal(hits[i]!.turnId, independent[i]!.turnId, `"${q}" position ${i}: turnId does not match the scorer's own rank order`);
+      assert.equal(hits[i]!.sessionId, bySessionId.get(independent[i]!.turnId), `"${q}" position ${i}: sessionId does not match this turn's real session`);
+    }
+  }
+});
+
 test("sessions are fetched once each, not once per hit (ISS-080, contract [I3] N+1)", async () => {
   const { db, calls } = capturingDb();
   const hits = await createMongoSearchDeps({ db }).search("toc", "2026", 10);
