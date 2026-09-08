@@ -296,6 +296,36 @@ test("a SUCCESSFUL embed replaces the session's chunks — delete BEFORE insert,
  */
 const REAL_TURNS = [{ _id: "t1", tenantId: "t", sessionId: "s1", speakerRef: "spk:0", tStart: 0, tEnd: 1, text: "A real sentence." }];
 
+/* ── ISS-116's second defect: indexSession used to DISCARD the chunk result ───────────────────
+ * The batch-limit bug was the cause; this was the concealment. `indexSession` resolved,
+ * `status.index` flipped to "done", and a session with zero vectors looked identical to a fully
+ * indexed one. Three whole sessions (37% of the corpus) stayed out of the index that way.
+ */
+test("indexSession SURFACES an embedding failure in its return — a skip must not look like success", async () => {
+  const { db } = fakeDb();
+  const res = await indexSession("t", "s1", {
+    complete: completeWith() as never,
+    embed: async () => { throw new Error("all providers failed"); },
+    db,
+  });
+  assert.equal(res.chunks.skipped, "embedding-failed", "the caller must be able to SEE it got no vectors");
+  assert.equal(res.chunks.written, 0);
+  assert.equal(res.sessionId, "s1");
+});
+
+test("indexSession reports 'no-embedder' distinctly from a failure — an install without embeddings is not broken", async () => {
+  const { db } = fakeDb();
+  const res = await indexSession("t", "s1", { complete: completeWith() as never, db });
+  assert.equal(res.chunks.skipped, "no-embedder");
+});
+
+test("indexSession reports a real chunk write, so success is positively evidenced and not merely un-thrown", async () => {
+  const { db } = fakeDb();
+  const res = await indexSession("t", "s1", { complete: completeWith() as never, embed: embedOk as never, db });
+  assert.equal(res.chunks.skipped, null);
+  assert.ok(res.chunks.written > 0, "a successful run must report the rows it actually wrote");
+});
+
 test("writeSessionChunks reports a provider failure as skipped, never as a silent success", async () => {
   const { db, calls } = fakeDb();
   const res = await writeSessionChunks("t", "s1", REAL_TURNS as never, async () => { throw new Error("all providers failed"); }, db);

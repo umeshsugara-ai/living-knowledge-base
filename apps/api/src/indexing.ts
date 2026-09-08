@@ -78,13 +78,27 @@ async function loadTreeRoot(tenantId: string, db: Pick<Db, "collection">): Promi
  * @returns what actually happened, so a caller (the backfill) can report per-session counts
  *          instead of inferring success from the absence of a throw. `indexSession` ignores it.
  */
+/** Why a session ended up with no vectors. `null` means it genuinely got them. */
+export type ChunkSkipReason = "no-chunkable-turns" | "embedding-failed" | "no-embedder" | null;
+
+export interface ChunkWriteResult {
+  written: number;
+  skipped: ChunkSkipReason;
+}
+
+/** What `indexSession` observed. Returned so a caller can SEE a silent degradation (ISS-116). */
+export interface IndexSessionResult {
+  sessionId: string;
+  chunks: ChunkWriteResult;
+}
+
 export async function writeSessionChunks(
   tenantId: string,
   sessionId: string,
   turns: Turns[],
   embed: IndexEmbedFn,
   db: Pick<Db, "collection">,
-): Promise<{ written: number; skipped: "no-chunkable-turns" | "embedding-failed" | null }> {
+): Promise<ChunkWriteResult> {
   const chunksColl = scopedCollection<Chunks>(db as never, "chunks");
   const plans = buildChunks(turns);
   if (plans.length === 0) {
@@ -146,7 +160,11 @@ export async function writeSessionChunks(
  * ingested session. Never throws out of the caller's control on an LLM failure — `summarizeSession`/
  * `extractClaims` already degrade honestly on their own (a labeled fallback summary, an empty
  * claims list) rather than blocking the pipeline. */
-export async function indexSession(tenantId: string, sessionId: string, deps: IndexSessionDeps): Promise<void> {
+export async function indexSession(
+  tenantId: string,
+  sessionId: string,
+  deps: IndexSessionDeps,
+): Promise<IndexSessionResult> {
   const db = deps.db ?? getDb();
   // Tenant-scoped through the SAME injected handle: `scopedCollection` still forces a tenantId at
   // every call site (its whole purpose), it just no longer reaches past the injection to getDb().
@@ -220,9 +238,15 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
     await claimsColl(tenantId).insertMany(claimDocs);
   }
 
-  if (deps.embed) {
-    await writeSessionChunks(tenantId, sessionId, turns, deps.embed, db);
-  }
+  // ISS-116's SECOND defect: this return used to be discarded, so a session that got no vectors
+  // was indistinguishable from one that did — `indexSession` resolved, `status.index` flipped to
+  // "done", and the only trace was a console warning nobody reads. That is how three whole
+  // sessions (37% of the corpus) stayed out of the vector index while the index looked complete.
+  // Returned rather than thrown: the degradation is deliberately non-fatal (see writeSessionChunks),
+  // so the caller needs a value to inspect, not an exception to catch.
+  const chunks = deps.embed
+    ? await writeSessionChunks(tenantId, sessionId, turns, deps.embed, db)
+    : { written: 0, skipped: "no-embedder" as const };
   const [allSessions, allPages, existingRoot] = await Promise.all([
     sessionsColl(tenantId).find({}).toArray() as Promise<Sessions[]>,
     sessionPagesColl(tenantId).find({}).toArray() as Promise<SessionPages[]>,
@@ -243,10 +267,12 @@ export async function indexSession(tenantId: string, sessionId: string, deps: In
   }
 
   await sessionsColl(tenantId).updateOne({ _id: sessionId }, { $set: { "status.index": "done" } });
+
+  return { sessionId, chunks };
 }
 
 export type IndexSessionFn = typeof indexSession;
 /** The composition-root-bound shape every ingest deps builder actually takes — `complete`
  * (and its per-request `tenantId` routing) already closed over, so a caller only ever supplies
  * `(tenantId, sessionId)`. */
-export type BoundIndexer = (tenantId: string, sessionId: string) => Promise<void>;
+export type BoundIndexer = (tenantId: string, sessionId: string) => Promise<IndexSessionResult>;

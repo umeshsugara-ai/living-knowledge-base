@@ -67,7 +67,16 @@ export function createMongoIngestDeps(indexSession?: BoundIndexer): IngestDeps {
 
       if (indexSession) {
         try {
-          await indexSession(tenantId, sessionId);
+          const res = await indexSession(tenantId, sessionId);
+          // ISS-116: indexing "succeeding" while the session got no vectors is the silent failure
+          // that hid three whole sessions from the index. A skip is not an error, so it must not
+          // be thrown — but it must not be invisible either.
+          if (res.chunks.skipped) {
+            console.warn(
+              `ingestUrl: session ${sessionId} indexed but has NO vectors (${res.chunks.skipped}) — ` +
+                "it will not be reachable by vector search",
+            );
+          }
         } catch (err) {
           console.error(`ingestUrl: indexing failed for session ${sessionId} (raw content still stored):`, err);
         }

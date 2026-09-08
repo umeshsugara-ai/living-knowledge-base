@@ -165,7 +165,15 @@ export function createMongoWhatsAppDeps(indexSession?: BoundIndexer): WhatsAppRo
 
       if (indexSession) {
         try {
-          await indexSession(tenantId, sessionId);
+          const res = await indexSession(tenantId, sessionId);
+          // ISS-116, same reasoning as ingest-store: a session that indexed but got no vectors is
+          // invisible to vector search while every status field says "done".
+          if (res.chunks.skipped) {
+            console.warn(
+              `ingestGroup: session ${sessionId} indexed but has NO vectors (${res.chunks.skipped}) — ` +
+                "it will not be reachable by vector search",
+            );
+          }
         } catch (err) {
           console.error(`ingestGroup: indexing failed for session ${sessionId} (raw content still stored):`, err);
         }
