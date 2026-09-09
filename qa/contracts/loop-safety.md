@@ -7,10 +7,19 @@
 > work against it would have credited it for nothing it actually does.
 >
 > **Gate note.** The checker SKILL puts initial contract creation behind a human START approval.
-> This file is authored WITHOUT a fresh approval because it introduces no new direction: every
-> criterion below is derived from **D-014** (`Approved-by: Umesh`) and from the 2026-09-08 incident
-> D-014 records. It is a restatement of an approved decision in checkable form. Umesh should
-> ratify or amend it; nothing here should be read as a checker-invented requirement.
+> This file was authored on 2026-09-08 without a fresh approval, on the stated ground that every
+> criterion derived from **D-014** (`Approved-by: Umesh`) and the 2026-09-08 incident D-014 records.
+> **That was true of C1–C6 and not true of C7–C8** — as this file's own amendment log admitted in the
+> same breath, and as ISS-087 (raised by a Mode B sweep) established: C7 imposes a new procedural
+> obligation on every future checker, and C8 is a general Lab-Protocol rule binding every future
+> DECISIONS entry. Neither traces to anything D-014 authorizes.
+>
+> **Corrected 2026-09-09 per D-022** (`Approved-by: Umesh`; `Changes-authorized:` this provenance
+> note only). **C1–C6 remain traceable to D-014. C7 and C8 are authorized by D-022**, which ratifies
+> them as project-wide policy in their own right and keeps their current wording. The objection
+> D-022 settles was never the content but the door: a checker that can widen its own mandate by
+> writing a contract is a self-certification path, which is the one failure mode the maker-checker
+> pair exists to prevent. Nothing here should be read as a checker-invented requirement.
 
 ## North star
 
@@ -89,3 +98,9 @@ on any checker that mutates source. No product code.
   cycle-1 check; derived wholly from D-014 (`Approved-by: Umesh`) + the 2026-09-08 incident. C7/C8
   and I1–I3 record judgments the checker made on evidence this cycle, including the explicit
   rejection of a tree-wide assertion · loop-safety-mutation-guard cycle-1 check
+- 2026-09-09 · routine · **provenance note corrected by /checker per D-022** (`Approved-by: Umesh`,
+  `Changes-authorized:` provenance note only). The gate note claimed the whole file derived from
+  D-014 while this log said C7/C8 recorded the checker's own judgments; the log was right and the
+  gate note was wrong. C7/C8 now cite **D-022**, which ratifies them as policy in their own right;
+  C1–C6 stay traceable to D-014. **No criterion text, invariant or scope line was changed** — this
+  amendment is provenance only · raised as ISS-087 by a Mode B sweep
