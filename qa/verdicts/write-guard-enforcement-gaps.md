@@ -470,3 +470,171 @@ same block. **Per D-015, the regression evidence must re-run ISS-172's own four 
 reproductions verbatim and report them by issue id** — not a corpus authored alongside the fix.
 They belong in the `aios-write-guard` block of `hook-fixtures.ps1`, which today pins only canonical
 spellings. ISS-174 is a HUMAN_GATE and ISS-175 is another repo's low; neither blocks cycle 3.
+
+
+---
+
+# Verdict — write-guard-enforcement-gaps · **Cycle checked: 3**
+
+**Date:** 2026-09-09 · **Bound root:** `D:/KnowledgeBase` · **Contract:** `qa/contracts/write-guard.md` (proposed)
+**Commit under check:** `59c121b` (KnowledgeBase) · artifact `D:/ai_os/.claude/hooks/aios-write-guard.ps1` @ `e3bf6f8` (ai_os)
+**Note on cycle numbering:** an earlier cycle-3 run was killed and wrote no file. A run that wrote
+no verdict is not a verdict, so nothing from it was carried forward — every result below was
+re-derived in this run.
+
+```
+VERDICT: FAIL
+SCOREBOARD: 4/7 criteria met, 4/4 invariants hold
+FAILURES:
+- [C1] sev: high · The deny wall is still bypassable, by the extended-length path prefix
+  `\\?\D:\KnowledgeBase\docs\DECISIONS.md` -> SILENT — and unlike every earlier finding on this
+  seam, this one's reachability is MEASURED, not assumed: the Write tool honours that prefix and
+  the write lands on the real file. · Root cause is the existence probe, not the match: the regex
+  matches, then `Test-Path -LiteralPath` returns False for a `\\?\` path under PS 5.1 and control
+  falls to the "initial creation (file absent)" allow branch. Strip the prefix before Test-Path,
+  or deny when existence is indeterminate on a DECISIONS-shaped path. · issue: ISS-180
+- [C6] sev: high · The cycle-3 fixtures that pin the ISS-172 security fix are UNCOMMITTED in
+  `D:/ai_os` (` M .claude/hooks/tests/hook-fixtures.ps1`, 24 insertions). ISS-166's failure class
+  one layer up. · Commit the harness under a narrow pathspec. · issue: ISS-182
+- [C3] sev: n/a (not scorable) · Unchanged from cycle 2: the criterion describes a control that was
+  deliberately withdrawn. Per ISS-174 it counts as not met and no unit may score it until the
+  Approver ratifies the amendment. Not a defect in this unit's work.
+LIVE-BROWSER: not-applicable (changed paths: D:/ai_os/.claude/hooks/aios-write-guard.ps1,
+  D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1 — no UI surface)
+ISSUES-WRITTEN: ISS-180 (high), ISS-181 (low), ISS-182 (high); ISS-172 and ISS-173 marked fixed
+EXPLANATION: ISS-172 and ISS-173 are genuinely fixed — every spelling those rows name now denies,
+re-derived by my own probe suite and killed by independent mutants. But the hunt for a fifth
+survivor found one, it reaches the `deny`, and it is the first defect on this seam whose
+reachability has been demonstrated rather than assumed. Security class, uncapped. FAIL, which
+under the re-dispatch terms means STALLED.
+```
+
+## 1. ISS-172 — fixed, and the fix is real
+
+Every spelling in the issue's title and `fix_direction`, plus the two the maker added, re-probed
+by me against the live guard (not read from the manifest):
+
+| spelling | decision |
+|---|---|
+| `docs\DECISIONS.md` | deny |
+| `docs\sub\..\DECISIONS.md` | deny |
+| `docs\.\DECISIONS.md` | deny |
+| `docs\..\docs\DECISIONS.md` | deny |
+| `docs\\DECISIONS.md` | deny |
+| `docs\DECISIONS.md\` (trailing sep) | deny |
+| same path via `Edit` / `MultiEdit` | deny / deny |
+| `docs\decisions.MD` (casing — my own) | deny |
+| `docs\DECISIONS.md ` and `...md.` (Win32 trailing trim — my own) | deny / deny |
+
+## 2. D-015 compliance — the maker's disclosure is honest, and I verified it
+
+`qa/issues.jsonl` ISS-172 has **no `reproductions` field at all** (confirmed by parsing the row;
+`fix_direction` and `title` are the only enumerations it carries). The maker's claim is therefore
+accurate, and its substitute corpus is honest rather than convenient: it is the union of the
+classes the row names, the three concrete spellings in the cycle-2 verdict, and two additions —
+i.e. it is *wider* than the row, not narrower. Saying so explicitly instead of implying a recorded
+corpus is exactly what D-015 asks for. **Credited in full.** My own additions above (casing,
+trailing space, trailing dot, `Edit`/`MultiEdit`) all pass too.
+
+## 3. Harness + my own mutation table
+
+`powershell -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1` → **ALL PASS, 82 PASS / 0 FAIL,
+exit 0.** Re-run by me.
+
+I did not re-run the maker's mutation table. I wrote my own (D-020-compliant: sandbox **copy** in
+the scratchpad so the live artifact is never touched, per-probe timeout, `finally` cleanup,
+live-file SHA256 asserted before and after **every** mutant — `3c73b146…8598`, unchanged), driving
+a **26-check suite I derived from the contract**, not from the maker's fixtures. All 26 pass on the
+unmutated guard.
+
+| mutation | result |
+|---|---|
+| **no-op control** | **clean** |
+| drop the `GetFullPath` canonicalisation | killed (`docs\sub\..\` → silent) |
+| **drop the trailing-separator trim** | **killed** (`docs\DECISIONS.md\` → silent) |
+| narrow `.claude\hooks\` back to `*.ps1` direct children | killed (`hooks\x.mjs` → silent) |
+| flip the DECISIONS wall `deny` → `ask` | killed |
+| drop `settings.local.json` from the shape list | killed |
+| drop the `append_decision.ps1` rule | killed |
+| re-gate the shape block on the protocol root (ISS-165 regression) | killed |
+
+The trim — which the maker discloses survived its first table — **is genuinely pinned now**, and
+pinned independently: my suite kills it without using the maker's fixture. I found **no unpinned
+line** among the seven I attacked. Recording the survivor rather than presenting a first-time-clean
+table was the right call and it is what let me target that mutant specifically.
+
+## 4. No regression, and the approval-fatigue win re-measured
+
+All from my own suite, all green: `docs/DECISIONS.md` deny; `.claude/{settings.json,
+settings.local.json,CLAUDE.md,rules/*}`, `CLAUDE.md`, `scripts/append_decision.ps1`,
+`.claude/hooks/{*.ps1,x.mjs,lib/y.py}` **ask**; the nested ISS-165 class
+(`sources/whatsapp_msg/.claude/settings.json`, `apps/api/.claude/hooks/h.ps1`,
+`.claude/worktrees/lane-a/.claude/settings.json`) **ask**; I2 holds on a non-existent parent;
+`~/.claude/settings.json` and `D:/ai_os/CLAUDE.md` **silent** (the cycle-2 withdrawal, upheld);
+`qa/manifests/x.md`, `README.md`, `apps/api/src/search-store.ts` **silent**.
+
+Approval fatigue, re-measured by walking the repo rather than quoted: **314 source files judged,
+exactly 1 prompted** — `packages/ask/src/ask-v2.ts`, a true positive. Identical to the previous
+measurement. [C4] holds.
+
+## 5. Ruling on the five Known Gaps — including the invited FAIL on Gap 2
+
+**Gap 2 does NOT fail this unit, on two independent grounds.**
+
+*On the merits.* The burden runs the other way. The maker did not add a speculative control; it
+closed a **demonstrated** bypass of a wall that had been matching a raw string. Requiring proof of
+reachability before hardening would mean the safe state is the one where an attacker's input shape
+is assumed impossible — and the entire history of this seam is defects found in shapes nobody
+thought to name. A security-class fix may PASS on an assumed-reachable input when the alternative
+is leaving a proven-defective match in place.
+
+*And empirically, the assumption is now discharged.* Hunting the fifth survivor produced the
+measurement the maker said it could not get without writing to `DECISIONS.md`. Through the tool
+layer, on a harmless scratch file, `Write` to `\\?\C:\…\ads.txt` **landed on the real file** while
+the guard returned silent for that same shape — so the harness demonstrably passes non-canonical
+`file_path` values straight through to the hook. **Gap 2 is closed in the maker's favour.** It is
+also, exactly, what turned the fifth survivor from a curiosity into a FAIL.
+
+- **Gap 1** (relative paths resolved against the hook's CWD) — accurate, and harmless for the wall
+  as argued, since any spelling ending in `\docs\DECISIONS.md` matches whatever it resolves
+  against. Note only.
+- **Gap 3** (`delivery-gate-stop.ps1` carries the generic-config route) — outside this unit. Not
+  scored, per cycle 2.
+- **Gap 4 / Gap 5** (ISS-174, ISS-168) — correctly left open, see §6.
+
+## 6. The Approver's items — the maker stayed in its lane
+
+Verified rather than taken on trust: `qa/contracts/write-guard.md`'s amendment log contains **only**
+the START entry — [C3] is untouched, so no silent self-amendment. `qa/gates/d023-supersede.md`
+exists, states both options and the exact command, and has **no `Answered:` line**. `docs/DECISIONS.md`
+contains **no entry superseding D-023** (latest is D-026, unrelated). The maker wrote neither the
+contract amendment nor the DECISIONS entry it needed. That is the correct behaviour and it is worth
+saying plainly after three cycles of findings.
+
+## 7. The fifth survivor, and why the class-based cap is doing its job
+
+```
+\\?\D:\KnowledgeBase\docs\DECISIONS.md   ->  SILENT     (want: deny)
+```
+
+The regex is not the problem — it still matches. Line 79's `Test-Path -LiteralPath $pathNorm`
+returns **False** for a `\\?\` path under Windows PowerShell 5.1 (I verified this directly against
+the real, 59,687-byte `docs/DECISIONS.md`), so the guard takes the `exit 0   # initial creation
+(file absent)` branch and allows the write as though the file did not exist. `GetFullPath` does not
+strip the prefix, and cycle 3's canonicalisation therefore never sees it.
+
+Three cycles moved this wall from **position** → **shape** → **identity**, and each time the
+remaining hole was in a different organ. This one is in the **existence probe** — the one line the
+identity fix left alone.
+
+Two smaller notes: NTFS stream spellings (`DECISIONS.md::$DATA`, `DECISIONS.md:x`) are also silent
+at the guard, but `Write` cannot currently reach them because it writes through a `<path>.tmp.…`
+sibling that a stream suffix makes illegal — filed **low** (ISS-181) with that evidence, not
+promoted. 8.3 short names are a non-issue here: `D:\KNOWLE~1` does not resolve, so 8.3 generation is
+off on this volume. `//localhost/D$/…` denies correctly.
+
+**On the cap.** `.claude/CLAUDE.md`'s round cap is class-based precisely for this: this seam is well
+past two PASSes, and a count-based cap would have closed it before round 5 — which is the same
+arithmetic that would have shipped ISS-078. ISS-180 is security class, therefore uncapped, and it
+opens a unit at any round count. This unit is at its cycle limit, so the correct disposition is
+**STALLED with ISS-180 opening a new unit**, not a fourth cycle here.
