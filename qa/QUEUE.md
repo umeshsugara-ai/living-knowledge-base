@@ -1,97 +1,122 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-09, Mode B)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-09T08:10Z, Mode B)
 
-> Range: `d265833..169efb3` (last sweep stamp `2026-09-08T17:46:00Z`). Bound root `D:/KnowledgeBase`;
-> the three sibling worktrees (`a-speakers`, `b-golden-set`, `c-unrun-writers`) were **read** for
-> bypass detection and pair-state reconciliation and **not modified**.
-> **Terminal state: FINDINGS: 2** — ISS-142, ISS-143 (plus in-place evidence on ISS-130, ISS-133).
+> Range: `169efb3..f3cbe03` (31 commits; the concurrent loop landed `2abc1c9` during the sweep —
+> read, not swept). Bound root `D:/KnowledgeBase`; the three sibling worktrees (`a-speakers`,
+> `b-golden-set`, `c-unrun-writers`) were **read** for ledger-union and pair-state reconciliation
+> and **not modified**.
+> **Terminal state: FINDINGS: 2** — ISS-160 (high), ISS-161 (medium), plus an in-place re-measure
+> on ISS-130.
 > Written by this sweep: `qa/issues.jsonl`, `qa/QUEUE.md`, `qa/.last-sweep`. Nothing else.
 
 ## HUMAN_GATE — open, blocking
 
-- `qa/gates/ledger-shard-union-hook.md` — **unanswered.** Enforcement-path change
+- `qa/gates/ledger-shard-union-hook.md` — **the only genuinely open gate.** Enforcement-path change
   (`.claude/hooks/mc-sessionstart.ps1:5` is still `$LEDGER = 'qa/issues.jsonl'`), so per the project
-  CLAUDE.md it needs a `docs/DECISIONS.md` entry carrying **`Approved-by: Umesh`**. This is the
-  *unfixed half* of ISS-129: `scripts/lib/tracker-audit.mjs` now globs the union (verified,
-  `tracker-audit: OK (gate G1)`), the session-start hook does not.
-- `qa/gates/loop-safety-contract-ratification.md` — `**Answered:** _(pending)_`.
-- `qa/gates/vector-retrieval-contract.md` — `**Answered:** _(pending)_`.
+  CLAUDE.md it needs a `docs/DECISIONS.md` entry carrying **`Approved-by: Umesh`**. Unfixed half of
+  ISS-129; `scripts/lib/tracker-audit.mjs` already globs the union.
+
+**The previous queue's gate section was stale and is corrected here.** Both
+`loop-safety-contract-ratification` and `vector-retrieval-contract` were **answered 2026-09-09**
+("Option 1" in each, Umesh in session, recorded on disk at `be387e0` with explicit provenance that
+it was a general "go with whatever is best" rather than a clause-by-clause ruling) and both have
+already been acted on — D-022 (`3c85e9a`, `Approved-by: Umesh`) ratifies loop-safety C7/C8, and
+`ad6e7b7` / `09f8997` drafted the `vector-retrieval`, `entity-promotion` and `hybrid-retrieval`
+contracts. Neither was answered off-disk. They still *read* as pending to a first-match grep because
+each file retains a superseded `**Answered:** _(pending)_` line above its real answer — that is
+ISS-161, and it is what made this sweep's own dispatch instruction wrong about them.
 
 Answered/closed: `concurrent-maker-sessions`, `golden-set-redesign`, `ledger-id-collision`,
-`ledger-id-divergence` (both via D-019), `mongo-host-unreachable` (self-resolved). None was
-answered off-disk — no `docs/DECISIONS.md` entry mentions any of the three open gates.
+`ledger-id-divergence` (both via D-019), `mongo-host-unreachable` (self-resolved),
+`loop-safety-contract-ratification`, `vector-retrieval-contract`.
 
-## Merge audit — `c3989ef` (lane/c-unrun-writers, 21 commits)
+## Top-3 recommended next units
 
-**Bypass detection: CLEAN.** All 13 source-touching commits in the range map to a manifest naming
-their unit: `4aef342`→`watched-sources-entrypoint`, `c8da5ee`→`watched-sources-url-normalisation`,
-`43c1281`/`26e283a`/`948212e`/`f6f2b86`→`guarded-fetcher`, `d12232a`/`534af4e`/`cb54652`→
-`watched-sources-run`, `b91cd7b`→`promote-tree-entities`, `5addd42`→`claims-write-targeting`,
-`93a1ec2`/`b9159cf`→`ledger-shard-union-readers`. All four lane-c manifests, verdicts and contracts
-arrived with the merge.
+1. **`aios-write-guard-lab-config-hole`** (ISS-160, high — tier 2). The three-into-one hook merge
+   left `CLAUDE.md` and `.claude/rules/**` **silently allowed inside every Lab Protocol repo**,
+   including this one: CHECK 2 is skipped whenever `$protocolRoot` is non-empty, but CHECK 1's
+   enforcement list covers only `.claude/hooks/`, `.claude/settings.json` and
+   `scripts/append_decision.ps1`. Probed empirically in both directions. The guard file is
+   **outside this repo's bound root**, so the unit here is the repo-side half: a superseding
+   DECISIONS entry correcting D-023's "Protection is unchanged" claim, which its own three-path
+   parity test could not have substantiated. Full ceremony — enforcement path.
+2. **`gate-answered-line-uniqueness`** (ISS-161, medium — tier 4, but cheap and it is currently
+   misinforming the loop). Strike or annotate the superseded `Answered: (pending)` line when a gate
+   is answered, so each gate file has exactly one. Verified cost of not doing it: this sweep was
+   dispatched to chase two closed gates.
+3. **The next unblocked roadmap task** (tier 3, `.goal/goal.json` `pending` with deps met). U1.5 is
+   in flight at fix cycle 3 of 3 in the concurrent loop and must not be touched; the U2.1 successors
+   and the newly-contracted `entity-promotion` / `vector-retrieval` layers are the honest next pull
+   now that both contracts exist. **Do not** open a fourth round on the U1.5 merge seam from this
+   queue.
 
-**The U1.0 duplicate was the whole of the damage.** Verified independently, not taken on trust:
-`TASKS.md` row-id set is a superset of *both* merge parents (`comm` against `821b70c` and `efd2fd8`
-is empty in each direction), no id appears twice, `.goal/goal.json` holds 61 tasks with no lane-c
-task id missing, and `pnpm lint:structure` exits 0 with `tracker-audit: OK (gate G1)`.
-`pnpm -r test` green (api 156/156, plus index/ingest/ai/ask/meeting-bot/db/core, 0 fail anywhere)
-and `pnpm -r typecheck` clean. Three paths present in lane-c and absent from HEAD
-(`apps/api/src/indexing.ts`, `.test.ts`, `scripts/backfill-chunks.mjs`) are the pre-U1.0c layout the
-master side refactored into `apps/api/src/indexing/` and `scripts/backfill.mjs` — superseded, not
-lost. `apps/api/src/watched-run-deps.test.ts` was *deleted* by `cb54652` inside the lane, not by the
-merge.
+## Ledger union (D-019 re-measure, 2026-09-09)
 
-## Ledger union (D-019) — re-measured
+| Tree | Files | Rows | Parse errors | Dup ids | Open by severity |
+|---|---|---|---|---|---|
+| master | `issues.jsonl` (163) + `issues.c-unrun-writers.jsonl` (22) | **185** | 0 | 0 | 1 critical · 7 high · 22 medium · 18 low |
+| `a-speakers` | `issues.jsonl` only — **no shard** | 103 | 0 | 0 | 4 medium · 10 low |
+| `b-golden-set` | `issues.jsonl` only — **no shard** | 86 | 0 | 0 | 2 high · 1 medium · 6 low |
+| `c-unrun-writers` | `issues.jsonl` (117) + shard (22) | 139 | 0 | 0 | 1 critical · 1 high · 4 medium · 16 low |
 
-| File | Rows | Parse errors | Ids |
-|---|---|---|---|
-| `qa/issues.jsonl` (master) | 143 | 0 | ISS-001..ISS-141 contiguous, **no gaps**, + 2 lane-shaped ids |
-| `qa/issues.c-unrun-writers.jsonl` (master) | 22 | 0 | ISS-C-UNRUN-WRITERS-001..022 |
-| **Union on master** | **165** | **0** | **0 duplicate ids** |
-| `a-speakers/qa/issues.jsonl` | 103 | 0 | ISS-001..ISS-103, **no shard** |
-| `b-golden-set/qa/issues.jsonl` | 86 | 0 | ISS-001..ISS-086, **no shard** |
-| `c-unrun-writers` (both files) | 117 + 22 | 0 | matches master |
+Master canonical is `ISS-001..ISS-161` contiguous plus the two lane-shaped ids ISS-143 recorded.
+**ISS-130 collision re-measure:** `a-speakers` next allocation `ISS-104` collides with **56**
+existing master rows (was 38 — the window grows monotonically with every master row);
+`b-golden-set` next allocation `ISS-087` collides with **73**. `c-unrun-writers` holds the shard but
+its canonical file sits at ISS-117 against master's ISS-161, so a canonical allocation there would
+collide with 44. Two of three lanes still have not adopted D-019.
 
-Open by severity across the master union: **1 critical, 4 high, 11 medium, 18 low** (34 open;
-79 fixed, 52 verified). The merged shard's ids do **not** collide with the canonical sequence —
-that part of D-019 worked exactly as designed.
+## Concurrent-write damage — checked, NONE reached this repo
 
-## Top 3 recommended next units
+The shared-config corruption seen this session (`C:/Users/Lenovo/.claude/settings.json` overwritten
+twice, once reverting the hook change and once dropping 101 of 108 `permissions.allow` rules) did
+**not** reach anything under `D:/KnowledgeBase`. Measured, not assumed:
 
-1. **ISS-142 (high) — repoint the merged lane-c audit trail.** 96 of 101 bare `ISS-NNN` references
-   in the four merged manifests, four verdicts and three contracts now resolve to *unrelated*
-   canonical rows. This is the failure D-019 names in its own rationale, arriving on master.
-   Remedy is a rewrite of the references to `ISS-C-UNRUN-WRITERS-NNN` in those qa docs (commit
-   messages are immutable — note the mapping in the gate file instead). **Not** a renumbering of
-   any ledger row.
-2. **ISS-130 (high) — adopt shards in the two remaining lanes.** `a-speakers` and `b-golden-set`
-   still write un-namespaced `qa/issues.jsonl`. Master is at ISS-141; `a-speakers`' next
-   allocation is ISS-104, which collides with 38 existing master rows. Measured, not predicted.
-3. **ISS-143 (medium) — normalise the two lane-shaped ids in the canonical ledger** *(only if the
-   maker judges it cheap; otherwise take the next unblocked roadmap task per D-013 tier 3 —
-   `U1.5` hybrid merge is the first `open` roadmap row with its deps met).*
+- `docs/DECISIONS.md` is **additions-only across the whole range** — `git diff --numstat` reports
+  `16  0`, and a `grep -c` for removed lines over the range diff returns **0**. Only two commits
+  touch it (`3c85e9a` +8, `e045cb8` +8), each a single appended entry.
+- `.claude/settings.json` lost exactly the 10 lines D-023 authorizes and nothing else; the file is
+  valid JSON and `mc-precommit.ps1` remains registered under `PreToolUse` matcher `Bash|PowerShell`.
+  All `SessionStart` / `SessionEnd` entries intact.
+- `qa/issues.jsonl` row count is **monotonically non-decreasing** across every commit that touches
+  it (143 → 145 → 148 → 148 → 152 → 152 → 155 → 157 → 158 → 159 → 161): no truncation, no lost
+  rows. The 139 deleted lines in the range diffstat are in-place status/evidence updates to existing
+  rows, not removals.
+- `C:/Users/Lenovo/.claude/settings.json` currently holds **112** allow rules and the single
+  `aios-write-guard.ps1` PreToolUse registration — the restore from
+  `settings.json.bak-2026-09-09` held.
 
-`ISS-132` is deliberately **not** queued here — the maker holds it as this tick's unit
-(`divergence-mapping-correction`). `ISS-104` (critical, open) belongs to `lane/a-speakers` and is
-not actionable from master.
+## Pair-state
 
-## Normal sweep duties
+- `speaker-verbatim-token-boundary` — **unmerged-lane artifact; master needs no action.** Master's
+  manifest is `ready-for-check` cycle 3 and master's verdict *does* carry `Cycle checked: 3`
+  (line 424, commit `62c4637`), so the handshake is matched — a fix gap by the letter, not a
+  dispatch gap. `lane/a-speakers` has already flipped it to
+  `superseded-by speaker-denylist-ledger-corpus (STALLED at cycle 3 of 3)`, and that branch is
+  unmerged. It resolves on merge. Third sweep to rule the same way; not re-filed.
+- `issue-ref-disambiguation` — `ready-for-check` cycle 3, out for a check right now. **Not touched.**
+- `hybrid-merge` — `Fix cycle: 3 of max 3`, cycle-3 work in flight in the concurrent loop
+  (`2abc1c9`, tick 03:40Z). **Not touched.** A further FAIL is STALLED and stops for the human.
+- All other manifests are `checked-PASS` with cycle numbers matching their verdicts.
 
-- **Pair state:** one manifest at `ready-for-check` — `speaker-verbatim-token-boundary` (cycle 3).
-  Its verdict on master **does** carry `Cycle checked: 3` (line 424, `62c4637`), so the handshake is
-  matched: a fix gap, not a dispatch gap. `lane/a-speakers` `f1e616c` already closes it as
-  `superseded-by speaker-denylist-ledger-corpus`; that branch is unmerged. **Master's copy is an
-  unmerged-lane artifact, not a genuine dangling handshake** — it resolves on merge and needs no
-  maker action here. ISS-133 updated in place.
-- Every other manifest is `checked-PASS` with cycle numbers matching its verdict.
-  `git ls-files --others qa/` is empty — no untracked verdict.
-- **Maker liveness: HEALTHY.** `qa/.last-tick` stamped `2026-09-08T19:17:16Z`, no `qa/.paused`,
-  no `STALLED`/`EXHAUSTED` stamp lacking a `qa/debug/` report.
-- Feedback inbox fully folded; `qa/.regrill-due` absent, no `GRILL:` row raised.
-- `docs/DECISIONS.md` additions-only across the range (0 changed lines — nothing appended).
-- **Silent-failure hunt** over the range's new source (`guarded-fetch.ts`, `node-transport.ts`,
-  `watched/run.ts`, `routes/watched-sources.ts`, `promote-entities.ts`, `tracker-audit.mjs`):
-  **nothing filed.** The two `catch { return null }` sites are URL validators whose callers reject
-  `null` explicitly (400 at `routes/watched-sources.ts:74`), i.e. fail-closed, not masked; the
-  `catch` in `watched/run.ts:101` records the failure against the source and continues by documented
-  contract; `guarded-fetch.ts:231` rethrows with the cause and fails closed on an empty DNS answer.
-- **Reopen-power not exercised** — no PASSed unit's claim was found unbacked.
+## Normal duties
+
+**Bypass detection CLEAN.** All 10 source-touching commits in the range map to a manifest naming
+their unit (`b90e206` / `a8c3dce` → `hybrid-merge`, `0d7dcc9` / `3380e84` / `ccd81d4` →
+`issue-ref-disambiguation`, `9a2226f` / `683fe25` / `26fc450` → `entity-id-tenant-namespace`,
+`e34ddce` → `divergence-mapping-correction`). `f3cbe03` "wip iss-158" is the in-flight hybrid-merge
+cycle-3 work, superseded minutes later by `2abc1c9` which names its unit — not filed as a bypass.
+Maker **live** (tick 03:40Z), no `qa/.paused`, no undiagnosed STALLED / EXHAUSTED stamp. Feedback
+inbox fully folded. `qa/.regrill-due` absent, no `GRILL:` row raised. Every verdict in range is
+tracked and committed. Reopen-power **not exercised** — no PASSed unit's claim was found unbacked.
+
+**Was the machine-wide hook change a maker-checker unit, and should it have been?** It was not, and
+the answer splits. The **in-repo half is correctly governed**: D-023 exists, carries
+`Approved-by: Umesh`, and its `Changes-authorized` ("remove the redundant PreToolUse
+decisions-append-guard registration only; mc-precommit.ps1 and all SessionStart/SessionEnd entries
+unchanged") describes `e045cb8`'s diff exactly — 10 lines removed, one registration, nothing else.
+The **out-of-repo half should have had a check.** It is an enforcement-path change, which this
+repo's own severity gate routes to full ceremony regardless of severity, and the specific thing a
+fresh checker does — re-derive rather than trust, probe the paths the author did not choose — is
+precisely what would have caught ISS-160. The author's parity test was real and was run; it just
+tested the three paths that happen to survive. That is the D-015 failure shape in a new place: a
+change measured against a corpus its own author chose.
