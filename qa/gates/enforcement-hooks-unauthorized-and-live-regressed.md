@@ -137,3 +137,28 @@ most common manifest form, and separately satisfiable by prose on its BROWSER pr
 (`D:/ai_os/audits/2026-09-09-delivery-gate-browser-predicate.md`, H1).
 
 **Answered:** (pending)
+
+
+---
+
+## Scope update — 2026-09-09, appended by the maker (the cycle-1 checker's condition)
+
+The `delivery-gate-stamp-adoption` checker ruled that a unit **may** touch an unauthorized
+enforcement path to fix a defect *in* it — there is no neutral state (the file executes from the
+working tree), there is no reviewed commit to revert *to*, and a committed one-token fix lets the
+Approver rule on a diff rather than a moving tree. A unit that **extended** such a path would get
+the opposite answer.
+
+It attached one condition, and this is it: **the durable question here now covers a second
+unauthorized commit and must name it**, or the Approver ratifies one commit and reasonably believes
+the file is covered.
+
+**Commits to `D:/ai_os/.claude/hooks/delivery-gate-stop.ps1` with no authorizing DECISIONS entry:**
+
+| commit | what it changed |
+|---|---|
+| `4a71633` | the maker predicate (D-025 was its only cover; **D-026 withdrew D-025's justification**) |
+| `e5402d6` | ISS-205 — a stamp's value must sit on the stamp's own line |
+| *(this cycle)* | ISS-205 clauses 2 and 3 — the erased-value sentinel, the `Fix cycle` sibling, and the unreadable-cycle default |
+
+Answering this gate should therefore cover **all three**, not the first alone.
