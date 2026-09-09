@@ -36,6 +36,12 @@ dispatch on this signal.
   first.** Its section 2 no longer describes the working tree.
 - **`qa/gates/mc-hooks-manifest-blindness.md` — genuinely open, genuinely separate.** See the ruling
   below.
+- **`qa/gates/ui-surfaces-test-file-exclusion.md` — NEW, non-blocking.** Raised by the
+  `vacuous-evidence-probes` cycle-1 checker: should `qa/ui-surfaces.json` exclude `*.test.*` from
+  the D-024 browser trigger? A test-only unit tripped the live-browser gate on the `.tsx` extension
+  alone. Checker recommends APPROVE; it is a gate weakening read by `delivery-gate-stop.ps1`, so it
+  needs `Approved-by: Umesh` in a DECISIONS entry, not a checker's edit. **Nothing is blocked on
+  it** — that unit PASSed on an explicit not-applicable ruling.
 - `qa/gates/ledger-shard-union-hook.md` — still `(unanswered)`. Unfixed half of ISS-129.
 - `qa/gates/d023-supersede.md` — still no `Answered:` line at all. ISS-168.
 - ISS-174 (contract `[C3]` wording) — still no gate file. Open one or fold it into the d023 answer.
