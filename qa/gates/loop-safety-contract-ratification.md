@@ -86,7 +86,7 @@ It does not bear either way on **C8**, which remains a separate question about D
 Reply with the option number, or just say which of C7/C8 you accept. I will append the
 `Answered:` line here **before** acting on it, then write the authorizing DECISIONS entry.
 
-**Answered:** _(pending)_
+**Answered:** SUPERSEDED by the line below — this stale `_(pending)_` predates the real answer and is corrected here by the Mode B sweep of 2026-09-09 (ISS-161 recurrence). The gate is ANSWERED: see the 2026-09-09 Option 1 line immediately following.
 
 **Answered:** 2026-09-09 — **Option 1: ratify both C7 and C8** — Umesh, in session: *"go with
 whatever is best"*, in direct reply to a message naming this gate and my recommendation (option 1).

@@ -49,7 +49,7 @@ constraint currently lives only in a manifest and a verdict. If it is not in a c
 unit inherits the number without the caveat — which is precisely how 1.000 became load-bearing
 before the golden set was rebuilt.
 
-**Answered:** _(pending)_
+**Answered:** SUPERSEDED by the AMENDED section below — this stale `_(pending)_` belongs to the pre-amendment one-layer question and was left standing above the real answer. Corrected by the Mode B sweep of 2026-09-09 (ISS-161 recurrence). The gate is ANSWERED: see the 2026-09-09 "Option 1, both layers" line.
 
 ---
 
