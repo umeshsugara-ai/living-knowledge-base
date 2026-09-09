@@ -40,6 +40,7 @@ a client of that API — with the long-range goal of beating top human counsello
   - `packages/meeting-bot/`
 - `qa/`
   - `qa/contracts/`
+  - `qa/debug/`
   - `qa/evidence/`
   - `qa/gates/`
   - `qa/manifests/`

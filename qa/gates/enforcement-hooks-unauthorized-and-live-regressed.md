@@ -21,7 +21,52 @@ Hooks execute from the working tree, so the gate that blocks every session on th
 whatever is on disk — not `HEAD`, not anything a checker has judged. Found by the
 `delivery-gate-manifest-blindness` checker (ISS-190), verified independently here.
 
-## 2. The uncommitted version is a REGRESSION, and a bigger one than the bug it fixes
+## 2. CORRECTED 2026-09-09 (ISS-200) — this section quoted a diff that no longer exists
+
+**The original section 2, preserved below, is out of date and must not be answered as written.**
+The sweep caught it: I documented a specific uncommitted diff, and the other session kept working,
+so by the time anyone read it the file had moved. Measured again just now:
+
+- `hook-fixtures.ps1` is **committed** (`bbabf41`) — "three uncommitted files" is **two**.
+- `delivery-gate-stop.ps1`'s live diff is no longer the heading-anchor drop I described. At the
+  sweep's reading it neutered `Strip-Code`; at mine, minutes later, it is a narrowing of the
+  `Fix cycle:` anchor. **Both readings were accurate when taken.**
+
+**The lesson, which is the actual finding: a gate cannot document an uncommitted diff.** The diff is
+the one thing guaranteed to change while the gate waits. So the question below is restated to be
+durable, and the specific numbers are struck rather than deleted.
+
+### The durable question (answer THIS, not the struck text)
+
+> Three enforcement files in `D:/ai_os/.claude/hooks/` have been running **from the working tree,
+> uncommitted, all day**. Whatever their contents are at the moment you read this, they have never
+> been reviewed as a commit. **Commit or revert what is live**, and **retro-authorize or revert
+> `4a71633`** (§3), which shipped with no `Approved-by`.
+
+~~The uncommitted version is a REGRESSION, and a bigger one than the bug it fixes~~
+*(struck 2026-09-09 per ISS-200 — the measurement below was true when taken and is no longer true
+of disk. Kept because striking is honest and deleting is not.)*
+
+## 2b. ISS-201 — the finding BOTH gates missed, and it is live right now
+
+`edit-in-place-guard.ps1` is uncommitted and live, and its diff adds **`\qa\`, `\.goal\` and
+`\brainstorms\`** to `allowDirSignals`. Verified on disk just now.
+
+That **disables the drift guard over every manifest, verdict, contract, ledger shard and gate file
+in this repo** — including this file. The stated rationale is about disposable probe scripts
+(`.work/`, `scratchpad/`, `temp/claude/`, `.playwright-mcp/`), and for those it is entirely
+reasonable: the guard was firing on 48 throwaway files in one directory and getting clicked through,
+which spends a guard's credibility. **But `qa/`, `.goal/` and `brainstorms/` are not throwaway.**
+They are the governance record. The rationale does not reach them.
+
+I created several new files under `qa/` today without ever seeing a drift prompt. That is this.
+
+**Ask:** keep the scratch entries, drop `\qa\`, `\.goal\` and `\brainstorms\` — or state why the
+governance record should be exempt from the anti-drift guard.
+
+---
+
+## 2 (ORIGINAL, STRUCK — see 2a above)
 
 Measured, not read — both regexes run against the real forms, and the forms counted across all
 114 manifests in `qa/manifests/`:
