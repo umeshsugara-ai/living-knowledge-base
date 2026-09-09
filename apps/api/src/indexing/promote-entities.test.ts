@@ -120,13 +120,22 @@ test("ISS-126/ISS-202: every write is tenant-scoped on filter AND body", async (
   // survived four PASSes). So reads are checked too, on the filter alone.
   const isWrite = (op: string) => op.startsWith("update") || op.startsWith("insert") || op.startsWith("replace");
 
-  const filterIsScoped = (f: Record<string, unknown> | undefined) =>
-    !!f &&
-    (f.tenantId === "tenant-a" ||
-      (typeof f._id === "string" && f._id.includes("tenant-a")) ||
-      // `sessionId` alone is NOT accepted: session ids are not tenant-namespaced, so a filter on
-      // one is only as safe as the caller. That is precisely ISS-121's collision.
-      false);
+  // ISS-211. The first version of this helper accepted `_id.includes(tenant)` for EVERY operation.
+  // Because the entity writes filter on a namespaced `_id`, that disjunct absorbed them: removing
+  // `tenantId` from the write filter still passed a test named "tenant-scoped ON FILTER and body".
+  // The assertion was unfalsifiable on exactly the half its name promises, and the manifest claimed
+  // the opposite. Split by operation so the name is literally true:
+  //
+  //   WRITES — require `tenantId` in the filter itself. A namespaced `_id` guards against
+  //            COLLISION (ISS-121), not against an unscoped update; those are different
+  //            guarantees and the old helper conflated them.
+  //   READS  — the namespaced-`_id` disjunct is allowed: fetching one row by an id that already
+  //            contains the tenant cannot cross a tenant boundary.
+  //
+  // A lone `sessionId` counts for neither — session ids are not tenant-namespaced.
+  const hasTenantField = (f: Record<string, unknown> | undefined) => !!f && f.tenantId === "tenant-a";
+  const idIsNamespaced = (f: Record<string, unknown> | undefined) =>
+    !!f && typeof f._id === "string" && f._id.startsWith("tenant-a:");
 
   let writeCount = 0;
   for (const c of scoped) {
@@ -135,9 +144,10 @@ test("ISS-126/ISS-202: every write is tenant-scoped on filter AND body", async (
     // FILTER — for reads AND writes. The half the old test's own name promised and never checked.
     // A correctly-scoped body behind an unscoped filter still touches another tenant's row.
     assert.ok(
-      filterIsScoped(c.filter),
-      `${where}: filter is not tenant-scoped — ${JSON.stringify(c.filter)}. A tenant-namespaced ` +
-        `_id counts (that is ISS-121's fix); a bare slug or a lone sessionId does not.`,
+      isWrite(c.op) ? hasTenantField(c.filter) : hasTenantField(c.filter) || idIsNamespaced(c.filter),
+      `${where}: filter is not tenant-scoped — ${JSON.stringify(c.filter)}. A WRITE must carry ` +
+        `tenantId in the filter itself; a namespaced _id counts only for a READ; a lone sessionId ` +
+        `counts for neither.`,
     );
 
     if (!isWrite(c.op)) continue;
