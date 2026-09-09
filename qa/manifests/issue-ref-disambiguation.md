@@ -8,7 +8,7 @@ Approver; if that contract lands, this unit belongs under it.
 **Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-142** (high), **ISS-144** (medium).
-**Status:** ready-for-check (cycle 3)
+**Status:** checked-PASS (cycle 3)
 
 ## Why
 
@@ -341,3 +341,40 @@ move this whole unit exists to argue against.
 
 The paragraph about G4 blocking other lanes is the decision I would most like ruled on rather than
 left to me. Everything else in this cycle is a correction of something I got wrong.
+
+
+---
+
+# Close-out — PASS at cycle 3
+
+Verdict `qa/verdicts/issue-ref-disambiguation.md` (`Cycle checked: 3`, commit `f0c258b`):
+**PASS, 12/12 verify items reproduced.** Re-derived independently in a full worktree at `ccd81d4`,
+with none of the earlier BLOCKED run's claims taken on trust.
+
+**ISS-151 is closed on evidence, not on my say-so.** The checker ran its own probe: all five
+previously-silent shapes flagged again, the three genuine range spellings silent, and **two
+deliberate smuggling attempts failed** — a wide range spanning a citation, and a citation placed
+between endpoints. Corpus mute census **152/2031 to 24/2266**, and it read the context of all 24:
+23 genuine ranges, one `(canonical)` escape, **zero false mutes**. It found one residual — an
+em-dash chain of three ids mutes the middle one — with zero instances in the real corpus, and
+recorded it as an explanation rather than inflating the ledger. That is the severity gate working.
+
+**Two mediums against claims I made, both fair:**
+
+- **ISS-162.** `G4_FROZEN` is a whole-file skip, so my line *"any NEW ambiguous ref anywhere
+  fails"* is **false** — it is false in the manifest and in the source comment. The checker proved
+  it by appending a new bare ref to a frozen verdict and watching the gate stay silent. I described
+  the debt as frozen when it is actually a hole with a lid on it.
+- **ISS-163.** Narrowing the standing test to exclude `qa/contracts/` is defensible on the merits
+  but **I never named it in the manifest**, and the test now reports green while the gate is red.
+
+**The ruling I asked for, and it overturned the prior run.** Scope G4's *gating* by **ownership** —
+`qa/manifests/` blocks, `qa/verdicts/` and `qa/contracts/` report advisory — and do **not** drop G4
+from `lint:structure`. Its reasoning: the ownership objection is true of verdicts and contracts and
+**false of manifests**, which the committing maker always owns, so deferring the whole gate to the
+sweep discards the half that meets G1's criterion perfectly. It took the checker-owned residue as a
+sweep duty on its own side. Filed as ISS-164; that is the next unit on this seam.
+
+**The red gate was honest disclosure**, confirmed by link: the finding was correct, the contract was
+committed by a checker ten minutes earlier, and the gate really was exit 0 at `3380e84`. As owner of
+`qa/contracts/` the checker cleared it itself, so master is green again.
