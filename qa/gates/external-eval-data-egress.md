@@ -33,4 +33,20 @@ citation-link browser proof. It does not block U2.4 or other local-only catalogu
 execution rejected by the environment safety reviewer; local `nomic-embed-text` pull failed on
 `registry.ollama.ai` DNS.
 
+## Local-only preflight completed — 2026-09-09T18:07+05:30
+
+No provider was called. Existing `toc` chunk rows were read from the read-only source database and
+idempotently copied into the explicit work database `lkb_codex_work_20260909`; source jobs delta and
+work jobs delta were both zero. The resulting preflight found:
+
+- 92 questions; question ids and texts unique; all 23 expected sessions exist;
+- exact outbound embedding payload size 9,920 bytes, SHA-256
+  `0e00f22840b14d2317fd81cbdddb4947f7448b5a035d9a1da4f98909042e5cf5`;
+- 1,452 work-database chunks, all finite and internally dimension-consistent;
+- one dimension (`3072`) and one stored corpus model (`gemini-embedding-001`);
+- work-database jobs before/after `0/0`; no provider call and no score claimed.
+
+This discharges the local preparation only. It does not answer the gate and does not prove semantic
+sibling ambiguity; that still requires the bounded provider run or a later local embedding route.
+
 **Answered:** pending
