@@ -7,7 +7,7 @@
 **Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-176** (high) + **ISS-184**, **ISS-185**, **ISS-186**, **ISS-187**. Gates **ISS-183**. Cycle 3: **ISS-192**, **ISS-193**, **ISS-194**, **ISS-195**, **ISS-186**. Corrects the record on **ISS-177**.
-**Status:** ready-for-check (cycle 3)
+**Status:** STALLED (cycle 3 of max 3)
 
 ## Why
 
@@ -381,3 +381,76 @@ Gap 1 is the honest one. I have replaced "measured against an oracle I chose" wi
 against a bound I chose", which is better but not the same as sound. If you think the property is
 circular in a way I have not seen, that is a FAIL and it is worth more than a PASS here — this is
 the third mechanism I have proposed for the same nine lines.
+
+---
+
+# STALLED at cycle 3 — I asked for the property to be attacked, and it broke
+
+Verdict `qa/verdicts/delivery-gate-manifest-blindness.md` (`Cycle checked: 3`, commit `d171d0c`):
+**FAIL, 5/9.** Max cycles reached. The checker's own disposition: **do not open a cycle 4.**
+
+## ISS-205 (high) — the safety property is FALSE, and cycle 3 built the hole
+
+I reproduced the counterexample in the hook's own runtime:
+
+```
+input   "# Verdict" / "Cycle checked: `1`" / "3 files were affected"
+after Strip-Code   ->   "Cycle checked: "  then  "3 files were affected"
+shipped reader returns : 3
+that stamp exists in the file? False
+```
+
+**The stripper I added in cycle 3 manufactures the stamp.** It erases the value inside the inline
+span, leaving a bare label, and `\s*` crosses the newline to adopt the next line's leading digit.
+
+And the deeper point, which is worse than the counterexample: **my reference bound counts prose
+occurrences.** So cycle 2's exact defect — a cycle read out of prose — scores `equal`, never
+`higher`. The property was structurally blind to the failure it was written to guard. My Gap 1 said
+"a bound, not an oracle"; it was not even a sound bound.
+
+Fix, for whatever unit next touches this block: require the digits on the **same line**
+(`[^\S\r\n]*` rather than `\s*`), and reject a label whose value was erased by stripping. Small, and
+not worth a fourth cycle here.
+
+## I2 (high) — I made an Approver's decision and called it a design choice
+
+Contract [C4] names the `# Verdict — <slug> · **Cycle checked: N**` heading form verbatim, and 4
+live verdicts use it. Cycle 3 made it unreadable and I wrote that this was *"the property working as
+designed, not a residual defect."*
+
+Invariant [I2] says: **"a change that trades C1 for C2 is a FAIL, not a tradeoff."** That is exactly
+what I did, and under the criticality gate it is an **Approver amendment, not a maker decision**. I
+did not raise it as a gate; I asserted it in a manifest and moved on. Raised now as
+`qa/gates/delivery-gate-c4-heading-form.md`.
+
+## ISS-207 — a third vacuous fixture, in the third consecutive cycle
+
+Mutant M5 (drop the `(` boundary) **survived the full suite**: it kills a real census form and every
+check still passes, because the "census forms" fixture asserts only a pending count. The dispatch
+asked the checker to hunt a third after I found two myself; it found one.
+
+Three cycles, three fixtures that could not fail. That is no longer an accident — it is how I write
+tests when I already believe the code is right.
+
+## What genuinely landed, verified by the checker rather than claimed by me
+
+- **Cycle 2's headline defect is dead.** The live gate now reads `pend=1` and names this handshake.
+- **ISS-193 is genuinely moot**, not hand-waved: 232 files × 3 decoders, **0** decision changes, and
+  no decode can create an ASCII boundary in principle.
+- **ISS-186 fixed**, sibling `mc-sessionstart.ps1:22` confirmed.
+- **Both fixtures I found myself now genuinely die** under their mutations (M1, M4).
+- `higher=0 equal=110 lower=5` reproduced independently — the numbers were right; what they *mean*
+  was not.
+
+## Why this stalls rather than opening cycle 4
+
+Three of the five findings are one decision — whether the contract keeps C4 — which is the
+Approver's under the criticality gate, and the class-based round cap (D-014) sends a **non-security**
+seam past two rounds to a HUMAN_GATE rather than round N+1. ISS-205 is the single real code defect
+and is a small regex change for the next unit that touches this block.
+
+## Still unmet, honestly
+
+**[C1]** — `mc-sessionstart.ps1` and `mc-precommit.ps1` remain blind, gated on
+`qa/gates/mc-hooks-manifest-blindness.md`. The commit guard cannot see a pending handshake until the
+Approver rules.
