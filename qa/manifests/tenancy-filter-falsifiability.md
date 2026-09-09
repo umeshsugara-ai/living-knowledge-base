@@ -32,10 +32,17 @@ true, which is the point of this whole thread:
 **Measured, with a mutant that compiles** (`scopedCollection` replaced by the raw handle for the two
 entity collections only, so the `claims` read stays scoped and the write half is isolated):
 
-| | ISS-202 test |
-|---|---|
-| **M-updateOne-filter-unscoped @ `99ed8f3`** (before) | **SURVIVES** — 0 failures |
-| **M-updateOne-filter-unscoped @ HEAD** (after) | **KILLED** — 2 failures |
+| | ISS-202 test | repo-wide |
+|---|---|---|
+| **M-updateOne-filter-unscoped @ `99ed8f3`** (before) | **SURVIVES** | 3 fail (ISS-154 + `session.test.ts` ×2) |
+| **M-updateOne-filter-unscoped @ HEAD** (after) | **KILLED** | 4 fail (the above + this test) |
+
+**Count correction (the checker's low note, and it is fair).** My first version of this table said
+"0 failures" and "2 failures". Those were `grep -c` over the runner's output, and node prints each
+failing test **twice** — once inline and once under `failing tests:` — so "2" was one failing test
+counted twice, and neither cell mentioned the repo-wide total. The SURVIVES/KILLED verdicts were
+right; the numbers beside them were an artifact of how I counted. That is precisely the habit
+ISS-210 exists to fix, recurring inside the unit that fixes it.
 
 The first attempt at this mutant did **not** typecheck (`as never` collapsed the return type), and a
 non-compiling mutant fails everything for the wrong reason — a fake kill. The table above is from
@@ -86,4 +93,4 @@ manifests changed; `qa/ui-surfaces.json`'s pattern does not reach `apps/api/src/
 by the previous checker compiling that pattern and matching it, with `AskPage.tsx` as a positive
 control.
 
-## Status: ready-for-check
+## Status: checked-PASS
