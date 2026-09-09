@@ -38,11 +38,19 @@ try {
 
     // ISS-212. A pairing defect is only OBSERVABLE when the hits span more than one session:
     // mis-pairing among rows that all carry the same `sessionId` produces an identical result, so
-    // `mismatchedPairs=0` is uninformative there. Measured: under an ISS-084-shaped mutation this
-    // probe reports 6 / 0 / 2 across the three queries, and the 0 is exactly the single-session
-    // query. The limitation was previously disclosed only in a manifest the reader of this output
-    // never sees — so the probe now refuses in its own words, the same way it already refuses on
-    // zero hits.
+    // `mismatchedPairs=0` is uninformative there. The limitation was previously disclosed only in a
+    // manifest that the reader of this output never sees — so the probe now refuses in its own
+    // words, the same way it already refuses on zero hits.
+    //
+    // ISS-223: an earlier draft of this comment said "this probe reports 6 / 0 / 2 under an
+    // ISS-084-shaped mutation". That was the PREVIOUS probe's measurement stated in the present
+    // tense about this one, and it is false by code reading alone — the guard below `continue`s
+    // before `badPair` is computed, so this probe can only ever emit 6 / INCONCLUSIVE / 2.
+    //
+    // NECESSARY, NOT SUFFICIENT (recorded by the ISS-212 author): `distinctSessions >= 2` makes the
+    // power non-zero, not high. A 5+5 split rotated reports 8 mismatches where a 9+1 split reports
+    // 2, and both print `distinctSessions=2`; mis-pairing WITHIN one session is invisible at any
+    // value. Read the number as a floor on sensitivity, never as a grade.
     const distinctSessions = new Set(hits.map((h) => h.sessionId)).size;
     if (distinctSessions < 2) {
       console.log(

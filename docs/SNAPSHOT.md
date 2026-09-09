@@ -44,6 +44,7 @@ a client of that API — with the long-range goal of beating top human counsello
   - `qa/evidence/`
   - `qa/gates/`
   - `qa/manifests/`
+  - `qa/probes/`
   - `qa/verdicts/`
 - `raw/` — Data and source repos
   - `raw/TOC/`
