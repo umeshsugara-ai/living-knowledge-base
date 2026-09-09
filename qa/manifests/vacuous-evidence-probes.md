@@ -62,6 +62,8 @@ unresolvable turns, 0 mismatched joins.** That zero now means something.
 - `pnpm --filter @lkb/web test` → **46 pass, 0 fail**
 - drop `trimmed === ""` from `AskPage.tsx:52` → **45/46**, the ISS-202 test fails; restore → 46/46
 - `npx tsx --env-file=.env qa/evidence/live-rank-probe-2026-09-08.mjs` → three lines, all zeros
+  **(superseded — ISS-213: that dated artifact is restored and void; the instrument now lives at
+  `qa/probes/rank-probe.mjs`. See `qa/manifests/rank-probe-relocation.md`.)**
 - `node scripts/lib/mutate.mjs assert-clean` → none outstanding
 
 ## Live browser evidence
@@ -84,4 +86,4 @@ criterion. Two things for the checker to weigh, and I am deliberately not decidi
    files should be excluded from the pattern is a config question that belongs to the checker or the
    Approver.
 
-## Status: ready-for-check
+## Status: checked-PASS

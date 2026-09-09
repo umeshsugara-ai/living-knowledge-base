@@ -134,3 +134,51 @@ all three.
 
 **Result:** blocked → escalate. The unit stays `STALLED`. ISS-205 goes to the next unit touching the
 block; the C4 gate goes to the Approver. One dispatch per unit per stall; this is it.
+
+---
+
+# CORRECTION — 2026-09-09, after the Mode B sweep refuted half of this report
+
+The Mode B sweep (`6aed4fb`, ISS-220) attacked the unifying claim above and **half of it does not
+hold.** Verified here rather than accepted:
+
+```
+$ git log --format="%h %an %s" -- qa/contracts/write-guard.md
+  d703897 umesh  checker: FAIL write-guard-enforcement-gaps (cycle 1) + a seventh silent-allow class
+$ grep "Authored by" qa/contracts/write-guard.md
+  ... Authored by the checker on 2026-09-09
+```
+
+**One commit, and it is a checker commit.** The contract that licensed the write-guard stall's
+fifth survivor was written by the **independent** party. My phrase *"an author-chosen
+specification"* is simply false, and the sibling report's use of it is false the same way.
+
+## What that changes
+
+The **INSTRUMENT limb stands.** Four self-chosen judges inside one unit — cycle-1 fixtures, the
+cycle-2 oracle, the cycle-3 bound, and a mutant set missing M5 because I did not believe the `(`
+boundary mattered — each caught by an independent party, each satisfying D-015's letter, which
+speaks only of a *corpus*. That is a real gap in a real rule.
+
+The **SPECIFICATION limb is refuted.** Independence was *present* at write-guard and did not help.
+Its defect is different in kind: [C1] makes existence decisive while [I2] forbids it, and neither
+covers the undecidable third state (`grep` for fail-closed language: **0** hits).
+
+**So these are two rules, not one** — and the sweep's sharper point is that collapsing them aims
+the remedy at the wrong target. "More independence" was already satisfied at the seam it would be
+applied to; the real hole there is a contract that contradicts itself and is silent on a third
+state. Filing them together would have left that unnamed.
+
+I reached for the unifying story because it was more satisfying than two separate ones. That is the
+same reflex as choosing a corpus that agrees with you — a *narrative* selected for fitting, and I
+did it in the report diagnosing exactly that reflex.
+
+The Approver decision is now `qa/gates/d015-generalisation-scope.md` (A / B / both / neither), which
+is where it belongs rather than asserted in a debug report.
+
+## A second error, mine, in the same tick
+
+I dispatched that sweep calling the stamp "19h stale". `qa/.last-sweep` is a **9-line append log**;
+I read the **first** line (`2026-09-08T13:05Z`) when the last is `2026-09-09T14:15Z` — about 50
+minutes old. The sweep was not due, and I asserted an age from the wrong end of a file. The sweep
+filed the log's shape as ISS-217; the misreading was mine.

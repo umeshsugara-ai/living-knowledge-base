@@ -1,61 +1,44 @@
-// Checker-authored READ-ONLY live probe for search-store-rank-assertion (ISS-083 / ISS-084).
-// No writes.
+// =============================================================================================
+// VOID AS EVIDENCE (ISS-202 item 1) -- PRESERVED AS THE RECORD OF WHAT RAN ON 2026-09-08.
 //
-// ===========================================================================================
-// CORRECTED 2026-09-09 (ISS-202 item 1). THE ORIGINAL PROBE COULD NOT FAIL.
-// ===========================================================================================
-// It called `lexicalSearchTurns(q, docs, 10)` directly and then checked each hit's pair against
-// `bySession`, a Map built from THE SAME `turns` array `docs` was derived from. `lexicalSearchTurns`
-// emits `{ turnId: turn._id, sessionId: turn.sessionId }` off those very objects, so
-// `bySession.get(h.turnId) !== h.sessionId` was false by construction: `mismatchedPairs=0` was
-// arithmetic, not evidence.
+// The check below CANNOT FAIL. `bySession` is built from the same `turns` array that `docs` is
+// derived from, and `lexicalSearchTurns` emits `{turnId: turn._id, sessionId: turn.sessionId}` off
+// those very objects, so `mismatchedPairs=0` is arithmetic rather than a measurement. It also never
+// calls `createMongoSearchDeps`, which is where ISS-083/ISS-084 actually live.
 //
-// Worse, ISS-083/084 are defects in `createMongoSearchDeps` — the store that joins turns to
-// sessions — and the probe never called it. It was evidence for a claim it structurally could not
-// support, and it reported that claim as verified.
+// The file is left BYTE-IDENTICAL below this header (ISS-213): it is cited by
+// qa/verdicts/search-store-rank-assertion.md and qa/verdicts/vacuous-evidence-probes.md, both
+// checker-owned, and a dated artifact whose content silently changes repoints every citation to
+// code the citing author never saw. It was rewritten in place once, on 2026-09-09; that was wrong
+// and this restores it.
 //
-// Two things changed, per the recorded fix direction:
-//   1. it now runs the REAL store, `createMongoSearchDeps({ db })`, which is where the defects live;
-//   2. the oracle is an INDEPENDENT re-read of `turns` by `_id`, not the array the hits came from,
-//      so a wrong pair is expressible.
-// It also refuses to report success on an empty result: no hits means nothing was checked.
-import { MongoClient } from "../../node_modules/.pnpm/mongodb@7.6.0/node_modules/mongodb/lib/index.js";
-import { createMongoSearchDeps } from "../../apps/api/src/search-store.ts";
+// THE WORKING INSTRUMENT IS `qa/probes/rank-probe.mjs`. Run that one; do not run this.
+// =============================================================================================
+
+// Checker-authored, READ-ONLY live probe for search-store-rank-assertion (ISS-083/ISS-084).
+// Independently recomputes lexicalSearchTurns over the real `toc` corpus and checks that each
+// ranked hit's (turnId, sessionId) pair is the one the real corpus says it is, and that scores
+// are the scorer's own (not a constant). No writes.
+import { MongoClient } from "../node_modules/.pnpm/mongodb@7.6.0/node_modules/mongodb/lib/index.js";
+import { lexicalSearchTurns } from "../packages/index/src/index.ts";
 
 const uri = process.env.MONGODB_URL;
 if (!uri) { console.log("UNVERIFIED: MONGODB_URL not set"); process.exit(0); }
 const client = new MongoClient(uri, { serverSelectionTimeoutMS: 8000, connectTimeoutMS: 8000 });
-let anyChecked = false;
 try {
   await client.connect();
   const db = client.db(process.env.MONGODB_DB ?? "lkb");
-  const store = createMongoSearchDeps({ db });
-
+  const turns = await db.collection("turns").find({ tenantId: "toc" }).toArray();
+  console.log("live turns(toc):", turns.length);
+  const docs = turns.map((t) => ({ _id: t._id, sessionId: t.sessionId, text: t.text }));
+  const bySession = new Map(turns.map((t) => [t._id, t.sessionId]));
   for (const q of ["visa student university funding", "2026 intake", "counselling"]) {
-    const hits = await store.search("toc", q, 10);
-    if (hits.length === 0) {
-      console.log(`q="${q}" hits=0 -> NOTHING CHECKED (not a pass)`);
-      continue;
-    }
-    anyChecked = true;
-
-    // INDEPENDENT oracle: re-read each hit's turn by _id straight from the collection.
-    let badPair = 0, missingTurn = 0, badJoin = 0;
-    for (const h of hits) {
-      const truth = await db.collection("turns").findOne({ _id: h.turnId, tenantId: "toc" });
-      if (!truth) { missingTurn++; continue; }
-      if (truth.sessionId !== h.sessionId) badPair++;
-      // ISS-080's shape: the joined documents must be the hit's OWN turn and session.
-      if (h.turn?._id !== h.turnId || (h.session && h.session._id !== h.sessionId)) badJoin++;
-    }
-    const distinctScores = new Set(hits.map((s) => s.score)).size;
-    console.log(
-      `q="${q}" hits=${hits.length} mismatchedPairs=${badPair} unresolvableTurns=${missingTurn} ` +
-      `mismatchedJoins=${badJoin} distinctScores=${distinctScores} ` +
-      `scores=[${hits.map((s) => s.score.toFixed(4)).join(",")}]`,
-    );
+    const scored = lexicalSearchTurns(q, docs, 10);
+    let badPair = 0;
+    for (const h of scored) if (bySession.get(h.turnId) !== h.sessionId) badPair++;
+    const distinctScores = new Set(scored.map((s) => s.score)).size;
+    console.log(`q="${q}" hits=${scored.length} mismatchedPairs=${badPair} distinctScores=${distinctScores} scores=[${scored.map((s) => s.score.toFixed(4)).join(",")}]`);
   }
-  if (!anyChecked) console.log("UNVERIFIED: every query returned 0 hits — the probe asserted nothing");
 } catch (e) {
   console.log("UNVERIFIED: live probe failed:", e.message);
 } finally {
