@@ -135,4 +135,42 @@ restored byte-identical · MUTATIONS CLEAN · clean run 161 pass / 0 fail
   BrainPage, the accessor and the schemas: no `split(":")`, prefix strip or id regex anywhere.
 - **`topics`/`orgs` still 0 rows, `topicRefs` empty on all 81 claims.** C8's deferral holds.
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+**Verdict:** `qa/verdicts/entity-id-tenant-namespace.md` — **PASS**, cycle 2, 9/9 criteria, 4/4
+invariants (cycle 2 of 3; one unused). `ISSUES-WRITTEN: ISS-156 (medium)`.
+
+**The checker verified this better than I did, and the difference is instructive.** I ran the
+mandatory mutation on `topics` and `orgs` **together** and reported 158/3. It pointed out that a
+combined mutation cannot distinguish *"both are covered"* from *"one is covered and the other still
+is not"* — the exact failure it had caught at cycle 1. So it ran each collection **alone**: both
+kill independently at 158/3. It also confirmed the tests that die are the right ones (all three are
+tenancy assertions, none an incidental crash) and that the sibling "REACHES" test correctly stays
+green, since a bare handle still writes — just unscoped.
+
+**On the risk I flagged — that a richer fixture might make some other assertion vacuous — it
+audited rather than reassured:** it ran the contract's full 12-mutation battery against the new
+fixture. Eleven redden, and **nothing that previously reddened now survives.** The three exact
+op-list `deepEqual`s on `session_pages` are untouched because that read was *already* recorded —
+only its return value changed, not the op sequence — and the blanket assertions are lower bounds,
+so more calls only tighten them.
+
+### ISS-156 — one more asymmetry, closed here rather than deferred
+
+Dropping `tenantId` from the **org** `$set` body survived 161/0 while the identical **topic**
+mutation reddened. That is the same topics-vs-orgs asymmetry as ISS-154, one layer in: I asserted
+the topic body and left the org body unpinned.
+
+It is medium (live impact nil — `scopedCollection` merges `withTenant` into the filter and Mongo
+builds the upsert-insert from it), and the severity gate would let it wait for "the next unit
+touching this file". **It is one assertion, and no such unit is scheduled**, which is precisely how
+this project has watched mediums become permanent. Closed now: mutation drops the org `tenantId`
+→ **161/1**. 162 pass clean.
+
+"Harmless because something else covers it" is exactly the reasoning that let the first asymmetry
+survive, so I am not leaning on it twice.
+
+**Also cleared by the checker's own mutations:** the never-throws catch (a rethrow reddens the
+*named* assertion, not an incidental crash) and the `tagClaims:false` branch. The C6 amendment's
+provenance under D-022 was checked and found sound — logged with date, class, reason and a verdict
+cite, and **committed** rather than left as a working-tree edit.

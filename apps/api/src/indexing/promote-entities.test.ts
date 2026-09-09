@@ -60,6 +60,18 @@ test("ISS-126: promotion NEVER deletes — a topic row spans sessions, so delete
   }
 });
 
+test("ISS-156: the ORG body carries tenantId too — the topic assertion alone left orgs unpinned", async () => {
+  // Dropping tenantId from the org $set survived 161/0 while the identical topic mutation reddened:
+  // the same topics-vs-orgs asymmetry as ISS-154, one layer in. Live impact is nil today because
+  // scopedCollection merges withTenant into the filter and Mongo builds the upsert-insert from it —
+  // but "harmless because something else covers it" is how the first asymmetry survived too.
+  const { db, calls } = fakeDb();
+  await promoteAndPersistEntities("t", "s1", treeRoot(), db);
+  const orgSet = (writes(calls, "orgs")[0]!.update as Record<string, Record<string, unknown>>).$set!;
+  assert.equal(orgSet.tenantId, "t", "the org body must carry its tenantId, exactly as the topic body does");
+  assert.equal(orgSet.name, "Acme");
+});
+
 test("ISS-126: the written topic carries the UNIONED sessionRefs, not just the indexed session", async () => {
   // If this regressed to `[sessionId]`, every topic would look single-session and the one signal
   // that makes a topic worth being an entity would be gone.
