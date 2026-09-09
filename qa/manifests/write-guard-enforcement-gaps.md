@@ -7,7 +7,7 @@
 **Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-160** (high) · **ISS-165**, **ISS-166**, **ISS-167** (high) · **ISS-168**.
-**Status:** ready-for-check (cycle 3)
+**Status:** STALLED (cycle 3 of max 3)
 
 ## Why
 
@@ -322,3 +322,64 @@ Gap 2 is the honest one: I have fixed a bypass whose *reachability* nobody has d
 judge that a security-class fix needs proof the input can actually arrive in that shape before it
 can PASS, FAIL it and say what would count — I would rather carry a STALL than a PASS resting on an
 assumption I flagged myself.
+
+
+---
+
+# STALLED at cycle 3 — a fifth survivor, and this one had its reachability measured
+
+Verdict `qa/verdicts/write-guard-enforcement-gaps.md` (`Cycle checked: 3`, commit `5231a42`):
+**FAIL, 4/7.** Max fix cycles reached, so this unit stops here. The checker's own disposition:
+**ISS-180 opens a new unit rather than a fourth cycle.**
+
+## What is still failing
+
+**ISS-180 (high, security class — therefore uncapped).**
+`\?\D:\KnowledgeBase\docs\DECISIONS.md` returns **silent**. Re-probed here and it reproduces:
+
+```
+canonical         D:/KnowledgeBase/docs/DECISIONS.md          deny
+dot-dot           D:/KnowledgeBase/docs/sub/../DECISIONS.md   deny     <- cycle 3's fix holds
+extended-prefix   \?\D:\KnowledgeBase\docs\DECISIONS.md      SILENT   <- ISS-180
+```
+
+**The root cause is not the match — it is the existence probe**, the one line the identity fix left
+alone. `Test-Path -LiteralPath` returns `False` for a `\?\` path under PowerShell 5.1, so control
+falls through to the *"initial creation (file absent) — allowed for /init-lab"* branch and the write
+is permitted.
+
+Three cycles moved the wall from **position** to **shape** to **identity**, and each time the hole
+was in a different organ. This one is in the fourth.
+
+## What the checker credited, and it matters for what comes next
+
+- **ISS-172 and ISS-173 are genuinely fixed and well-pinned.** It wrote its own 26-check suite from
+  the contract rather than from my fixtures: **7/7 mutants killed with a clean control**, including
+  the trim I had disclosed as a first-table survivor — killed independently of the fixture I added.
+- **Gap 2 ruled in my favour, twice.** On the merits, a security-class fix to a *demonstrated*
+  string-match defect does not need proof of reachability first. And empirically the assumption is
+  now discharged: writing to a `\?\` spelling of a scratch file landed on the real file while the
+  guard stayed silent. **That same probe is what turned the fifth survivor from a curiosity into a
+  FAIL** — the reachability I flagged as unproven is exactly what proved the next hole.
+- **D-015 credited in full** — ISS-172's row genuinely has no `reproductions` field, and my
+  substitute corpus was *wider* than the row rather than easier.
+- **No silent self-amendment**: contract C3 untouched, `d023-supersede` still unanswered, no
+  DECISIONS entry superseding D-023.
+
+## ISS-182 — already closed, and it was mine
+
+The checker found the cycle-3 fixtures **uncommitted** in `D:/ai_os` — ISS-166's failure class one
+layer up: the test pinning a security fix existing only in a working tree. They were committed at
+`4a71633` shortly after it looked, so the finding is resolved; that it was open at all is the point.
+
+## ISS-181 (low) — filed, not promoted
+
+NTFS alternate data streams (`::$DATA`) are silent at the guard but unreachable through `Write`,
+which writes via a `.tmp.<pid>` sibling. Correctly a ledger row, not a unit.
+
+## Why this stalls rather than opening round 4
+
+The class-based round cap (D-014) permits a security-class finding to open a unit at any round
+count — and the checker notes a **count-based** cap would have closed this seam before round 5,
+which is the same arithmetic that would have shipped ISS-078. So ISS-180 is a real unit, just not
+this one. Stopping here is the cycle limit doing its job, not the defect being dismissed.
