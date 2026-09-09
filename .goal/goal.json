@@ -4,15 +4,15 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-09T07:01:02",
+  "updated": "2026-09-09T07:16:02",
   "progress": {
     "total": 62,
-    "done": 41,
-    "in_progress": 3,
+    "done": 42,
+    "in_progress": 2,
     "blocked": 0,
     "pending": 18,
-    "current": "U2.1c",
-    "percent": 66
+    "current": "U2.4",
+    "percent": 68
   },
   "tasks": [
     {
@@ -540,13 +540,14 @@
     {
       "id": "U1.5",
       "title": "Hybrid merge (tree + vector + lexical, RRF) into askV2",
-      "status": "pending",
+      "status": "in_progress",
       "base_criticality": "MEDIUM",
       "deps": [
         "U1.4"
       ],
       "criticality": "critical",
-      "note": "do NOT rewrite router.ts — ask() already takes candidates via a thunk"
+      "note": "do NOT rewrite router.ts — ask() already takes candidates via a thunk",
+      "evidence": "part 1 (merge mechanism) ready-for-check. Deliberately ships NO recall number: contract C7 requires U1.5 to measure its OWN hybrid recall, which needs the composition-root binding (part 2)."
     },
     {
       "id": "U2.1",
@@ -748,8 +749,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 3.67,
-    "eta_days": 5.7
+    "velocity_per_day": 3.66,
+    "eta_days": 5.5
   },
-  "last_deterministic_tick": "2026-09-09T07:01:02"
+  "last_deterministic_tick": "2026-09-09T07:16:02"
 }
