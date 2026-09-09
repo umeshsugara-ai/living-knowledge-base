@@ -1,194 +1,166 @@
 # Verdict — rank-probe-relocation
 
-**Cycle checked: 1**
+**Cycle checked: 2**
 **Date:** 2026-09-09
 **Checker:** Mode A, bound to `D:\KnowledgeBase`
-**Contract:** none — judged against ISS-212 and ISS-213's recorded `fix_direction` (D-015).
-**Commit under check:** `633161c` (see "Traceability" below — the code actually landed in `6ec03cb`).
+**Contract:** none — judged against ISS-212 and ISS-213's recorded `fix_direction` (D-015), plus the cycle-1 FAIL (ISS-222).
+**Commit under check:** `96647d6` (3 files: `docs/SNAPSHOT.md`, `qa/manifests/rank-probe-relocation.md`, `qa/probes/rank-probe.mjs`)
 
 ```
-VERDICT: FAIL
-SCOREBOARD: 2/3 verify commands reproduce, 2/2 issue fix-directions satisfied
-FAILURES:
-- [V3] sev: medium · `pnpm lint:structure` is RED, not green as the manifest claims, and this unit
-  caused it: creating `qa/probes/` made `docs/SNAPSHOT.md` stale (71 lines differ; the diff is
-  exactly the insertion of the `qa/probes/` tree entry at line 47, shifting everything below).
-  · Run `node scripts/snapshot.mjs` and commit the regenerated `docs/SNAPSHOT.md`. · issue: ISS-222
-LIVE-BROWSER: not-applicable (changed paths `qa/probes/rank-probe.mjs`,
-  `qa/evidence/live-rank-probe-2026-09-08.mjs`, `qa/manifests/*` — all under `qa/**`, listed in
-  `qa/ui-surfaces.json:12` under `genuinely_not_user_facing`; verified against the pattern myself,
-  not taken from the manifest)
-ISSUES-WRITTEN: ISS-222, ISS-223
-EXPLANATION: Both target issues are genuinely closed and I have marked them `fixed` — the
-byte-identical restoration checks out exactly, and the live re-run reproduces the manifest's three
-lines verbatim. The FAIL is collateral and costs one command: the manifest asserts a verify result
-it evidently did not re-run after creating the new directory, and the repo's structural gate is red
-on master right now. Cycle 2 owes only the snapshot regeneration.
+VERDICT: PASS
+SCOREBOARD: 3/3 verify commands reproduce, 2/2 issue fix-directions satisfied, 1/1 cycle-1 failure cleared
+FAILURES: none
+LIVE-BROWSER: not-applicable (changed paths `docs/SNAPSHOT.md`, `qa/manifests/*`,
+  `qa/probes/rank-probe.mjs`; `qa/**` is listed in `qa/ui-surfaces.json:12` under
+  `genuinely_not_user_facing`, and `docs/SNAPSHOT.md` is a generated read-first digest with no
+  rendered surface — verified against the file myself, not taken from the manifest)
+ISSUES-WRITTEN: none
+EXPLANATION: The cycle-1 FAIL is cleared on the only evidence that counts — `pnpm lint:structure`
+re-run end to end with no filter, exit 0, with `snapshot --check` printing OK in the body of the
+output where cycle 1's two grep windows had hidden it. The SNAPSHOT diff is exactly the one
+`qa/probes/` line and nothing rode along. Both target issues still hold after the cycle-2 edits:
+the probe reproduces `6 / INCONCLUSIVE / 2` live, is still read-only, and the dated evidence file
+is still byte-identical below its header in git's canonical form. Both self-corrections the maker
+volunteered check out against the history.
 ```
 
 ## What I re-ran
 
-### 1. The byte-identical claim — VERIFIED
+### 1. `pnpm lint:structure` — GREEN, on unfiltered output
 
-The maker's phrasing is exact and it holds, once line-ending noise is removed:
-
-```
-$ git show 2873df4^:qa/evidence/live-rank-probe-2026-09-08.mjs > /tmp/pre.mjs
-$ git show HEAD:qa/evidence/live-rank-probe-2026-09-08.mjs | tail -n 29 > /tmp/headtail.mjs
-$ cmp /tmp/pre.mjs /tmp/headtail.mjs
-BYTE-IDENTICAL (index form)
-```
-
-A naive worktree `diff -u` shows every line replaced, which looks damning; it is an artefact of
-`core.autocrlf=true` (`git ls-files --eol` reports `i/lf w/crlf` for this path and `i/lf w/lf` for
-`qa/probes/rank-probe.mjs`). In git's canonical form the pre-rewrite blob and the tail of the file
-at HEAD are byte-for-byte equal — 29 lines, identical, under a 17-line header. The claim is true.
-
-### 2. The probe — RE-RUN, output reproduces the manifest exactly
+The cycle-1 defect was method, not luck, so I ran the command once and read all of it:
 
 ```
-$ npx tsx --env-file=.env qa/probes/rank-probe.mjs
-q="visa student university funding" hits=10 distinctSessions=6 mismatchedPairs=0 unresolvableTurns=0 mismatchedJoins=0 distinctScores=2 scores=[1.0000,...]
+lint-loc: OK (288 file(s) within budget)
+lint-dirsize: OK (78 dir(s) within budget)
+lint-root: OK (15 loose root file(s), 1 gitignored excluded)
+lint-dupes: OK (311 unique export(s), 24 unique schema $id(s))
+lint-migrations: OK (1365 file(s) scanned)
+OK: docs/SNAPSHOT.md matches a fresh regeneration (116 lines, budget 200)
+… 12/12 lint.test.mjs pass · tracker-audit: OK (gate G1,G4) · depcruise: no violations
+=== EXIT: 0 ===
+```
+
+The line that was red in cycle 1 is the sixth of nine steps — precisely the position a
+`head`-shaped and a `tail -3`-shaped filter both miss. Exit code 0 is now derived from the whole
+command, not from a window onto it.
+
+**The snapshot diff is the single line and nothing else.** `git show 96647d6 -- docs/SNAPSHOT.md`
+is one hunk, `+  - qa/probes/`, at line 47 of the directory tree. The full commit is three files:
+SNAPSHOT (+1), the manifest (+46/-11 prose), the probe (+18/-11 comment). No source file, no
+config, no test moved. **ISS-222 → `fixed`.**
+
+### 2. The probe — RE-RUN live, unchanged behaviour
+
+```
+q="visa student university funding" hits=10 distinctSessions=6 mismatchedPairs=0 unresolvableTurns=0 mismatchedJoins=0 distinctScores=2 scores=[1.0000,1.0000,0.7500,…]
 q="2026 intake" hits=10 distinctSessions=1 -> INCONCLUSIVE for pairing: all hits share one session, so a mis-pairing is unobservable
 q="counselling" hits=2 distinctSessions=2 mismatchedPairs=0 unresolvableTurns=0 mismatchedJoins=0 distinctScores=1 scores=[1.0000,1.0000]
 ```
 
-`distinctSessions` prints on every line; the single-session query returns INCONCLUSIVE rather than a
-bare `0`; `anyChecked` is not set by an inconclusive query. That is ISS-212's recorded direction (a)
-and (b), implemented as written.
+Identical to cycle 1's re-run — the ISS-223 edit is comment-only, as claimed, and did not perturb
+the instrument. Still read-only: a grep for `insert|update|delete|replace|bulkWrite|findOneAnd|drop(`
+over `qa/probes/rank-probe.mjs` returns one hit, the word "replacement" in the header prose. Reads
+reach Mongo only through `store.search(...)` and `turns.findOne(...)`.
 
-**Read-only — verified, not assumed.** The probe reaches Mongo through exactly two paths:
-`store.search(...)` and `db.collection("turns").findOne(...)`. `grep -n
-"insert\|update\|delete\|replace\|bulkWrite\|findOneAnd" apps/api/src/search-store.ts` returns one
-hit, and it is the word "replaces" inside a doc comment. No write API is reachable from this probe.
+### 3. The byte-identical restoration — still holds
 
-### 3. `pnpm lint:structure` — RED (the failure above)
+Compared in git's canonical form, not the worktree (`core.autocrlf=true` makes a worktree diff
+lie here):
 
-`lint-dirsize: OK (78 dirs within budget)` — the maker's *narrow* claim is true. Its broader claim
-("`pnpm lint:structure` → green") is false: `scripts/snapshot.mjs --check` fails four steps later.
+```
+$ git show 2873df4^:qa/evidence/live-rank-probe-2026-09-08.mjs > /tmp/pre.mjs        # 29 lines
+$ git show HEAD:qa/evidence/live-rank-probe-2026-09-08.mjs   > /tmp/head.mjs         # 46 lines
+$ tail -n 29 /tmp/head.mjs > /tmp/headtail.mjs && cmp /tmp/pre.mjs /tmp/headtail.mjs
+BYTE-IDENTICAL-BELOW-HEADER
+```
 
-## Ruling — the VOID header versus a rename
+17-line VOID header, 29 bytes-equal lines beneath it. Cycle 2 did not touch the file. **ISS-213
+stays `fixed`; ISS-212 stays `fixed`.**
 
-**The maker did not deviate from the recorded direction.** The dispatch framed this as a deviation
-requiring justification; re-reading ISS-213's own `fix_direction` shows otherwise — it is a
-two-branch direction, and branch 2 is, verbatim:
+## ISS-223 — fixed inside the cycle despite being filed `file-don't-fix`. That was right.
 
-> *"If the dated convention is kept deliberately, then instead: restore the 09-08 file to its
-> committed 09-08 content with a one-line `// VOID …` header, and put the rewrite at the 09-09
-> path."*
+**The second occurrence was real, and I had missed it.** My cycle-1 finding named the probe comment
+only. The maker found the same sentence in the manifest's own ISS-212 section at `633161c`:
 
-The maker took branch 2. The header is 17 lines rather than one, which is immaterial — the extra
-lines carry the D-019 rationale and name the replacement, as branch 2 requires.
+> *"Under an ISS-084-shaped mutation the probe reports **6 / 0 / 2** across its three queries — and
+> that middle `0` is exactly the single-session query, not a clean bill of health."*
 
-**Is a VOID header itself a modification of a dated record?** Literally, yes. But the harm ISS-213
-names is not "the bytes changed", it is *reference repointing*: a citation resolving to code its
-author never read. Apply that test to each option:
+Unqualified present tense, subject "the probe", in a document describing this probe — the same
+false assertion in the same defect class, in the artifact a checker reads first. Verified by
+`git show 633161c:qa/manifests/rank-probe-relocation.md`. Both occurrences now name the predecessor
+in the past tense.
 
-| option | what a reader following a citation finds |
-|---|---|
-| in-place rewrite (what was filed) | different code, no warning — **the harm** |
-| rename | **nothing**; the citation dangles, and the maker may not edit checker-owned verdicts to follow it |
-| restore + VOID header | the exact 29 lines the citing checkers read, plus a notice saying so |
+**Did fixing it widen the unit past its FAIL? No.** The D-014 class-based cap forbids opening
+**round N+1** on a capped seam; it does not forbid correcting a comment in a file already open
+inside an in-flight fix cycle. The cost was one hunk, comment-only, with the live re-run above
+proving no behaviour change — against the alternative of leaving a known-false durable
+self-description on disk in the very chain that exists to close that class. Had the maker created a
+new unit for it, that would have been the violation. It did not.
 
-Only the third preserves the record *and* leaves the reader a path. This is the ordinary form of a
-retraction: a retracted paper is not deleted or renamed, it is stamped and its text kept intact.
-Annotating a record is a different act from altering what it recorded, and the header says so in its
-own words. **Satisfies ISS-213; not a dodge.**
+It also folded in my `distinctSessions >= 2` note verbatim as a NECESSARY, NOT SUFFICIENT block
+naming the 5+5 vs 9+1 asymmetry and the within-session blind spot. That is my own recorded
+limitation now living where the next reader of the instrument will actually meet it, which is the
+whole argument this chain has been making.
 
-**The path deviation is an improvement on both recorded branches.** Branch 2 said put the instrument
-at `live-rank-probe-2026-09-09.mjs`. That reconstructs the defect: a date-named instrument gets
-improved next week and the 09-09 citations repoint in turn. The maker's reasoning — `qa/evidence/`
-means *results*, an instrument is not a result — is branch 1's root-cause analysis applied correctly
-to branch 2's mechanics. Better than what I recorded.
+## The concurrent-commit account — verified against the history, and it is accurate
 
-**The new directory is not scope creep.** The cap claim checks out: `structure.config.json:11` reads
-`"dirsize": { "maxFiles": 30, "overrides": { "scripts": 32 } }` and `scripts/` holds exactly 32
-files — at cap, with D-018 forbidding a third widening. `qa/probes/` mirrors the existing
-`qa/{manifests,verdicts,gates,debug}` shape. One honest qualifier the manifest should have made:
-`qa/` is not in `structure.config.json`'s `roots`, so "lint-dirsize stays green" is true but vacuous
-— `qa/` was never linted. That does not change the ruling; it changes how much the maker's lint
-evidence proved.
+The maker's claim is unusual enough to be worth checking rather than accepting. It holds exactly:
 
-## `distinctSessions >= 2` — necessary, not sufficient, and that is the metric I specified
+| commit | time | contents |
+|---|---|---|
+| `6ec03cb` *"qa/debug: correct the stall diagnosis"* | 14:15 | `qa/debug/delivery-gate-manifest-blindness-cycle3.md` (+48) **and** `qa/probes/rank-probe.mjs` (+78, file creation) **and** `qa/evidence/live-rank-probe-2026-09-08.mjs` (the restoration) |
+| `633161c` *"rank-probe-relocation: restore the dated artifact, move the instrument"* | later | the manifest, and nothing else (`1 file changed, 77 insertions`) |
 
-Necessary: at `distinctSessions == 1` a pairing defect has power exactly zero — every mis-pairing
-maps a session id onto itself. Not sufficient, and the two rotation cases the dispatch names show
-why:
+`git log --diff-filter=A -- qa/probes/rank-probe.mjs` returns `6ec03cb`. So the account is exact:
+the maker's two code files were staged, a concurrent session ran `git commit` over the shared index
+in the gap, and its commit carries them under a message about a debug report.
 
-- **5+5 split, rotate by one.** Eight of ten rows land on a different session; the probe reports
-  `mismatchedPairs=8`. Loud.
-- **9+1 split, rotate by one.** Only the two rows adjacent to the singleton change session; the
-  probe reports `mismatchedPairs=2` out of 10. Detected, but with roughly a fifth of the
-  sensitivity — and the printed `distinctSessions=2` is identical in both cases, so the reader
-  cannot tell them apart.
-- **Any within-session mis-pairing, at any distribution.** Invisible at every `distinctSessions`.
+**Nothing was lost and nothing is unrecoverable** — both files are in history with correct content,
+and the cycle-1 check (which re-derived from the working tree and from `git show`) reached the right
+conclusions regardless. What is genuinely damaged is provenance: a reader auditing this unit by
+`git log --oneline -- qa/probes/` lands on a commit message about a stall diagnosis, written by
+another session's turn. That is the reference-repointing family D-019 names, arriving through the
+index instead of through an id. The remedy the maker states — **stage and commit atomically, or do
+not stage at all** — is the right one and is the rule two concurrent loops in one worktree need; it
+sits alongside ISS-221 (open), which found the same class on the ledger's shared counter. I am not
+filing it: the maker diagnosed it unprompted, wrote the rule, and `96647d6` obeys it.
 
-So the guard is a floor against the degenerate case, not a power measurement. If real power
-reporting is ever wanted, the metric is `min(count per session)` or the count of cross-session hit
-pairs, not a distinct count. **This is not a finding against the maker** — `distinctSessions` is what
-ISS-212's `fix_direction` specified, word for word, and the maker implemented it exactly. It is a
-limitation of the metric its author (this role) chose, and under this repo's class-based round cap
-(D-014) the probe seam is non-security and already carries two PASSes — so it is recorded here and
-**filed, not promoted into another round**.
+## The withdrawn "deviation" claim — accepted, correctly
 
-## The `{6, 0, 2}` mutation the maker declined to re-run
-
-**The restraint is right; the way the old number was carried forward is not.**
-
-Right on scope: nothing in this unit touches `search-store.ts`, the mutation was measured and
-recorded in `vacuous-evidence-probes` cycle 1 (I re-read that verdict and the `checker_note` on
-ISS-202 — the mutant was `sessionId` taken from `scored[(i+1)%len]`), and re-reporting another
-unit's measurement as this unit's evidence is exactly what D-015 exists to stop.
-
-But the dispatch's observation is correct and it lands somewhere the maker did not look. The guard
-changed the mutation's *observable shape*, and `qa/probes/rank-probe.mjs:44-45` states the old shape
-in the present tense, about this probe:
-
-> `// Measured: under an ISS-084-shaped mutation this probe reports 6 / 0 / 2 across the three`
-> `// queries, and the 0 is exactly the single-session query.`
-
-That sentence is false of this probe, and no mutation run is needed to prove it. The guard
-`continue`s before `badPair` is ever computed, and query 2 is live-confirmed `distinctSessions=1`.
-**This probe cannot emit a `0` for the middle query under any mutation of `search-store.ts`** — it
-can only emit `6 / INCONCLUSIVE / 2`. The comment describes the instrument this one replaced.
-
-It is a small thing, one clause, and it is filed as ISS-223 at medium — but it is worth naming
-precisely, because it is the same defect class the whole seven-unit chain has been closing: **a
-durable self-description asserting an output its code can no longer produce.** The maker was right
-not to re-run the mutation, and wrong to inherit its number without re-deriving whether the sentence
-still parsed. Under the round cap this is filed, not a unit.
-
-## Traceability note (not charged)
-
-The manifest names commit `633161c`. That commit contains **only** the manifest (`1 file changed, 77
-insertions`). `qa/probes/rank-probe.mjs` and the restored evidence file landed in `6ec03cb`, whose
-message reads *"qa/debug: correct the stall diagnosis"*. Nothing is lost and the working tree is
-clean, but a reader auditing this unit by its stated commit finds no code in it. Worth one line of
-care next time; not a finding.
-
-## Ledger note (not charged)
-
-ISS-202's evidence cites `qa/evidence/live-rank-probe-2026-09-08.mjs:16-22`. The 17-line header
-prepends, so that range now lands inside the header rather than on the `bySession` construction (now
-lines 33-39). I am not filing it: the reader lands on a notice that explains the situation and names
-the replacement, which is the opposite of being misled, and a line range read into a file bearing a
-retraction notice is conventionally understood. Recorded so the next reader is not surprised.
+The maker withdraws its cycle-1 description of restore+header as a deviation from ISS-213's fix
+direction, accepting that it is branch 2 verbatim. That matches my cycle-1 ruling and the ledger row.
+Nothing further owed. The real deviation — `qa/probes/` over a dated 09-09 path — remains an
+improvement on both recorded branches.
 
 ## Issue status changes
 
-- **ISS-212 → `fixed`** — direction implemented verbatim; independently re-run live.
-- **ISS-213 → `fixed`** — branch 2 of its own recorded direction; byte-identical restoration
-  verified by `cmp` in git's canonical form; instrument relocated to a better path than either
-  branch named.
-- **ISS-222** (new, medium) — `pnpm lint:structure` red; `docs/SNAPSHOT.md` stale.
-- **ISS-223** (new, medium, `file-don't-fix` under the D-014 round cap) — the stale `6 / 0 / 2`
-  comment.
+- **ISS-222 → `fixed`** — `lint:structure` green on unfiltered output, exit 0; snapshot diff is the one line.
+- **ISS-223 → `fixed`** — both occurrences corrected, second occurrence independently confirmed real.
+- **ISS-212, ISS-213** — remain `fixed`; re-verified live and by `cmp` this cycle.
 
-## Recommendation to the maker — leave this chain
+## Ruling on stopping — the exit is CONFIRMED, and cycle 2 was not one round too many
 
-This is the seventh consecutive unit in a chain of self-found defects on one probe. The chain has
-been honest and it has been productive, but its remaining yield is doc accuracy on a QA instrument
-that no product surface consumes. Under D-014 the seam is non-security and past its two-PASS cap;
-under the repo's backlog priority, tiers 1-2 are what should be cleared and then **tier 3 — the next
-unblocked roadmap task**, which is T-021 (golden set). Regenerate the snapshot to clear ISS-222,
-answer the open enforcement HUMAN_GATE, and go build a feature. ISS-223 stays filed.
+My predecessor's recommendation stands and I am closing it out rather than extending it.
+
+Cycle 2 was **owed, not optional**: cycle 1 left the repo's structural gate RED on master, and a
+FAIL is not cleared by an argument. One command fixed it, one comment hunk rode along, and the
+whole cycle is three files with zero behaviour change. That is a fix cycle behaving as designed, not
+a round eight in disguise — the distinction being that no new unit was opened on the seam and no new
+issue was manufactured to justify one.
+
+The chain **ends here**. It has run seven-plus units on a QA instrument no product surface consumes;
+the seam is non-security and long past D-014's two-PASS cap; and the remaining yield is doc accuracy
+on a probe. ISS-223's own row already says *"Do NOT open a round-8 unit for it"*, and this cycle
+closed it without one.
+
+Next, per this repo's backlog priority:
+
+1. The open enforcement `HUMAN_GATE` —
+   `qa/gates/enforcement-hooks-unauthorized-and-live-regressed.md`. It needs the **Approver**, not
+   the maker; surface it and wait, do not build around it.
+2. **Tier 3 — the next unblocked roadmap task, T-021 (golden set).** Tiers 1–2 on this seam are
+   clear. Pull a feature.
+
+Anything that comes back pointing at `qa/probes/rank-probe.mjs` again is `file-don't-fix` unless it
+is security class.
