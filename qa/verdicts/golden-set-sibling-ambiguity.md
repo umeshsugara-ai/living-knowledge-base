@@ -1,204 +1,271 @@
 # Verdict — golden-set-sibling-ambiguity
 
-**Cycle checked: 1**
+**Cycle checked: 2**
 **Date:** 2026-09-09
 **Checker:** Mode A, bound to `D:\KnowledgeBase`
-**Commit checked:** `caf66c9`
+**Commit checked:** `9fee80e`
 **Manifest:** `qa/manifests/golden-set-sibling-ambiguity.md`
 **Binding spec:** `qa/gates/golden-set-redesign.md` (Option C), condition 4 — sibling-ambiguity half
 **Goal task:** T-021
+**Cycle-1 verdict:** FAIL — ISS-234, ISS-235, ISS-236, ISS-237 (+ ISS-238)
 
 ```
 VERDICT: FAIL
-SCOREBOARD: 2/7 criteria met, 2/3 invariants hold
+SCOREBOARD: 6/7 criteria met, 3/3 invariants hold
 FAILURES:
-- [C1] sev: high · the known-positive test is anchored on the WRONG question; the gate's actual worked example ranks 2/23 and the measure does not flag it · re-pin KNOWN_POSITIVE to `...-gq02` and report the resulting non-detection as the finding · issue: ISS-234
-- [C5] sev: high · 6 of the 13 tail questions come from the two shortest transcripts; `coverage()` is a set-recall fraction with no length normalisation, so the adjudication list is substantially a transcript-length artifact · normalise, or score tail membership against a length-matched null · issue: ISS-235
-- [C4] sev: medium · `1/df` is not inverse document frequency and does not suppress generic vocabulary: it floors at 1/23, and in the probe's own worked example four df=23 words carry ~36% of the weight mass against 13.8% for the single content word · use `log(N/df)` (exactly 0 at df=N) or accept a stopword list · issue: ISS-236
-- [C7] sev: medium · the cluster/tail-composition claim is stated backwards and is argued from the statistic the unit itself declared unusable; on the USABLE rank measure `uniaccess-*` is enriched in the tail (5/20 = 25% vs 8/72 = 11%) with worse mean rank (5.70 vs 4.44) — it supports the gate's seven-sibling story rather than undercutting it · issue: ISS-237
-- [C3] sev: medium · the stated cause of the 77.2% vs 33.3% disagreement ("counts every tie") explains the rate but not the direction: with strict `>` the rate is 58.7% and the cluster inversion SURVIVES (uniaccess 0.500 vs other 0.611) · issue: ISS-237
-LIVE-BROWSER: not-applicable (qa/probes/golden-set-ambiguity.mjs, data/eval/golden-set-ambiguity.json — `qa/**` is `genuinely_not_user_facing` in qa/ui-surfaces.json; `data/eval/**` matches no pattern in its regex; verified against the file, not the manifest's claim)
-ISSUES-WRITTEN: ISS-234, ISS-235, ISS-236, ISS-237, ISS-238
-EXPLANATION: Every number in the manifest reproduces exactly, and the decision to lead with rank rather than the 77.2% binary was correct — a creditable call, not an evasion. But the unit's own stated validity gate fails: the probe's KNOWN_POSITIVE is `...-gq01` ("What kind of support is available for students looking for internships?"), while the gate's worked example is `...-gq02` ("Is the university located right in the city or is it more of a secluded campus?"). The manifest prints the gq02 text beside the gq01 id, and the report the unit shipped records the gq01 text — the contradiction was already on disk. The real worked example ranks 2/23: the measure does NOT fire on the one case whose answer is known. Compounding it, 6 of the 13 tail entries belong to the two shortest transcripts (450 and 495 unique tokens against a next-smallest of 983), whose questions average rank 16.13 against 3.63 for the rest, so the deliverable list is substantially a length artifact.
+- [C6] sev: high · two unstruck sections of the manifest still state cycle-1 numbers as live, and one of them is the verification recipe: "How to verify" tells the next reader to expect `FLAGGED contested`, rank 21/23, `contestedRate 0.7717` and `medianRank 3` — all three now false — and its own void-rule ("if it ever prints NOT FLAGGED, every other number in the report is void") is tripped by the very output this cycle ships as its finding · strike/rewrite "## How to verify" and "## The usable signal: where the target actually ranks" to the cycle-2 figures; no re-measurement needed · issue: ISS-239
+LIVE-BROWSER: not-applicable (qa/probes/golden-set-ambiguity.mjs, data/eval/golden-set-ambiguity.json — `qa/**` is listed under `genuinely_not_user_facing` in qa/ui-surfaces.json and `data/eval/**` matches no clause of its pattern; checked against the file, not the manifest's claim)
+ISSUES-WRITTEN: ISS-239, ISS-240
+EXPLANATION: All four cycle-1 fixes are real and independently reproduced, and the reversed conclusion is SOUND rather than a convenient exit — I re-ran the measure under four operationalisations (1/df raw, log-IDF raw, 1/df + baseline, log-IDF + baseline) and the gate's worked example gq02 ranks 1 or 2 of 23 in every one of them, so no principled variant or tail threshold detects it. What fails is document hygiene, and in the same class the unit was FAILed for at cycle 1: the shipped manifest's own verification section instructs a reader to treat this cycle's result as void. That is a doc-only fix and cycle 3 should clear in one edit.
 ```
 
 ## What I re-ran
 
 ```
-node qa/probes/golden-set-ambiguity.mjs          # reproduced verbatim, no --write
+node qa/probes/golden-set-ambiguity.mjs                 # reproduced verbatim, no --write
 ```
 
-plus three independent re-derivations written from the gate and the raw corpora (not from the
-maker's probe), reading `data/eval/golden-set.json` and `loadCorpora().turnsText` directly.
+plus an independent re-implementation written from the gate and the raw corpora (reading
+`data/eval/golden-set.json` and `loadCorpora().turnsText` directly), parameterised over
+weighting × baseline so the two fixes could be decomposed, and two 20,000-draw permutation tests.
 
 ## My independent numbers
 
 | quantity | manifest | mine | agrees |
 |---|---|---|---|
-| rank 1 of 23 | 24/92 = 26.1% | 24/92 = 26.1% | yes |
-| top-3 | 57/92 = 62.0% | 57/92 = 62.0% | yes |
-| median rank | 3 | 3 (mean 4.72) | yes |
-| tail rank >= 10 | 13 | 13 | yes |
-| binary contested (`>=`) | 71/92 = 77.2% | 71/92 = 77.2% | yes |
-| mean target coverage | 0.769 | 0.7695 | yes |
-| uniaccess vs other (binary) | 70.0% / 79.2% | 70.0% / 79.2% | yes |
-| tail composition | 4 decoding, 5 uniaccess | 4 decoding, 5 uniaccess | yes |
+| known positive id | `...-gq02` | `...-gq02` | yes |
+| known positive | rank 1/23, 0 rivals, NOT FLAGGED | rank 1/23, 0 rivals, NOT FLAGGED | yes |
+| rank 1 | 32.6% | 30/92 = 32.6% | yes |
+| top-3 | 66.3% | 61/92 = 66.3% | yes |
+| median rank | 2 | 2 | yes |
+| tail (rank >= 10) | 11 | 11 | yes |
+| tail from two shortest | 3 of 11 | 3 of 11 | yes |
+| uniaccess mean rank / tail share | 3.75 / 10.0% | 3.75 / 10.0% (2/20) | yes |
+| other mean rank / tail share | 3.99 / 12.5% | 3.99 / 12.5% (9/72) | yes |
+| `log(N/df)` = 0 at df = N | claimed | exact 0; 106 tokens sit at df = 23 | yes |
 
 Numbers I derived that the unit does not report:
 
 | quantity | value |
 |---|---|
-| contested with **strict `>`** (ties removed) | 54/92 = **58.7%** |
-| uniaccess vs other, strict `>` | **0.500 / 0.611** — inversion survives |
-| **mean rank, uniaccess vs other** | **5.70 / 4.44** (median 4 / 3) |
-| **uniaccess share of the tail** | **5/20 = 25%** vs other 8/72 = 11.1% |
-| **rank of the gate's ACTUAL worked example (gq02)** | **2 of 23** |
-| rank of the probe's KNOWN_POSITIVE (gq01) | 21 of 23 |
-| unique tokens: atlas-skilltech / decoding / next smallest | **450 / 495 / 983** |
-| mean question rank, those two sessions vs all others | **16.13 / 3.63** |
-| tail entries from those two sessions | **6 of 13** |
-| tail size at rank >= 9 / 10 / 11 / 12 | 16 / 13 / 11 / 8 |
-| questions with >=1 token absent from every session | 11 (one token each, of 14–24) |
-| sessions with missing or empty transcript | 0 |
+| gq02 rank under **cycle-1's own measure** (`1/df`, no baseline) | **2 of 23**, 4 rivals |
+| gq02 rank under **log-IDF, no baseline** | **2 of 23**, 4 rivals |
+| gq02 rank under **`1/df` + baseline** | **1 of 23**, 0 rivals |
+| gq02 rank under the shipped measure | **1 of 23**, 0 rivals |
+| atlas-skilltech gq01 / gq02 / gq03 / gq04, shipped measure | rank 3 / 1 / 2 / 19 |
+| corr(transcript length, session mean rank): cycle-1 `1/df` | **-0.662** |
+| … log-IDF, no baseline | -0.636 |
+| … **shipped (log-IDF + baseline)** | **-0.208** |
+| mean rank: two shortest / longest five / the middle sixteen | **8.75 / 4.50 / 3.16** |
+| tail entries from the **longest five** transcripts | **4 of 11** (20 of 92 questions) |
+| uniaccess vs other under the **cycle-1** measure | **5.70 / 4.44**, tail 5/20 vs 8/72 |
+| uniaccess vs other, log-IDF only (baseline off) | 5.45 / 4.21 |
+| permutation p, abs(uniaccess − other) mean rank (B = 20,000) | **0.834** |
+| permutation p, tail-share difference | **1.000** |
+| sd of ranks / se of the cluster mean difference | 4.16 / ≈1.08 |
+| binary `contested` rate under the new measure | **0.6739** (was 0.7717) |
 
-## Ruling on the discarded 77.2%
+## ISS-234 — fixed, and the fix is the unit's result
 
-**The call was right; the reasoning given for it is not.**
+`KNOWN_POSITIVE` is now `2026-05-23-uniaccess-atlas-skilltech-gq02`, and the id, the question text
+printed beside it, and the gate's sentence all agree — the three-way contradiction that produced
+cycle 1's accidental pass is gone. The result reproduces exactly: **rank 1 of 23, zero rivals, NOT
+FLAGGED.**
 
-Leading with rank instead of the binary flag was correct and I would have made the same call. A
-`>=` predicate over 23 sessions at mean coverage 0.769 is dominated by ties, and reporting it as
-"77.2% of the golden set is ambiguous" would have been a materially false claim. Keeping it in the
-report labelled unusable, rather than deleting it, is better practice than either reporting it or
-hiding it. This was not an inconvenient number swapped for a friendlier one — the substituted
-framing (median rank 3, 26% unique) is *less* favourable to the maker's own thesis that the set is
-ambiguous, which is the opposite of what fitting looks like.
+**The interpretation line does print in the probe's own output**, and it prints before every
+headline figure — before the rank/top-3/median block, before the cluster table, before the tail. It
+does *not* precede the known positive's own rank line, which sits two lines above it; the manifest's
+"before any figure" is therefore very slightly generous, but the ordering does what the claim exists
+to secure: no reader can lift 32.6% or the tail list without having read the disclaimer first. Not a
+finding.
 
-**But the diagnosis is wrong.** The manifest says the cause is mechanical — `rivals >= expectedCoverage`
-counting ties. Remove the ties (strict `>`) and the rate is still **58.7%**, 1.8x the hand read, and
-the cluster inversion is **unchanged** (uniaccess 0.500 vs other 0.611). Ties explain part of the
-rate; they explain none of the direction. The manifest offers one mechanical cause for a two-column
-disagreement and only half of it holds.
+## ISS-236 — fixed, and it is real IDF
 
-## Ruling on threshold tuning
+`idf = Math.log(N / df)`. At df = N it is exactly `Math.log(1) = 0` — I checked the identity, not the
+description. 106 tokens sit at df = 23 and now contribute zero to both numerator and denominator,
+against the 36%-of-mass they carried at cycle 1. The manifest's retraction of its cycle-1
+"no stopword list needed" claim is correct and correctly scoped.
 
-**No evidence of fitting. `TAIL_RANK = 10` is arbitrary but innocent.**
+## ISS-235 — fixed, sound as a normalisation, with a residual it does not disclose
 
-Tail sizes at nearby thresholds are 16 (>=9), 13 (>=10), 11 (>=11), 8 (>=12). There is no cliff at
-10 and no comfortable round number produced — 13 is not a number anyone fits to, and the rank
-histogram has empty buckets at 7 and 12, so 10 sits inside a plateau rather than at an edge. More
-importantly the threshold does not touch the headline: the 26.1% / 62.0% / median-3 figures are
-threshold-free, and the tail's composition (decoding + uniaccess dominant) is the same at 9, 10, 11
-and 12. The maker's claim that it did not tune to 33.3% is credible, and structurally so — no rank
-threshold could produce 33.3% from this histogram at all.
+**It is a sound normalisation, not a trick.** Subtracting a session's own mean coverage asks "does
+this session do better *than itself* here", which is exactly the right question for a set-recall
+score whose absolute level is set by vocabulary size. The evidence that it works is the length
+correlation, which I measured rather than inferred: **-0.662 → -0.208**. The claimed tail movement
+(6/13 → 3/11) reproduces, and 26.1 → 32.6 / 62.0 → 66.3 / median 3 → 2 all reproduce.
 
-## Ruling on "moderately discriminating, not degenerate"
+**Does it now penalise broadly-relevant sessions?** In principle yes — the baseline is a
+session-level constant, so a session that covers many questions' vocabulary pays for that on every
+question, including the ones it genuinely owns. Measured, that is a real but second-order effect:
+baselines run 0.09–0.13 for the two short sessions and 0.44–0.56 for the five longest, and the
+correction slightly over-shoots at the long end. The longest five sessions now sit at **mean rank
+4.50** against **3.16** for the middle sixteen, and supply **4 of the 11** tail slots from 22% of the
+questions, while the two shortest are still under-corrected at 8.75. So the length artifact is
+reduced by roughly two-thirds and has become two-sided rather than eliminated. The manifest claims
+only "3 of 11", which is true, and does not claim the tail is clean — so this is an undisclosed
+residual rather than a false statement. **ISS-240, low: ledger only, not a FAIL line.**
 
-**Supported, with a caveat the manifest should carry.** 26.1% at rank 1 and 62.0% top-3 against a
-chance baseline of 4.3% / 13.0% is a real signal, and the phrase is a fair reading of it. The
-caveat: the distribution is strongly bimodal — 65 of 92 sit at rank <= 3, then a near-empty middle,
-then a tail concentrated in two sessions. "Moderately discriminating" describes the mean of a
-distribution that has no middle. That is a nuance rather than a misstatement, so it is not a
-FAILURE line.
+## ISS-237 — fixed, and "indistinguishable" is defensible
 
-## The attacks, ruled individually
+Restated from rank, as required. I re-derived 3.75 / 10.0% vs 3.99 / 12.5% independently. On whether
+"indistinguishable" overstates what n = 20 vs n = 72 supports: **it does not**. A 20,000-draw
+permutation test on the mean-rank difference gives **p = 0.834**, and on the tail-share difference
+**p = 1.000**. There is no effect to speak of, in either direction, and the manifest's phrasing —
+"this measure neither supports nor refutes the gate's structural claim" — is the correct one, being
+careful in exactly the place where an over-reading would be tempting.
 
-**Inverse-session-frequency weighting — FAILS its stated purpose (ISS-236).** The manifest claims
-"a word in every session carries ~0 weight ... which is what a stopword list crudely approximates."
-Checked by hand on the probe's own known positive, *"What kind of support is available for students
-looking for internships?"*:
+The honest caveat, which the manifest could carry but whose absence is not a defect: with sd 4.16 and
+n = 20 vs 72, the se of the difference is ≈1.08, so this test could not have detected an effect
+smaller than roughly two rank positions. It is underpowered to *rule out* a modest cluster effect —
+which is precisely why "neither supports nor refutes" is the right sentence and "no cluster effect
+exists" would not be.
 
-| token | df | weight `1/df` | share of the question's total weight mass |
-|---|---|---|---|
-| internships | 15 | 0.0667 | **13.8%** |
-| support | 19 | 0.0526 | 10.9% |
-| available | 19 | 0.0526 | 10.9% |
-| kind / students / looking | 22 | 0.0455 | 9.4% each |
-| **what / of / is / for** | **23** | **0.0435** | **9.0% each — 36% combined** |
+**The 5.70 → 3.75 discrepancy: the maker's explanation is verified, and it is the whole
+explanation.** Re-running my cycle-1 measure (`1/df`, no baseline) over today's code and data
+reproduces **5.70 / 4.44** to the digit, with the same 5/20 vs 8/72 tail split. So my cycle-1 numbers
+were not wrong and neither are these; the measure changed underneath them. I decomposed which fix
+did it: the IDF change alone moves the pair only 5.70 → 5.45, and it is the **baseline subtraction**
+that collapses it to 3.75 / 3.99. That matters, because the enrichment I reported at cycle 1 was
+itself substantially the length artifact — atlas-skilltech, the shortest transcript in the corpus, is
+a `uniaccess-*` session, so the cluster was carrying the artifact I filed separately as ISS-235. My
+cycle-1 inference was correctly derived and, in hindsight, confounded. **I withdraw the cycle-1
+claim that the tail supports the gate's seven-sibling story.**
 
-`1/df` floors at `1/N` = 0.0435, not ~0. Four words present in every single session carry more than
-a third of the weight, nearly three times the single content word. Real IDF, `log(N/df)`, is exactly
-0 at df = N and would have done what the manifest claims. The concern about a third stopword list
-was reasonable; the substitute chosen does not do the job.
+## Ruling on the central claim: the negative result is SOUND, not a convenient exit
 
-**The known-positive test — FAILS, and in the way that matters (ISS-234).** The probe pins
-`KNOWN_POSITIVE = "2026-05-23-uniaccess-atlas-skilltech-gq01"`. That id's question is *"What kind of
-support is available for students looking for internships?"*. The gate's worked example is *"Is the
-university located right in the city or is it more of a secluded campus?"* — which is in the set, at
-**`...-gq02`**. The manifest prints the gq02 sentence beside the gq01 id, and
-`data/eval/golden-set-ambiguity.json` `knownPositive.question` records the gq01 sentence with the
-gq02 justification (`"stated to be answerable by all seven uniaccess sessions"`) attached to it.
+I went looking for the small principled variant that rescues detection, because that is what would
+make "the cheap path is closed" premature. **There isn't one.**
 
-Run the test on the right question and it **does not fire**: gq02 ranks **2 of 23**. Under the
-headline signal the unit actually reports, the gate's own all-seven-siblings example is one of the
-cleanest questions in the set. All four atlas-skilltech questions, for completeness: gq01 rank 21,
-gq02 rank 2, gq03 rank 5, gq04 rank 19.
+| operationalisation | gq02 rank | flagged at tail ≥ 10? |
+|---|---|---|
+| cycle 1's own: `1/df`, raw coverage | 2 / 23 | no |
+| IDF fixed only: `log(N/df)`, raw coverage | 2 / 23 | no |
+| length fixed only: `1/df` minus baseline | 1 / 23 | no |
+| **shipped: `log(N/df)` minus baseline** | **1 / 23** | **no** |
 
-The accidental pass is exactly the shape the dispatch anticipated. gq01 ranks 21 not because
-siblings answer it — nine sessions tie at coverage 1.0 — but because the target transcript happens
-to lack two ordinary words, **`support`** and **`looking`**, while containing `internships`. It is
-flagged for two absent stopwords.
+Ranking by raw coverage instead of baseline-adjusted advantage — the specific variant worth
+suspecting, since it is the one that undoes the fix most likely to be tuned — puts gq02 at **rank 2
+with 4 rivals out of 23**. Not flagged, and not near flagging. No tail threshold rescues it either:
+to catch a rank-2 question you must set the tail at rank ≥ 2, which flags 68 of 92 and is not a
+measure. The non-detection is therefore a **property of the lexical family**, not of this
+parameterisation, and the maker's conclusion generalises further than the maker actually
+demonstrated. The mechanism is plain once seen: *city*, *campus*, *secluded*, *located* are words the
+target transcript happens to use and the sibling transcripts happen not to, even though — per the
+gate's human reader — all seven sessions answer the question. Lexical presence and semantic
+answerability come apart, which is what the manifest says in its own words at the top.
 
-**Tokens absent everywhere (`df === undefined -> continue`) — correct, and immaterial.** 11 of 92
-questions have exactly one such token, out of 14–24 tokens each. `tokenize` runs over the same
-corpus that builds `df`, so a token absent everywhere is a question-only word that discriminates
-between nothing; skipping it is right, and including it would add the same zero to every session's
-numerator. No finding.
+**Is cycle 2 more trustworthy than cycle 1, or merely different?** More trustworthy, and I can say
+why in terms that do not depend on liking the answer. Three of the four changes are corrections
+against a stated external standard, not tuning: `log(N/df)` is *the* definition of IDF and cycle 1's
+`1/df` simply was not; gq02 is the gate's example and gq01 was not; the rank-based cluster statistic
+is the one the document itself called usable. Only the baseline subtraction is a modelling choice,
+and it is independently validated by a measurement that was never its target — the length
+correlation falling from -0.662 to -0.208. And the direction of travel is against interest: the
+corrected instrument makes the golden set look *less* ambiguous (median rank 3 → 2, rank-1 26.1% →
+32.6%), which weakens the case for the very defect the unit was built to quantify, and it destroys
+the unit's own headline. Fitting does not look like that.
 
-**`coverage()` on a missing or empty transcript — no live hazard, but a real latent one.** All 23
-sessions have non-empty transcripts, so nothing is silently scoring 0 today. The guard that matters
-is a different one and it is live: `coverage()` has **no length normalisation** and is a
-set-membership recall over the session's vocabulary, so a short transcript scores low mechanically.
-The two shortest sessions have **450** and **495** unique tokens against a next-smallest of **983**;
-their 8 questions average rank **16.13** against **3.63** for the other 84, and they supply **6 of
-the 13** tail entries. That is ISS-235, and it is why the deliverable list cannot be used as-is.
+**One thing the manifest overstates.** "Condition 4 needs semantic adjudication; it cannot be
+reached this way" is sound for the *lexical-coverage* family this unit built. It is not evidence
+about embedding similarity, which is deterministic, cheap, already in this repo's dependency
+surface, and is the obvious next rung below an LLM pass. The repo's own vector recall@5 of 0.935
+says the embedding layer separates these sessions well. "The cheap path is closed" should read "the
+*lexical* cheap path is closed"; the *semantic-but-not-LLM* path is untested. That is a scoping
+imprecision in the conclusion, not an error in it — it goes in this verdict for whoever picks up
+condition 4, not into the FAILURES block.
 
 ## The three "also rule on" questions
 
-**1. Does this advance condition 4?** *Partly, and less than claimed.* The negative result is real
-and worth having: a lexical measure cannot settle semantic answerability, and saying so with numbers
-beats the gate's 12-question hand read alone. The 13-question list is a real idea and not busywork —
-reducing adjudication from 92 to 13 is the right move. But **this particular list is not yet the
-deliverable**: 6 of its 13 members are there for transcript length, and the one question the gate
-itself named as ambiguous is not on it. Fix ISS-234 and ISS-235 and the deliverable stands up; ship
-it as-is and condition 4's adjudication reads the wrong 13 questions.
+**1. Does this advance T-021?** **Yes — more than cycle 1 did, and the value is real.** It converts
+"a lexical proxy might quantify sibling ambiguity" from an open assumption into a closed one, with
+the gate's own worked example as the counterexample and four operationalisations behind it. That is
+worth having before anyone spends a human afternoon or an LLM budget on the wrong instrument.
 
-**2. The tail composition finding.** Reproduced exactly: 4 `decoding-ever-expanding-cast`, 5
-`uniaccess-*`, 13 total. The inference drawn from it is wrong in both halves.
+**What should happen next, and who owns it — my position, restated.** At cycle 1 I said the next
+move was the maker's, not the Approver's, because the choice would have been made on a broken
+artifact. That objection is now answered, so **the position flips: this is the Approver's call, and
+it is now a genuine one.** But it is a three-way choice, not the two-way one the manifest frames:
 
-*The decoding half:* that session is the **second-shortest transcript in the corpus** (495 unique
-tokens) and **all four** of its questions are in the tail. That is a length artifact announcing
-itself, not a session the gate missed.
+- **a bounded embedding pass** — cosine between each question and every session's transcript,
+  flagging questions whose top-2 sessions are within a small margin. No LLM cost, no data approval,
+  and it tests the one hypothesis this unit's negative result does not touch. **I would run this
+  before paying for anything**, and it is a maker unit, not an Approver decision.
+- **a bounded LLM adjudication** over whatever list survives that.
+- **a human read**, the gate's Option-A-flavoured fallback.
 
-*The uniaccess half:* "only five are `uniaccess-*`" understates it. `uniaccess-*` is 20 of 92
-questions (21.7%) and 5 of 13 tail slots (38.5%) — a 1.8x enrichment — with worse mean rank (5.70 vs
-4.44) and worse median (4 vs 3). **The tail supports the gate's seven-sibling story.** The manifest
-reaches the opposite conclusion by arguing from `byCluster`, which is computed on the binary flag
-the same document declares unusable two sections earlier. A statistic cannot be unusable for the
-headline and authoritative for the refutation.
+The Approver's decision is only needed at the second and third. The first is unblocked work the
+maker can pull today, and condition 4 should not sit on a human gate while an untested cheap path
+remains. ISS-232's ~82% overlap caveat still applies wherever two rates are compared.
 
-**3. What should happen next on condition 4, and who owns it.** I disagree that the next move is the
-Approver's. **The maker owns one more cycle first**, and the choice should not be put to a human on
-the current evidence:
+**2. The 11-question tail — ship it or drop it?** **Ship it, labelled as it now is, and do not use
+it as the adjudication list.** The manifest's own framing ("a candidate list to read, explicitly not
+a finding") is the correct one and I would not weaken or strengthen it. It is not misleading, because
+the disclaimer that precedes it in the probe's output is unambiguous and because the gate's own
+question being absent is stated in the same breath. But it is also not the deliverable: 4 of its 11
+entries come from the five longest transcripts and 3 from the two shortest, so 7 of 11 slots are
+still explicable by length alone, and the one question with an independent ambiguity judgement is not
+on it. It is a reading list with a known bias, which is a fair thing to hand a human and an unfair
+thing to hand a gate. The claim on manifest line 101 that the unit "reduces adjudication from 92
+questions to 13" should not survive cycle 3 in that form — it is both stale (11, not 13) and stronger
+than the tail can bear.
 
-- Re-pin `KNOWN_POSITIVE` to `...-gq02` and report the non-detection as the unit's finding. A probe
-  that fails its own known positive is a publishable result, and more useful to condition 4 than the
-  current framing.
-- Length-normalise `coverage()` (or score the tail against a length-matched null) and re-derive the
-  13. Only then is there a list worth paying a human or an LLM to read.
-- Replace `1/df` with `log(N/df)` — a one-line change that makes the manifest's own stated rationale
-  true.
-- Re-state the cluster section from rank, not from the discarded binary. On the current numbers that
-  section reverses.
+**3. Struck vs live.** **Not confirmed — this is the FAIL.** The strike discipline is mostly good:
+the known-positive section, the deliverable-list section and the no-stopword-list section all carry
+strikethrough headings with the issue id that withdrew them, and the cycle-1 77.2% section is
+explicitly labelled. Two sections are not:
 
-Then the Approver's call is a genuine one — human read vs bounded LLM pass over a defensible 13 —
-rather than a choice about which artifact to trust. ISS-232's caveat (~82% question overlap with the
-set the original hand read sampled) stands and should be quoted wherever the two rates are compared;
-it is the reason the 33.3% and any new rate are not fully independent.
+- **`## How to verify`** (manifest lines 180–185) is entirely cycle-1 and entirely wrong now. It
+  tells the reader to expect `FLAGGED contested`, `rank 21/23`, `unusableBinary.contestedRate 0.7717`
+  and `headline.medianRank 3`. The shipped artifact carries **0.6739** and **2**, and the probe prints
+  **NOT FLAGGED / rank 1**. Worse than stale: the section's own rule — *"if it ever prints NOT
+  FLAGGED, every other number in the report is void"* — is now tripped by the output the unit ships
+  as its central finding, so a reader who follows the documented verification concludes the report is
+  void. Cycle 2 deliberately reinterprets that rule; the recipe was never updated to say so.
+- **`## The usable signal: where the target actually ranks`** (lines 128–138) is unstruck, unlabelled
+  and states 26.1% / 62.0% / median 3 / tail 13 as current, fifty lines under a cycle-2 table giving
+  32.6% / 66.3% / 2 / 11 for the same four quantities.
+
+I am charging this at **high** rather than waving it through as documentation churn, for one reason:
+it is the same defect class as ISS-234 — a shipped artifact stating, as live, a figure the same
+document elsewhere withdraws — in the unit whose entire subject is measurement honesty, and this time
+in the section that tells the next reader how to check. The fix is two edits and no re-measurement.
+
+Also fixed and creditable, though not listed in `Issues addressed`: **ISS-238** — the probe now
+prints `tail.slice(0, 13)` and the truncated-list defect is gone. Marked fixed.
+
+## Ledger
+
+| issue | status |
+|---|---|
+| ISS-234 | open → **fixed** (verified: probe pinned to gq02; id, text and gate sentence agree) |
+| ISS-235 | open → **fixed** (verified: length correlation -0.662 → -0.208; tail 6/13 → 3/11) |
+| ISS-236 | open → **fixed** (verified: `log(N/df)`, exactly 0 at df = N over 106 tokens) |
+| ISS-237 | open → **fixed** (verified: restated from rank; cycle-1 refutation withdrawn, and I withdraw my own cycle-1 counter-claim) |
+| ISS-238 | open → **fixed** (verified: full tail printed) |
+| ISS-239 | **new, high** — manifest states withdrawn cycle-1 figures as live in the verification recipe |
+| ISS-240 | **new, low** — residual length bias is now two-sided and undisclosed |
+
+## What would clear cycle 3
+
+Two edits to `qa/manifests/golden-set-sibling-ambiguity.md`, and nothing else. **Do not re-run the
+measure and do not change the probe** — the instrument is correct and its conclusion stands.
+
+1. Rewrite `## How to verify` to the cycle-2 expectations: `NOT FLAGGED, rank 1/23, 0 rivals`;
+   `unusableBinary.contestedRate` **0.6739**; `headline.medianRank` **2**; tail **11**. State
+   explicitly that the cycle-1 void-rule is superseded — the non-detection *is* the finding, and what
+   would now void the report is the known positive being re-pinned or the probe printing FLAGGED
+   without a stated reason.
+2. Strike or retitle `## The usable signal…` as cycle 1, the way the neighbouring sections already
+   are, and fix line 101's "92 questions to 13" to 11 with the tail's known length bias named.
+
+Optional, and it would improve the result rather than merely repair it: narrow the conclusion to "the
+*lexical* cheap path is closed", and record the four-variant robustness table above — the maker's
+negative result is stronger than the single operationalisation it currently rests on, and one
+sentence would say so.
 
 ## Note on process, not a finding
 
-The manifest's framing — "the headline finding is that my first statistic was wrong" — is the right
-instinct and I want it preserved through the fix cycle. What went wrong is narrower than the
-framing: the self-scepticism was aimed at the statistic and not at the test that was supposed to
-validate it. The known-positive id was never checked against the question text sitting in the same
-JSON the unit wrote.
+Cycle 1's manifest was rescued by its own instinct — "the headline finding is that my first statistic
+was wrong" — and cycle 2 carried that instinct all the way to a result that deletes the unit's
+headline and reports it anyway. That is the behaviour this pair exists to produce, and I want it on
+the record separately from the FAIL, which is about two paragraphs nobody re-read.
