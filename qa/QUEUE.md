@@ -15,6 +15,15 @@
   *(unanswered)*. Enforcement-path change (`.claude/hooks/mc-sessionstart.ps1:5` is still
   `$LEDGER = 'qa/issues.jsonl'`), so it needs a `docs/DECISIONS.md` entry carrying
   **`Approved-by: Umesh`**. Unfixed half of ISS-129.
+- `qa/contracts/handshake-liveness.md` — **START approval needed (new contract).** The cycle-1
+  check of `dispatch-state-tracking` ruled that the maker-checker handshake mechanics do **not**
+  belong under `qa/contracts/loop-safety.md`, whose north star is confined to the loop's mutation
+  procedure not damaging what it verifies. Handshake liveness needs its own contract covering
+  marker write/derive semantics, the five states, `STALE_MS`, and the reader obligations on
+  `mc-sessionstart.ps1` and sweep check 1. Initial contract creation is a human-approved START;
+  the checker declined to author it unilaterally, per `loop-safety.md`'s own corrected provenance
+  note (*"a checker that can widen its own mandate by writing a contract is a self-certification
+  path"*). See `qa/verdicts/dispatch-state-tracking.md`.
 - `qa/gates/d023-supersede.md` — genuinely open (**no `Answered:` line at all**, only an
   "## Answer format" section). ISS-168: D-023's Result states something measurably false about
   protection and only the Approver can authorise the superseding entry.
