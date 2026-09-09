@@ -1,0 +1,94 @@
+# GATE — three enforcement-path hooks are uncommitted and live, and one shipped unauthorized
+
+**Opened:** 2026-09-09
+**Blocks:** `delivery-gate-manifest-blindness` (cycle 1 FAIL, ISS-189/190/191)
+**Owner:** Umesh (Approver). Nothing here is a maker fix.
+**Severity:** high. One part is live on every Claude session on this machine right now.
+
+---
+
+## 1. The Stop hook running on this machine is not any reviewed commit
+
+`D:/ai_os` has **uncommitted edits to three enforcement files**:
+
+```
+ M .claude/hooks/delivery-gate-stop.ps1
+ M .claude/hooks/edit-in-place-guard.ps1
+ M .claude/hooks/tests/hook-fixtures.ps1
+```
+
+Hooks execute from the working tree, so the gate that blocks every session on this machine is
+whatever is on disk — not `HEAD`, not anything a checker has judged. Found by the
+`delivery-gate-manifest-blindness` checker (ISS-190), verified independently here.
+
+## 2. The uncommitted version is a REGRESSION, and a bigger one than the bug it fixes
+
+Measured, not read — both regexes run against the real forms, and the forms counted across all
+114 manifests in `qa/manifests/`:
+
+| Status form | manifests | committed regex | **uncommitted (LIVE)** |
+|---|---|---|---|
+| `## Status:` (heading) | **45** | matches | **DOES NOT MATCH** |
+| `**Status:**` (bolded) | 16 | matches | matches |
+| `Status:` (bare) | 29 | matches | matches |
+| prose / blockquote | — | correctly ignored | correctly ignored |
+
+The uncommitted diff drops `(?:#+\s*)?` from the anchor:
+
+```diff
+-      if ($mtPlain -match '(?m)^\s*(?:#+\s*)?Status:\s*ready-for-check') {
++      if ($mtPlain -match '(?m)^\s*Status:\s*ready-for-check') {
+```
+
+ISS-176 — the bug this whole unit exists to fix — was the gate being blind to **16** bolded
+manifests. The uncommitted replacement is blind to **45 heading ones**, the largest group and 39%
+of the corpus. `hybrid-arms-binding`, closed at `checked-PASS` today, uses the heading form.
+
+The same diff also widens the `Fix cycle:` anchor to `^[\s\-*#>` + backtick + `|]*`, which re-admits
+code-span and blockquote prose — the over-match the committed version was written to exclude, and
+which contract `[I2]` calls a FAIL rather than a tradeoff (ISS-191).
+
+## 3. The committed half shipped without authorization
+
+`D:/ai_os` commit **`4a71633`** changed `delivery-gate-stop.ps1`, an enforcement path. This repo's
+rule (project `.claude/CLAUDE.md`, "Update Authorization") requires an authorizing
+`docs/DECISIONS.md` entry carrying `**Approved-by:** Umesh`, **written first**. There is none:
+
+- `docs/DECISIONS.md` ends at **D-026**; no entry mentions ISS-176
+- **D-024** authorizes only the BROWSER (fifth) predicate
+- **D-025** authorized a different scoping change and was **withdrawn by D-026**
+- **D-026** states `Changes-authorized: none`
+- `D:/ai_os/decisions/log.md` has **zero** ISS-176 hits; its 2026-09-09 `Approved-by` covers
+  turn-scoping + budget-3 (commit `8fd5625`), not this regex change
+
+Filed as **ISS-189** (high, HUMAN_GATE). Precedent in this repo's own ledger for stopping here
+rather than proceeding: ISS-C-UNRUN-WRITERS-005 and -013 both stop at "needs the Approver".
+
+## 4. Why the maker did not just fix it
+
+Two rules point the same way and neither is mine to waive:
+
+1. **Enforcement paths need the Approver first.** Editing the hook to repair the regression would
+   repeat exactly the violation in §3.
+2. **A dirty file belongs to whoever is mid-unit on it** (the 2026-09-08 commit-coordination rule).
+   These three files are another lane's in-flight cycle-2 work. Reverting or editing them destroys
+   uncommitted work I do not own.
+
+So this is recorded and surfaced, not touched.
+
+## What is being asked
+
+One `scripts/append_decision.ps1` entry carrying `**Approved-by:** Umesh` that resolves all of it
+together, since every item touches one file:
+
+- **ratify or revert `4a71633`** (the committed ISS-176 fix — the code is correct; the
+  authorization is missing), and
+- **rule on the uncommitted working-tree edits** — as written they regress the gate against 45
+  manifests and re-open the prose over-match, so the honest options are *revert to HEAD*, or
+  *let the lane finish and re-check before it is trusted*.
+
+Until then the delivery gate should be treated as **unreliable in both directions**: blind to the
+most common manifest form, and separately satisfiable by prose on its BROWSER predicate
+(`D:/ai_os/audits/2026-09-09-delivery-gate-browser-predicate.md`, H1).
+
+**Answered:** (pending)
