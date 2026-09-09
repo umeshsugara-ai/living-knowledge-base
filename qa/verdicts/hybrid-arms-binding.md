@@ -628,3 +628,237 @@ own mutation harness (D-020): CONTROL, CONTROL3, K, B, P, T, U, N, R, S — tabl
   every restore SHA256-identical · git status clean · mutate.mjs assert-clean green
 live browser: localhost:5173/ask — typed, clicked Ask, CLICKED the citation through to the session
 ```
+
+---
+
+# Verdict — hybrid-arms-binding (U1.5 part 2) — CYCLE 3
+
+**Contract:** qa/contracts/hybrid-retrieval.md
+**Manifest:** qa/manifests/hybrid-arms-binding.md (Fix cycle: 3 of max 3)
+**Cycle checked: 3**
+**Date:** 2026-09-09
+**Checker:** Mode A, fresh subagent, bound to `D:\KnowledgeBase`
+**Commit under judgement:** `d6b788b` (cycle-2 baseline `526e88b`; part-1 baseline `ad6e7b7`)
+
+```
+VERDICT: PASS
+SCOREBOARD: 11/11 criteria met, 5/5 invariants hold
+FAILURES: none
+LIVE-BROWSER: not-applicable (cycle 3's only shipped-source change is
+  apps/api/src/ask-arms.test.ts; `git diff --stat 526e88b d6b788b -- apps packages scripts`
+  is exactly one test file, 62+/7-. The Mode D pass carried forward is my predecessor's own
+  browser run at qa/evidence/browser-hybrid-arms-binding-2026-09-09-checker/, taken against
+  byte-identical server-side source. Re-running it would re-verify an unchanged binary.)
+ISSUES-WRITTEN: ISS-188 (low, not a failure — see §4). ISS-179 → fixed.
+EXPLANATION: I re-derived R and S with my own harness and both are KILLED by the new test
+(173→172, and the dying test is the named C6 data-boundary one in each case), with a green
+no-op control on the same file in the same batch and every mutant asserted present on disk
+first. I then tried to break the test six further ways — two genuine unscoped leaks, a
+first-tenant-wins boot capture, a leak that SUBSTITUTES rather than adds a node, and three
+feature-disabled variants — and it killed all of them; `seen.length >= 4` is load-bearing
+rather than decorative (LEXOFF dies on that exact assertion, message quoted in §2). C6 is
+now MET: I found no fourth in-process path, and I say plainly in §3 why I do not think one
+exists at this boundary. C7 was MET at cycle 2 and this cycle's diff does not touch it.
+```
+
+## 1 · My harness, and what I did about the two failure modes that have bitten this seam
+
+Written by me. Per D-020: arm/restore through `scripts/lib/mutate.mjs`, `timeout 600` on every
+test run, and restore in a `trap … EXIT INT TERM ERR` — not on the success path — followed by
+`git diff --quiet HEAD -- <file>` as the restore assertion, printed as `RESTORE-OK <M>` on every
+single row below. `assert-clean` green before and after every batch.
+
+Two guards earned their place, and both are the maker's and my predecessor's recorded scars:
+
+1. **Every mutant is asserted present on disk before its run counts.** My first attempt at R and S
+   reported them as *survivors*. They were not: my anchors used `\n` against a CRLF working copy,
+   so nothing applied at all. The presence check caught it as `ANCHOR MISSING` before any test ran.
+   **This is the third independent time this exact CRLF anchor mismatch has produced a fake
+   survivor on this file** (the maker's cycle-3 note, my predecessor's cycle-2 batch 3, and now
+   mine). A no-op mutant reads as a survival, and a survival on C6 reads as a security finding.
+2. **A control in every batch.** `CTRL` (no-op comment in `ask-arms.ts`) and `CTRL2` (no-op in
+   `routes/ask.ts`) both returned **173/173** in the same batches as the kills, so a kill here is
+   the mutation and not a broken harness.
+
+| # | mutation | file | result | reading |
+|---|---|---|---|---|
+| **CTRL** | no-op comment | `ask-arms.ts` | **173 / 0 / 0 cancelled** | harness can show green |
+| **CTRL2** | no-op comment | `routes/ask.ts` | **173 / 0 / 0** | same, second file |
+| **R** | module-level `TURN_CACHE ??=`, unkeyed | `ask-arms.ts` | **172 / 1** | **KILLED — ISS-179 fixed** |
+| **S** | module-level `CHUNK_CACHE ??=`, unkeyed | `ask-arms.ts` | **172 / 1** | **KILLED — ISS-179 fixed** |
+| **W** (mine) | chunks read loses tenant scope entirely (`db.collection("chunks")`) | `ask-arms.ts` | **172 / 1** | killed |
+| **X** (mine) | turns read loses tenant scope entirely | `ask-arms.ts` | **172 / 1** | killed |
+| **Y** (mine) | `BOOT_TENANT ??= tenantId` — first tenant seen wins forever | `ask-arms.ts` | **172 / 1** | killed |
+| **Z** (mine) | unscoped chunks read **truncated to one hit** — the leak SUBSTITUTES the wrong tenant's node instead of adding one | `ask-arms.ts` | **172 / 1** | killed |
+| **DIS** (mine) | arms return empty (feature disabled, degradation still null) | `ask-arms.ts` | **171 / 2** | killed |
+| **LEXOFF** (mine) | lexical arm never queries | `ask-arms.ts` | **172 / 1** | killed, on `seen.length >= 4` |
+| **VECOFF** (mine) | vector arm never queries | `ask-arms.ts` | **170 / 3** | killed |
+| **K** | hoist the bind to router construction, tenant `"system"` | `routes/ask.ts` | **170 / 3** | binding site still pinned |
+| **N** | tenant from the request **body** instead of the verified key | `routes/ask.ts` | **173 / 0** | survivor — §4, not charged |
+
+`0 cancelled` on every row: no timed-out test is hiding behind a `fail 0`. In R, S, W, X, Y, Z and
+LEXOFF the **single** dying test is
+`C6: tenant B's arms return only tenant B's session — ONE corpus, both tenants in it` — the new one.
+
+## 2 · The five ways I tried to make the new test vacuous, and what happened
+
+The dispatch asked me to assume the replacement is over-fitted until shown otherwise. Each probe,
+and its answer:
+
+**"Does it pass if the arms return the right nodes for the wrong reason — could the tree lookup
+mask a corpus leak?"** No, and the fixture is built to prevent exactly that. `sessionNodesById`
+resolves only sessions present in the passed tree, so a leak whose session is absent from the tree
+is silently dropped — the masking the question is about. The fixture puts **both** `s1` and `s2` in
+`TREE` (test file lines 16-23), so a leaked row genuinely resolves to a node and lands in the
+assertion. Mutations W and X prove it empirically: an unscoped read really does surface the other
+tenant's node and really does redden.
+
+**"Can you construct a leak the assertions miss — one that substitutes rather than adds?"** That
+was the sharpest version of the question, because `deepEqual([...new Set(ids)], [NODE])` could
+plausibly have been an *extra-element* detector. Mutation **Z** is that leak: read unscoped, then
+`.slice(0, 1)` so exactly one chunk survives and the vector arm returns exactly one node — which
+for tenant B is tenant A's. Cardinality unchanged, identity wrong. **172/1.** The assertion is on
+identity, not on length.
+
+**"Is `seen.length >= 4` load-bearing, or does it pass under a mutation that reads the right number
+of times with the wrong scope?"** Load-bearing, and I have the assertion message. Under LEXOFF the
+returned ids are still exactly `[A_NODE]` and `[B_NODE]` — every identity assertion passes — and
+the test dies here:
+
+```
+AssertionError: both tenants must actually read both collections: ["chunks:tenant-a","chunks:tenant-b"]
+    at ask-arms.test.ts:112
+```
+
+That is the `[].every()` vacuity closed at the root: an arm that stops querying can no longer pass
+by returning nothing, which is precisely what R and S exploited. The companion
+`filter(s => s.endsWith(":UNSCOPED")).length === 0` covers the other direction — a read that happens
+with no tenant at all.
+
+**"Does `deepEqual([...new Set(ids)], [NODE])` hide extra arms, ordering, or duplicates?"** It hides
+*duplicates* — a node returned twice by one arm collapses. That is not a C6 property and I am not
+charging it. It does **not** hide extra arms (both arms' output is `flat()`ed into the same list, so
+a third leaking arm adds an element) and it does not hide ordering in any way that matters, because
+the expected list has one element. Worth one line for a future reader: if this fixture ever grows to
+two sessions per tenant, the `new Set` will need to go or a multiplicity assertion will need to come
+back.
+
+**"Would these tests still fail if the feature were disabled rather than mis-scoped?"** Yes — DIS,
+LEXOFF and VECOFF each redden. This is the generic check that keeps catching guards in this repo,
+and here it comes out the right way round: the failure mode being probed for is a test that *passes*
+when the feature is off, and this one does not.
+
+## 3 · The ruling the dispatch asked for: is C6 met, or is there a fourth path?
+
+**C6 is MET.** Stated as a ruling rather than a scoreboard entry, because it has failed on three
+distinct paths and the question of whether it is falsifiable at all is a fair one.
+
+**It is falsifiable, and the three rounds were not three attempts at the same thing.** Each named a
+genuinely different surface — the factory's internals (cycle 1's mutation I), the binding site in
+`routes/ask.ts` (cycle 1's mutation K), and the data boundary inside the arms (cycle 2's R and S).
+Each was real: each mutation was a two-line change a competent engineer would plausibly make, each
+left the whole suite green, and each is now killed. That is a criterion doing its job three times,
+not a criterion nobody can satisfy.
+
+**I looked for a fourth and I do not believe one exists at this boundary.** The remaining candidates
+and why each is closed or out of scope:
+
+- **`scopedCollection` itself dropping the tenant** (`packages/db/src/lib/tenantScope.ts`). Covered
+  transitively: the fake db records the filter it actually receives, so a `scopedCollection` that
+  stopped merging `tenantId` produces `chunks:UNSCOPED` and dies on the UNSCOPED assertion *and* on
+  identity. Its own correctness is `tenantScope`'s contract, not this one's.
+- **The `getDb()` default when `deps.db` is absent.** Not reachable in-process by construction; it
+  is the reason the injectable `db` exists.
+- **The tree corpus** (`deps.tree.load(tenantId)` in `routes/ask.ts`). A different corpus with its
+  own contract, and outside this unit's changed paths.
+- **A caller-supplied tenant override** — mutation N, §4, which is an *added* attack surface rather
+  than a removed guard.
+
+**What no in-process test can prove, said plainly so it is not mistaken for coverage.** These tests
+pin the *query decisions*: which tenant is asked for, and that what comes back is filtered by it.
+They cannot prove isolation against a real Mongo — that is a property of `scopedCollection` plus the
+deployment. The evidence for that half is the **live two-tenant probe cycle 1's checker ran against
+real Mongo** (verdict §3: disjoint corpora, identical query text in both, each tenant's tree seeded
+with a node for the *other* tenant's session so a leak could resolve; clean, cleanup read back from
+the server). `ask-arms.ts` and `routes/ask.ts` are **byte-unchanged since that probe**
+(`git diff --stat 526e88b d6b788b -- apps packages scripts` = one test file), so it still holds. I
+did not re-run it, and I am recording that as a decision rather than an omission.
+
+**I2 now holds.** It is the invariant that failed all three cycles — "coverage is assumed absent
+until a mutation proves it present" — and thirteen mutation runs against two green controls are that
+proof.
+
+## 4 · Mutation N — the survivor I am again NOT charging, but am filing
+
+`const tenantId = (req.body as any)?.tenantId ?? req.auth!.tenantId` in `routes/ask.ts` survives
+**173/173**. My predecessor flagged this at cycle 2, called it "free while you are there, not
+required", and the maker did not take it.
+
+I am keeping that ruling, for its reason and one of my own. Its reason: N *adds* an override that no
+code path has, rather than removing a guard that exists, and mutation evidence is weakest exactly
+there — every module in this repo would "survive" a mutation that invents a new input. Mine: C6's
+Verified-by is now satisfied in full, and a criterion is met when its own verification clause is
+met, not when the checker has run out of mutations. Failing a unit on the last cycle for a
+not-required item my predecessor explicitly released it from would be moving the bar after the fact.
+
+But it should not evaporate with this session, so it is filed as **ISS-188, severity low** — per
+this repo's severity gate, a ledger entry only, never a pulled unit, verified inside the next unit
+that touches `routes/ask.ts`. **It is not a FAILURE and it does not gate this PASS.**
+
+Also still open and still unpinned: **ISS-171** (the lexical `seen` dedupe, medium, cycle 1). This
+cycle touched only the test file, so it correctly stays open for the next unit on `ask-arms.ts`.
+
+## 5 · Every criterion
+
+| C | Verdict | Evidence I produced at `d6b788b` |
+|---|---|---|
+| C1 | **MET** | `git diff ad6e7b7 HEAD -- packages/ask/src/router.ts packages/ask/src/evaluator.ts` → **0 lines**. `d6b788b` touches 2 files, neither in `packages/`. `grep -rn "askV3\|finishAsk"` → only the three pre-existing `router.ts` lines, in a byte-unchanged file. |
+| C2 | **MET** | Arms still resolve only via `bySession.get()` from the passed tree; mutations DIS/W/X/Z all die on the returned-node assertions, and `a hit for a session NOT in this tree is dropped rather than invented` is still green. |
+| C3 | **MET** | `merge.ts` byte-unchanged since its own PASS; untouched by `d6b788b`. |
+| C4 | **MET** | Unchanged module. Not re-measured — the cycle-3 diff contains no ranking code. |
+| C5 | **MET** | Unchanged module; VECOFF kills both C5 tests (the positive and the negative half), so `degraded` still means something. |
+| **C6** | **MET** | §1–§3. R and S both **killed** on my own harness with a verified mutant and a green control; six further leak/disable mutations of mine also killed; K still kills 3 at the binding site. |
+| C7 | **MET** | Ruled MET at cycle 2 and untouched: `git diff --stat 526e88b d6b788b -- apps packages scripts` is one test file, so no measurement code moved. Re-grepped anyway — `0.870`/`0.891` appear only in the manifest's regression framing and the report's own `reason` string; `.goal/goal.json`, `docs/PROGRESS.md`, `TASKS.md`, `docs/DECISIONS.md` carry no hybrid number and no bare `≥ 0.85` PASS claim. |
+| C8 | **MET** | The manifest's cycle-3 section addresses **ISS-179**, whose recorded reproductions in `qa/issues.jsonl` are literally mutations R and S and whose `fix_direction` ends "Confirm it reddens under mutations R and S". The manifest reports both, and I re-derived both rather than reading them. No self-authored corpus was substituted. *Recorded, not charged: the manifest **header** still says `Issues addressed: none — roadmap feature work` while its body closes ISS-179 — stale by one cycle, and the body is what C8 grades.* |
+| C9 | **MET** | `pnpm -r typecheck` exit **0**; `compete.ts` untouched and still arm-free, behaviour unchanged. |
+| C10 | **MET** | `npx depcruise --config .dependency-cruiser.cjs packages apps` → exit **0**, no violations (304 modules, 934 deps). |
+| C11 | **MET** | `pnpm -r typecheck` exit **0** and `pnpm -r test` exit **0**, by their own exit codes, no `lint:structure` wrapper. |
+
+**Invariants.** **I1** holds (router/evaluator byte-unchanged; no number chased — none was
+re-measured). **I2 HOLDS for the first time in this unit** — §1's table is the mutation evidence I2
+demands, on the criterion that lacked it. **I3** holds (VECOFF kills the degradation tests in both
+directions). **I4** holds — nothing here closes a gate; the `≥ 0.85` exit criterion of plan §10 U1.5
+remains open and 0.870 remains a regression against the vector arm's 0.935, recorded and uncredited.
+**I5 now holds AND is defended** — mutations W, X, Y and Z each drop or misdirect the tenant filter
+at the data boundary and each reddens.
+
+## 6 · One thing that survives this PASS, so it is not lost
+
+The unit passes; **the configuration question does not go away.** The hybrid merge measures **0.870
+(80/92) against pure vector's 0.935** — it still loses to one of its own arms, and it is enabled on
+`/ask` today. Nothing in this contract required fixing that (C7 governs citation, and "Deliberately
+NOT criteria" refuses both a recall floor and per-arm weights), and the maker was right not to tune
+weights against a 92-question set whose ground truth an open gate precondition disputes. But a
+future unit measuring arm contribution — the U2.2-style measurement the maker itself proposed — is
+the honest next step, and no reader of this PASS should take it as a verdict that the merge is
+*good*. It is a verdict that the merge is **correct, tenant-safe, honestly measured, and proven so
+by mutation**.
+
+## Commands re-run by this checker
+
+```
+pnpm --filter @lkb/api test                                   → 173 pass / 0 fail / 0 cancelled (clean baseline)
+pnpm -r typecheck                                             → exit 0
+pnpm -r test                                                  → exit 0
+npx depcruise --config .dependency-cruiser.cjs packages apps  → exit 0 (304 modules, 934 deps)
+git diff ad6e7b7 HEAD -- packages/ask/src/{router,evaluator}.ts → 0 lines
+git diff --stat 526e88b d6b788b -- apps packages scripts      → 1 file: apps/api/src/ask-arms.test.ts
+grep -rn "askV3|finishAsk" packages apps                      → 3 pre-existing router.ts lines, no new entry point
+grep 0.870 / 0.891 across md,json,ts,mjs                      → no uncaveated cite, no bare ≥0.85 PASS claim
+own mutation harness (D-020, trap on EXIT INT TERM ERR, timeout 600, mutant-presence assertion):
+  CTRL, CTRL2, R, S, W, X, Y, Z, DIS, LEXOFF, VECOFF, K, N — full table in §1
+  every row printed RESTORE-OK · mutate.mjs assert-clean green before and after every batch
+```
+
+Working tree left carrying only the concurrent lane's `.goal/goal.json` and `qa/.last-tick` plus its
+untracked `qa/debug/`, none of which I touched.
