@@ -200,12 +200,16 @@ test("each hit's (turnId, sessionId) pair matches what the scorer actually ranke
   }
 });
 
-test("sessions are fetched once each, not once per hit (ISS-080, contract [I3] N+1)", async () => {
+test("turns load once and sessions are fetched once each, never once per hit (ISS-080/085, contract [I3] N+1)", async () => {
   const { db, calls } = capturingDb();
   const hits = await createMongoSearchDeps({ db }).search("toc", "2026", 10);
   const distinct = new Set(hits.map((h) => h.sessionId)).size;
+  const turnsFinds = calls.filter((c) => c.coll === "turns" && c.op === "find").length;
+  const turnsFindOnes = calls.filter((c) => c.coll === "turns" && c.op === "findOne").length;
   const lookups = calls.filter((c) => c.coll === "sessions" && c.op === "findOne").length;
   assert.ok(hits.length > distinct, `precondition: need a repeated session (${hits.length} hits over ${distinct})`);
+  assert.equal(turnsFinds, 1, `${turnsFinds} turns.find calls — turns must load exactly once per request`);
+  assert.equal(turnsFindOnes, 0, `${turnsFindOnes} turns.findOne calls — per-hit turn lookup reintroduces N+1`);
   assert.equal(lookups, distinct, `${lookups} session lookups for ${distinct} distinct sessions — dedup was dropped`);
 });
 
