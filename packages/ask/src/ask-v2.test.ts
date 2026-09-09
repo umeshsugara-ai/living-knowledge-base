@@ -234,3 +234,49 @@ test("U1.5: with NO extraCandidateArmsFn, behaviour is unchanged (the tavilySear
   assert.equal(result.verdict, "correct");
   assert.equal(result.auditLog.find((e) => e.jobKind === "ask.retrieval_degraded"), undefined);
 });
+
+test("ISS-157 / C2: a node an ARM invents can never become a citation", async () => {
+  // The checker fabricated `tenant:t9/session:GHOST`, watched it come back in sources.internal,
+  // and all 45 tests stayed green. ask() builds an internal source from whatever the thunk yields
+  // and performs no membership check; rrfMerge is generic over T so it structurally cannot.
+  //
+  // Note the ghost carries a FOREIGN TENANT prefix — this is not merely a hygiene guard. A
+  // retrieval arm is exactly the kind of thing that will later be fed by a vector index over rows
+  // another tenant wrote, and the contract's own invariant is that tenant scoping is never a
+  // property of the caller behaving well.
+  const write = fakeWrite();
+  const GHOST = { node_id: "tenant:t9/session:GHOST", title: "Ghost", level: "session", summary: "Not in this tree.", children: [] } as TreeIndexNode;
+  const result = await askV2("what color are apples?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.9, "tenant:t9/session:GHOST": 0.99 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [[GHOST]], degraded: null }),
+    write,
+    tenantId: "t1",
+  });
+  const cited = result.sources.internal.map((s) => JSON.stringify(s));
+  assert.ok(!cited.some((c) => c.includes("GHOST")),
+    `a fabricated node reached the citations: ${cited.join(" | ")}`);
+  assert.equal(result.verdict, "correct", "and the real candidate must still answer");
+});
+
+test("ISS-157 / C2: the guard does not drop LEGITIMATE arm nodes that are in the tree", async () => {
+  // The guard must not be a blanket "ignore the extra arms" — that would pass the ghost test while
+  // silently disabling the whole feature, which is the cheaper wrong fix.
+  const write = fakeWrite();
+  const result = await askV2("what color are oranges?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.1, "tenant:t1/session:b": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [[TREE.children[1]!]], degraded: null }),
+    write,
+    tenantId: "t1",
+  });
+  assert.equal(result.verdict, "correct", "a real node from an arm must still reach the answer");
+});

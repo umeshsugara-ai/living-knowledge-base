@@ -73,6 +73,19 @@ function webDocText(source: WebSource): string {
     .join(". ");
 }
 
+/** Every node_id in this tenant's loaded tree. Local and trivial — `packages/ask` may not import
+ * `packages/index` (contract C10), and a membership set does not need a tree library. */
+function collectNodeIds(root: TreeIndexNode): Set<string> {
+  const ids = new Set<string>();
+  const stack: TreeIndexNode[] = [root];
+  while (stack.length > 0) {
+    const n = stack.pop()!;
+    ids.add(n.node_id);
+    for (const c of n.children ?? []) stack.push(c);
+  }
+  return ids;
+}
+
 export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps): Promise<AskV2Result> {
   const { complete, scoreFn, treeSearchFn, webFallbackFn, tavilySearchFn, extraCandidateArmsFn, write, tenantId } = deps;
   const upper = deps.upper ?? UPPER_THRESHOLD;
@@ -113,7 +126,19 @@ export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps)
     }
     // The tree arm goes FIRST: on a tie its node is the representative, and it is the one carrying
     // the `summary` the refine step reads without a second lookup.
-    candidates = rrfMerge([treeCandidates, ...extra.arms], { keyOf: (n: TreeIndexNode) => n.node_id });
+    const merged = rrfMerge([treeCandidates, ...extra.arms], { keyOf: (n: TreeIndexNode) => n.node_id });
+    // MEMBERSHIP GUARD (ISS-157, contract C2). Without it, ANY node an arm supplies becomes a
+    // citation — a checker fabricated `tenant:t9/session:GHOST`, watched it come back in
+    // `sources.internal`, and the whole suite stayed green. `ask()` builds an internal source from
+    // whatever the thunk yields and performs no membership check, and `rrfMerge` is generic over
+    // `T` so it structurally cannot perform one.
+    //
+    // Deliberately NOT treated as the caller's obligation: the ghost carried a foreign TENANT
+    // prefix, and this contract's own invariant is that tenant scoping is never a property of the
+    // caller behaving well. A retrieval arm is exactly the kind of thing that will later be fed by
+    // a vector index over rows another tenant wrote.
+    const known = collectNodeIds(tree);
+    candidates = merged.filter((n) => known.has(n.node_id));
   }
   // ask() re-scores `candidates` via `scoreFn` internally (T-005's evaluate()) — reused here, not
   // duplicated. Each candidate's node comes back on `scored[].node`, still the full node object
