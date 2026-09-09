@@ -2,9 +2,53 @@
 **Contract:** qa/contracts/hybrid-retrieval.md
 **Goal task:** U1.5 (part 2 — discharges the C6/C7 deferral)
 **Date:** 2026-09-09
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** none — roadmap feature work
+
+## CYCLE 3 — ISS-179: my own C6 test was VACUOUS, and it is the same class I keep shipping
+
+The checker passed C7 and confirmed both cycle-2 fixes reproduce (the hoist mutation that stayed
+green at cycle 1 now kills 3 tests; recall reproduces to the digit at 0.870). It then failed C6 on
+a **third distinct unpinned path** — factory internals, then binding site, now the **data boundary**
+— and it is right.
+
+What I shipped in cycle 2:
+
+```js
+assert.ok(a.queriedTenants.every((q) => q.endsWith(":tenant-a")));
+```
+
+**`[].every()` is `true`.** A module-level cache of `turns`/`chunks` not keyed by tenant — one
+`??=`, the most ordinary perf change anyone would make to this file — suppresses the second tenant's
+read entirely and the assertion passes because there is nothing left to iterate. The test also used
+two SEPARATE db fakes and asserted on the **query filter string**, never on what came back, so it
+could not observe a cross-tenant candidate even in principle. C6's Verified-by asks for exactly the
+thing it did not check: *"tenant B's question never returns a candidate resolving to tenant A's
+session."*
+
+This is the ninth-plus instance of *a guard that passes by doing nothing* in my own units, and the
+second time in three days that I have written a check whose negative result was structurally
+unreachable. I am recording it as a pattern, not an incident.
+
+**The fix:** ONE db holding BOTH tenants' rows, whose `find()` actually honours the `tenantId`
+filter so a leak is expressible; assertions on the **returned node ids**; and a non-vacuity block
+asserting ≥4 real reads, non-empty results for both tenants, and zero `UNSCOPED` reads — so the test
+cannot pass by querying nothing.
+
+| mutation (the checker's own, re-run by me) | old test | new test |
+|---|---|---|
+| **R — unkeyed module-level `turns` cache** | survived (vacuous) | **killed** |
+| **S — unkeyed module-level `chunks` cache** (vector arm's corpus) | survived (vacuous) | **killed** |
+
+173/173 green, 0 cancelled; `pnpm -r typecheck` clean; mutations armed and restored through
+`scripts/lib/mutate.mjs` with a trap on timeout/interrupt/error (D-020), `assert-clean` outstanding
+none. One anchor mismatch aborted a first attempt and the trap restored the file — recorded because
+it is evidence the trap works, not despite it.
+
+**Not claimed:** this pins the boundary against an in-process cache. It does not prove isolation
+against a real Mongo; the checker's own live two-tenant probe is the evidence for that, and it is
+the checker's, not mine.
 
 ## CYCLE 2 — both cycle-1 failures fixed, and the corrected number is WORSE than the one I reported
 

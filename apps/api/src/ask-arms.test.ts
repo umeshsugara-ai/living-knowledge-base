@@ -57,13 +57,68 @@ test("C6: every collection read carries the tenant the factory was called with",
   }
 });
 
-test("C6: two tenants' arms query different corpora — no shared binding", async () => {
-  const a = fakeDb(); const b = fakeDb();
-  const factory = createAskArmsFor({ embed: embedOk as never, db: a.db });
-  await factory("tenant-a")("q", TREE);
-  await createAskArmsFor({ embed: embedOk as never, db: b.db })("tenant-b")("q", TREE);
-  assert.ok(a.queriedTenants.every((q) => q.endsWith(":tenant-a")));
-  assert.ok(b.queriedTenants.every((q) => q.endsWith(":tenant-b")));
+// ISS-179. The version of this test that shipped in cycle 2 was VACUOUS, and the way it was vacuous
+// is the failure mode this repo keeps finding: it asserted
+//   a.queriedTenants.every((q) => q.endsWith(":tenant-a"))
+// and `[].every()` is `true`. A module-level cache of `turns`/`chunks` not keyed by tenant — one
+// `??=`, the most ordinary perf change anyone would make to this file — suppresses the second
+// tenant's read entirely and PASSES, because there is nothing left to iterate. It also used two
+// SEPARATE db fakes and asserted on the query FILTER STRING, never on what came back, so it could
+// not see a cross-tenant candidate even in principle.
+//
+// C6's Verified-by asks for the data boundary: "tenant B's question never returns a candidate
+// resolving to tenant A's session". So: ONE db holding BOTH tenants' rows, and assertions on the
+// RETURNED NODES, plus an explicit non-vacuity check so this can never pass by querying nothing.
+test("C6: tenant B's arms return only tenant B's session — ONE corpus, both tenants in it", async () => {
+  const rows = {
+    chunks: [
+      { _id: "a:c1", tenantId: "tenant-a", sourceRef: "s1", vector: [1, 0, 0] },
+      { _id: "b:c1", tenantId: "tenant-b", sourceRef: "s2", vector: [1, 0, 0] },
+    ],
+    turns: [
+      { _id: "a:t1", tenantId: "tenant-a", sessionId: "s1", text: "visas" },
+      { _id: "b:t1", tenantId: "tenant-b", sessionId: "s2", text: "visas" },
+    ],
+  };
+  // A single db whose find() HONOURS the tenantId filter, so a leak is expressible: if the arms
+  // ever query without a tenant (or with the wrong one), the other tenant's rows really do come
+  // back and land in the returned nodes.
+  const seen: string[] = [];
+  const db = {
+    collection(name: string) {
+      return {
+        find: (filter?: Record<string, unknown>) => ({
+          toArray: async () => {
+            const t = filter && typeof filter.tenantId === "string" ? filter.tenantId : undefined;
+            seen.push(`${name}:${t ?? "UNSCOPED"}`);
+            const all = (name === "chunks" ? rows.chunks : rows.turns) as { tenantId: string }[];
+            return t === undefined ? all : all.filter((r) => r.tenantId === t);
+          },
+        }),
+      };
+    },
+  } as unknown as Pick<Db, "collection">;
+
+  const factory = createAskArmsFor({ embed: embedOk as never, db });
+  const aRes = await factory("tenant-a")("visas?", TREE);
+  const bRes = await factory("tenant-b")("visas?", TREE);
+
+  const aIds = aRes.arms.flat().map((n) => n.node_id);
+  const bIds = bRes.arms.flat().map((n) => n.node_id);
+
+  // NON-VACUITY FIRST (ISS-179): every assertion below is meaningless if nothing was queried or
+  // nothing came back. A cache that serves tenant B from tenant A's rows must not be able to
+  // satisfy this test by returning an empty set.
+  assert.ok(seen.length >= 4, `both tenants must actually read both collections: ${JSON.stringify(seen)}`);
+  assert.ok(aIds.length > 0, "tenant A must retrieve something, or the isolation claim is empty");
+  assert.ok(bIds.length > 0, "tenant B must retrieve something, or the isolation claim is empty");
+  assert.equal(seen.filter((s) => s.endsWith(":UNSCOPED")).length, 0, `an unscoped read: ${seen}`);
+
+  // THE DATA BOUNDARY, asserted on what came back — not on the filter that was sent.
+  const A_NODE = "tenant:t1/year:2026/month:06/session:s1";
+  const B_NODE = "tenant:t1/year:2026/month:06/session:s2";
+  assert.deepEqual([...new Set(aIds)], [A_NODE], "tenant A saw a session that is not its own");
+  assert.deepEqual([...new Set(bIds)], [B_NODE], "tenant B saw a session that is not its own");
 });
 
 test("C5: a FAILING vector arm still yields the lexical arm, and says why", async () => {
