@@ -4,9 +4,9 @@
 defects blocking **condition 4**.
 **Goal task:** T-021 (tier 3, roadmap).
 **Date:** 2026-09-09
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
-**Issues addressed:** **ISS-234**, **ISS-235**, **ISS-236**, **ISS-237** (cycle-1 failures, all mine).
+**Issues addressed:** **ISS-234**, **ISS-235**, **ISS-236**, **ISS-237** (cycle 1) · **ISS-239**, **ISS-240** (cycle 2).
 
 ## CYCLE 2 — the measure fails its own known-positive test, and that is the result
 
@@ -75,12 +75,20 @@ cycle-1 refutation is **withdrawn**. Note this also differs from the checker's o
 
 ### What the unit now delivers
 
-A **negative result about the cheap path**, which is worth more than a number I cannot defend: a
+A **negative result about the LEXICAL cheap path**, which is worth more than a number I cannot defend: a
 deterministic lexical measure, corrected on every axis the checker named, **fails to detect the
 gate's own worked example.** Condition 4 needs semantic adjudication; it cannot be reached this way.
 
-The 11-question tail remains in the report as a **candidate list to read**, explicitly not a finding
-— and with the gate's own ambiguous question absent from it, its value is now clearly bounded.
+The 11-question tail ships as a **reading list**, explicitly not an adjudication list (ISS-240):
+**7 of its 11 slots are still explicable by transcript length** even after normalisation, and the
+gate's own ambiguous question is absent from it. Its value is bounded and stated as such.
+
+**Scope correction the checker required:** "the cheap path is closed" is too broad — what is closed
+is the **lexical** family. It ran four operationalisations (`1/df` raw, log-IDF raw, `1/df`+baseline,
+log-IDF+baseline) and gq02 ranks **1 or 2 of 23 in every one**, with no tail threshold catching a
+rank-2 question without flagging 68 of 92. So the non-detection is a property of the family rather
+than of my parameterisation — the result generalises **further** than I demonstrated. An embedding
+pass tests a hypothesis none of this touches.
 
 ---
 
@@ -125,17 +133,13 @@ recompute the obvious statistic and believe it.
 to the answer — the metric-gaming this repo's own D-015 exists to stop — and it would have been easy
 to do and hard to detect.
 
-## The usable signal: where the target actually ranks
+## ~~The usable signal: where the target actually ranks~~ (CYCLE 1 FIGURES, SUPERSEDED — ISS-239)
 
-| | value |
-|---|---|
-| target ranks **1st of 23** | 24/92 = **26.1%** |
-| target ranks **top-3** | 57/92 = **62.0%** |
-| **median rank** | **3** of 23 |
-| tail at rank ≥ 10 | **13** questions |
-
-That is a **moderately discriminating set, not a degenerate one** — and it is a different picture
-from what the binary flag suggested.
+~~24/92 = 26.1% at rank 1 · 57/92 = 62.0% top-3 · median 3 · tail 13.~~
+**Cycle-2 figures, from the corrected measure: 30/92 = 32.6% at rank 1, 61/92 = 66.3% top-3, median
+rank 2, tail 11.** The "moderately discriminating set" reading survives the correction — but it is
+now beside the point, since the measure fails on the gate's own example and none of these figures
+is evidence about ambiguity.
 
 ## ~~Known-positive test — the discipline I kept failing today~~ (CYCLE 1, VOID — wrong question, ISS-234)
 
@@ -143,9 +147,12 @@ The gate's worked example is literally in the set:
 `2026-05-23-uniaccess-atlas-skilltech-gq01` — *"Is the university located right in the city or is it
 more of a secluded campus?"*, stated by the gate to be answerable by all seven `uniaccess` sessions.
 
-**It is flagged: rank 21 of 23, 20 rivals.** The measure fires on the one case whose answer is
-already known. Without that, a low finding anywhere else would mean nothing — which is exactly how
-the 16-hour gap, the `[].every()` assertion and the forced 0/92 all got past me earlier today.
+~~**It is flagged: rank 21 of 23, 20 rivals.** The measure fires on the one case whose answer is
+already known.~~ **VOID (ISS-234).** That id is `gq01`, which is NOT the gate's example, and it
+ranked 21 because its own transcript lacks `support` and `looking` — not because siblings answer
+it. The gate's actual example is `gq02`, which ranks **1/23, NOT FLAGGED**. The closing sentence of
+this section — that without a known-positive a low finding anywhere else would mean nothing — is
+the one part that survives, and it convicts the section it appears in.
 
 ## ~~The deliverable: 13 questions, not 92~~ (CYCLE 1, SUPERSEDED — 11 questions after length normalisation)
 
@@ -154,7 +161,7 @@ the 16-hour gap, the `[].every()` assertion and the forced 0/92 all got past me 
 ```
 rank 23  2026-05-29-decoding-ever-expanding-cast-gq04
 rank 22  2026-05-29-decoding-ever-expanding-cast-gq02
-rank 21  2026-05-23-uniaccess-atlas-skilltech-gq01   ← the gate's own example
+rank 21  2026-05-23-uniaccess-atlas-skilltech-gq01   ← NOT the gate's example (ISS-234); gq02 is, and it ranks 1
 rank 19  2026-05-29-decoding-ever-expanding-cast-gq03
 rank 19  2026-05-23-uniaccess-atlas-skilltech-gq04
 rank 18  2026-05-29-decoding-ever-expanding-cast-gq01
@@ -177,14 +184,26 @@ The repo already carries two (`extract-topics.ts`'s `STOPWORDS`, `gen-golden-set
 frequency** instead — a word in every session carries ~0 weight, a word in one carries nearly all of
 it — which is what a stopword list crudely approximates.
 
-## How to verify
+## How to verify (CYCLE 3 — this section stated cycle-1 expectations, ISS-239)
 
-- `node qa/probes/golden-set-ambiguity.mjs` → the tables above; `--write` persists
-- known positive → `FLAGGED contested`, rank 21/23. **If it ever prints NOT FLAGGED, every other
-  number in the report is void**, and the probe says so in its own output.
-- `data/eval/golden-set-ambiguity.json` → `unusableBinary.contestedRate` 0.7717, `headline.medianRank` 3
+- `node qa/probes/golden-set-ambiguity.mjs` → `--write` persists
+- known positive `…-gq02` → **`NOT FLAGGED`, rank 1/23, 0 rivals.** That non-detection **is the
+  unit's finding**, not a failure of the run. The cycle-1 wording here read "→ `FLAGGED`, rank
+  21/23. If it ever prints NOT FLAGGED, every other number in the report is void" — which the
+  output this unit ships as its result trips on its own terms. The rule was right for a probe whose
+  purpose was to *measure* ambiguity; this probe's result is that it cannot.
+- `data/eval/golden-set-ambiguity.json` → `knownPositive.flagged` **false**, `headline.medianRank`
+  **2**, `headline.rank1` **30**, `tailForAdjudication.count` **11**,
+  `tailForAdjudication.fromTwoShortestTranscripts` **3**
 
 ## What this does NOT settle
+
+**CYCLE 3 — the next step is three-way, and the first leg is mine, not the Approver's.** The
+cycle-2 checker flipped its earlier position and I am recording its correction rather than my
+framing: before paying for an LLM pass or a human read, a **bounded embedding pass** (cosine
+question ↔ transcript, flag a near-tied top-2) is **unblocked maker work needing no approval**, and
+it tests the one hypothesis this lexical negative does not touch. Only after that is the
+human-vs-LLM choice a real one.
 
 **Condition 4 is not unblocked by this unit.** A lexical proxy cannot decide semantic answerability,
 and its disagreement with the gate's hand read is unresolved in both directions — I do not know
