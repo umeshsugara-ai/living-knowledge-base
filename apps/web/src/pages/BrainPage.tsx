@@ -43,7 +43,13 @@ export function BrainPage(): React.ReactElement {
     if (!el) return;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (entry) setGraphSize({ width: entry.contentRect.width, height: 520 });
+      if (!entry) return;
+      // Rounded, and no-op updates dropped. This is hygiene, NOT the node-click fix: the raw
+      // contentRect width is fractional (682.391px), so the observer re-fired after mount and
+      // re-sized force-graph's canvas for no visible gain. Kept because pointless resizes are
+      // pointless; see nodePointerAreaPaint below for what actually made nodes clickable.
+      const width = Math.round(entry.contentRect.width);
+      setGraphSize((prev) => (prev.width === width && prev.height === 520 ? prev : { width, height: 520 }));
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -125,6 +131,30 @@ export function BrainPage(): React.ReactElement {
                 nodeId="id"
                 nodeLabel="label"
                 nodeColor={(n: unknown) => NODE_COLOR[(n as GraphNode).kind]}
+                /**
+                 * THE ACTUAL FIX for "clicking a node does nothing" (measured 2026-09-09).
+                 *
+                 * Nothing was broken in code: `onNodeClick` fired correctly whenever a click
+                 * genuinely landed on a node. The problem was that almost none did. Measured on
+                 * the real page: of 2601 grid points across the canvas only 32 were over a node —
+                 * **1.2%** — with a hittable radius of **5px** for ~180 nodes. A person aiming at
+                 * a dot they can plainly see misses it, repeatedly, and concludes the page is dead.
+                 *
+                 * `nodePointerAreaPaint` paints the PICKING layer independently of the visible
+                 * one, so the target can be generous while the dot stays small and the graph stays
+                 * readable. `globalScale` is the current zoom: dividing by it keeps the target a
+                 * constant size in SCREEN pixels, so zooming out does not shrink it back to
+                 * unhittable.
+                 */
+                nodePointerAreaPaint={(node: unknown, color: string, ctx: CanvasRenderingContext2D, globalScale: number) => {
+                  const n = node as GraphNode & { x?: number; y?: number };
+                  if (n.x === undefined || n.y === undefined) return;
+                  const HIT_RADIUS_PX = 10;
+                  ctx.fillStyle = color;
+                  ctx.beginPath();
+                  ctx.arc(n.x, n.y, HIT_RADIUS_PX / globalScale, 0, 2 * Math.PI);
+                  ctx.fill();
+                }}
                 linkColor={(l: unknown) => ((l as { inferred?: boolean }).inferred ? "rgba(20,24,31,0.15)" : "rgba(20,24,31,0.35)")}
                 linkLineDash={(l: unknown) => ((l as { inferred?: boolean }).inferred ? [2, 2] : null)}
                 onNodeClick={handleNodeClick}

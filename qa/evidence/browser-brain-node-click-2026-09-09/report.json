@@ -1,0 +1,44 @@
+{
+  "unit": "brain-node-click",
+  "actor": "maker",
+  "commit": "97e35d8",
+  "servers": {
+    "web": "http://localhost:5173",
+    "api": "http://localhost:3300"
+  },
+  "pages": [
+    {
+      "path": "/brain",
+      "consoleErrors": 0,
+      "interactions": [
+        {
+          "did": "hover sweep, 2601 grid points, BEFORE fix",
+          "expected": "nodes are hittable",
+          "observed": "32/2601 = 1.2% over a node; 5px hit radius across ~180 nodes",
+          "pass": false
+        },
+        {
+          "did": "hover sweep, 2601 grid points, AFTER fix",
+          "expected": "materially more of the canvas is hittable",
+          "observed": "230/2601 = 8.8% (7.2x more)",
+          "pass": true
+        },
+        {
+          "did": "click a hovered node",
+          "expected": "side panel replaces its placeholder with that node's real content",
+          "observed": "panel shows TOPIC 'Bhakti Shah' + LINKED SESSIONS (1) 'Metrics & Mingling: Conference ROI & Networking' as a clickable link",
+          "pass": true
+        }
+      ],
+      "screenshot": "brain-node-click-works.png"
+    }
+  ],
+  "verdict": "PASS",
+  "skipReason": null,
+  "corrections_to_my_own_earlier_claims": [
+    "I reported 'clicking does nothing / pointer picking never fires'. WRONG. force-graph signals hover with a `clickable` CSS class, not inline canvas.style.cursor, which is what I was polling - so every 'zero hover hits' measurement measured nothing.",
+    "I reported the DPR scale was lost (transform 0.913 vs dpr 1.25). WRONG. 0.9134 / 1.25 = 0.7308 = the d3-zoom factor; the transform includes zoom, so the scale WAS applied. I mis-read my own instrument and called it a confirmed root cause.",
+    "Consequence: the two changes I made on that theory (rounding the observed width, remounting via `key`) fixed nothing. The `key` remount was reverted - it would have reset the graph layout on every window resize for no benefit. The rounding was kept as hygiene only, and its comment says so."
+  ],
+  "real_cause": "onNodeClick was always wired and always fired when a click landed on a node. Only 1.2% of the canvas was over a node, with 5px targets, so a person aiming at a dot they can see misses it repeatedly. Fixed with nodePointerAreaPaint: a 10px screen-space pointer target painted independently of the visible dot, divided by globalScale so zooming out does not shrink it back."
+}
