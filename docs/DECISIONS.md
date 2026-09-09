@@ -302,3 +302,56 @@ approval, because the authorizing act was a plan approval plus that two-word rep
 
 **Links:** D-024 (the live-browser rule this same gate carries); incident record in qa/.last-tick
 2026-09-09T04:12Z; maker/SKILL.md THE CONTINUATION RULE.
+
+## D-026 | 2026-09-09 | type: fix | status: ACTIVE
+
+**What:** Withdraw D-025's justification. There was no 16-hour continuation gap and no ~20-tick
+unarmed run. The maker predicate in `delivery-gate-stop.ps1` is NOT known to be defective, and the
+scoping change D-025 authorized is withdrawn pending a defect that actually reproduces. The
+enforcement path is untouched: nothing was edited under D-025 (the harness permission classifier
+denied it), so this entry withdraws an authorization, it does not roll back a change.
+
+**Why:** Counted across every session file in `~/.claude/projects/d--KnowledgeBase/`, this session
+made **179 distinct ScheduleWakeup calls**, 26 of them inside the window D-025 called dead. The
+largest recent gap is 2026-09-08T18:35:32Z -> 2026-09-09T00:54:40Z = **6h19m**, which is IST 00:05
+to 06:24 - overnight, with Claude closed. Nothing fires while Claude is fully closed; that is a
+documented honest limit of the continuation rule, not a defect. The gate also behaved correctly on
+the night in question: it blocked at 03:32:30Z, a ScheduleWakeup followed at 03:33:49Z, and the
+03:34:10Z Stop passed with no findings.
+
+The error was in my instrument, not in the loop. After a compaction the transcript contains
+duplicated event ranges, so **line order is not time order**. I ran `grep -n ... | tail -4` and read
+the highest line number as the latest event: line 38076 carries timestamp 10:56:13Z but sits near
+the end of the file, while lines 33403-36259 carry later timestamps. I checked one line's timestamp,
+found it consistent with the story I already had, and never validated the probe against a
+known-positive. That is the same failure as the /brain node-click diagnosis two days earlier, where
+polling `canvas.style.cursor` measured nothing because force-graph signals hover with a CSS class -
+and the lesson recorded from it was, verbatim, to test a probe on a known-positive before reporting
+a negative.
+
+Found by a Mode B checker sweep (ISS-177, high), which counted the calls directly and contradicted
+a number I had already written into `qa/.last-tick`, a DECISIONS entry, a commit message and a
+report to the Approver. The sweep is correct on every point.
+
+**Result:** D-025 withdrawn as unsupported. What survives independently, because it was measured a
+different way and does not rest on the gap figure: the **BROWSER predicate is satisfied by prose** -
+476 transcript lines match its `browsed` pattern against 371 real Playwright tool calls, so 105
+matches are text, including a subagent dispatch prompt that merely names an evidence directory
+(audit `D:/ai_os/audits/2026-09-09-delivery-gate-browser-predicate.md`, H1); and
+`qa/ui-surfaces.json`'s regex can disable that gate while both its own comment and the hook's claim
+it can only narrow it (H2). Those two remain open and still need an Approved-by to fix, on their own
+evidence rather than on D-025's.
+
+**Supersedes:** D-025 -- D-025's Why is a measurement artifact: it read a compacted transcript's line
+order as time order and reported a 16h38m dead loop that the raw timestamps refute at 179 calls and a
+6h19m worst gap explained by an overnight machine shutdown. An entry authorizing an enforcement-path
+change on a false premise must be withdrawn explicitly rather than left standing and quietly unused.
+
+**Approved-by:** Umesh - the authorization being withdrawn is D-025's, granted by plan approval plus
+"proceed ahead"; this entry narrows that grant rather than widening it, and no enforcement file was
+modified under either entry.
+
+**Changes-authorized:** none - this entry withdraws an authorization and changes no file.
+
+**Links:** D-025 (superseded); ISS-177 (the sweep finding that caught it); ISS-176, ISS-178 (same
+sweep, open); `D:/ai_os/audits/2026-09-09-delivery-gate-browser-predicate.md` H1/H2 which survive.
