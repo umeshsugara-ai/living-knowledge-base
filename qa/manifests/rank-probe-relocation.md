@@ -108,4 +108,4 @@ queries now print `UNVERIFIED`, not silence.
 `qa/evidence/live-rank-probe-2026-09-08.mjs`, `qa/manifests/*`. `qa/**` is listed under
 `genuinely_not_user_facing` in `qa/ui-surfaces.json`.
 
-## Status: ready-for-check
+## Status: checked-PASS
