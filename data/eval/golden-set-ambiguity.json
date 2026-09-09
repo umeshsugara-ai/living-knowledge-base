@@ -1,0 +1,1290 @@
+{
+  "measuredAt": "2026-09-09T09:34:25.108Z",
+  "goldenSet": "data/eval/golden-set.json",
+  "measures": "LEXICAL NON-DISCRIMINATION over raw transcripts, inverse-session-frequency weighted",
+  "doesNotMeasure": "semantic answerability. A session can share the vocabulary without answering, and answer without sharing it. A proxy in BOTH directions — not an upper or lower bound.",
+  "knownPositive": {
+    "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+    "question": "What kind of support is available for students looking for internships?",
+    "why": "the gate's own worked example, stated to be answerable by all seven uniaccess sessions",
+    "flaggedContested": true,
+    "detail": {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 0.7966,
+      "rank": 21,
+      "rivalCount": 20,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    }
+  },
+  "headline": {
+    "rank1": 24,
+    "rankTop3": 57,
+    "medianRank": 3,
+    "sessions": 23,
+    "reading": "the target session ranks 1st of 23 for 26% of questions and top-3 for 62%, median rank 3. That is a moderately discriminating set, not a degenerate one."
+  },
+  "unusableBinary": {
+    "contested": 71,
+    "contestedRate": 0.7717,
+    "whyUnusable": "fires on any tie at a mean coverage of 0.769 across 23 sessions. 77.2% against the gate's hand-read 33.3%, and it rates the uniaccess cluster LESS contested than the rest, which contradicts the gate's structural claim. Reported so it is not recomputed and believed.",
+    "gateHandReadSample": {
+      "read": 12,
+      "judgedAmbiguous": 4,
+      "rate": 0.333
+    }
+  },
+  "byCluster": {
+    "uniaccess": {
+      "questions": 20,
+      "contested": 14,
+      "rate": 0.7
+    },
+    "other": {
+      "questions": 72,
+      "contested": 57,
+      "rate": 0.7917
+    }
+  },
+  "tailForAdjudication": {
+    "thresholdRank": 10,
+    "count": 13,
+    "note": "the questions a human or LLM should read — tractable where all 92 is not",
+    "ids": [
+      {
+        "id": "2026-05-29-decoding-ever-expanding-cast-gq04",
+        "rank": 23,
+        "rivals": 22
+      },
+      {
+        "id": "2026-05-29-decoding-ever-expanding-cast-gq02",
+        "rank": 22,
+        "rivals": 21
+      },
+      {
+        "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+        "rank": 21,
+        "rivals": 20
+      },
+      {
+        "id": "2026-05-29-decoding-ever-expanding-cast-gq03",
+        "rank": 19,
+        "rivals": 18
+      },
+      {
+        "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+        "rank": 19,
+        "rivals": 21
+      },
+      {
+        "id": "2026-05-29-decoding-ever-expanding-cast-gq01",
+        "rank": 18,
+        "rivals": 17
+      },
+      {
+        "id": "2026-05-20-telling-your-brand-story-better-gq02",
+        "rank": 17,
+        "rivals": 16
+      },
+      {
+        "id": "2026-08-03-uk-beyond-offer-letters-gq04",
+        "rank": 13,
+        "rivals": 15
+      },
+      {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1-gq01",
+        "rank": 11,
+        "rivals": 10
+      },
+      {
+        "id": "2026-07-22-uniaccess-cept-university-gq01",
+        "rank": 11,
+        "rivals": 10
+      },
+      {
+        "id": "2026-08-12-uniaccess-ashoka-university-gq01",
+        "rank": 11,
+        "rivals": 10
+      },
+      {
+        "id": "2026-08-12-uniaccess-ashoka-university-gq02",
+        "rank": 10,
+        "rivals": 9
+      },
+      {
+        "id": "2026-08-10-ucas-what-changed-what-matters-gq03",
+        "rank": 10,
+        "rivals": 9
+      }
+    ]
+  },
+  "worst": [
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq04",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.524,
+      "rank": 23,
+      "rivalCount": 22,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq02",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.6591,
+      "rank": 22,
+      "rivalCount": 21,
+      "topRival": {
+        "id": "2026-08-03-uk-beyond-offer-letters",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 0.5385,
+      "rank": 19,
+      "rivalCount": 21,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 0.7966,
+      "rank": 21,
+      "rivalCount": 20,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq03",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.6262,
+      "rank": 19,
+      "rivalCount": 18,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq01",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.6497,
+      "rank": 18,
+      "rivalCount": 17,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq02",
+      "expectedSessionId": "2026-05-20-telling-your-brand-story-better",
+      "expectedCoverage": 0.6093,
+      "rank": 17,
+      "rivalCount": 16,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq04",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "expectedCoverage": 0.753,
+      "rank": 13,
+      "rivalCount": 15,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq01",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "expectedCoverage": 0.4739,
+      "rank": 11,
+      "rivalCount": 10,
+      "topRival": {
+        "id": "2026-06-25-in-focus-2",
+        "cov": 0.7239
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq01",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "expectedCoverage": 0.24,
+      "rank": 11,
+      "rivalCount": 10,
+      "topRival": {
+        "id": "2026-08-12-uniaccess-ashoka-university",
+        "cov": 0.5425
+      },
+      "contested": true
+    }
+  ],
+  "rows": [
+    {
+      "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq01",
+      "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+      "expectedCoverage": 0.646,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-05-08-funding-dreams-loans-forex",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq02",
+      "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+      "expectedCoverage": 0.8728,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq03",
+      "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-05-08-funding-dreams-loans-forex",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq04",
+      "expectedSessionId": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+      "expectedCoverage": 0.3848,
+      "rank": 2,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-05-08-funding-dreams-loans-forex",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq01",
+      "expectedSessionId": "2026-05-08-funding-dreams-loans-forex",
+      "expectedCoverage": 0.8839,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-08-12-uniaccess-ashoka-university",
+        "cov": 0.9067
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq01",
+      "expectedSessionId": "2026-05-20-telling-your-brand-story-better",
+      "expectedCoverage": 0.9749,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq02",
+      "expectedSessionId": "2026-05-20-telling-your-brand-story-better",
+      "expectedCoverage": 0.6093,
+      "rank": 17,
+      "rivalCount": 16,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq01",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq02",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "expectedCoverage": 0.7098,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq03",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq04",
+      "expectedSessionId": "2026-05-22-uniaccess-xavier-university",
+      "expectedCoverage": 0.9393,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 0.7966,
+      "rank": 21,
+      "rivalCount": 20,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq02",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 1,
+      "rank": 2,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq03",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 0.5762,
+      "rank": 5,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-07-03-inside-the-uc-session",
+        "cov": 0.9181
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq01",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq02",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "expectedCoverage": 0.3829,
+      "rank": 9,
+      "rivalCount": 8,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.5888
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq03",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "expectedCoverage": 0.8413,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq04",
+      "expectedSessionId": "2026-05-28-in-focus-1",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-06-30-exploring-identity-success-counseling",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq01",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.6497,
+      "rank": 18,
+      "rivalCount": 17,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq02",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.6591,
+      "rank": 22,
+      "rivalCount": 21,
+      "topRival": {
+        "id": "2026-08-03-uk-beyond-offer-letters",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq03",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.6262,
+      "rank": 19,
+      "rivalCount": 18,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq04",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "expectedCoverage": 0.524,
+      "rank": 23,
+      "rivalCount": 22,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-03-dual-enrollment-pathway-gq01",
+      "expectedSessionId": "2026-06-03-dual-enrollment-pathway",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-06-03-dual-enrollment-pathway-gq02",
+      "expectedSessionId": "2026-06-03-dual-enrollment-pathway",
+      "expectedCoverage": 0.828,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-08-10-ucas-what-changed-what-matters",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-03-dual-enrollment-pathway-gq03",
+      "expectedSessionId": "2026-06-03-dual-enrollment-pathway",
+      "expectedCoverage": 0.8285,
+      "rank": 3,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-08-10-ucas-what-changed-what-matters",
+        "cov": 0.9274
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-03-dual-enrollment-pathway-gq04",
+      "expectedSessionId": "2026-06-03-dual-enrollment-pathway",
+      "expectedCoverage": 0.6845,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 0.831
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq01",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "expectedCoverage": 0.4739,
+      "rank": 11,
+      "rivalCount": 10,
+      "topRival": {
+        "id": "2026-06-25-in-focus-2",
+        "cov": 0.7239
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq02",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "expectedCoverage": 0.7847,
+      "rank": 2,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-08-27-in-focus-4",
+        "cov": 0.8141
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq03",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "expectedCoverage": 0.8205,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq04",
+      "expectedSessionId": "2026-06-19-entrance-exams-pathways-india-part1",
+      "expectedCoverage": 1,
+      "rank": 3,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq01",
+      "expectedSessionId": "2026-06-25-in-focus-2",
+      "expectedCoverage": 0.6791,
+      "rank": 4,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 0.8075
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq02",
+      "expectedSessionId": "2026-06-25-in-focus-2",
+      "expectedCoverage": 0.3749,
+      "rank": 6,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.8506
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq03",
+      "expectedSessionId": "2026-06-25-in-focus-2",
+      "expectedCoverage": 0.7227,
+      "rank": 4,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 0.8941
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq04",
+      "expectedSessionId": "2026-06-25-in-focus-2",
+      "expectedCoverage": 0.6152,
+      "rank": 4,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 0.7479
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq01",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "expectedCoverage": 0.8071,
+      "rank": 8,
+      "rivalCount": 9,
+      "topRival": {
+        "id": "2026-08-03-uk-beyond-offer-letters",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq02",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "expectedCoverage": 0.6573,
+      "rank": 6,
+      "rivalCount": 6,
+      "topRival": {
+        "id": "2026-07-15-creative-futures",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq03",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "expectedCoverage": 0.4663,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-08-12-uniaccess-ashoka-university",
+        "cov": 0.9111
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq04",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "expectedCoverage": 0.4045,
+      "rank": 3,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-05-28-in-focus-1",
+        "cov": 0.9033
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq01",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "expectedCoverage": 0.9293,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 0.9293
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq02",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "expectedCoverage": 0.8198,
+      "rank": 6,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-08-10-ucas-what-changed-what-matters",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-08-beyond-black-robes-law-careers-gq01",
+      "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers",
+      "expectedCoverage": 0.8755,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-07-08-beyond-black-robes-law-careers-gq02",
+      "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers",
+      "expectedCoverage": 0.8287,
+      "rank": 8,
+      "rivalCount": 7,
+      "topRival": {
+        "id": "2026-05-08-funding-dreams-loans-forex",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq01",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "expectedCoverage": 0.8791,
+      "rank": 4,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-07-30-in-focus-3",
+        "cov": 0.953
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq02",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "expectedCoverage": 0.4163,
+      "rank": 9,
+      "rivalCount": 8,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.8703
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq03",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "expectedCoverage": 1,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-05-28-in-focus-1",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq01",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "expectedCoverage": 0.24,
+      "rank": 11,
+      "rivalCount": 10,
+      "topRival": {
+        "id": "2026-08-12-uniaccess-ashoka-university",
+        "cov": 0.5425
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq02",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "expectedCoverage": 0.7355,
+      "rank": 9,
+      "rivalCount": 8,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq03",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "expectedCoverage": 1,
+      "rank": 4,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-06-25-in-focus-2",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq04",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "expectedCoverage": 0.6379,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq01",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "expectedCoverage": 0.7837,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq02",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "expectedCoverage": 0.655,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq03",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "expectedCoverage": 0.9291,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-07-30-in-focus-3-gq01",
+      "expectedSessionId": "2026-07-30-in-focus-3",
+      "expectedCoverage": 0.9107,
+      "rank": 5,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-07-15-creative-futures",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-30-in-focus-3-gq02",
+      "expectedSessionId": "2026-07-30-in-focus-3",
+      "expectedCoverage": 1,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-05-28-in-focus-1",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-30-in-focus-3-gq03",
+      "expectedSessionId": "2026-07-30-in-focus-3",
+      "expectedCoverage": 1,
+      "rank": 2,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-30-in-focus-3-gq04",
+      "expectedSessionId": "2026-07-30-in-focus-3",
+      "expectedCoverage": 0.5162,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.7303
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq01",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "expectedCoverage": 1,
+      "rank": 2,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-07-08-beyond-black-robes-law-careers",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq02",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "expectedCoverage": 1,
+      "rank": 3,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq03",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "expectedCoverage": 0.5461,
+      "rank": 5,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 0.8991
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq04",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "expectedCoverage": 0.753,
+      "rank": 13,
+      "rivalCount": 15,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq01",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "expectedCoverage": 0.9239,
+      "rank": 5,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq02",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "expectedCoverage": 0.9477,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 0.9477
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq03",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "expectedCoverage": 0.8129,
+      "rank": 4,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 0.9587
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-reupload-gq04",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters-reupload",
+      "expectedCoverage": 1,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-08-03-uk-beyond-offer-letters",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq01",
+      "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters",
+      "expectedCoverage": 0.8796,
+      "rank": 2,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-07-03-inside-the-uc-session",
+        "cov": 0.9037
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq02",
+      "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters",
+      "expectedCoverage": 0.5518,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.6327
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq01",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "expectedCoverage": 0.6076,
+      "rank": 11,
+      "rivalCount": 10,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq02",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "expectedCoverage": 0.3454,
+      "rank": 10,
+      "rivalCount": 9,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.9603
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq03",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "expectedCoverage": 1,
+      "rank": 4,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-06-25-in-focus-2",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq01",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "expectedCoverage": 0.8895,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-07-15-creative-futures",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq02",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "expectedCoverage": 1,
+      "rank": 4,
+      "rivalCount": 3,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq03",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq04",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "expectedCoverage": 0.9419,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-05-28-in-focus-1",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq01",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "expectedCoverage": 0.9568,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq02",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "expectedCoverage": 0.9073,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq02",
+      "expectedSessionId": "2026-05-08-funding-dreams-loans-forex",
+      "expectedCoverage": 0.7471,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-07-08-beyond-black-robes-law-careers",
+        "cov": 0.7516
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq03",
+      "expectedSessionId": "2026-05-08-funding-dreams-loans-forex",
+      "expectedCoverage": 0.4647,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-06-19-entrance-exams-pathways-india-part1",
+        "cov": 0.6253
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq04",
+      "expectedSessionId": "2026-05-08-funding-dreams-loans-forex",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq03",
+      "expectedSessionId": "2026-05-20-telling-your-brand-story-better",
+      "expectedCoverage": 0.4515,
+      "rank": 2,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-07-15-creative-futures",
+        "cov": 0.6522
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq04",
+      "expectedSessionId": "2026-05-20-telling-your-brand-story-better",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "expectedCoverage": 0.5385,
+      "rank": 19,
+      "rivalCount": 21,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq03",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "expectedCoverage": 0.5305,
+      "rank": 2,
+      "rivalCount": 1,
+      "topRival": {
+        "id": "2026-08-12-uniaccess-ashoka-university",
+        "cov": 0.7522
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq04",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "expectedCoverage": 0.6819,
+      "rank": 5,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-05-08-funding-dreams-loans-forex",
+        "cov": 0.9237
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-08-beyond-black-robes-law-careers-gq03",
+      "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers",
+      "expectedCoverage": 1,
+      "rank": 2,
+      "rivalCount": 4,
+      "topRival": {
+        "id": "2026-06-30-exploring-identity-success-counseling",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-08-beyond-black-robes-law-careers-gq04",
+      "expectedSessionId": "2026-07-08-beyond-black-robes-law-careers",
+      "expectedCoverage": 0.5513,
+      "rank": 5,
+      "rivalCount": 5,
+      "topRival": {
+        "id": "2026-06-30-exploring-identity-success-counseling",
+        "cov": 0.7553
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq04",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "expectedCoverage": 0.665,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq04",
+      "expectedSessionId": "2026-07-28-metrics-and-mingling",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq03",
+      "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters",
+      "expectedCoverage": 0.5857,
+      "rank": 10,
+      "rivalCount": 9,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq04",
+      "expectedSessionId": "2026-08-10-ucas-what-changed-what-matters",
+      "expectedCoverage": 1,
+      "rank": 1,
+      "rivalCount": 0,
+      "topRival": null,
+      "contested": false
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq04",
+      "expectedSessionId": "2026-08-12-uniaccess-ashoka-university",
+      "expectedCoverage": 0.8294,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-08-27-in-focus-4",
+        "cov": 1
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq03",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "expectedCoverage": 0.8245,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "cov": 0.8537
+      },
+      "contested": true
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq04",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "expectedCoverage": 0.4767,
+      "rank": 3,
+      "rivalCount": 2,
+      "topRival": {
+        "id": "2026-06-03-dual-enrollment-pathway",
+        "cov": 0.7085
+      },
+      "contested": true
+    }
+  ]
+}
