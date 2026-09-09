@@ -4,7 +4,7 @@
   "north_star": "Build the Vidysea Living Knowledge Base as the brain for an AI virtual counsellor that matches and then beats every living top human counsellor in head-to-head evaluation (public championship, AlphaGo-style). Phase 1 exit: POST /ask over the 23 TOC sessions returns speaker+timestamp-cited internal answers, with web-fallback for off-corpus questions.",
   "status": "active",
   "created": "2026-09-03T07:01:15",
-  "updated": "2026-09-09T11:16:02",
+  "updated": "2026-09-09T11:56:02",
   "progress": {
     "total": 62,
     "done": 42,
@@ -540,14 +540,14 @@
     {
       "id": "U1.5",
       "title": "Hybrid merge (tree + vector + lexical, RRF) into askV2",
-      "status": "in_progress",
+      "status": "done",
       "base_criticality": "MEDIUM",
       "deps": [
         "U1.4"
       ],
       "criticality": "critical",
       "note": "do NOT rewrite router.ts — ask() already takes candidates via a thunk",
-      "evidence": "PART 1 checked-PASS (qa/verdicts/hybrid-merge.md cycle 3, 9/9, 266d09b): RRF merge in the candidates thunk, ask() byte-unchanged, citation membership by RESOLUTION not filtering. Part 2 owes C6 (per-request tenant binding at the composition root) and C7 (U1.5's OWN hybrid recall number) - a SECOND deferral of either is accretion and must be failed."
+      "evidence": "checker PASS 11/11, cycle 3, verdict 31134f1 (qa/verdicts/hybrid-arms-binding.md). Part 1 = packages/ask rrfMerge; part 2 = apps/api per-request arm binding. NOT credited: hybrid recall is 0.870 vs pure vector 0.935 - the merge is correct, tenant-safe and honestly measured, not good. The >=0.85 quality gate stays open."
     },
     {
       "id": "U2.1",
@@ -749,8 +749,8 @@
     "risk_tolerance": "conservative"
   },
   "analytics": {
-    "velocity_per_day": 3.56,
+    "velocity_per_day": 3.55,
     "eta_days": 5.6
   },
-  "last_deterministic_tick": "2026-09-09T11:16:02"
+  "last_deterministic_tick": "2026-09-09T11:56:02"
 }

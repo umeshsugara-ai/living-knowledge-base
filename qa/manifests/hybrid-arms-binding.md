@@ -211,4 +211,4 @@ information about what speakers said regarding post-study work"* rather than inv
 end to end through the per-request-bound arms; it is **one question on one tenant** and is not a
 recall measurement. The checker runs Mode D with its own script.
 
-## Status: ready-for-check
+## Status: checked-PASS
