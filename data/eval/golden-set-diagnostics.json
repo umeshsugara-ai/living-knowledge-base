@@ -1,46 +1,53 @@
 {
-  "measuredAt": "2026-09-09T09:07:22.198Z",
+  "measuredAt": "2026-09-09T09:17:52.828Z",
   "goldenSet": "data/eval/golden-set.json",
   "questions": 92,
   "sessions": 23,
   "scoredCorpus": "session_page.json (summary + keyInsights) — what retrieval scores against",
   "sourceCorpus": "data/toc-migrated/<id>/turns.json — what the questions were generated from",
-  "pinCriterion": "globallyUniqueTokens over the SCORED corpus — deliberately the same blunt criterion that produced the gate's 63% baseline, so the comparison is like-for-like. It is NOT buildPinTokens (the ISS-093-corrected generation-time filter); using the corrected one here would compare a new number against an old one measured a different way.",
-  "verbatimOverlap": {
-    "mean": 0.16071850266979065,
-    "max": 0.3125,
-    "nearVerbatimCount": 0,
-    "gateRequirement": "must stay ~0 — otherwise the eval is a string-matching tautology"
+  "gateComparable": {
+    "corpus": "raw transcripts (~218k words)",
+    "pinnedCount": 10,
+    "pinRate": 0.10869565217391304,
+    "uniqueTokenCount": 3910,
+    "vsLeakyBaseline": 0.63,
+    "vsPrior75": 0.093,
+    "overlapMean": 0.16071850266979065,
+    "overlapMax": 0.3125,
+    "priorOverlapMean": 0.164
   },
-  "uniqueTokenPin": {
-    "blunt": {
-      "pinnedCount": 17,
-      "pinRate": 0.18478260869565216,
-      "uniqueTokenCount": 921,
-      "criterion": "unique in the SCORED corpus (~3.1k words) — the gate's 63% baseline criterion",
-      "caveat": "dominated by ordinary-word artifacts: the pinning tokens include you, should, will, people, paths, skills, living — the exact list ISS-093 recorded. Read as an UPPER BOUND."
-    },
-    "corrected": {
-      "pinnedCount": 0,
-      "pinRate": 0,
-      "uniqueTokenCount": 159,
-      "criterion": "ISS-093's buildPinTokens: unique across the RAW TRANSCRIPTS (~218k words) AND present in the page text",
-      "tokens": []
-    },
-    "gateRequirement": "must fall WELL BELOW 0.63"
+  "pageCorpus": {
+    "corpus": "session_page text (~3.1k words)",
+    "pinnedCount": 17,
+    "pinRate": 0.18478260869565216,
+    "caveat": "NOT comparable to the 63% baseline, which is turns-corpus. The page-corpus analogue of the leaky 46-question set is 100%, not 63%. Chance uniqueness dominates at this corpus size: the pinning tokens are you, should, will, people, paths, skills, living.",
+    "overlapMean": 0.07113778836887691,
+    "overlapMax": 0.21428571428571427,
+    "priorOverlapMean": 0.071
   },
-  "comparison": {
-    "leakySet": {
-      "pinRate": 0.63,
-      "note": "29/46 on the set ISS-071 called unfalsifiable"
+  "forcedZero": {
+    "pinnedCount": 0,
+    "uniqueTokenCount": 159,
+    "forced": true,
+    "why": "the operative set is the output of refilter() (6055634) whose keep-predicate IS buildPinTokens, so re-applying it rejects 0 by construction. Carries no information about leakage; it restates the filter."
+  },
+  "nearVerbatimAtOrAbove0_8": {
+    "page": 0,
+    "turns": 0
+  },
+  "baselines": {
+    "leaky46": {
+      "turnsPinRate": 0.63,
+      "pagePinRateAnalogue": 1,
+      "note": "the set ISS-071 called unfalsifiable"
     },
-    "prior75QuestionSet": {
-      "pinRate": 0.093,
-      "meanVerbatimOverlap": 0.071,
-      "note": "the 75-question set, recall@5 0.307"
+    "prior75": {
+      "turnsPinRate": 0.093,
+      "pageOverlapMean": 0.071,
+      "turnsOverlapMean": 0.164
     }
   },
-  "pinnedQuestions": [
+  "pagePinnedQuestions": [
     {
       "id": "2026-05-08-funding-dreams-loans-forex-gq02",
       "token": "parents"
@@ -108,6 +115,48 @@
     {
       "id": "2026-08-27-in-focus-4-gq04",
       "token": "you"
+    }
+  ],
+  "turnsPinnedQuestions": [
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq01",
+      "token": "distracted"
+    },
+    {
+      "id": "2026-05-22-uniaccess-xavier-university-gq02",
+      "token": "isolated"
+    },
+    {
+      "id": "2026-05-28-in-focus-1-gq03",
+      "token": "remotely"
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq03",
+      "token": "matched"
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq04",
+      "token": "realistically"
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq02",
+      "token": "outsider"
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq03",
+      "token": "politely"
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq04",
+      "token": "emotions"
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq04",
+      "token": "awkward"
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq04",
+      "token": "disability"
     }
   ],
   "highestOverlap": [

@@ -3,9 +3,67 @@
 **Contract:** `qa/gates/golden-set-redesign.md` (Option C) is the binding spec — conditions 2 and 3.
 **Goal task:** T-021 (tier 3, roadmap).
 **Date:** 2026-09-09
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** none directly — closes a measurement gap on T-021's conditions 2 and 3.
+**Issues addressed:** **ISS-224**, **ISS-225**, **ISS-226** (cycle-1 failures, all mine).
+
+## CYCLE 2 — I compared mixed corpora and reported a regression that does not exist
+
+The FAIL is right on both counts, and the first one is worse than a mistake in a number.
+
+### ISS-224 — the "2.3× overlap regression" was an artifact of my own comparison
+
+`diagnose(q, page, turns)` returns overlap against the **worse of the two** corpora. I set that
+`max(page, turns)` figure beside a prior of 0.071 that was **page-only**, and called the difference a
+regression. Measured like-for-like there is none:
+
+| | operative 92-set | prior 75-set |
+|---|---|---|
+| overlap vs **page** corpus | **0.0711** | 0.071 |
+| overlap vs **turns** corpus | **0.1607** | 0.164 |
+
+Page-to-page identical; turns-to-turns marginally **better**. `qa/verdicts/golden-set-regeneration.md:232`
+states both prior numbers on one line — I read one of them.
+
+**The part that matters more than the number:** I presented that fake regression under the heading
+*"stated rather than buried"*, as evidence of my own rigour. Manufacturing a finding and then
+claiming credit for disclosing it is worse than missing it, because it buys trust with the same act
+that spends it. The same error ran through the pin rates — 18.5% is **page**-corpus, while 63% and
+9.3% are **turns**-corpus, so that comparison was never like-for-like either.
+
+### ISS-225 — the 0/92 was arithmetically forced, and my vacuity check missed it
+
+`data/eval/golden-set.json` was last written by `refilter()` (`6055634`), whose keep-predicate
+`judgeCandidate` **is** `buildPinTokens`. Re-applying a filter to its own output rejects nothing by
+construction. The zero restates the filter; it measures no leakage.
+
+I did check that zero — and checked the **wrong thing**. I verified the denominator was non-empty
+(159 real tokens, `flywire` among them) and treated that as verifying the measurement. A non-empty
+denominator rules out one way of being vacuous, not the others. That is the sixth vacuity of the
+day and the first where the check I ran was itself the problem.
+
+The number is kept and **labelled forced** rather than deleted, because "0/92, forced" is its honest
+form.
+
+### ISS-226 — two tokenizers for one lookup
+
+My lookup used `/[a-z][a-z'-]*/g` while the pin map was built with `tokenize()`. Both give 0/92 with
+zero per-question disagreement, so it changed no result — but it is a latent defect and the probe
+now uses `tokenize()` throughout.
+
+### The corrected, gate-comparable measurement
+
+| corpus | pin rate | comparable to |
+|---|---|---|
+| **turns (~218k words)** | **10/92 = 10.9%** | the 63% leaky baseline and the 9.3% prior — **this is the gate-comparable row** |
+| page (~3.1k words) | 17/92 = 18.5% | nothing; the leaky set's page-corpus analogue is **100%** |
+| `buildPinTokens` | 0/92 | nothing; forced by `refilter()` |
+
+The turns-corpus 10.9% is the number condition 3 actually asks for: non-zero, never optimised
+against by any filter, and its pinning tokens are real content words — `distracted`, `isolated`,
+`remotely`, `realistically`, `disability`. **Well below 63%.**
+
+So cycle 1 reached the right conclusion through two unusable numbers. Same verdict, honest arithmetic.
 
 ## Why — three recall numbers rest on an unmeasured set
 
@@ -34,7 +92,7 @@ near-neighbour distractors). What was missing was the measurement, so that is wh
   reproduces it exactly.
 - `data/eval/golden-set-diagnostics.json` (new) — the report the gate requires.
 
-## Condition 3 — measured on the OPERATIVE set
+## ~~Condition 3 — measured on the OPERATIVE set~~ (CYCLE 1, SUPERSEDED — mixed corpora, see ISS-224/225 above)
 
 | diagnostic | operative 92-set | leaky baseline | prior 75-set |
 |---|---|---|---|
@@ -71,18 +129,21 @@ example of a trivially-pinning token — **is** in the set, and no question uses
 Strictly inside the (0.217, 1.000) band with a non-zero miss count. **Not 1.000, so no Option B
 escalation.**
 
-## The number that moved the wrong way, stated rather than buried
+## ~~The number that moved the wrong way, stated rather than buried~~ (CYCLE 1, WITHDRAWN — the regression does not exist)
 
-**Mean verbatim overlap is 0.161 against the prior set's 0.071 — 2.3× higher.** The gate's wording is
+~~**Mean verbatim overlap is 0.161 against the prior set's 0.071 — 2.3× higher.**~~ **False.** 0.161 is a `max(page,turns)` figure and 0.071 is page-only. Like-for-like: 0.0711 vs 0.071 (page), 0.1607 vs 0.164 (turns). The gate's wording is
 "must stay ~0". Max overlap is 0.313 and **zero** questions reach the 0.8 near-verbatim threshold, so
 this is nowhere near a copy-detection tautology — but 0.161 is not "~0" in the way 0.071 is, and I am
 not going to describe it as such. Whether that clears the gate's bar is the checker's call, not mine.
 
 ## How to verify
 
-- `node qa/probes/golden-set-condition3.mjs` → the table above; add `--write` to persist
-- `node -e` over `buildPinTokens` → map size **159**, `flywire` → `2026-05-08-funding-dreams-loans-forex`
+- `node qa/probes/golden-set-condition3.mjs` → prints the two corpora **separately**:
+  turns pin **10/92 = 10.9%**, overlap mean 0.1607 / max 0.3125; page pin 17/92 = 18.5%, overlap
+  mean 0.0711 / max 0.2143; near-verbatim 0 on both; forced zero 0/92 from a 159-token map
 - `data/eval/recall-report.json` → hits 36 / total 92, control `recallAtK` 0.2174
+- `git log -1 --format=%H -- data/eval/golden-set.json` → `6055634`, the `refilter()` commit whose
+  predicate is `buildPinTokens` — the forcing ISS-225 names
 
 ## Not claimed
 

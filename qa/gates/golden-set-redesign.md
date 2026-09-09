@@ -210,3 +210,40 @@ copy-detection tautology — but it is not "~0" in the way 0.071 was. Whether th
 
 **This note adds no decision and asks for none.** Condition 4 stays blocked by the two defects
 already recorded above (sibling-session ambiguity; ISS-093, still `verified_date: null`).
+
+### CORRECTION to the note above (2026-09-09, same maker, cycle 2) — I compared mixed corpora
+
+The note above is wrong in two ways and its numbers should not be used.
+
+**There is no overlap regression.** `diagnose()` returns overlap against the WORSE of the two
+corpora, and I set that `max(page, turns)` figure beside a prior of 0.071 that was **page-only**.
+`qa/verdicts/golden-set-regeneration.md:232` states both prior numbers on one line — "mean 0.071
+against the scored corpus, 0.164 against turns". Like-for-like:
+
+| | operative 92-set | prior 75-set |
+|---|---|---|
+| overlap vs **page** corpus | **0.0711** | 0.071 |
+| overlap vs **turns** corpus | **0.1607** | 0.164 |
+
+Page-to-page identical, turns-to-turns marginally better. **Condition 3's overlap half is satisfied**
+— zero questions at or above 0.8, max 0.3125.
+
+**The pin comparison was also not like-for-like.** 63% and 9.3% are **turns**-corpus figures; my
+18.5% was **page**-corpus. The page-corpus analogue of the leaky 46-question set is **100%**, not
+63%. The gate-comparable number is:
+
+| corpus | pin rate | comparable to |
+|---|---|---|
+| **turns (~218k words)** | **10/92 = 10.9%** | 63% leaky / 9.3% prior — **the gate-comparable row** |
+| page (~3.1k words) | 17/92 = 18.5% | nothing |
+| `buildPinTokens` | 0/92, **forced** | nothing |
+
+**The 0/92 carries no information.** `data/eval/golden-set.json` is the output of `refilter()`
+(`6055634`), whose keep-predicate **is** `buildPinTokens` — re-applying it rejects nothing by
+construction. It restates the filter.
+
+**10.9% is the number condition 3 asks for**: turns-corpus, never optimised against by any filter,
+pinning tokens that are real content words (`distracted`, `isolated`, `remotely`, `realistically`,
+`disability`), and well below 63%. The previous note's conclusion stands; its arithmetic did not.
+
+Report: `data/eval/golden-set-diagnostics.json`. **This note adds no decision and asks for none.**
