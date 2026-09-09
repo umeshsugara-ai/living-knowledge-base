@@ -8,6 +8,10 @@
 > PASS and close-out; enforcement wiring runs; no new feedback/contract/goal-north-star drift was
 > introduced. The concurrent edits to `qa/gates/golden-set-redesign.md` and `.goal/goal.json` were
 > read as evidence and not staged.
+> **Narrow follow-up 2026-09-09T18:12+05:30:** ISS-054 is fixed again on fresh disk evidence
+> (`.last-tick` 9 minutes old, `ADVANCED`, heartbeat recorded, backlog real, no pause). ISS-135's
+> visible banner is gone and the 44.7% check passes, but its recurrence-prevention clause is still
+> absent, so ISS-135 remains open. This does not replace the full-sweep range or terminal state.
 
 ## Current top 3
 
