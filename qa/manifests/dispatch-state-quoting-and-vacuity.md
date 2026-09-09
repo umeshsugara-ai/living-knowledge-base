@@ -120,4 +120,4 @@ MUTATIONS CLEAN: none outstanding
 `scripts/lib/dispatch-state.test.mjs`, `.gitignore`. `qa/ui-surfaces.json` lists `scripts/**` under
 `genuinely_not_user_facing`; nothing under `apps/` or `packages/` imports the module.
 
-## Status: ready-for-check
+## Status: checked-PASS
