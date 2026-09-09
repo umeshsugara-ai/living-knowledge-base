@@ -686,3 +686,183 @@ as agreement. Not unjustified complexity — complexity that bought the defect i
 `Fix cycle` in a manifest is still read with `-match`, i.e. the first occurrence, while [C3]'s second
 sentence asks for the highest. No manifest in the corpus diverges today, so this stays an observation
 rather than a FAIL line — but it is the same first-not-highest shape, one predicate over.
+
+---
+
+# Verdict — delivery-gate-manifest-blindness (cycle 3)
+
+**Cycle checked:** 3
+**Date:** 2026-09-09
+**Manifest:** `qa/manifests/delivery-gate-manifest-blindness.md` (`Fix cycle: 3 of max 3`)
+**Commit under check:** `55e90cf` (KnowledgeBase) · artifact `D:/ai_os/.claude/hooks/delivery-gate-stop.ps1` @ `bbabf41` (ai_os)
+**Contract:** `qa/contracts/delivery-gate.md` (status `proposed`)
+**Mode D:** not applicable — no UI surface in the changed paths (two `.ps1` files).
+
+```
+VERDICT: FAIL
+SCOREBOARD: 5/9 criteria met, 2/3 invariants hold
+FAILURES:
+- [C2] sev: high · The safety property is FALSE, not merely un-oracled. The cycle-3 code-span
+  stripper can MANUFACTURE a stamp that is in no stamp position in the file: a "Cycle checked:"
+  label whose value sits in an inline span, followed by a line beginning with a digit, reads that
+  digit (measured: shipped=3, with no "Cycle checked: 3" anywhere in the file). The pattern's
+  \s* also crosses newlines, so a bare label line adopts the next paragraph's leading number.
+  Both read HIGHER than any stamp present - the silencing direction · require the digits on the
+  same line as the label ([^\S\r\n]* instead of \s*) and reject a label whose value was erased by
+  stripping · issue: ISS-205
+- [C4] sev: medium · The heading form "# Verdict - <slug> · **Cycle checked: N**" - named
+  verbatim in C4 and present in 4 live verdicts - is now unreadable by design. A shipped
+  blindness is what C4 forbids; that it fails safe does not make the criterion met · re-reach the
+  form without a decode-dependent boundary (strip a heading's leading run of non-alphanumerics
+  before matching), or take the criterion to the Approver as a CRITICAL amendment · issue: ISS-206
+- [C5] sev: medium · The third vacuous fixture in three cycles. The check labelled "ISS-185 the
+  middle-dot heading form is unreachable" asserts only "1 check(s) pending", which is true for
+  ANY reader returning < 6, including one that reads nothing. Proven: my mutant M5 removes the
+  "(" boundary - killing the census form "**Status: PASS** (Cycle checked: N)" - and the whole
+  suite still passes · assert the computed cycle, not the pending count, and add a case whose
+  only reachable stamp is the paren form · issue: ISS-207
+- [I2] sev: high · "A change that trades C1 for C2 (or the reverse) is a FAIL, not a tradeoff."
+  Cycle 3's central move is exactly that trade - it ships a known-unreadable real form to buy
+  prose safety, and argues the trade is correct. The argument may well be right; the invariant
+  says it is not the maker's to make inside a fix cycle · issue: ISS-206
+- [C1] sev: high · Unmet, honestly gated (unchanged from cycle 2): mc-sessionstart.ps1 and
+  mc-precommit.ps1 remain blind · awaiting the Approver on qa/gates/mc-hooks-manifest-blindness.md
+  · issue: ISS-183 (stays open)
+LIVE-BROWSER: not-applicable (D:/ai_os/.claude/hooks/delivery-gate-stop.ps1, D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1)
+ISSUES-WRITTEN: ISS-205, ISS-206, ISS-207, ISS-208, ISS-209
+EXPLANATION: Every cycle-2 finding is genuinely closed, each verified against its own recorded
+reproduction: this unit's verdict now reads max cycle 2 - its true maximum - instead of 3, and the
+live gate reports pend=1 naming this very handshake, so the blindness that made cycle 2 fail is
+gone. ISS-193 is genuinely MOOT: across all 232 real manifests and verdicts read three ways (PS
+default, -Encoding UTF8, .NET ReadAllText) not one decision changes. ISS-186 is fixed and its
+sibling mc-sessionstart.ps1:22 does test VERDICT: PASS as claimed. Both self-found broken fixtures
+are genuinely repaired - M1 and M4 both die now. It fails because the property justifying the whole
+cycle does not hold: the stripper this cycle added can itself invent a stamp that is nowhere in the
+file, and the measurement cannot see that, because its reference bound counts prose mentions as
+stamps - so the exact cycle-2 defect scores as "equal", never "higher". Cycle 3 of 3: STALLED.
+```
+
+## What I re-ran — every number below is mine
+
+### 1. Fixture suite
+
+`powershell -NoProfile -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1` → **ALL PASS**, 0 FAIL,
+including all four new/rebuilt cases.
+
+### 2. The safety property, re-derived over all 115 verdicts in the hook's own runtime
+
+```
+  shipped PowerShell block vs the unanchored raw bound
+  higher (SILENCES)  0        equal  110        lower  5
+```
+
+Reproduces the maker's `0 / 110 / 4`; the fifth `lower` is `dispatch-state-tracking.md`, which
+landed after the manifest was written. Live state: `pend=1 unclosed=0`, and the single pending item
+is `delivery-gate-manifest-blindness mc=3 vc=2` — **this handshake, correctly seen.** Cycle 2's
+headline defect is dead.
+
+### 3. Attacking the property — the answer to the Note to the checker
+
+The dispatch asked for a verdict the reader scores higher than any real stamp. Three constructions,
+run through the shipped code:
+
+| construction | shipped reads | is that number a stamp in the file? |
+|---|---|---|
+| label, value in an inline span, next line `3 criteria met.` | **3** | **no** |
+| bare label line, blank line, `9 issues were written.` | **9** | **no** |
+| label, span `not a number, see`, then `9 lines below.` | **9** | no (only `1`) |
+
+All three read **higher**, so the property is false as stated. The mechanism is the cycle-3 addition
+itself: `Strip-Code` deletes the span, `\s*` then walks across the newline, and the label adopts a
+number that was never its value.
+
+**The deeper problem is the measurement, and it is worse than the counterexamples.** The reference
+bound counts *any* occurrence anywhere, prose included. So the very defect cycle 3 exists to fix —
+cycle 2 reading `3` out of a quoted table cell — scores as `equal`, not `higher`. Verified: a
+verdict whose only real stamp is 1 and whose prose reads `the maker claimed (Cycle checked: 9)`
+returns **9**, and the property reports no violation. A bound that classifies the failure it was
+built for as compliant is not a weak oracle; it is blind on the one axis that matters. Gap 1
+understates its own problem.
+
+Both defects are constructed, not live: **zero** of the 115 real verdicts contain a newline-spanning
+match. This is a real defect in the claim, and a latent one in the reader.
+
+### 4. ISS-193 mootness — verified, and the disagreement genuinely stops mattering
+
+232 files (115 verdicts + 117 manifests), three decoders, comparing both the computed cycle and the
+`ready-for-check` decision: **0 decode-sensitive files.** The reasoning holds in general too — a
+mis-decoded U+2014/U+00B7 can only yield non-ASCII characters, and none of `^`, `(`, the marker
+class or a digit is reachable that way, so no decode can *create* a match. Which reader mangles the
+em dash is now unanswerable from this code and no longer needs an answer. **MOOT, correctly
+claimed** — the disagreement itself no longer matters, which is a better outcome than winning it.
+
+### 5. My own D-020 mutation harness — 10 mutants, independently written
+
+Backup outside the repo, SHA256 baseline, each suite run in a `Start-Job` + `Wait-Job -Timeout 300`
+so a hang is a `TIMEOUT` and not a hang, restore in a `finally` that fires on error and interrupt,
+hash asserted after every restore (`RESTORE OK sha256=0E49236…`; `git status` on the hook is clean).
+
+| mutant | result |
+|---|---|
+| M0 no-op control | **clean** |
+| M1 drop inline code-span stripping | **killed** (2 fixtures) |
+| M2 take the first cycle stamp, not the highest | **killed** (1) |
+| M3 status predicate line-anchored, no emphasis strip | **killed** (10) |
+| M4 ISS-186: count any verdict as PASS-not-closed-out | **killed** (1) |
+| M5 **drop the `(` boundary** | **SURVIVED** |
+| M6 cycle stamp never matches | **killed** (4) |
+| M7 fix-cycle predicate line-anchored only | **killed** (2) |
+| M8 re-add both non-ASCII boundaries | **killed** (2) |
+| M8a re-add **only** the em-dash boundary | **SURVIVED** |
+
+M5 is the third vacuous fixture (see [C5]). M8a is ISS-194's residual: the em-dash boundary is still
+unfixtured — cycle 3 resolved it by *deleting the code* rather than pinning it, which is sufficient
+today and silently unpins any future reintroduction. M8's kill comes from the middle dot, not the em
+dash, exactly as in cycle 2. Filed low, not charged.
+
+### 6. Each cycle-2 issue measured against its OWN recorded reproduction (D-015)
+
+| issue | recorded reproduction | result now |
+|---|---|---|
+| ISS-192 | own verdict scores max cycle 3 against a real max of 1; live `pend=0` | reads **2**, its true maximum, and `pend=1`. **fixed** |
+| ISS-193 | "0 misreads" false under the hook's own reader | 0/232 decode-sensitive. **fixed (moot)** |
+| ISS-194 | em-dash boundary unfixtured, survives mutation | boundary removed; M8a still survives. **fixed, residual ISS-208** |
+| ISS-195 | the manifest's backtick-quoted status line counts as a handshake | stripped; no live false positive. **fixed** |
+| ISS-186 | a FAIL labelled "PASS not closed out" | M4 kills it; sibling `mc-sessionstart.ps1:22` confirmed to test the same. **fixed** |
+
+### 7. A residual found while checking ISS-195's fix
+
+The leading-marker class still contains the table pipe, so an **unbackticked** table row quoting the
+status counts as a handshake. Zero live occurrences (today's `pend=1` is correct) and it fails
+noisily rather than silently. Ledger only: ISS-209.
+
+### 8. Gap 4 confirmed
+
+No fixture file contains a fenced block at all, so `Strip-Code`'s fence branch is exercised by
+nothing. Honestly disclosed by the maker; ledger only, not charged.
+
+## Judging the deliberate regression (dispatch item 3)
+
+The direction is right and the reasoning is good: a gate that nags is survivable, a gate that goes
+quiet is what this seam exists to prevent. My objection is not to the tradeoff — it is to **who made
+it.** [I2] says a shipped blindness is not something a fix cycle may choose, and [C4] names the
+discarded form by example. The maker is asking to be relieved of a criterion its new design cannot
+meet, which is the one amendment shape a checker may never grant inside a verdict.
+
+Will it strand a future unit? Yes, in one specific way: a verdict written in that heading form
+against an open manifest reads as **pending forever**, and the implied remedy — that checkers always
+write the stamp on its own line — is a convention no code enforces. That cost is small and
+self-announcing, which is exactly what makes it a good candidate for an **amendment** and a bad one
+for silence.
+
+## Recommendation, given this is cycle 3 of 3
+
+**STALLED — and it should not go to a cycle 4.** The shipped state is strictly better than both
+predecessors and the live gate is correct right now. Three of the five findings (C4, I2, and the C5
+fixture) are one decision, not three: whether the contract keeps C4. That is an Approver call under
+the criticality gate, and this project's class-based round cap sends a non-security seam past two
+rounds to a `HUMAN_GATE`, not to another round. ISS-205 is the one genuine code defect and is a
+small regex change (`\s*` → `[^\S\r\n]*`) that belongs in whatever unit next touches this block.
+
+**Contract note:** `qa/contracts/delivery-gate.md` stays at `Status: proposed` and I have **not**
+amended C4. Softening it now, with a verdict pending on it, is the one thing this role may not do.
