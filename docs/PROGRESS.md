@@ -9,7 +9,7 @@ Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe
 if that changes, a probe or a human downgrade was edited (the hash covers both) and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
 
-Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (run 2026-09-08T11:06:33.153Z, content `e0cb4a506b12`) — **EDITED SINCE COMMIT — `qa/evidence/live-2026-09-08-11-06-33/preflight.json` no longer matches the version in git, so this score is not the one the repository supports**. Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
+Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (run 2026-09-08T11:06:33.153Z, content `e0cb4a506b12`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
 ## By group
 
