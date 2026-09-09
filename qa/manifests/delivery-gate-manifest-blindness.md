@@ -4,10 +4,10 @@
 (status `proposed`) covers the sibling guard; judge whether this belongs under it or needs its own.
 **Goal task:** none (tier 2 — open high issue).
 **Date:** 2026-09-09
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
-**Issues addressed:** **ISS-176** (high) + **ISS-184**, **ISS-185**, **ISS-186**, **ISS-187**. Gates **ISS-183**. Corrects the record on **ISS-177**.
-**Status:** ready-for-check (cycle 2)
+**Issues addressed:** **ISS-176** (high) + **ISS-184**, **ISS-185**, **ISS-186**, **ISS-187**. Gates **ISS-183**. Cycle 3: **ISS-192**, **ISS-193**, **ISS-194**, **ISS-195**, **ISS-186**. Corrects the record on **ISS-177**.
+**Status:** ready-for-check (cycle 3)
 
 ## Why
 
@@ -264,3 +264,120 @@ Gap 2 is the one I would push on. I chose the pattern that fails *noisily* over 
 identically today, on the argument that a silenced gate is worse than a nagging one. If you think
 0/0 across the real corpus should have settled it and the extra boundary characters are unjustified
 complexity, say so — I would rather be wrong about the reasoning than have it go unexamined.
+
+---
+
+# Fix cycle 3 — I chose my own oracle, and it silenced the gate on this very unit
+
+FAILed 4/9. The headline finding is the sharpest one this seam has produced, and it is mine.
+
+## ISS-192 — choosing your own oracle is the same defect as choosing your own corpus
+
+Cycle 2 fixed ISS-185 by censusing the real verdicts instead of inventing forms. Then it scored the
+new field-boundary pattern **against the unanchored pattern it was rejecting**. Both share the
+prose-match error, so the one place the shipped regex silences the gate scored as *agreement*, and
+my "0 misreads" was 0 disagreements-with-a-broken-referee.
+
+**The live consequence, in this unit's own verdict.** The `·` boundary matched a stamp quoted inside
+a table cell whose backtick span wrapped a newline — my stripper only handled single-line spans — so
+the file read **max cycle 3** when its only real stamp is 1, and the gate reported `pend=0`. It was
+blind to the handshake it was written to see, in the file about it being blind to handshakes.
+
+Cycle 2's Gap 2 said "zero occurrences across 114 verdicts". There were two, in the one file that
+mattered.
+
+## The fix: a property, because this corpus has no oracle I do not author
+
+There is no ground truth for "is this markdown a stamp or prose" that I can write without writing
+the answer. So cycle 3 does not chase accuracy. It establishes a **direction**:
+
+> The reader may never return a cycle **higher** than a stamp present in the file.
+
+Missing a stamp biases the unit to **pending** — the gate nags. Inventing one biases it to
+**closed** — the gate goes silent. Only one of those is survivable, and it is checkable without an
+oracle.
+
+Three changes deliver it:
+
+1. **Strip fenced blocks and inline code spans, newlines allowed.** The cycle-2 stripper used
+   `` `[^`\n]*` ``; the table cell that defeated it spans a line.
+2. **ASCII-only boundaries** (`^` and `(` plus markers). The `·`/`—` heading form becomes
+   unreachable — deliberately. It is 4 files, all closed, so the cost is zero live noise.
+3. This also makes the **encoding dispute moot rather than settled.** The checker measured that
+   PS 5.1's default reader destroys the em dash; my probe measured the opposite, that
+   `-Encoding UTF8` does. A boundary whose behaviour depends on which of us is right is fragile by
+   construction, so cycle 3 depends on neither.
+
+### Measured, in both runtimes, over all 114 real verdicts
+
+```
+                              higher (SILENCES)   equal   lower (noisy)
+  python                              0            110          4
+  the shipped PowerShell block        0            110          4
+```
+
+`higher = 0` is the property. The 4 lower are `calendar-auto-join`, `evaluator-calibration`,
+`write-guard-enforcement-gaps`, and this unit's own verdict — **none of them live**, because none of
+their manifests is at `ready-for-check`.
+
+## ISS-186 — fixed, and the checker was right that deferring it was convenient
+
+Only a `VERDICT: PASS` can be "not closed out". The checker's argument stands: the line sits **five
+lines below the one cycle 2 edited, in the same block**, and the sibling `mc-sessionstart.ps1:22`
+already tests it. "Out of scope" was a boundary I drew where it happened to spare me work.
+
+## The seventh census form, and what it costs
+
+`**PASS** — Cycle checked: 1` (`evaluator-calibration.md`) was absent from my census — the checker
+found it, and the heading form is 4x not 2x. Under cycle 3 it reads as *no stamp* → pending. That is
+the property working as designed, not a residual defect.
+
+## Two of my own fixtures were broken, and I found both
+
+- The ISS-185 fixture asserted `-notmatch`, passing whether `Fix cycle` read 6 **or** 0 — ISS-179's
+  `[].every()` class. Caught by mutation, replaced with a discriminating case.
+- The ISS-192 fixture wrote literal backticks inside a PowerShell **double-quoted** string, where
+  the backtick is the **escape character** — so the fixture contained no backticks at all and
+  **never reproduced the defect it asserted**. It passed for the wrong reason. Rebuilt with
+  `[char]0x60`; it now dies when the stripping is removed.
+
+The second is the more embarrassing: a test that cannot fail is worse than no test, and I wrote one
+in the cycle whose subject is tests that share their subject's blind spot.
+
+## Evidence
+
+```
+$ powershell -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1     ALL PASS
+$ safety property over qa/verdicts/*.md, shipped PS block             higher=0 equal=110 lower=4
+```
+
+| mutation | result |
+|---|---|
+| drop inline code-span stripping (prose becomes a stamp) | **killed** |
+| re-add the non-ASCII boundaries (encoding-dependent again) | **killed** |
+| `Status` back to line-anchored only | **killed** |
+| `Fix cycle` back to line-anchored only | **killed** |
+| take the first `Cycle checked` again | **killed** |
+| ISS-186: count any verdict as PASS-not-closed-out | **killed** |
+| **no-op control** | **clean** |
+
+D-020: timeout, restore in a `finally`, every restore SHA256-asserted, live file verified.
+
+## Known gaps
+
+1. **The safety property is measured against a reference that is itself a regex** (the unanchored
+   scan, used only as an upper bound). It cannot manufacture a stamp that is not in the file, so it
+   is sound as a *bound* — but it is not an oracle, and I am not claiming it is one.
+2. **The `·`/`—` heading form is now unreadable.** 4 files today, none live. If a future verdict
+   uses it while its manifest is open, that unit reads as pending forever until someone notices.
+3. **ISS-183 is still gated**, so `mc-sessionstart.ps1` and `mc-precommit.ps1` stay blind until the
+   Approver rules — and `mc-precommit` is the commit guard.
+4. **`Strip-Code` is not itself fixture-pinned against a fenced block**, only against inline spans.
+   The fence branch is exercised by no test.
+
+## Note to the checker
+
+Gap 1 is the honest one. I have replaced "measured against an oracle I chose" with "measured
+against a bound I chose", which is better but not the same as sound. If you think the property is
+circular in a way I have not seen, that is a FAIL and it is worth more than a PASS here — this is
+the third mechanism I have proposed for the same nine lines.
