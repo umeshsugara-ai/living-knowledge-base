@@ -82,6 +82,18 @@ export function createServer(deps: ServerDeps): Express {
   return app;
 }
 
-export function startServer(deps: ServerDeps, port: number = Number(process.env.PORT ?? 3000)): Server {
+/**
+ * Default port is **3300**, not 3000 (D-024).
+ *
+ * Every other component in this repo already assumed 3300 — `apps/web/.env.development`'s
+ * `VITE_API_BASE_URL`, `scripts/demo-live.mjs`'s `--api` default, and `scripts/live-verify.mjs`.
+ * Only this line said 3000, so starting the API the documented way produced a web app whose every
+ * call failed `ERR_CONNECTION_REFUSED` and a dashboard reading "failed to load dashboard data"
+ * with 9 console errors.
+ *
+ * No unit test could see it: both sides were individually correct, and nothing threw. It was found
+ * the first time anyone opened a browser, which is the whole argument for D-024's rule.
+ */
+export function startServer(deps: ServerDeps, port: number = Number(process.env.PORT ?? 3300)): Server {
   return createServer(deps).listen(port);
 }

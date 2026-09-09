@@ -1,0 +1,16 @@
+{
+  "$comment": "D-024. Which changed files make a unit UI-touching, and therefore require live browser validation before it can PASS. Read by D:/ai_os/.claude/hooks/delivery-gate-stop.ps1 (predicate BROWSER). This file may only NARROW the hook's generic default - a malformed file falls back to the default rather than disabling the gate, because an exemption that arrives by accident is the failure this whole rule exists to stop.",
+  "pattern": "\"file_path\":\"[^\"]*?(\\.(tsx|jsx|vue|svelte|html|css)\"|[\\/](apps[\\/]web|routes|pages|components)[\\/][^\"]+\"|[\\/]packages[\\/](ask|index)[\\/]src[\\/][^\"]+\"|[\\/]apps[\\/]api[\\/]src[\\/](server|production|ask-arms|search-store|store|ingest-store|whatsapp-store)\\.ts\")",
+  "why_the_indirect_ones_are_here": [
+    "packages/ask/** and packages/index/src/** are NOT backend-only: AskPage -> POST /ask -> askV2 -> merge.ts -> rankSessionsByCosine. A ranking change alters the answer text and the citation list a user reads.",
+    "This session made exactly that mistake - shipped a retrieval merge, called it backend-only, and nothing ever looked at what /ask rendered.",
+    "apps/api/src/server.ts is here because its PORT default alone made the entire web app dead on arrival, and no unit test could see it."
+  ],
+  "genuinely_not_user_facing": [
+    "scripts/**",
+    "migrations/**",
+    "qa/**",
+    "workers/**",
+    "packages/meeting-bot/**"
+  ]
+}

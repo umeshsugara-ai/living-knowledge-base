@@ -7,11 +7,23 @@
  * prints the reconcile checklist, so "it works" is something Umesh sees himself in ~3 minutes
  * rather than something he has to take on trust from a transcript or an agent's screenshot.
  *
- * Deliberately does NOT start the servers: spawning detached cross-platform servers from a
- * throwaway script leaves orphans behind, which is worse than one printed instruction. If they
+ * Deliberately does NOT start the servers DETACHED: spawning detached cross-platform servers from
+ * a throwaway script leaves orphans behind, which is worse than one printed instruction. If they
  * are not up, this says exactly how to start them and exits non-zero.
  *
- * Usage: pnpm demo:live   (or: node scripts/demo-live.mjs [--web http://localhost:5173])
+ * `--up` (D-024) starts them in the FOREGROUND instead and stops there. That is not a reversal of
+ * the rule above — the objection was orphans, and foreground children die with Ctrl-C. It exists
+ * because D-024 makes the browser check MANDATORY, and a mandatory step that is a research task
+ * every time ("which port? what CORS origin?") is a step that gets switched off. Measured in this
+ * repo one day earlier: tree-cleanliness-sensitive tests were wired into `lint:structure`, went
+ * red for every lane, and had to be backed out within the hour.
+ *
+ * Folded in here rather than added as `scripts/demo-up.mjs` because `scripts/` sits at its D-018
+ * directory cap and that entry records that a THIRD raise must consolidate rather than widen.
+ *
+ * Usage: pnpm demo:up      -> start both servers (foreground; Ctrl-C stops both)
+ *        pnpm demo:live    -> open the operator's own browser on every page
+ *        (or: node scripts/demo-live.mjs [--up] [--web http://localhost:5173])
  */
 import { execFile } from "node:child_process";
 import { platform } from "node:process";
@@ -35,6 +47,36 @@ const PAGES = [
   ["/settings", "Settings — real API keys, masked"],
 ];
 
+// ---- `--up`: start both servers in the foreground, then stop (D-024) ---------------------------
+if (process.argv.includes("--up")) {
+  const { spawn } = await import("node:child_process");
+  const { dirname, join, resolve } = await import("node:path");
+  const { fileURLToPath } = await import("node:url");
+  const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const apiPort = new URL(API).port || "3300";
+  const webPort = new URL(WEB).port || "5173";
+
+  console.log(`starting api on :${apiPort} and web on :${webPort} (foreground; Ctrl-C stops both)`);
+  console.log("then, in another terminal: pnpm demo:live");
+
+  const kids = [
+    // CORS_ORIGINS is REQUIRED, not a nicety: server.ts documents that it has no default, so
+    // without it every browser call is blocked by the browser rather than by the server — which
+    // looks exactly like a broken app.
+    spawn("node", ["--import", "tsx", "src/index.ts"], {
+      cwd: join(ROOT, "apps", "api"), stdio: "inherit", shell: true,
+      env: { ...process.env, PORT: apiPort, CORS_ORIGINS: WEB },
+    }),
+    spawn("npx", ["vite", "--port", webPort], {
+      cwd: join(ROOT, "apps", "web"), stdio: "inherit", shell: true, env: { ...process.env },
+    }),
+  ];
+  for (const sig of ["SIGINT", "SIGTERM"]) {
+    process.on(sig, () => { for (const k of kids) k.kill(); process.exit(0); });
+  }
+  await new Promise(() => {}); // hold the foreground until Ctrl-C
+}
+
 async function isUp(url) {
   try {
     await fetch(url, { method: "GET" });
@@ -50,7 +92,9 @@ const apiUp = await isUp(`${API}/sessions`); // 401 without a key is still "up"
 if (!webUp || !apiUp) {
   console.error(`Not running: ${!apiUp ? `api (${API}) ` : ""}${!webUp ? `web (${WEB})` : ""}\n`);
   console.error("Start them in two terminals, then re-run:");
-  console.error("  cd apps/api && PORT=3300 pnpm dev");
+  console.error("  pnpm demo:up                       (both, foreground)");
+  console.error("  — or, in two terminals —");
+  console.error("  cd apps/api && PORT=3300 CORS_ORIGINS=http://localhost:5173 pnpm dev");
   console.error("  cd apps/web && pnpm dev");
   process.exit(1);
 }

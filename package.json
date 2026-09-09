@@ -9,6 +9,7 @@
   },
   "scripts": {
     "demo:live": "node scripts/demo-live.mjs",
+    "demo:up": "node scripts/demo-live.mjs --up",
     "gen:types": "node scripts/gen-types.mjs",
     "audit:trackers": "node scripts/tracker-audit.mjs",
     "progress": "node scripts/catalogue-score.mjs",
