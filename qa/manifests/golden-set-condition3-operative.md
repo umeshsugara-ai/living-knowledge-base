@@ -160,4 +160,4 @@ not going to describe it as such. Whether that clears the gate's bar is the chec
 `data/eval/golden-set-diagnostics.json`; `qa/**` is `genuinely_not_user_facing` in
 `qa/ui-surfaces.json`, and `data/**` matches no pattern in it.
 
-## Status: ready-for-check
+## Status: checked-PASS

@@ -247,3 +247,16 @@ pinning tokens that are real content words (`distracted`, `isolated`, `remotely`
 `disability`), and well below 63%. The previous note's conclusion stands; its arithmetic did not.
 
 Report: `data/eval/golden-set-diagnostics.json`. **This note adds no decision and asks for none.**
+
+**Correction to the correction (ISS-233, low).** The note above says 10.9% was "never optimised
+against by any filter". That is too strong, and the checker is right to pull it. `refilter()`'s
+predicate is *turns-unique AND page-present*, so it did remove a subset of exactly this class; all
+10 survivors are page-absent, which is precisely the residue that predicate leaves. The comparison
+to the equally-filtered **9.3%** prior is exact; the comparison to the **unfiltered 63%** baseline
+is mildly biased in the set's favour — and survives by a wide margin regardless.
+
+**Lineage, which the earlier notes should have stated (ISS-232, medium).** The 92-set is **not**
+independently generated: it is the 75-set's candidate pool re-judged by `refilter()` — 75 kept plus
+17 re-admitted, 0 rejected. So roughly 82% of the questions are shared with the set the earlier
+diagnostics measured, and the close agreement between the two runs is partly that overlap rather
+than independent confirmation.
