@@ -83,17 +83,51 @@ export function isReadyForCheck(text) {
  * a prose number silences a genuinely pending check. Undercounting is the safe failure here.
  */
 export function verdictCycle(text) {
-  // Fenced blocks are stripped FIRST. Verdicts quote example stamps inside ``` fences when they
-  // discuss this very parsing problem, and such a line is not indented and opens no table, so no
-  // line-shape rule can exclude it. Measured over all 114 verdicts: no real stamp lives inside a
-  // fence, and one verdict's prose example does.
-  const plain = text.replace(/\*\*/g, "").replace(/^```[\s\S]*?^```/gm, "");
   let hi = -1;
-  for (const m of plain.matchAll(/^(?![ \t>|`])[^\n]*?\bCycle checked:?[ \t]*(\d+)/gm)) {
+  for (const m of stripQuoted(text).matchAll(/^(?![ \t>|`])[^\n]*?\bCycle checked:?[ \t]*(\d+)/gm)) {
     const n = Number(m[1]);
     if (n > hi) hi = n;
   }
   return hi;
+}
+
+/**
+ * Removes every region where a `Cycle checked: N` is being QUOTED rather than recorded: HTML
+ * comments, fenced code blocks, and inline code spans. Emphasis markers go too, since the field
+ * form is written `**Cycle checked:** 2`.
+ *
+ * ISS-196. The first shipped version stripped only ``` fences, via `^```[\s\S]*?^```` — and the
+ * cycle-1 checker found four shapes that defeat it, all in the UNSAFE direction against this
+ * module's own "undercounting is safe" rule: `~~~` fences, HTML comments, mid-line code spans, and
+ * an UNCLOSED or nested fence (a non-greedy pair strips nothing when the closer is missing, and
+ * mispairs on ````-wrapped nesting). Shape (c), a mid-line code span, is live prose in ten verdict
+ * files today and was harmless only because the numbers quoted there happened not to exceed the
+ * real stamp. "Harmless by luck of the numbers" is not a property worth relying on.
+ *
+ * Fences are paired by SCANNING, not by one regex: a closer must use the same marker character and
+ * be at least as long as its opener (so ```` survives an inner ```), and an opener that is never
+ * closed suppresses everything after it. Suppressing too much is the safe direction here.
+ */
+function stripQuoted(text) {
+  const noComments = text.replace(/<!--[\s\S]*?-->/g, "");
+  const out = [];
+  let fence = null; // { char, len }
+  for (const line of noComments.split("\n")) {
+    const m = /^\s{0,3}(`{3,}|~{3,})/.exec(line);
+    if (fence) {
+      if (m && m[1][0] === fence.char && m[1].length >= fence.len) fence = null;
+      out.push(""); // keep line count stable; content suppressed either way
+      continue;
+    }
+    if (m) {
+      fence = { char: m[1][0], len: m[1].length };
+      out.push("");
+      continue;
+    }
+    out.push(line);
+  }
+  // Inline code spans last, so a span inside a fence was already removed with the fence.
+  return out.join("\n").replace(/`[^`\n]*`/g, "").replace(/\*\*/g, "");
 }
 
 /** Records that a checker was dispatched. Called by the maker in the same turn as the dispatch. */

@@ -121,6 +121,23 @@ test("verdictCycle IGNORES prose — both false positives found on the live corp
   assert.equal(verdictCycle("      Cycle checked: 9"), -1, "indented continuation line");
 });
 
+test("ISS-196: the four quoting shapes the cycle-1 checker found, all of which OVERCOUNTED", () => {
+  // Every one of these is a recorded reproduction from ISS-196, not an invented case. All four
+  // failed in the UNSAFE direction — counting a quoted number as a real stamp — against this
+  // module's own documented claim that undercounting is the safe failure.
+  assert.equal(verdictCycle("~~~\nCycle checked: 9\n~~~\n"), -1, "(a) only ``` was stripped, not ~~~");
+  assert.equal(verdictCycle("<!-- Cycle checked: 9 -->\n"), -1, "(b) HTML comment");
+  assert.equal(verdictCycle("see `Cycle checked: 9` here\n"), -1,
+    "(c) a MID-LINE code span — the backtick guard was a column-0 lookahead only. Live prose in 10 verdict files.");
+  assert.equal(verdictCycle("```\nCycle checked: 9\n"), -1,
+    "(d1) an UNCLOSED opener stripped nothing under the old non-greedy pair; it must suppress to EOF");
+  assert.equal(verdictCycle("````\n```\nCycle checked: 7\n```\n````\n"), -1, "(d2) nested fences mispaired");
+
+  // And the fix must not have bought silence: a real stamp still reads through all of that noise.
+  const mixed = "**Cycle checked:** 2\n\n~~~\nCycle checked: 9\n~~~\n<!-- Cycle checked: 8 -->\nsee `Cycle checked: 7`\n";
+  assert.equal(verdictCycle(mixed), 2, "over-suppression would be the opposite failure");
+});
+
 test("manifest parsing survives every Status/Fix-cycle form this repo actually uses", () => {
   // 114 manifests, three forms: `## Status:` (45), `**Status:**` (16), bare (29). A parser blind
   // to any one of them is ISS-176 all over again.
@@ -192,9 +209,29 @@ test("sweep orders worst-first and omits not-pending", () => {
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
-test("a missing qa/ directory is empty, not a crash — and a real fault is NOT swallowed", () => {
+test("a missing qa/ directory is empty, not a crash", () => {
   const root = mkdtempSync(join(tmpdir(), "dispatch-state-bare-"));
   try {
     assert.deepEqual(sweep(root, { now: T0 }), []);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("ISS-197: a NON-ENOENT readdir fault THROWS — it is not swallowed into a healthy-looking sweep", () => {
+  // The test this replaces was NAMED "a real fault is NOT swallowed" and asserted only the ENOENT
+  // path, so mutating `if (err?.code !== "ENOENT") throw err` to `if (false) throw err` survived
+  // the whole suite. That is the third test-names-a-property-it-does-not-exercise defect I shipped
+  // in one day, and it is the same class as mocking the component under test.
+  //
+  // qa/manifests exists as a FILE, so readdirSync fails with something that is not ENOENT
+  // (ENOTDIR on POSIX; Windows reports it differently). The code is deliberately not asserted —
+  // the contract is "anything other than 'no directory' propagates", not a specific errno.
+  const root = mkdtempSync(join(tmpdir(), "dispatch-state-notdir-"));
+  try {
+    mkdirSync(join(root, "qa"), { recursive: true });
+    writeFileSync(join(root, "qa", "manifests"), "I am a file, not a directory", "utf8");
+    assert.throws(() => sweep(root, { now: T0 }), (err) => {
+      assert.notEqual(err?.code, "ENOENT", "an ENOTDIR must not be mistaken for a missing directory");
+      return true;
+    });
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
