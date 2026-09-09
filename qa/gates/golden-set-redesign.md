@@ -260,3 +260,18 @@ independently generated: it is the 75-set's candidate pool re-judged by `refilte
 17 re-admitted, 0 rejected. So roughly 82% of the questions are shared with the set the earlier
 diagnostics measured, and the close agreement between the two runs is partly that overlap rather
 than independent confirmation.
+
+---
+
+## Current routing correction (2026-09-09 — ISS-242)
+
+The older notes at lines 164-173 and 211-212 are historical and must not be used to route the next
+unit. **ISS-093 is fixed and is no longer a blocker.** Its corrected pin criterion has already been
+measured on the operative 92-question set.
+
+Condition 4 is still **not satisfied**. The sibling-session ambiguity unit independently PASSed its
+bounded lexical diagnosis and explicitly left the next step as a question-to-session embedding
+pass. That semantic pass is buildable, but its actual Gemini run is waiting on
+`qa/gates/external-eval-data-egress.md`; no score or adjudication result may be claimed before that
+run completes. The remaining blocker is therefore the unresolved semantic sibling ambiguity plus
+the pending bounded embedding evidence—not ISS-093.
