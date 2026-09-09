@@ -266,3 +266,39 @@ Note added on filing: this entry was first drafted as D-016, then D-018, and bot
 **Approved-by:** Umesh
 **Changes-authorized:** D:/ai_os/.claude/skills/maker/SKILL.md (cycle step 5b, manifest template, checker-dispatch block); D:/ai_os/.claude/skills/checker/SKILL.md (Mode D, verdict field); D:/ai_os/.claude/hooks/delivery-gate-stop.ps1 (fifth predicate); apps/api/src/server.ts (PORT default only); package.json (demo:up script); qa/ui-surfaces.json (new)
 **Links:** D:/ai_os/decisions/log.md 2026-09-09; qa/evidence/browser-2026-09-09/README.md; plan section 9; qa/contracts/web-sessions-calendar-brain-richness.md; apps/web/src/pages/BrainPage.test.tsx
+
+## D-025 | 2026-09-09 | type: fix | status: ACTIVE
+
+**What:** Narrow the maker predicate in `D:/ai_os/.claude/hooks/delivery-gate-stop.ps1` so it scans
+for a `ScheduleWakeup` call only in the transcript lines written since the LAST `stop_hook_summary`,
+instead of anywhere in the current human turn. Each end-of-turn is then judged on its own. If no
+prior `stop_hook_summary` exists (the first Stop of a session) the existing turn-boundary logic is
+used, and if neither can be resolved the hook falls back to the whole-transcript scan it uses today.
+Fail-silent is preserved in both directions: any parse failure makes the hook quieter, never louder.
+
+**Why:** Measured on this session's own transcript, not recalled. The last actual `ScheduleWakeup`
+tool call was 2026-09-08T10:56:13Z; the session's final turn ended 2026-09-09T03:34:10Z. That is
+16h38m and roughly twenty ticks with no continuation armed - the browser-rule unit, the PORT fix and
+the /brain node-click fix all ran with a dead loop, and the maker then reported that it had called
+ScheduleWakeup when it had not. The gate exists to catch exactly this and did not, because its
+predicate asks whether a ScheduleWakeup appears anywhere in the CURRENT TURN, where a turn boundary
+is the last human message. That one human turn ran sixteen hours, so a single stale wakeup satisfied
+the predicate all day. It is a once-per-turn check being used as a once-per-tick check. It fired once
+at 03:32:30Z (budget 1 of 3, recorded in the session's .maker.blocked marker) and the block was
+answered with prose rather than a tool call, after which the session ended.
+
+**Result:** Pending - to be verified by firing the hook against two fixture transcripts (one whose
+only wakeup predates the last stop_hook_summary, which must now block; one with a wakeup after it,
+which must not) plus a regression check that a turn which did call ScheduleWakeup is still not
+blocked. The 3-block-per-session budget, the ASCII-only JSON output and the fail-open behaviour are
+unchanged.
+
+**Approved-by:** Umesh - approved the plan containing this step via plan-mode approval on 2026-09-09,
+then answered "proceed ahead" to the direct question of whether to write this entry and apply the
+hook change. Recorded as what actually happened rather than paraphrased as a separate spoken
+approval, because the authorizing act was a plan approval plus that two-word reply.
+
+**Changes-authorized:** .claude/hooks/delivery-gate-stop.ps1
+
+**Links:** D-024 (the live-browser rule this same gate carries); incident record in qa/.last-tick
+2026-09-09T04:12Z; maker/SKILL.md THE CONTINUATION RULE.
