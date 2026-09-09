@@ -1,3 +1,176 @@
+# Verdict — hybrid-merge · CYCLE 3
+
+**Contract:** qa/contracts/hybrid-retrieval.md
+**Manifest:** qa/manifests/hybrid-merge.md (Fix cycle: 3 of max 3)
+**Cycle checked: 3**
+**Date:** 2026-09-09
+**Checker:** Mode A, fresh subagent, bound to `D:\KnowledgeBase`
+**Unit commit under judgement:** 2abc1c9 (cycle-2 a8c3dce, cycle-1 b90e206, baseline ad6e7b7)
+
+```
+VERDICT: PASS
+SCOREBOARD: 9/9 applicable criteria met, 5/5 applicable invariants hold
+             (C6, C7 legitimately deferred — FIRST deferral, verified not accepted)
+FAILURES: none
+ISSUES-WRITTEN: none
+EXPLANATION: C2 is genuinely met. The resolve-don't-filter fix closes the ISS-157/ISS-158 class
+rather than the two strings that had been probed: I re-derived the cycle-2 attack myself and the
+arm's poisoned summary and foreign `tenant:t9` turn_id are both gone from the citation AND from the
+scored nodes the answer is built from, replaced by the tree's own node. I then ran the dispatch's
+"one refinement in" hunt as five further attacks — fabricated `children`, duplicate ids inside the
+tree, the tree ROOT, prototype-shaped ids, and tree mutation — and found no reachable defect: the
+pattern of the gap sitting one level behind the pinned property does not continue into cycle 3.
+Both claimed mutations re-derived to the exact counts and the exact dying tests, and my own
+mutation-E-class probe (ignore the arms entirely) reddens THREE named tests, so the feature is not
+silently disabled. C6/C7 remain the same first deferral, narrower not wider: zero hits under
+`apps/`, no recall number anywhere in the commit.
+```
+
+---
+
+## 1 · Is C2 actually met? Yes — six attacks, one refinement in from the last one
+
+Cycle 2's finding was that the guard compared the `node_id` string, so an arm's *object* survived.
+The fix at `ask-v2.ts:148-149` builds `Map<string, TreeIndexNode>` over the loaded tree and
+**substitutes the tree's node** for every surviving id. I wrote my own probe
+(`packages/ask/src/zz-checker-probe3.test.ts`, created → run → deleted; `mutate.mjs assert-clean`
+green, `git status` shows no residue) rather than running the maker's tests as evidence.
+
+| # | Attack | Result |
+|---|---|---|
+| **B1** | **the cycle-2 exploit, re-derived**: arm supplies `tenant:t1/session:b` (a REAL id `selectNodes` did **not** return) with `summary:"POISONED SUMMARY"` and `evidence:[{turn_id:"tenant:t9/turn:X"}]`, scored 0.95 | **BLOCKED.** Citation came back `{"node_id":"tenant:t1/session:b","evidence":[{"turn_id":"tenant:t1/turn:2","text":"real b"}]}` and `scored[].node.summary` = `"Oranges are orange."` — the **tree's** content. ISS-158 is dead in both the citation and the answer context. |
+| **B2** | arm node carrying a **fabricated `children` array** containing `tenant:t9/session:GHOSTCHILD` with ghost evidence, scored 0.99 | **BLOCKED.** The ghost child never appears in `sources.internal` or in `scored`. Nothing downstream walks an arm object's `children`: `collectNodesById` walks **the tree**, and the resolved node is the tree's own (whose `children` is `[]`). The arm's object is discarded whole, not merged field-by-field — which is exactly why resolving beats filtering. |
+| **B3** | **duplicate `node_id` inside the tree itself** — a second `tenant:t1/session:a` planted deep under `session:b` | **Benign, but worth recording.** The **deep** copy won (`summary:"DUPLICATE-DEEP-COPY"`), because `collectNodesById` uses `stack.pop()` (LIFO DFS) with first-wins, so `session:b`'s subtree is visited before the shallow `session:a`. **Not a defect:** both objects are the tenant's own tree content, so nothing is fabricated and nothing crosses a tenant. It is deterministic for a given tree, and `node_id` is a path string (`tenant:t1/session:a`) so duplicates are not structurally producible by the indexer. Noted, not filed. |
+| **B4** | arm returns the **tree ROOT** (`tenant:t1`, `level:"tenant"`) scored 0.95 | **ADMITTED**, and correctly so. The root exists in this tenant's loaded tree, so C2 ("nodes that exist in this tenant's loaded tree, never fabricated") is satisfied on its own terms; its summary is the tenant's own. The contract sets no node-level restriction, and the tree arm itself could return it. A relevance-quality question for the ranking unit, not a citation-integrity one. |
+| **B5** | ids `__proto__` and `constructor` | **BLOCKED and REPORTED** — `2 candidate(s) not in this tenant's tree`. The choice of `Map` over a plain object is load-bearing here and the ISS-159 reporting fires on it. |
+| **B6** | does `askV2` **mutate the caller's tree**? Arm returns the tree's own node object | **No.** `JSON.stringify(tree)` byte-identical before and after. Arms receive only `query` and cannot reach the tree; nothing writes through a shared reference. |
+
+**The pattern does not continue.** Cycle 1 pinned ordering not membership; cycle 2 pinned
+id-membership not node-identity. The obvious cycle-3 variant would be "the node object is the tree's
+own, but something downstream still reads arm-supplied structure" — that is B2, and it is closed by
+construction rather than by a check: the arm's object is **replaced**, not sanitised, so there is no
+field left for a later attack to live in. That is the difference between this fix and the previous
+two, and it is why I am not looking for a fourth variant.
+
+**Every route arm data could take was traced.** `candidates = resolved` (tree objects) →
+`ask()` → `evaluate()` scores those objects → `askResult.scored[].node` → `goodDocNodes` →
+`refinedContext` / `internalSource`. The only arm-controlled value that survives anywhere is
+`extra.degraded`, a diagnostic string that reaches `auditLog[].step` and **not** the answer, the
+citations, or the score path. Confirmed in B1's `scored` dump.
+
+## 2 · Mutations re-derived (not trusted), plus two of my own
+
+Clean baseline: **50 pass / 0 fail** — matches the manifest. All armed via
+`node scripts/lib/mutate.mjs apply`, restored via `restore`, `assert-clean` green after each.
+
+| # | Mutation | Manifest claim | **My result** | Dying test(s) |
+|---|---|---|---|---|
+| G | `resolve` → `filter` (`merged.filter(n => byId.has(n.node_id))`) — the exact ISS-158 bypass | 49/1 | **49 pass / 1 fail** ✔ | `ISS-158 / C2: a fabricated node wearing a REAL node_id cannot poison the citation` |
+| H | drop-reporting block deleted (ISS-159) | 49/1 | **49 pass / 1 fail** ✔ | `ISS-159: candidates dropped by the membership guard are REPORTED, not dropped silently` |
+
+Both re-derive to the exact count **and** the right test — G kills the identity test and nothing
+else, H kills the reporting test and nothing else, so the two properties are pinned separately
+rather than both tripping on one symptom.
+
+**Two further mutations of my own**, the ones the dispatch asked for:
+
+| # | Mutation | Result | Reading |
+|---|---|---|---|
+| **I** | `candidates = treeCandidates` — the **mutation-E class**: satisfy the guard by ignoring the arms | **47 pass / 3 fail** | `U1.5: extra arms are merged into the candidates…`, `ISS-157 / C2: the guard does not drop LEGITIMATE arm nodes that are in the tree`, `ISS-158 / C2: …cannot poison the citation`. **The resolve is NOT over-strict and the feature is not silently disabled** — three named tests defend it, one more than at cycle 2. |
+| **J** | C5 degradation report removed from cycle-3's code | **49 pass / 1 fail** | `U1.5 / C5: a DEGRADED arm still answers, and the degradation is VISIBLE in the audit log`. The C5 branch still executes in the rewritten block. |
+
+`merge.ts` / `merge.test.ts` are **byte-unchanged since b90e206** (`git diff b90e206 HEAD --stat`
+empty), so cycle 1's mutations A/B/C stand and C3/C4 are undisturbed; I did not re-run them.
+
+## 3 · C6 / C7 — still the FIRST deferral, and the scope got narrower, not wider
+
+Cycle 1's standing condition is that a **second** deferral is accretion and must be failed.
+Verified this is not one:
+
+```
+$ git show --stat 2abc1c9  → 3 files: ask-v2.ts, ask-v2.test.ts, qa/manifests/hybrid-merge.md
+$ grep -rn "extraCandidateArmsFn|rrfMerge" --include=*.ts apps packages
+    → packages/ask/src/{ask-v2.ts, ask-v2.test.ts, merge.ts, merge.test.ts} ONLY. Zero under apps/.
+$ git show 2abc1c9 | grep -inE "0\.935|0\.85|recall@|recall"
+    → one hit, and it is the manifest saying there is NO recall number in the commit.
+```
+
+Nothing binds the seam; no composition root was touched; **no recall number of any kind is claimed**.
+This is the same unit and the same first deferral — cycle 3 added a resolve, a report and three
+tests and changed nothing else. C6 and C7 remain neither met nor violated, remain loud on disk, and
+**C6 remains security-class and uncapped**. The cycle-1 condition still binds the composition-root
+unit: it must be graded against C6 and C7 **in full**, and this PASS is not precedent for a third
+split.
+
+## 4 · Every criterion
+
+| C | Verdict | Evidence I produced this cycle |
+|---|---|---|
+| C1 | **MET** | `git diff ad6e7b7 HEAD -- packages/ask/src/{router,evaluator}.ts` → **0 lines**. No `askV3` in the repo; `finishAsk`/`ask` appear only at their pre-existing definitions inside the byte-unchanged `router.ts`. `apps/web/src/api/ask.ts`'s `ask()` is the pre-existing HTTP client, not in this commit. The thunk seam is intact (`ask(query, tree, () => candidates, …)`, ask-v2.ts:163). |
+| C2 | **MET** | §1 — six independent attacks, all blocked or benign; §2 mutation G. |
+| C3 | **MET** | `merge.ts`/`merge.test.ts` byte-unchanged since the cycle-1 PASS. Key explicit (`keyOf` injected), documented in the module header, total over the arms. |
+| C4 | **MET** | As C3 — cycle-1 mutation A (tie-break) and the `deepStrictEqual` test are undisturbed. Resolution preserves merged order (`.map`), so RRF ranking survives the substitution. |
+| C5 | **MET** | Mutation **J** re-run against cycle-3's rewritten block → the C5 test reddens, so the branch still executes. The negative half (`an arm that RAN and found nothing is NOT logged as degraded`) is untouched from cycle 1. |
+| C6 | **deferred (1st)** | §3. Not credited, not violated. |
+| C7 | **deferred (1st)** | §3. Not credited, not violated. |
+| C8 | **MET** | Diffed the tests against the ledger rows for both claimed ids. **ISS-158: 1/1** — the row records exactly one reproduction (`tenant:t1/session:b`, a real-but-unselected id, poisoned summary, `evidence[].turn_id = tenant:t9/turn:X`, scored high) and `ask-v2.test.ts:284-319` re-runs that shape **verbatim**; I re-derived it independently as B1. **ISS-159: 1/1** — the row's reproduction is "a wholly-rejected arm produces an auditLog indistinguishable from a healthy run"; `ask-v2.test.ts:321-340` re-runs it, and `:342-356` adds the negative half. **No substituted corpus, nothing omitted.** D-015 satisfied. *(Reporting nit, not charged: the manifest states C8 with a by-id count for **ISS-157** but gives ISS-158/159 as prose rather than `ISS-158: 1/1 · ISS-159: 1/1`. C8's harm is substitution and there is none; the format is a manifest-writing note, not a defect, and I will not fail cycle 3 of 3 on it.)* |
+| C9 | **MET** | `pnpm -r typecheck` exit **0**, `pnpm -r test` exit **0**. `compete.ts` untouched (not in the commit). The dep stays optional, and `U1.5: with NO extraCandidateArmsFn, behaviour is unchanged` is live — it is one of mutation I's three kills. |
+| C10 | **MET** | `npx depcruise --config .dependency-cruiser.cjs packages apps` → exit **0**, "no dependency violations found (302 modules, 923 dependencies cruised)". `collectNodesById` is local and imports nothing; `merge.ts` still imports nothing and stays pure. |
+| C11 | **MET** | Both gates by their own exit codes, no `lint:structure` wrapper. The other lane's `.goal/goal.json` and `qa/issues.jsonl` modifications were in the tree throughout and are not chargeable here. |
+
+**Invariants.** **I1** holds — `router.ts`/`evaluator.ts` byte-unchanged by git, and no number was
+chased. **I2** holds: every claimed property is mutation-proved, and the two I added (I, J) found no
+unpinned property. **I3** holds and is now stronger than at cycle 2 — a failed arm *and* a rejecting
+arm are both visible, and mutation H proves the second is real. **I4** holds trivially — no number.
+**I5** now holds rather than being inapplicable: after the resolve, tenant scoping is a property of
+the **tree that was loaded for this request**, not of the arm behaving well — B1 and B5 are the
+evidence, and that is the invariant cycle 2 said A2 would violate once an arm existed.
+
+## 5 · Unreachable-path hunt — none found, and that is the finding
+
+Eight unreachable paths were found across this maker's prior units, each by a mutation and none by a
+passing suite, and the last two sat one refinement behind the pinned property. I looked specifically
+for a ninth in that shape (§1 B2–B6, §2 mutations I and J) and there is not one. The reason is
+structural rather than lucky: the fix **replaces** the arm's object instead of validating it, so
+there is no remaining field through which an arm can influence content. A guard that discards
+untrusted input wholesale has no next refinement to be one behind.
+
+The one thing I probed that is *not* closed by construction is B3 (duplicate ids inside the tree),
+and it resolves to tree-owned content either way, so it is a note above and not a ledger row.
+`ISSUES-WRITTEN: none` — a correct implementation that survives six fresh attacks earns it.
+
+## 6 · Should this unit PASS at cycle 3 of 3? Yes
+
+Stated plainly because a STALL was the alternative. C2 was the only live failure and it is met on
+evidence I produced, not on the maker's. The two deferred criteria are the same first deferral the
+cycle-1 verdict already ruled legitimate on architectural grounds (C6 and C7 are properties of a
+composition-root binding that C10 forbids `packages/ask` from reaching), verified this cycle to be
+unchanged and unwidened, and both stay open and loud for the next unit. Everything else is green by
+its own exit code. Holding this at STALLED would be charging the maker for work the contract puts in
+a different unit.
+
+Ledger: **ISS-158 → fixed**, **ISS-159 → fixed** (`fixed`, not `verified` — only a later re-check
+moves them on).
+
+## Commands re-run by this checker
+
+```
+node scripts/lib/mutate.mjs assert-clean                       → MUTATIONS CLEAN (before and after)
+pnpm --filter @lkb/ask test                                    → 50 pass / 0 fail (clean baseline)
+pnpm -r typecheck                                              → exit 0
+pnpm -r test                                                   → exit 0
+npx depcruise --config .dependency-cruiser.cjs packages apps   → exit 0 (302 modules, 923 deps)
+git diff ad6e7b7 HEAD -- packages/ask/src/{router,evaluator}.ts → 0 lines
+git diff b90e206 HEAD --stat -- packages/ask/src/merge*.ts     → empty
+git show --stat 2abc1c9                                        → 3 files, none under apps/
+grep -rn "extraCandidateArmsFn|rrfMerge" --include=*.ts apps packages → zero hits under apps/
+git show 2abc1c9 | grep -inE "0\.935|0\.85|recall"             → no number claimed
+mutate.mjs apply|restore  × 4 (G, H, I, J)                     → all restored, verified vs HEAD
+npx tsx --test src/zz-checker-probe3.test.ts (own probe, 6 attacks, deleted after)
+```
+
+---
+
 # Verdict — hybrid-merge · CYCLE 2
 
 **Contract:** qa/contracts/hybrid-retrieval.md
