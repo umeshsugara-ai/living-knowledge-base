@@ -1,0 +1,176 @@
+{
+  "generatedAt": "2026-09-09T02:25:14.382Z",
+  "k": 5,
+  "retriever": "hybrid (tree + cosine + lexical, RRF, gemini-embedding-001, 1452 chunks)",
+  "recallAtK": 0.8913043478260869,
+  "total": 92,
+  "hits": 82,
+  "misses": [
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "question": "What kind of support is available for students looking for internships?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-22-uniaccess-cept-university"
+      ]
+    },
+    {
+      "id": "2026-05-29-decoding-ever-expanding-cast-gq04",
+      "question": "What should I consider when trying to understand the different kinds of support available for students?",
+      "expectedSessionId": "2026-05-29-decoding-ever-expanding-cast",
+      "got": [
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-05-28-in-focus-1",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "428d130a-f41e-40c9-b52e-14664e307301",
+        "2026-05-22-uniaccess-xavier-university"
+      ]
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq01",
+      "question": "Is there a single application deadline or do they review applications as they come in?",
+      "expectedSessionId": "2026-07-03-inside-the-uc-session",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-08-12-uniaccess-ashoka-university",
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-08-10-ucas-what-changed-what-matters"
+      ]
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq02",
+      "question": "What if my student isn't sure exactly what they want to major in? Can they explore different options before committing?",
+      "expectedSessionId": "2026-07-15-creative-futures",
+      "got": [
+        "2026-07-03-inside-the-uc-session",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
+      "id": "2026-07-22-uniaccess-cept-university-gq01",
+      "question": "What's the relative importance of high school grades compared to standardized test scores when you calculate a final merit score for admission?",
+      "expectedSessionId": "2026-07-22-uniaccess-cept-university",
+      "got": [
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-07-03-inside-the-uc-session",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-08-12-uniaccess-ashoka-university",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq03",
+      "question": "Are universities getting stricter about checking your finances before you can even apply for a visa?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "got": [
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-07-30-in-focus-3",
+        "2026-08-24-uniaccess-leeds-arts-university",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-08-03-uk-beyond-offer-letters-reupload"
+      ]
+    },
+    {
+      "id": "2026-08-03-uk-beyond-offer-letters-gq04",
+      "question": "How can I be sure I'll find a good job after graduating?",
+      "expectedSessionId": "2026-08-03-uk-beyond-offer-letters",
+      "got": [
+        "2026-05-20-telling-your-brand-story-better",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq01",
+      "question": "Is your program a standard curriculum for everyone, or is it tailored to each student's specific needs and weaknesses?",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "got": [
+        "2026-05-28-in-focus-1",
+        "2026-06-25-in-focus-2",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-08-03-uk-beyond-offer-letters-reupload",
+        "2026-08-12-uniaccess-ashoka-university"
+      ]
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq02",
+      "question": "Beyond just getting into a good school, how does this help prepare students for the actual difficulty of university-level academic work?",
+      "expectedSessionId": "2026-08-27-in-focus-4",
+      "got": [
+        "2026-06-25-in-focus-2",
+        "2026-06-03-dual-enrollment-pathway",
+        "2026-06-19-entrance-exams-pathways-india-part1",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-06-30-exploring-identity-success-counseling"
+      ]
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+      "question": "Is living in the dorms required for students?",
+      "expectedSessionId": "2026-05-23-uniaccess-atlas-skilltech",
+      "got": [
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-07-08-beyond-black-robes-law-careers",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-05-28-in-focus-1",
+        "2026-07-03-inside-the-uc-session"
+      ]
+    }
+  ],
+  "control": {
+    "retriever": "null (question-blind)",
+    "recallAtK": 0.21739130434782608,
+    "hits": 20
+  },
+  "assessment": {
+    "k": 5,
+    "sessionCount": 23,
+    "chanceFloor": 0.21739130434782608,
+    "measuredRecall": 0.8913043478260869,
+    "controlRecall": 0.21739130434782608,
+    "liftOverControl": 0.6739130434782609,
+    "saturated": false,
+    "verdict": "informative",
+    "reason": "0.891 vs a 0.217 question-blind control (+0.674), with 10 miss(es) left to move"
+  },
+  "goldenSetProvenance": {
+    "generatedAt": "2026-09-08T09:01:27.115Z",
+    "recordedAfterTheFact": true,
+    "generator": "scripts/gen-golden-set.mjs",
+    "source": "data/toc-migrated/<sessionId>/turns.json (raw transcript)",
+    "model": "gemini-2.5-pro",
+    "summarizerModel": "gemini-2.5-flash",
+    "independence": "different model from the summarizer (gemini-2.5-flash), but the SAME vendor and family, so same-source vocabulary leakage is reduced less than a cross-vendor run would",
+    "promptStrategy": "real student questions, near-neighbour sessions named so wording must fit them too",
+    "postFilter": "rejects a candidate carrying a token unique to its own session in the turns (raw transcripts, ~218k words) corpus AND present in that session's page text, or overlapping the transcript past 0.5",
+    "postFilterBiasWarning": "no candidate was rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run",
+    "kept": 92,
+    "rejected": 0,
+    "sessions": 23
+  },
+  "filterBias": {
+    "note": "0 candidates rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run — kept === combined by construction",
+    "kept": {
+      "n": 92,
+      "recallAtK": 0.8913043478260869
+    },
+    "rejected": {
+      "n": 0,
+      "recallAtK": null
+    },
+    "combined": {
+      "n": 92,
+      "recallAtK": 0.8913043478260869
+    }
+  }
+}

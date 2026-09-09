@@ -23,6 +23,7 @@ const GOLDEN_SET_PATH = join(ROOT, "data", "eval", "golden-set.json");
 // numbers on disk and comparable.
 const REPORT_PATH = join(ROOT, "data", "eval", "recall-report.json");
 const VECTOR_REPORT_PATH = join(ROOT, "data", "eval", "recall-report-vector.json");
+const HYBRID_REPORT_PATH = join(ROOT, "data", "eval", "recall-report-hybrid.json");
 const PROVENANCE_PATH = join(ROOT, "data", "eval", "golden-set-provenance.json");
 const REJECTED_PATH = join(ROOT, "data", "eval", "golden-set-rejected.json");
 const K = 5;
@@ -41,7 +42,7 @@ function loadJson(path) {
  * than 92, and the `chunks` come from the live collection rather than a fixture — the whole point
  * of U1.4 is that its number is measured against real vectors.
  */
-async function embedQuestionsAndLoadChunks(questions, tenantId) {
+async function embedQuestionsAndLoadChunks(questions, tenantId, opts = {}) {
   const { connect, close, getDb, scopedCollection } = await import("../packages/db/src/index.ts");
   const { embed: routeEmbed } = await import("../packages/ai/src/index.ts");
   const { buildRouting } = await import("../apps/api/src/production.ts");
@@ -62,7 +63,12 @@ async function embedQuestionsAndLoadChunks(questions, tenantId) {
       throw new Error(`eval-recall: embedder returned ${embedded.vectors.length} vectors for ${texts.length} questions`);
     }
     const questionVectors = new Map(texts.map((t, i) => [t, embedded.vectors[i]]));
-    return { questionVectors, chunks, model: embedded.model };
+    // Turns are loaded only for the hybrid arm; the vector run must not pay for a 2118-row read
+    // it does not use.
+    const turns = opts.withTurns
+      ? await scopedCollection(getDb(), "turns")(tenantId).find({}).toArray()
+      : [];
+    return { questionVectors, chunks, model: embedded.model, turns };
   } finally {
     await close();
   }
@@ -97,12 +103,41 @@ async function main() {
   // rows instead of the tree heuristic, so both numbers come out of the same harness, the same
   // golden set and the same control — which is the only way the delta means anything. Everything
   // below this point is retriever-agnostic and deliberately untouched.
-  const useVector = process.argv.includes("--retriever") &&
-    process.argv[process.argv.indexOf("--retriever") + 1] === "vector";
+  const retrieverArg = process.argv.includes("--retriever")
+    ? process.argv[process.argv.indexOf("--retriever") + 1]
+    : "heuristic";
+  const useVector = retrieverArg === "vector";
+  // `--retriever hybrid` (U1.5 C7). U1.5 must measure its OWN recall rather than inherit U1.4's
+  // number, so the merge is scored through the SAME harness, the same golden set and the same
+  // question-blind control — which is the only way the three numbers are comparable.
+  const useHybrid = retrieverArg === "hybrid";
   let retrieverName = "heuristic";
   let latency = null;
   let retrieve = createHeuristicRetriever(tree);
-  if (useVector) {
+  if (useHybrid) {
+    const { createVectorRetriever } = await import("../packages/index/src/vector/retriever.ts");
+    const { createHeuristicRetriever: heur } = await import("../packages/index/src/eval/heuristic-retriever.ts");
+    const { rrfMerge } = await import("../packages/ask/src/merge.ts");
+    const { lexicalSearchTurns } = await import("../packages/index/src/index.ts");
+    const { questionVectors, chunks, model, turns } = await embedQuestionsAndLoadChunks(questions, tenantId, { withTurns: true });
+    const vectorRetrieve = createVectorRetriever(questionVectors, chunks);
+    const treeRetrieve = heur(tree);
+    retrieve = (question, kk) => {
+      // Each arm produces ranked SESSION IDS; fusing them is exactly what askV2 does with nodes,
+      // so the same rrfMerge is reused rather than a second implementation that could drift.
+      const treeArm = treeRetrieve(question, kk);
+      const vectorArm = vectorRetrieve(question, kk);
+      const seen = new Set();
+      const lexArm = [];
+      for (const h of lexicalSearchTurns(question, turns, kk * 4)) {
+        if (seen.has(h.sessionId)) continue;
+        seen.add(h.sessionId);
+        lexArm.push(h.sessionId);
+      }
+      return rrfMerge([treeArm, vectorArm, lexArm.slice(0, kk)], { keyOf: (id) => id }).slice(0, kk);
+    };
+    retrieverName = `hybrid (tree + cosine + lexical, RRF, ${model}, ${chunks.length} chunks)`;
+  } else if (useVector) {
     const { createVectorRetriever } = await import("../packages/index/src/vector/retriever.ts");
     const { questionVectors, chunks, model } = await embedQuestionsAndLoadChunks(questions, tenantId);
     retrieve = createVectorRetriever(questionVectors, chunks);
@@ -225,8 +260,8 @@ async function main() {
         "uninterpretable until provenance exists.",
     filterBias,
   };
-  writeFileSync(useVector ? VECTOR_REPORT_PATH : REPORT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");
-  console.log(`wrote ${useVector ? VECTOR_REPORT_PATH : REPORT_PATH}`);
+  writeFileSync(useHybrid ? HYBRID_REPORT_PATH : useVector ? VECTOR_REPORT_PATH : REPORT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");
+  console.log(`wrote ${useHybrid ? HYBRID_REPORT_PATH : useVector ? VECTOR_REPORT_PATH : REPORT_PATH}`);
 }
 
 main().catch((err) => {

@@ -20,6 +20,7 @@ import { realTransport } from "./ai-transport.js";
 import { createLlmScorer } from "./score.js";
 import { createTavilySearchFn } from "./ask-web-fallback.js";
 import { indexSession, type BoundIndexer } from "./indexing/session.js";
+import { createAskArmsFor } from "./ask-arms.js";
 
 const ROUTING_CONFIG_PATH = fileURLToPath(new URL("../../../config/ai-routing.yaml", import.meta.url));
 /** `write` for the router's own per-attempt ledger entries — a tenant isn't known until a
@@ -100,6 +101,14 @@ export function buildProductionDeps(): ServerDeps {
     corsOrigins: (process.env.CORS_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
     ask: {
       tree: createMongoTreeStore(),
+      // U1.5 C6: a FACTORY. There is no tenant at this point in the process, so there is nothing
+      // here that could correctly bind the arms — routes/ask.ts calls this with the verified key's
+      // tenantId, per request.
+      extraCandidateArmsFor: createAskArmsFor({
+        embed: chains.embedding
+          ? (job) => routeEmbed("embedding", job, { chains, providers, write: jobWrite, tenantId: ROUTER_TENANT_ID })
+          : undefined,
+      }),
       askDeps: {
         complete: (job) => routeComplete("ask", job, { chains, providers, write: jobWrite, tenantId: ROUTER_TENANT_ID }),
         // T-009b: real LLM judge by default; createLlmScorer falls back to the keyword heuristic

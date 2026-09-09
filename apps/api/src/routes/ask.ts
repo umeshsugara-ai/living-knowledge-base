@@ -19,7 +19,15 @@ export interface TreeStore {
 export interface AskRouteDeps {
   tree: TreeStore;
   /** Everything `askV2` needs except `tenantId`, which comes from the verified key per request. */
-  askDeps: Omit<AskV2Deps, "tenantId">;
+  askDeps: Omit<AskV2Deps, "tenantId" | "extraCandidateArmsFn">;
+  /**
+   * U1.5 C6. A FACTORY, not a bound function — the retrieval arms query this tenant's vectors, so
+   * binding them once at boot would query one tenant's corpus for every tenant's questions. That
+   * is ISS-078's shape aimed at the corpus instead of the API. `buildProductionDeps()` has no
+   * tenant (its router-level id is the literal "system"), so the only correct binding point is
+   * here, from the verified key.
+   */
+  extraCandidateArmsFor?: (tenantId: string) => AskV2Deps["extraCandidateArmsFn"];
 }
 
 export function createAskRouter(deps: AskRouteDeps): Router {
@@ -39,7 +47,11 @@ export function createAskRouter(deps: AskRouteDeps): Router {
       return;
     }
 
-    const result = await askV2(body.query, tree, { ...deps.askDeps, tenantId });
+    const result = await askV2(body.query, tree, {
+      ...deps.askDeps,
+      tenantId,
+      ...(deps.extraCandidateArmsFor ? { extraCandidateArmsFn: deps.extraCandidateArmsFor(tenantId) } : {}),
+    });
     res.status(200).json(result);
   });
 

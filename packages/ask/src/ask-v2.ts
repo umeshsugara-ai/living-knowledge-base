@@ -53,7 +53,7 @@ export interface AskV2Deps {
    * It must NEVER throw — a failed arm returns `[]` and `/ask` still answers from the tree. See
    * the call site for why that is reported rather than swallowed.
    */
-  extraCandidateArmsFn?: (query: string) => Promise<{ arms: TreeIndexNode[][]; degraded: string | null }>;
+  extraCandidateArmsFn?: (query: string, tree: TreeIndexNode) => Promise<{ arms: TreeIndexNode[][]; degraded: string | null }>;
   write: WriteJobFn;
   tenantId: string;
   upper?: number;
@@ -116,7 +116,11 @@ export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps)
   // (contract C1 — `router.ts` and `evaluator.ts` must stay byte-unchanged).
   let candidates = treeCandidates;
   if (extraCandidateArmsFn) {
-    const extra = await extraCandidateArmsFn(query);
+    // The tree is passed so an arm can map its own id vocabulary (a vector arm knows sessionIds,
+    // not node_ids) without duplicating buildTree's path convention — one definition, not two that
+    // agree until someone edits one. The arm may return sparse `{node_id}` placeholders: the
+    // resolution step below substitutes the tree's real node regardless (ISS-158).
+    const extra = await extraCandidateArmsFn(query, tree);
     // A degraded arm is REPORTED, never silently absent (contract C5). This project has shipped
     // three separate silent-degradation bugs; "answered from fewer arms" and "answered from all
     // arms" must not look identical to an operator reading the audit log.
