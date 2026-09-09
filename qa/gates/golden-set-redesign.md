@@ -175,3 +175,38 @@ because condition 4 is unexecuted — which is exactly why it should be fixed be
 **Answered: still Option C. This note adds no decision and asks for none** — it records what the
 work found, so whoever executes condition 4 reads it here rather than having to find it in a
 verdict file.
+
+---
+
+## Conditions 2 and 3 re-measured on the OPERATIVE set (appended 2026-09-09 by the maker — the answer above is untouched)
+
+**The progress note above measures a set that is no longer the one in use.** It reports a
+75-question set at recall@5 0.307. `data/eval/golden-set.json` now holds **92** questions
+(provenance: generated 2026-09-08T09:01, kept 92, rejected 0, `gemini-2.5-pro` against the
+`gemini-2.5-flash` summarizer), and all three current reports score against it — heuristic 0.391,
+vector 0.935, hybrid 0.870. No condition-3 diagnostics existed for it: `gen-golden-set.mjs` writes
+the set and the reject list only. Unit `golden-set-condition3-operative` supplies them.
+
+**Condition 2, on the operative set:** heuristic recall@5 **0.391** (36/92), **56 misses**,
+question-blind control **0.217** (20/92). Strictly inside (0.217, 1.000) with a non-zero miss count
+— **not 1.000, so no Option B escalation.**
+
+**Condition 3, on the operative set** (`data/eval/golden-set-diagnostics.json`):
+
+- verbatim overlap **mean 0.161 / max 0.313 / zero questions at or above 0.8**
+- unique-token pin, **blunt criterion** (the one that produced the 63% baseline): **17/92 = 18.5%**
+- unique-token pin, **ISS-093-corrected criterion**: **0/92 = 0.0%**
+
+The blunt 18.5% is an **upper bound dominated by ordinary-word artifacts** — its pinning tokens are
+`you`, `should`, `will`, `people`, `paths`, `skills`, `living`, which is the same list ISS-093
+recorded. The corrected zero is real rather than an empty denominator: the corrected pin set holds
+**159** tokens (`shagun`, `handa`, `flywire`, `cept`, `leeds`, `italia`, `provident`), and `flywire`
+— this gate's own worked example — is among them and used by no question.
+
+**Reported against, not buried:** mean verbatim overlap is **2.3× the prior set's** (0.161 vs
+0.071). Nothing reaches the near-verbatim threshold and the max is 0.313, so it is far from a
+copy-detection tautology — but it is not "~0" in the way 0.071 was. Whether that clears condition
+3's wording is a judgement this note does not make.
+
+**This note adds no decision and asks for none.** Condition 4 stays blocked by the two defects
+already recorded above (sibling-session ambiguity; ISS-093, still `verified_date: null`).

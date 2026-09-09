@@ -1,0 +1,135 @@
+{
+  "measuredAt": "2026-09-09T09:07:22.198Z",
+  "goldenSet": "data/eval/golden-set.json",
+  "questions": 92,
+  "sessions": 23,
+  "scoredCorpus": "session_page.json (summary + keyInsights) — what retrieval scores against",
+  "sourceCorpus": "data/toc-migrated/<id>/turns.json — what the questions were generated from",
+  "pinCriterion": "globallyUniqueTokens over the SCORED corpus — deliberately the same blunt criterion that produced the gate's 63% baseline, so the comparison is like-for-like. It is NOT buildPinTokens (the ISS-093-corrected generation-time filter); using the corrected one here would compare a new number against an old one measured a different way.",
+  "verbatimOverlap": {
+    "mean": 0.16071850266979065,
+    "max": 0.3125,
+    "nearVerbatimCount": 0,
+    "gateRequirement": "must stay ~0 — otherwise the eval is a string-matching tautology"
+  },
+  "uniqueTokenPin": {
+    "blunt": {
+      "pinnedCount": 17,
+      "pinRate": 0.18478260869565216,
+      "uniqueTokenCount": 921,
+      "criterion": "unique in the SCORED corpus (~3.1k words) — the gate's 63% baseline criterion",
+      "caveat": "dominated by ordinary-word artifacts: the pinning tokens include you, should, will, people, paths, skills, living — the exact list ISS-093 recorded. Read as an UPPER BOUND."
+    },
+    "corrected": {
+      "pinnedCount": 0,
+      "pinRate": 0,
+      "uniqueTokenCount": 159,
+      "criterion": "ISS-093's buildPinTokens: unique across the RAW TRANSCRIPTS (~218k words) AND present in the page text",
+      "tokens": []
+    },
+    "gateRequirement": "must fall WELL BELOW 0.63"
+  },
+  "comparison": {
+    "leakySet": {
+      "pinRate": 0.63,
+      "note": "29/46 on the set ISS-071 called unfalsifiable"
+    },
+    "prior75QuestionSet": {
+      "pinRate": 0.093,
+      "meanVerbatimOverlap": 0.071,
+      "note": "the 75-question set, recall@5 0.307"
+    }
+  },
+  "pinnedQuestions": [
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq02",
+      "token": "parents"
+    },
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq03",
+      "token": "interest"
+    },
+    {
+      "id": "2026-05-08-funding-dreams-loans-forex-gq04",
+      "token": "parents"
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq03",
+      "token": "story"
+    },
+    {
+      "id": "2026-05-20-telling-your-brand-story-better-gq04",
+      "token": "story"
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq04",
+      "token": "living"
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq03",
+      "token": "sat"
+    },
+    {
+      "id": "2026-07-03-inside-the-uc-session-gq04",
+      "token": "applicants"
+    },
+    {
+      "id": "2026-07-08-beyond-black-robes-law-careers-gq03",
+      "token": "should"
+    },
+    {
+      "id": "2026-07-08-beyond-black-robes-law-careers-gq04",
+      "token": "paths"
+    },
+    {
+      "id": "2026-07-15-creative-futures-gq04",
+      "token": "skills"
+    },
+    {
+      "id": "2026-07-28-metrics-and-mingling-gq04",
+      "token": "people"
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq03",
+      "token": "officers"
+    },
+    {
+      "id": "2026-08-10-ucas-what-changed-what-matters-gq04",
+      "token": "will"
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq04",
+      "token": "aptitude"
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq03",
+      "token": "you"
+    },
+    {
+      "id": "2026-08-27-in-focus-4-gq04",
+      "token": "you"
+    }
+  ],
+  "highestOverlap": [
+    {
+      "id": "2026-04-21-visa-blueprint-part2-italy-france-nz-gq02",
+      "overlap": 0.3125
+    },
+    {
+      "id": "2026-08-12-uniaccess-ashoka-university-gq03",
+      "overlap": 0.3077
+    },
+    {
+      "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
+      "overlap": 0.2727
+    },
+    {
+      "id": "2026-06-25-in-focus-2-gq01",
+      "overlap": 0.2727
+    },
+    {
+      "id": "2026-06-19-entrance-exams-pathways-india-part1-gq04",
+      "overlap": 0.25
+    }
+  ]
+}
