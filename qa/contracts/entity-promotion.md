@@ -6,7 +6,7 @@
 > of a single decision, not a separate ask.
 >
 > **Criteria in this file may be changed only by a checker, never by the maker** (`.claude/CLAUDE.md`;
-> ISS-006). Maker feedback goes to `qa/feedback-inbox.md`.
+> ISS-006 (canonical)). Maker feedback goes to `qa/feedback-inbox.md`.
 >
 > **Derivation.** From the **code** (`packages/index/src/tree/promote-entities.ts`,
 > `apps/api/src/indexing/promote-entities.ts`, `packages/db/src/lib/tenantScope.ts`), from the ledger
@@ -220,3 +220,10 @@ rows are not chargeable here — name them and move on.
   **MET** — reproduced in both directions by the checker (bare slug → `E11000 … index: _id_ dup key:
   { _id: "chk-uk" }`; namespaced → both tenants upserted, cleanup read back at 0 leftover).
   Verdict: `qa/verdicts/entity-id-tenant-namespace.md`.
+
+- **2026-09-09 · routine · checker** — qualified the header's bare six-hundred-and-six citation as `ISS-006 (canonical)`.
+  No criterion changed; the reference already meant the canonical segregation-of-duties row, and
+  `ISS-C-UNRUN-WRITERS-006` (an unrelated IPv6 range-table finding) made the bare number ambiguous.
+  This file was the single G4 finding that held `pnpm lint:structure` red at `ccd81d4`; the
+  `issue-ref-disambiguation` maker correctly declined to edit a checker-owned contract and disclosed
+  the red gate instead, so the checker cleared it as owner. Gate re-run: `OK (gate G1,G4)`, exit 0.

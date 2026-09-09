@@ -418,3 +418,259 @@ that test is vacuous.
    moves them.
 
 Nothing else. The engineering outside the range rule is sound and I would not touch it.
+
+---
+
+# Verdict — issue-ref-disambiguation
+
+**Cycle checked: 3**
+**Date:** 2026-09-09
+**Commit under check:** `ccd81d4`
+**Bound root:** `D:/KnowledgeBase`
+**Mode:** A (unit check). This is the **re-dispatch** of cycle 3 — the earlier cycle-3 run returned
+`BLOCKED` (plan mode) and wrote no file, so it consumed no fix cycle. I treated none of its
+reported evidence as established and re-derived everything below independently.
+
+```
+VERDICT: PASS
+SCOREBOARD: 12/12 verify items reproduced, 4/5 disclosure invariants hold
+FAILURES: none blocking
+ISSUES-WRITTEN: ISS-162, ISS-163, ISS-164
+EXPLANATION: ISS-151 — the high-severity finding that made this the last cycle — is genuinely and
+demonstrably closed: my own probe flags all five previously-silent shapes, leaves the three genuine
+range spellings silent, and the corpus mute count falls 152/2031 to 24/2266 with every one of the 24
+inspected and genuine. ISS-152 and ISS-153 re-derive exactly. Every number the manifest states
+reproduces at ccd81d4, including its refusal to report a green gate. What remains are two medium
+documentation defects (a stale G4_FROZEN claim carried from cycle 1, and an unnamed narrowing of a
+standing test) plus the ruling the maker asked for — none blocking under this repo's severity gate.
+```
+
+## How I ran it
+
+`git worktree add --detach <scratch> ccd81d4` — a **full** worktree, not a copy of `scripts/`,
+because `ROOT` in these modules is module-relative and a partial tree makes the "master is clean"
+test vacuous. Every command below ran in that tree at `ccd81d4`. Master's working tree was dirty
+with another lane's in-flight edits and was never used for evidence.
+
+## The four verify commands, re-run
+
+```
+$ node --test scripts/lib/ledger-union.test.mjs    tests 20  pass 20  fail 0  cancelled 0
+$ node --test scripts/lib/tracker-audit.test.mjs   tests 17  pass 17  fail 0  cancelled 0
+$ node scripts/tracker-audit.mjs --gate g1,g4      1 finding, exit 1
+$ pnpm lint:structure                              exit 1, failing at the tracker-audit step
+```
+
+Counts and **`cancelled 0`** match the manifest exactly. The gate is red, exactly as the manifest
+says, with exactly the one finding it names.
+
+## 1. ISS-151 — the crux. Closed.
+
+I wrote my own probe against `auditIssueRefs` with a synthetic lane ledger numbering 006/017/022. Results (ids shown as roles, not as tokens — see the note at the end of section 9):
+
+```
+FLAGGED | em-dash PRECEDED citation                  [flagged]
+FLAGGED | em-dash FOLLOWED citation                  [flagged]
+FLAGGED | en-dash form                               [flagged]
+FLAGGED | `--` aside                                 [flagged]
+FLAGGED | list item `- ISS-0NN -- title`             [flagged]
+silent  | GENUINE range lo..hi (bare-hi spelling)                 (intended)
+silent  | GENUINE range lo..ISS-hi (both prefixed)             (intended)
+silent  | GENUINE range lo-hi (hyphen spelling)                  (intended)
+FLAGGED | SMUGGLE: range spanning a citation         [flagged]
+FLAGGED | SMUGGLE: citation between range endpoints  [all three flagged]
+silent  | `(canonical)` escape                       (intended)
+```
+
+All five shapes the cycle-2 rule muted are flagged again. Genuine ranges stay silent. Two deliberate
+smuggling attempts — wrapping a citation inside a wide range, and sitting one between two endpoints —
+both fail to hide it.
+
+**Corpus re-measurement over every `.md` under `qa/`: 2,266 bare three-digit refs, 24 muted.** I
+printed and read the surrounding 120 characters of **every one of the 24**: 23 are genuine range
+expressions (`ISS-091..ISS-100`, `ISS-029..ISS-033`, `ISS-024..ISS-028`, `ISS-078..082`,
+`ISS-001..ISS-141` in the QUEUE table, and so on) and one is the `(canonical)` escape in the cycle-2
+verdict. **Zero false mutes.** Against 152 muted ordinary citations at cycle 2, the rule is not
+narrowed — it is correct.
+
+### The one new bypass I did find, and why it is not a failure
+
+An em-dash chain of three ids mutes the middle one: the regex consumes the first two as a range,
+so a citation can be hidden by writing an adjacent id before it across an em dash. I searched the real
+corpus for this shape and **found zero instances** — all 24 mutes are `..` spellings. A theoretical
+shape with no corpus presence is an `EXPLANATION` note under the >80%-confidence rule, not a FAILURE
+line, and not worth a ledger row.
+
+## 2. ISS-152 — re-derived from `e34ddce~1` vs `e34ddce`. Correct.
+
+```
+differing lines total: 48
+semantic:              2   (ISS-111, ISS-132 — the intended edits)
+escape-gaining:       42   (of which ISS-109 already carried escapes: 78 -> 79)
+no escape change:      4   (ISS-126, ISS-127, ISS-128, ISS-C-TOPICREFS-ARG-001)
+2 + 41 + 1 + 4 = 48        OK
+rows before/after: 143 / 143
+```
+
+**Key order is byte-identical in all five** of the rows the manifest tables — verified per row by
+comparing `Object.keys` order, not by eye. The first differing byte of each of the four re-spaced rows
+is **byte 6**, `,` to `, ` — `json.dumps`'s default separator, exactly as claimed. `ISS-109`'s first
+difference is at byte 3752 and is an em-dash escape on a row that already held 78 of them. The
+retraction of the invented "reordered keys" mechanism is itself accurate.
+
+One note, not a finding: key order *did* change on `ISS-111`, a semantic row. The manifest's claim is
+scoped to "all five" and is true as written.
+
+## 3. ISS-153 — the retraction reached the code.
+
+`grep -rni` over `scripts/` at `ccd81d4` finds no trace of *"fired on the very manifest that shipped
+it."* Two `fired on` hits remain and both are legitimate: an unrelated `golden-set-build.mjs` comment,
+and `ledger-union.test.mjs:215` recording that G4 fired on a checker's verdict for `ISS-001..022` —
+an event I confirmed is real and reproducible, and the reason the range rule exists. The replacement
+comment in `tracker-audit.mjs` claims only that a document explaining ambiguity must quote ambiguous
+numbers, which is a general statement about the escape and reproduces. Occurrences in `qa/` are the
+retraction itself and the prior verdicts describing it — meta-references, correct.
+
+## 4. No ledger write.
+
+`git show --stat ccd81d4` touches `.goal/goal.json`, the manifest, `ledger-union.test.mjs` and
+`tracker-audit.mjs`. `qa/issues.jsonl` is **not** in the commit. The ownership ruling was honoured.
+
+## 5. The red gate: honest disclosure, and I cleared it as owner.
+
+The single finding is `qa/contracts/entity-promotion.md` citing a bare in-range id. I verified each
+link of the maker's account rather than accepting it:
+
+- **The finding is correct.** The file uses `ISS-C-CLAIMS-TARGETING-001`, so it is judged; the
+  canonical row at that number is *"Segregation of duties: contract authored by the maker session"*
+  while `ISS-C-UNRUN-WRITERS-006` is an unrelated IPv6 range-table finding. The number is genuinely
+  ambiguous.
+- **It is not the maker's file.** Committed by `09f8997`, *"checker: init-contract vector-retrieval +
+  entity-promotion"* at 06:28, ten minutes before `ccd81d4` at 06:38. Contracts are checker-owned by
+  `checker/SKILL.md`.
+- **The "green at `3380e84`" claim reproduces.** I checked out `3380e84`: `tracker-audit: OK (gate
+  G1,G4)`, exit 0, and `entity-promotion.md` did not exist there.
+
+**Ruling: honest disclosure, not a unit shipping a red gate.** The maker reported the failure
+prominently, refused to print a green summary, and explicitly declined to narrow the gate to make its
+own unit pass — which is the behaviour this pair exists to produce. Charging a FAIL here would stall a
+unit for another role's file *and* reward the silent-narrowing alternative the maker declined.
+
+**As the owner of `qa/contracts/`, I cleared it in this commit** — a routine amendment qualifying the
+header citation with the `(canonical)` marker, with a logged reason. `--gate g1,g4` on master is now
+`OK`, exit 0.
+
+## 6. Mutation — my own harness (D-020), 7 mutants + control
+
+Worktree-scoped paths; `timeout: 300000` on every run; byte backup restored in a `finally`;
+**SHA256 asserted equal to the original after every mutant** and `git status --porcelain` confirmed
+empty at the end. Where a text pattern failed to match I re-cut by line index and by string index
+rather than reporting a phantom kill — three of my first-pass patterns did not match and I did not
+count them until they did.
+
+| mutation | result |
+|---|---|
+| G4 never flags anything (`if (false)`) | **killed** |
+| drop the qualified-form scope guard (the 58-file version) | **killed** |
+| ignore `G4_FROZEN` and judge verdicts too | **killed** |
+| the `(canonical)` escape mutes the whole file | **killed** |
+| range rule removed entirely (`ranges = []`) | **killed** |
+| **regression: back to the cycle-2 context sniff** | **killed** |
+| range regex stops requiring digits on the right | **killed** (4 assertions fail, incl. the list-item and both-sides tests — a semantic kill, not a crash) |
+| **no-op control** | **clean** |
+
+## 7. The narrowed standing test — defensible, but it should have been named
+
+`"G4: master itself is clean"` became `"G4: master's manifests and verdicts are clean"`, filtered to
+manifests and verdicts, in the same cycle a contract reddened it.
+
+**Ruled defensible on the merits and under-disclosed in form.** A repo-wide assertion that a
+concurrent lane's in-flight file can redden is a test people delete, and the reasoning is written
+honestly into the test itself. But the manifest — which documents the red gate across two paragraphs —
+never mentions that a standing assertion was narrowed, on a unit whose entire subject is disclosure.
+The concrete cost: the test now reports green while `lint:structure` is red, so it no longer detects
+the gate's own failure. **ISS-163, medium.** Not blocking: the assertion still kills the
+right-hand-digits mutant, so it has not been hollowed out.
+
+## 8. The ruling the maker asked for — G4 as a shared, ownerless gate
+
+**Decision: scope G4's *gating* by ownership. `qa/manifests/` blocks; `qa/verdicts/` and
+`qa/contracts/` are reported advisory. Do NOT drop G4 from `lint:structure`.** Filed as **ISS-164**.
+
+The reasoning, against the alternative:
+
+- `tracker-audit.mjs`'s own header states the criterion: a gate belongs in the commit gate only when
+  it is *"fully in the author's control and always clearable in the same commit"*, and G2/G3 are
+  excluded because each *"depends on someone ELSE acting later."* **G4 as shipped violates that
+  criterion** — proven twice over, by the frozen verdict list (conceded before shipping) and by the
+  `entity-promotion` incident (proven after).
+- But the objection is true of `qa/verdicts/` and `qa/contracts/` and **false of `qa/manifests/`**,
+  which the committing maker always owns and can always clear in the same commit. Dropping the whole
+  gate to the sweep discards the half that satisfies the criterion perfectly and converts G4 into
+  precisely the deferred, someone-else-acts-later class the header says people learn to bypass. That
+  is why I reject the earlier run's recommendation: it generalises the ownership argument past where
+  it holds.
+- The residue — ambiguous refs in checker-owned files with nobody forced to clear them — is a **sweep
+  duty, and the checker side accepts it here**: the sweep reads G4's advisory output over
+  `qa/verdicts/` and `qa/contracts/` and files against the checker. The maker is not asked to build a
+  checker's obligation.
+- Once gating is ownership-scoped, ISS-163's narrowing can be reverted and the standing assertion can
+  go back to repo-wide.
+
+## 9. The four Known Gaps
+
+1. **66 frozen verdict refs** — accepted as visible, named debt. **But one claim attached to it is
+   false**, in the manifest *and* verbatim in the `G4_FROZEN` source comment: *"any NEW ambiguous ref
+   anywhere fails, and the list can only shrink."* `if (G4_FROZEN.has(rel)) continue;` skips the
+   **file**, not its existing refs. I probed it: appending a new bare in-range citation to
+   `qa/verdicts/watched-sources-run.md` leaves `--gate g4` silent about it. **ISS-162, medium.** This
+   is the ISS-153 shape — an unreproducible claim in source on a unit about claim accuracy — carried
+   unexamined through three cycles, mine included until I probed it. It is **not blocking**: the
+   exemption covers four named, already-conceded files, where ISS-151 muted 152 live in-corpus
+   references. Under this repo's severity gate a medium is a ledger entry verified by the next unit
+   touching the file, and the cheapest real fix is a checker qualifying its own four verdicts, which
+   empties the set.
+2. **ISS-130 (the two shardless lanes)** — genuinely out of this unit's scope, genuinely untouched,
+   correctly still open. Accepted.
+3. **G4 is title-blind** — accepted, and I demonstrated it on myself: my first draft of the contract
+   amendment log above re-reddened the gate by writing the ambiguous number while *describing* the
+   fix, and I had to rephrase. The gap is real, correctly stated, and correctly presented as making a
+   human judgement cheaper rather than unnecessary. It does not make G4 net-negative: the alternative
+   is 96 silently repointed citations.
+4. **The escape had no user** — accurate at `ccd81d4`. I confirmed the sole occurrence in a judged
+   file is a backticked *mention* inside the cycle-2 verdict, not a load-bearing use. **That gap is
+   closed by this commit**: the qualified citation in `qa/contracts/entity-promotion.md` is the
+   escape's first real user, written because the citation genuinely means the canonical row and
+   rephrasing would have obscured it. Keeping the escape was the right call.
+
+## Ledger
+
+- `ISS-142` -> **fixed**, with the 66-ref residual recorded and handed to ISS-162.
+- `ISS-144` -> **fixed** (partition independently re-derived).
+- `ISS-151`, `ISS-152`, `ISS-153` -> **verified** — each re-derived by me this cycle, not taken from
+  the manifest.
+- New: **ISS-162** (medium), **ISS-163** (medium), **ISS-164** (medium, the ruling).
+
+## Why this is a PASS on the last cycle
+
+The finding that made cycle 3 the last one was a **bypass**: a gate reporting green over 152 live
+citations. I attacked it independently — five shapes, three range spellings, two smuggling attempts,
+a full-corpus mute census with all 24 mutes read by hand, and seven mutants with a clean control —
+and it is closed. Every number in the manifest reproduces, including the one it refused to make look
+good. Three mediums remain, two of them documentation and one of them a ruling I have now made; this
+repo's own severity gate says a medium is a ledger entry, never a stalled unit.
+
+## Postscript — the gate caught this verdict, twice
+
+Writing the section-9 gap-3 ruling, `--gate g1,g4` went red on **this verdict file**: my probe
+tables quoted synthetic in-range ids as tokens, and my contract amendment log described the fix by
+writing the ambiguous number. Both are true positives by the rule and false positives in meaning —
+gap 3 exactly, hit twice in one check by the checker ruling on it.
+
+I cleared both by rephrasing rather than by reaching for the escape, because these were placeholders
+in a synthetic ledger and not citations of the canonical row. **That makes three checkers who have
+now preferred to rephrase**, which is real evidence for the maker's gap 4 — and it is why I did not
+treat gap 4 as a reason to remove the facility: the one place in this commit where a bare id genuinely
+*did* mean the canonical row (the contract header) is the one place the escape was the right tool.
+The pattern is not "the escape is unused"; it is "the escape is for citations, and most in-range ids
+in QA prose are illustrations." Both should stay available.
