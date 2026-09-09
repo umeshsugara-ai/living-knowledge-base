@@ -4,10 +4,10 @@
 (status `proposed`) covers the sibling guard; judge whether this belongs under it or needs its own.
 **Goal task:** none (tier 2 — open high issue).
 **Date:** 2026-09-09
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** **ISS-176** (high, enforcement path). Corrects the record on **ISS-177**.
-**Status:** ready-for-check (cycle 1)
+**Issues addressed:** **ISS-176** (high) + **ISS-184**, **ISS-185**, **ISS-186**, **ISS-187**. Gates **ISS-183**. Corrects the record on **ISS-177**.
+**Status:** ready-for-check (cycle 2)
 
 ## Why
 
@@ -126,3 +126,141 @@ Gap 4 is where I would push. I fixed the predicate that was pointed at and did n
 siblings share the defect class — which is precisely the mistake that made ISS-165 take three cycles
 (fixing named paths instead of the class). If you find the same fragility in another predicate, that
 is a FAIL and I would rather have it now.
+
+---
+
+# Fix cycle 2 — five findings, and the worst one is that I repeated the exact mistake I was fixing
+
+FAILed 4/9. Every finding is real. Two are the same defect class I have now been caught by four
+times, and one of them I caught myself, mid-cycle, in my own new test.
+
+## ISS-185 — a fix measured against a corpus its own author chose. Again.
+
+My cycle-1 fixtures used only stamp forms **the new regex was written to satisfy**. That is D-015's
+rule broken in the test rather than in the measurement, for the fourth time in this project.
+
+The remedy is not "add more cases" — it is to stop choosing them. I took a **census of the 114 real
+verdicts**:
+
+```
+60x  **Cycle checked:** N          41x  **Cycle checked: N**       26x  Cycle checked: N
+ 2x  <slug> · **Cycle checked: N**  1x  - **Cycle checked: N**
+ 1x  **Status: PASS** (Cycle checked: N)
+```
+
+The last three are precisely what an `^\s*`-anchored pattern cannot reach — and they are the forms I
+would never have invented, because I write the first three.
+
+## ISS-184 — the fix was still fragile at its own site
+
+Confirmed by measurement, not reading: the cycle-1 pattern **misread 7 of 114 verdicts**, including
+`write-guard-enforcement-gaps` (saw cycles 1 and 2; the actual maximum is 3).
+
+Candidates evaluated against the whole corpus rather than argued about:
+
+| pattern | misread-LOW (looks pending, verdict landed) | misread-HIGH (**looks closed when it is not**) |
+|---|---|---|
+| cycle-1, `^\s*Cycle checked:` | 7 | 0 |
+| unanchored, anywhere | 0 | 0 |
+| **field-boundary (`^`, `·`, `—`, `(`) + markers** | **0** | **0** |
+
+Unanchored also scores 0/0 today, and I rejected it: it matches `Cycle checked` mid-sentence, so
+future prose in a verdict could make a **pending unit look closed** — the one direction that
+silences the gate. Proven rather than asserted:
+
+```
+prose probe "...take the first Cycle checked: 9 again..."
+  field-boundary -> no match (correct)     unanchored -> 9  (would silently close the unit)
+```
+
+`Fix cycle:` and `Status:` got the same marker treatment. The shipped PowerShell regex was then run
+over all 114 real verdicts: **0 misreads**.
+
+## ISS-186 — the old gate saw ZERO real handshakes, not one
+
+My cycle-1 evidence said `OLD logic : pend=1`, implying it saw `hybrid-arms-binding`. The checker
+found that single hit was a **false positive** — it matched *prose* at manifest lines 35/47, not any
+Status line. The old gate's true score was **0 of 3**, and my table made it look partly working. The
+direction of my error flattered my own before/after.
+
+The checker also found `delivery-gate-stop.ps1` never tests for `VERDICT: PASS` before printing
+"*N PASS not closed out*", while its sibling does. Today every such item is a FAIL, so the block
+message names the wrong action. **Not fixed in this cycle** — it is a message-accuracy defect in a
+predicate this unit did not otherwise touch, and I would rather leave it filed than widen scope past
+the failures I was given.
+
+## ISS-187 / Gap 1 — the reconciliation I refused took one query
+
+I reported 53 `ScheduleWakeup` calls and declined to reconcile the sweep's 26, calling it "most
+likely transcript-file scope". The checker did it in one query: **the sweep counted one of the two
+transcript files** (`38fdc7ba` = 27, `d3f69058` = 26); I counted both. My 53 is also 2 high — two
+tool-use ids double-counted across a fork/resume pair. **The reconciled figure is 51 unique calls.**
+
+Declining to adopt a number I had not derived was right. Declining to spend one query reconciling it,
+in a manifest whose subject is a false measurement, was not.
+
+## ISS-183 — the class IS alive, and it is not mine to fix
+
+I invited a FAIL on Gap 4 and it landed. The checker cleared the other predicates in
+`delivery-gate-stop.ps1` — they parse transcript JSONL, not markdown, so *"checked, not affected"* —
+but found the class alive in the two sibling hooks:
+
+- `mc-sessionstart.ps1:15` and `mc-precommit.ps1:43` still use the bare `Status: ready-for-check`
+- `mc-sessionstart.ps1:19` still ends in `Select-Object -First 1`
+
+**Live effect, measured this session:** the SessionStart directive reported
+`Checks pending: 1 [hybrid-arms-binding]` while the manifests actually pending were
+`delivery-gate-manifest-blindness` and `speaker-verbatim-token-boundary`. It named a unit that was
+not pending and missed both that were — and `mc-precommit.ps1` is the **commit guard**, so a guard
+that cannot see a pending handshake cannot refuse a commit that leaves one dangling.
+
+Both files are **Lab enforcement paths** requiring `Approved-by: Umesh`. Raised as
+`qa/gates/mc-hooks-manifest-blindness.md` with the exact change and an honest option B. I verified
+`mc-sessionstart.ps1:17` is *unaffected* (`[:*\s]+` already tolerates the bolding) rather than
+listing it for symmetry.
+
+## I caught one vacuous test myself, mid-cycle
+
+My first ISS-185 fixture asserted `-notmatch '1 check(s) pending'` — which passes whether `Fix cycle`
+reads 6 **or** 0. It survived mutation, which is how I found it. That is the same class as ISS-179's
+`[].every()` being `true`: written by me, in the cycle whose subject is tests that share their
+subject's blind spot.
+
+Replaced with a case whose output differs between the two readings — manifest cycle 6 (list-marker
+form) against a verdict whose highest stamp is 3: the correct reading is **pending**, while
+misreading `Fix cycle` as 0 makes it *unclosed* and the check fails.
+
+## Evidence
+
+```
+$ powershell -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1    ALL PASS
+$ shipped PS regex over qa/verdicts/*.md                             114 checked, 0 misreads
+```
+
+| mutation | result |
+|---|---|
+| revert the emphasis strip | **killed** |
+| `Cycle checked:` back to line-anchored only | **killed** |
+| `Fix cycle:` back to line-anchored only | **killed** (survived until I replaced the vacuous assertion) |
+| `Status:` back to line-anchored only | **killed** |
+| take the first `Cycle checked` again | **killed** |
+| **no-op control** | **clean** |
+
+## Known gaps
+
+1. **ISS-186's message-accuracy half is filed, not fixed** — deliberately out of scope, stated above.
+2. **The `(` and backtick boundaries admit a quoted stamp.** A verdict containing
+   `` (`Cycle checked: 9`) `` inside prose would match. Zero occurrences across 114 verdicts, and the
+   alternative — dropping `(` — misreads two real files. But it is a real residual, and it fails in
+   the *silencing* direction.
+3. **ISS-183's half is gated, not fixed**, so the SessionStart directive stays wrong until the
+   Approver rules.
+4. **The corpus census is a snapshot.** A seventh stamp form invented tomorrow is unpinned. [C7] of
+   the new contract is the durable answer; a census is not.
+
+## Note to the checker
+
+Gap 2 is the one I would push on. I chose the pattern that fails *noisily* over one that scored
+identically today, on the argument that a silenced gate is worse than a nagging one. If you think
+0/0 across the real corpus should have settled it and the extra boundary characters are unjustified
+complexity, say so — I would rather be wrong about the reasoning than have it go unexamined.
