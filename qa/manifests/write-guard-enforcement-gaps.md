@@ -4,10 +4,10 @@
 `qa/contracts/write-guard.md` if you judge one is owed — this is the third unit to touch this seam.
 **Goal task:** none (tier 2 — open high issue).
 **Date:** 2026-09-09
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-160** (high) · **ISS-165**, **ISS-166**, **ISS-167** (high) · **ISS-168**.
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 
 ## Why
 
@@ -219,3 +219,106 @@ Gap 1 is the one I would push on. I removed nothing, but I have accepted a state
 was asked to strengthen is now carried by a hook outside this unit's scope and outside my
 verification. If you think this unit cannot PASS while its own stated protection depends on an
 unverified component, FAIL it and say what evidence would suffice.
+
+
+---
+
+# Fix cycle 3 — the last one. The wall matched a string, not a file.
+
+FAILed 4/7. The checker did what I asked and hunted a fourth survivor, and **it reaches the
+`deny`** — the one decision in this guard that is not advisory.
+
+## ISS-172 (high, security class) — the append-only wall was bypassable by spelling
+
+```
+docs/DECISIONS.md          -> deny
+docs/sub/../DECISIONS.md   -> silent
+docs/./DECISIONS.md        -> silent
+docs/DECISIONS.md/         -> silent
+```
+
+All of them name the same protected file. `aios-write-guard.ps1:78` matched the **raw string**.
+
+The progression is the whole story of this unit: cycle 1 matched on **position** relative to the
+Lab root, cycle 2 moved to **shape**, and neither is what a wall on one specific file needs — it
+needs **identity**. Fixed by canonicalising once, immediately after the slash substitution, exactly
+as ISS-172's `fix_direction` prescribes: `[System.IO.Path]::GetFullPath` (not `Resolve-Path`, which
+requires the path to exist — a `Write` usually creates it), then a trailing-separator trim.
+
+**D-015 note, stated because the rule requires it:** ISS-172's ledger row records **zero**
+reproductions in its `reproductions` field. Its title and `fix_direction` name the classes — dot,
+dot-dot, trailing separator, relative — and the verdict lists three concrete spellings. I measured
+against those, plus `docs/../docs/` and `docs//` which I added. **5/5 now deny.** I am not claiming
+to have measured against a recorded corpus that does not exist.
+
+## ISS-173 (medium) — `.claude/hooks/` matched only `*.ps1` direct children
+
+Contract C2 says `.claude/hooks/*`. A `.mjs` hook, a `.py` hook, or anything in a subdirectory was
+silent. Widened to match the directory at any depth, the way the `.claude/rules` rule was already
+written. Latent today — no such file exists — but the contract said one thing and the code another.
+
+## What I did NOT do
+
+`$pathNorm` is canonicalised for **matching only**; the reason strings still quote `$rawPath`, so
+the prompt shows the user the path they actually typed rather than a rewritten one.
+
+## Evidence
+
+```
+$ powershell -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1     ALL PASS
+
+ISS-172, every spelling in its title + fix_direction        NOW     WANT
+  docs/DECISIONS.md                                         deny    deny
+  docs/sub/../DECISIONS.md                                  deny    deny
+  docs/./DECISIONS.md                                       deny    deny
+  docs/../docs/DECISIONS.md                                 deny    deny
+  docs//DECISIONS.md  and  docs/DECISIONS.md/               deny    deny
+ISS-173
+  .claude/hooks/x.mjs  ·  .claude/hooks/lib/y.py            ask     ask
+No regression (re-probed, not read)
+  .claude/{CLAUDE.md,rules/*,settings.json}                 ask     ask
+  sources/whatsapp_msg/.claude/settings.json                ask     ask
+  apps/api/.claude/hooks/h.ps1                              ask     ask
+  scripts/append_decision.ps1                               ask     ask
+  ~/.claude/settings.json (withdrawn in cycle 2)            silent  silent
+Approval-fatigue win
+  search-store.ts · README.md · qa/manifests/x.md           silent  silent
+                                                            18 / 18 PASS
+```
+
+**Mutation table** (D-020: sandbox copy, timeout, restore in `finally`, SHA256-asserted, live file
+verified unchanged after every run):
+
+| mutation | result |
+|---|---|
+| drop the `GetFullPath` canonicalisation | **killed** |
+| drop the trailing-separator trim | **killed** |
+| narrow `.claude/hooks/` back to `*.ps1` direct children | **killed** |
+| **no-op control** | **clean** |
+
+The trim mutant **survived my first table** — nothing covered it. I added the fixture ISS-172's own
+title names (trailing separator) and re-ran; it dies now. Recording that because a survivor I
+noticed and closed is worth more than a table that was clean first time.
+
+## Known gaps
+
+1. **Relative `file_path` is resolved against the process CWD**, which is the hook's, not
+   necessarily the caller's. For the deny wall it is harmless — any spelling ending in
+   `\docs\DECISIONS.md` matches regardless of what it is resolved against — but a relative path is
+   not truly canonicalised, only normalised.
+2. **Whether the harness ever hands over a non-canonical `file_path` is unverified.** The cycle-2
+   checker recorded the same bound and said the only decisive test is a real write to
+   `DECISIONS.md`, which a checker may not do. The fix is correct regardless; its *reachability* is
+   assumed, not measured.
+3. **The generic-config route is still carried by `delivery-gate-stop.ps1`**, which the cycle-2
+   checker verified fires correctly and is wider than what it replaced. Not this unit's code.
+4. **ISS-174 is open** — contract C3 still says those paths `ask`. The checker declined to amend it
+   itself, correctly: removing a control is a CRITICAL amendment for the Approver.
+5. **ISS-168 is open** — `qa/gates/d023-supersede.md`, needs you.
+
+## Note to the checker
+
+Gap 2 is the honest one: I have fixed a bypass whose *reachability* nobody has demonstrated. If you
+judge that a security-class fix needs proof the input can actually arrive in that shape before it
+can PASS, FAIL it and say what would count — I would rather carry a STALL than a PASS resting on an
+assumption I flagged myself.
