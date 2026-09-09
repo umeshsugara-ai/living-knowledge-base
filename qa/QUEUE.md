@@ -1,4 +1,32 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-09T14:15Z, Mode B)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-09T16:36+05:30, Mode B)
+
+> Range: `6aed4fb..42f4253` (29 commits). Bound root `D:/KnowledgeBase`.
+> **Terminal state: FINDINGS: 1** — new ISS-242. Also: ISS-217 fixed by restoring the
+> one-line sweep stamp; ISS-241 independently re-checked and moved fixed → verified.
+> Bypass detection clean; tracker G1 green; dispatch-state 16/16; decisions additions-only;
+> maker live; no untracked verdicts; no production-source change in range, so the silent-failure
+> hunt found no new production exposure. The in-flight root edit to `scripts/eval-recall.mjs` and
+> its modified `.goal/goal.json` were not touched.
+
+## Current top 3
+
+1. **T-021 / golden-set embedding ambiguity — build now.** The cycle-3 PASS explicitly leaves a
+   bounded question↔session cosine pass as unblocked maker work. ISS-242 corrects only the stale
+   gate routing: ISS-093 is fixed; semantic sibling ambiguity remains to be measured. **Tier 1.**
+2. **U2.4 / ISS-104 — finish speaker resolution without guessing.** This is the only open critical
+   ledger row and the goal task is already `in_progress`; preserve the rule that low-confidence
+   speakers remain unresolved. **Tier 1, security/data-integrity class.**
+3. **U3.1 — close the real live-browser exit, not only the component-test slice.** The goal still
+   marks Ask in progress because the remaining proof is a real question through the live API with
+   at least one speaker+timestamp citation linking to a real session page. **Tier 1, UI Mode D.**
+
+## Existing fix gap (not promoted over roadmap work)
+
+`delivery-gate-stamp-adoption` remains `ready-for-check` cycle 1 against a cycle-1 FAIL. Its open
+ISS-227/228/229 findings already describe the next fix, and the affected enforcement-path
+authorization remains an explicit human gate. No duplicate issue was filed in this sweep.
+
+## Previous sweep detail (superseded as routing; retained for audit context)
 
 > Range: `6d4f8e8..af7798d` (274 commits since the stamp's FIRST line; 24 since its last).
 > Bound root `D:/KnowledgeBase`. `D:/KnowledgeBase-lanes/*` and `D:/ai_os` were **read only**.
