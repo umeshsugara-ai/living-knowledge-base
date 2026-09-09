@@ -12,6 +12,7 @@ import { recordJob } from "@lkb/ai";
 import { ask, type AskResult, type WebFallbackFn, type WebSource } from "./router.js";
 import { LOWER_THRESHOLD, UPPER_THRESHOLD, type ScoreFn } from "./evaluator.js";
 import { selectNodes, type CompleteFn, type NodeSearchFn } from "./select-nodes.js";
+import { rrfMerge } from "./merge.js";
 import { refine, type RefinableDoc } from "./refine.js";
 import { answer as generateAnswer } from "./answer.js";
 
@@ -38,6 +39,21 @@ export interface AskV2Deps {
    * exists (apps/api/src/ask-web-fallback.ts); absent here, behavior is byte-identical to before
    * this addition. */
   tavilySearchFn?: (query: string) => Promise<WebSource[]>;
+  /**
+   * U1.5. Extra retrieval arms (vector, lexical) as already-ranked node lists, best-first.
+   *
+   * INJECTED, not imported: `packages/ask` may not depend on `packages/index` (contract C10), and
+   * the vector arm needs an embedding call this package must not know about. The composition root
+   * binds it PER REQUEST with the real tenantId — never at boot — because `buildProductionDeps`
+   * has no tenant and its router-level id is the literal `"system"` (contract C6).
+   *
+   * OPTIONAL, following the `tavilySearchFn` precedent: absent, `askV2` behaves byte-identically
+   * to before this addition, so an install with no vector index is unaffected rather than broken.
+   *
+   * It must NEVER throw — a failed arm returns `[]` and `/ask` still answers from the tree. See
+   * the call site for why that is reported rather than swallowed.
+   */
+  extraCandidateArmsFn?: (query: string) => Promise<{ arms: TreeIndexNode[][]; degraded: string | null }>;
   write: WriteJobFn;
   tenantId: string;
   upper?: number;
@@ -58,7 +74,7 @@ function webDocText(source: WebSource): string {
 }
 
 export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps): Promise<AskV2Result> {
-  const { complete, scoreFn, treeSearchFn, webFallbackFn, tavilySearchFn, write, tenantId } = deps;
+  const { complete, scoreFn, treeSearchFn, webFallbackFn, tavilySearchFn, extraCandidateArmsFn, write, tenantId } = deps;
   const upper = deps.upper ?? UPPER_THRESHOLD;
   const lower = deps.lower ?? LOWER_THRESHOLD;
   const auditLog: AuditEntry[] = [];
@@ -79,7 +95,26 @@ export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps)
     return completion;
   };
 
-  const candidates = await selectNodes(query, tree, loggingComplete("select_nodes"), treeSearchFn);
+  const treeCandidates = await selectNodes(query, tree, loggingComplete("select_nodes"), treeSearchFn);
+
+  // U1.5 hybrid merge. It lives HERE, in the thunk's input, and deliberately not inside `ask()`:
+  // plan §10 is explicit that `ask()` already takes candidates via a thunk and is therefore
+  // retriever-agnostic, so rewriting it would be scope creep on the one working retrieval path
+  // (contract C1 — `router.ts` and `evaluator.ts` must stay byte-unchanged).
+  let candidates = treeCandidates;
+  if (extraCandidateArmsFn) {
+    const extra = await extraCandidateArmsFn(query);
+    // A degraded arm is REPORTED, never silently absent (contract C5). This project has shipped
+    // three separate silent-degradation bugs; "answered from fewer arms" and "answered from all
+    // arms" must not look identical to an operator reading the audit log.
+    if (extra.degraded) {
+      await recordJob({ tenantId, kind: "ask.retrieval_degraded", status: "done" }, write);
+      auditLog.push({ jobKind: "ask.retrieval_degraded", step: extra.degraded });
+    }
+    // The tree arm goes FIRST: on a tie its node is the representative, and it is the one carrying
+    // the `summary` the refine step reads without a second lookup.
+    candidates = rrfMerge([treeCandidates, ...extra.arms], { keyOf: (n: TreeIndexNode) => n.node_id });
+  }
   // ask() re-scores `candidates` via `scoreFn` internally (T-005's evaluate()) — reused here, not
   // duplicated. Each candidate's node comes back on `scored[].node`, still the full node object
   // selectNodes/treeSearch resolved (with `summary`), so refine below needs no second lookup.

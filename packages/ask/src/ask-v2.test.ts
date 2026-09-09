@@ -151,3 +151,86 @@ test("insufficient coverage with no tavilySearchFn provided: behavior is unchang
   assert.deepEqual(result.sources.web, []);
   assert.ok(!result.auditLog.some((e) => e.step === "web_fallback"));
 });
+
+/* ── U1.5 hybrid merge (contract C1/C2/C5) ────────────────────────────────────────────────────
+ * The merge lives in the thunk's INPUT, not inside ask(): plan §10 is explicit that ask() already
+ * takes candidates via a thunk and is retriever-agnostic, so rewriting it would be scope creep on
+ * the one working retrieval path.
+ */
+test("U1.5: extra arms are merged into the candidates, and a node they surface can be answered from", async () => {
+  const write = fakeWrite();
+  const result = await askV2("what color are oranges?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } }, // selectNodes returns only session:a
+      { text: "Final answer" },
+    ),
+    // Only session:b scores well — so the answer can only be "correct" if the EXTRA arm's node
+    // reached the candidate set. The tree arm alone would fail this.
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.1, "tenant:t1/session:b": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({
+      arms: [[TREE.children[1]!]], // a vector arm surfacing session:b
+      degraded: null,
+    }),
+    write,
+    tenantId: "t1",
+  });
+  assert.equal(result.verdict, "correct");
+  assert.ok(result.sources.internal.length > 0, "the merged candidate must reach the answer");
+});
+
+test("U1.5 / C5: a DEGRADED arm still answers, and the degradation is VISIBLE in the audit log", async () => {
+  // This project has shipped three separate silent-degradation bugs. "Answered from fewer arms"
+  // and "answered from all arms" must not look identical to an operator.
+  const write = fakeWrite();
+  const result = await askV2("what color are apples?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [], degraded: "vector: embedding failed" }),
+    write,
+    tenantId: "t1",
+  });
+  assert.equal(result.verdict, "correct", "a failed arm must not take /ask down with it");
+  const entry = result.auditLog.find((e) => e.jobKind === "ask.retrieval_degraded");
+  assert.ok(entry, "a degraded retrieval arm must appear in the audit log");
+  assert.match(entry!.step, /embedding failed/, "and must say WHICH arm and why");
+});
+
+test("U1.5 / C5: an arm that RAN and found nothing is NOT logged as degraded", async () => {
+  // The distinction that matters: empty-but-healthy and failed must be distinguishable, or the
+  // audit entry means nothing.
+  const write = fakeWrite();
+  const result = await askV2("what color are apples?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [[]], degraded: null }),
+    write,
+    tenantId: "t1",
+  });
+  assert.equal(result.auditLog.find((e) => e.jobKind === "ask.retrieval_degraded"), undefined,
+    "an empty-but-healthy arm must not be reported as a failure");
+});
+
+test("U1.5: with NO extraCandidateArmsFn, behaviour is unchanged (the tavilySearchFn precedent)", async () => {
+  const write = fakeWrite();
+  const result = await askV2("what color are apples?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    write,
+    tenantId: "t1",
+  });
+  assert.equal(result.verdict, "correct");
+  assert.equal(result.auditLog.find((e) => e.jobKind === "ask.retrieval_degraded"), undefined);
+});
