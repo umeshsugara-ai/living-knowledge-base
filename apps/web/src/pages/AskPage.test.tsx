@@ -5,7 +5,7 @@
  * contract: that it calls the route with the trimmed query, renders the answer, and — the point
  * of the feature — keeps internal and web citations in SEPARATE, labelled lists.
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { vi, describe, test, expect, beforeEach } from "vitest";
@@ -136,11 +136,35 @@ describe("AskPage", () => {
     );
   });
 
-  test("does not call the route for an empty query", async () => {
+  test("does not call the route for a whitespace-only query — even when the form is SUBMITTED", async () => {
+    // ISS-202 item 2. The version this replaces asserted `not.toHaveBeenCalled()` without ever
+    // submitting, so it held whether or not `handleSubmit` guarded — it only ever proved the
+    // button's `disabled` attribute, never `handleSubmit`'s `trimmed === ""` check. `AskPage`
+    // renders a `<form onSubmit={handleSubmit}>`, so the handler is a reachable path in its own
+    // right and deserves its own assertion.
     const spy = vi.spyOn(askApi, "ask").mockResolvedValue(response());
     renderPage();
-    await userEvent.type(screen.getByLabelText("Question"), "   ");
+    const field = screen.getByLabelText("Question");
+    await userEvent.type(field, "   ");
+
+    // The disabled button is still worth pinning — it is the affordance the user sees.
     expect(screen.getByRole("button", { name: "Ask" })).toBeDisabled();
+
+    // Now actually submit. Typing "{Enter}" is NOT enough and I proved it: a browser performs
+    // implicit form submission only when there is an ENABLED submit button, so with the button
+    // disabled the keypress does nothing and the assertion below goes vacuous again. Removing
+    // handleSubmit's `trimmed === ""` guard left the whole suite at 46/46 under that version.
+    // Dispatching submit on the form is the path that actually reaches the handler.
+    const form = field.closest("form");
+    if (!form) throw new Error("AskPage must render its input inside a <form> for this guard to matter");
+    fireEvent.submit(form);
     expect(spy).not.toHaveBeenCalled();
+
+    // NON-VACUITY: prove the spy is reachable at all, or the assertion above proves nothing about
+    // the guard — it would hold equally if `ask` were never wired to this form.
+    await userEvent.clear(field);
+    await userEvent.type(field, "real question{Enter}");
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
+    expect(spy).toHaveBeenCalledWith(expect.anything(), "real question");
   });
 });
