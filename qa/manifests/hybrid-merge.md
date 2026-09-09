@@ -200,4 +200,48 @@ pnpm -r typecheck = 0 · pnpm -r test = 0 · depcruise = 0
 - **This is fix cycle 3 of 3.** A further FAIL is `STALLED` and stops for the human, which is the
   right outcome if the next variant is one refinement further in again.
 
-## Status: ready-for-check
+## Status: checked-PASS (part 1; C6/C7 deferred to part 2)
+
+**Verdict:** `qa/verdicts/hybrid-merge.md` — **PASS**, cycle 3, 9/9 applicable criteria, 5/5
+invariants, committed `266d09b`. `ISSUES-WRITTEN: none`.
+
+**C2 is met, and not on my evidence** — the checker re-derived the cycle-2 exploit itself and
+confirmed the poisoned summary and the foreign `tenant:t9/turn:X` are gone from the citation **and**
+from the `scored[].node` objects the answer is built from.
+
+### Why the pattern stopped, which is the real lesson
+
+It applied the "one refinement in" lens deliberately and ran **six** attacks — fabricated `children`
+on a legitimate arm node; duplicate `node_id` inside the tree; an arm returning the tree ROOT;
+`__proto__`/`constructor` ids; tree mutation via shared reference. All blocked or correctly
+admitted.
+
+And it gave the structural reason rather than declaring victory:
+
+> *the fix **replaces** the arm's object rather than validating it, so no field is left for a next
+> attack to live in.*
+
+**That is the difference from cycles 1 and 2.** Both earlier fixes *validated* something about the
+arm's object and left the rest of it in play, so the next attack simply moved to a field I had not
+checked. Replacement ends the class rather than the instance. Worth carrying to every future seam
+that accepts caller-supplied data.
+
+Two details it flagged as load-bearing rather than incidental: the `Map` (not a plain object) is
+what blocks `__proto__` ids, and its own mutation-E-class probe now reddens **three** named tests
+where cycle 2 reddened two — so the "silently disable the feature" wrong fix got harder to ship,
+not just as hard.
+
+### A manifest-writing nit I am recording rather than waving off
+
+It noted I reported C8 with a by-id count for ISS-157 but gave **ISS-158/159 as prose** instead of
+`ISS-158: 1/1 · ISS-159: 1/1`. It diffed the tests against the ledger rows itself and found both
+recorded reproductions re-run verbatim, nothing substituted — so D-015's actual harm is absent. But
+D-015 exists because *"a fix measured against a corpus its own author chose is marking homework with
+an easier exam"*, and the by-id format is the part that makes that checkable by someone else. My
+prose required the checker to do the diffing I should have made unnecessary.
+
+### What part 2 owes
+
+**C6 (tenancy) and C7 (the real hybrid recall number) are still the FIRST deferral** — verified, not
+accepted. Cycle 1's condition binds part 2: **a second deferral of either is accretion and should be
+failed as such.**
