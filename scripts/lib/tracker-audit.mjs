@@ -236,21 +236,29 @@ export function auditIssueRefs(root, ledgerRows) {
       const text = readFileSync(join(dir, name), "utf8");
       // Only a document that already speaks the qualified dialect can be inconsistent in it.
       if (!/ISS-[A-Z][A-Z0-9-]*-\d{3}/.test(text)) continue;
+      /**
+       * Spans covered by a range EXPRESSION, which requires a three-digit id on BOTH sides.
+       *
+       * ISS-151. Cycle 2 shipped this as a context sniff -- skip any bare id sitting next to `..`,
+       * `--`, or a dash -- and dashes are this repo's house punctuation around citations, so it
+       * silently muted **152 of the 2,031** bare references in `qa/*.md`, the sampled ones ordinary
+       * citations rather than ranges. A gate with a hole shaped like the prose style of the corpus
+       * it guards is worse than no gate: it reports green.
+       *
+       * Requiring digits on both ends is the whole fix. `ISS-001..022` and `ISS-001..ISS-022` are
+       * ranges; `-- ISS-006` is an em-dash aside introducing a citation, and now still counts.
+       */
+      const ranges = [...text.matchAll(/ISS-\d{3}\s*(?:\.\.|--|–|—)\s*(?:ISS-)?\d{3}/g)]
+        .map((r) => [r.index, r.index + r[0].length]);
       const hits = new Set();
       for (const m of text.matchAll(/(?<![A-Z0-9-])ISS-(\d{3})(?![0-9-])(\s*\(canonical\))?/g)) {
-        // `ISS-021 (canonical)` is a DELIBERATE reference to the canonical row. The gate cannot
-        // tell an ambiguous number from a wrong meaning (it is title-blind), so the escape makes
-        // the author state the judgement instead of the gate guessing it -- and makes a careless
-        // blanket qualification visibly wrong rather than silently wrong. Found the honest way:
-        // this gate fired on the very manifest that shipped it, on citations that were correct.
+        // A bare id marked `(canonical)` is a DELIBERATE reference to the canonical row. The gate
+        // is title-blind -- it sees an ambiguous NUMBER, never a wrong MEANING -- so the escape
+        // makes the author state the judgement instead of the gate guessing it, and makes a
+        // careless blanket qualification visibly wrong rather than silently wrong.
         if (m[2]) continue;
-        // A range ENDPOINT is a boundary, not a citation, and `(canonical)` is the wrong word for
-        // it. Found live: this gate fired on a checker's own verdict for `ISS-001..022`, and the
-        // checker rephrased its prose rather than mislabel a range as a citation. Every future
-        // verdict quoting a range would have hit the same wall.
-        const before = text.slice(Math.max(0, m.index - 8), m.index);
-        const after = text.slice(m.index + m[0].length, m.index + m[0].length + 8);
-        if (/(\.\.|--|–|—)\s*(ISS-)?$/.test(before) || /^\s*(\.\.|--|–|—)/.test(after)) continue;
+        // Inside a range EXPRESSION the number is a boundary, not a citation.
+        if (ranges.some(([lo, hi]) => m.index >= lo && m.index < hi)) continue;
         if (laneNumbers.has(m[1])) hits.add(`ISS-${m[1]}`);
       }
       if (hits.size) {

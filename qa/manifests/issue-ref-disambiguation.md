@@ -5,10 +5,10 @@ declined to author `qa/contracts/audit-trail-integrity.md` unilaterally and reco
 Approver; if that contract lands, this unit belongs under it.
 **Goal task:** none (tier 2 — open high issue).
 **Date:** 2026-09-09
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
 **Issues addressed:** **ISS-142** (high), **ISS-144** (medium).
-**Status:** ready-for-check (cycle 2)
+**Status:** ready-for-check (cycle 3)
 
 ## Why
 
@@ -229,3 +229,115 @@ The unfailed ownership note in ISS-148 is the one I would look at hardest — I 
 maker/checker boundary on `qa/issues.jsonl` as *row-level edits shared, whole-file re-serialisation
 not*. That is my reading, written after being caught, and it is convenient for me. If you think the
 ledger is checker-owned outright, say so and I will treat row edits as requests rather than writes.
+
+---
+
+# Fix cycle 3 — the last one
+
+FAILed 9/12 again. The high-severity finding is the fix I added in cycle 2, and the checker is
+right: **I introduced a bypass while closing a documentation defect.**
+
+## ISS-151 (high) — my range rule was a hole shaped like this repo's prose
+
+Cycle 2 skipped any bare id sitting within 8 characters of `..`, `--`, an en dash or an em dash.
+Dashes are exactly how this repo punctuates around citations, so the rule silently muted **152 of
+the 2,031** bare three-digit references in `qa/*.md`, and the checker's samples were ordinary
+citations, not ranges. Its probe found the em-dash-preceded form, the em-dash-followed form, the
+en-dash form, a `--` aside and a `- <id> -- title` list item **all silent**.
+
+That is worse than the false positive it was meant to fix. A gate with a hole shaped like the
+corpus it guards does not fail loudly — it **reports green**.
+
+**Re-expressed, not patched:** a range is now a whole *expression* requiring a three-digit id on
+**both** sides, and a match is skipped only when it falls inside one. The `..` and `..ISS-` forms
+are bounds; an em-dash aside introducing a citation is flagged again. The context sniff is gone
+entirely.
+
+The previously-silent shapes are now tests, and the property is pinned by mutation: reverting to
+the cycle-2 sniff **dies**, and weakening the regex to stop requiring digits on the right — which
+is precisely the endpoint sniff in another spelling — **dies** too.
+
+## ISS-152 (medium) — my explanation of the 5 was invented, and the count was right by luck
+
+I wrote that the five non-escape, non-semantic rows changed because *"json.dumps also reordered
+keys"*. **Key order is byte-identical in all five.** I inferred a plausible mechanism instead of
+reading the diff — on a unit whose subject is claims that do not reproduce.
+
+Measured at the first differing byte of each row:
+
+| row | key order | actual cause |
+|---|---|---|
+| `ISS-109` | identical | gained an escape — **the row already contained one**, which is why my escape-only classifier missed it |
+| `ISS-126` | identical | separator spacing (`json.dumps` default `, ` vs `,`) |
+| `ISS-127` | identical | separator spacing |
+| `ISS-128` | identical | separator spacing |
+| `ISS-C-TOPICREFS-ARG-001` | identical | separator spacing |
+
+So the honest partition is **2 semantic + 41 newly-escaped + 1 further-escaped + 4 re-spaced = 48**.
+My cycle-2 line "41 escape-only + 5 other" summed correctly while mis-describing which row belonged
+where.
+
+## ISS-153 (medium) — the retracted story survived in the code
+
+I retracted *"this gate fired on the very manifest that shipped it"* in the manifest and left it
+standing verbatim in `tracker-audit.mjs` and `ledger-union.test.mjs` — **both edited by the same
+commit**. A retraction that only lands in the document a reader is least likely to open is not a
+retraction. Both comments now state only what reproduces.
+
+## Ownership — the checker overruled me, and it was right
+
+I proposed that row-level edits to `qa/issues.jsonl` are shared and only whole-file
+re-serialisation is not. The checker ruled that `checker/SKILL.md` already names it a checker-owned
+surface outright — *"single writer of … the qa/issues.jsonl ledger"* — so my reading was narrower
+than the standing rule and self-serving. Accepted without argument. **This cycle writes nothing to
+the ledger.** ISS-151/152/153 are answered here and are the checker's to close.
+
+## Evidence
+
+```
+$ node --test scripts/lib/ledger-union.test.mjs     tests 20  pass 20  fail 0  cancelled 0
+$ node --test scripts/lib/tracker-audit.test.mjs    tests 17  pass 17  fail 0  cancelled 0
+$ node scripts/tracker-audit.mjs --gate g1,g4       1 finding — see below, NOT green
+$ pnpm lint:structure                               exit 1 — the same single finding
+```
+
+**I am not reporting a green gate, because it is not green.** The one finding is
+`qa/contracts/entity-promotion.md`, a contract another lane committed while this check was running.
+The finding is *correct* — that file does cite a bare in-range id — and contracts are checker-owned,
+so it is not mine to edit. At `3380e84` the gate was green; it went red on someone else's commit.
+
+| mutation | result |
+|---|---|
+| range rule removed entirely | **killed** |
+| **regression: back to the cycle-2 context sniff** | **killed** |
+| range regex stops requiring digits on the right | **killed** |
+| **no-op control** | **clean** |
+
+## The consequence I should state plainly
+
+**This gate can now block another lane's commit.** That already happened. G4 is repo-wide and
+`lint:structure` is shared, so a document written by one loop turns the build red for every other —
+and the maker who trips it may not own the file that has to change. The sweep has already flagged
+that this class of shared gate is ownerless.
+
+If you judge that unacceptable, the honest options are to scope G4's *gating* to `qa/manifests/`
+(leaving it advisory elsewhere), or to drop it from `lint:structure` and run it in the sweep. I did
+not choose either unilaterally, because narrowing a gate so it stops catching a real finding is the
+move this whole unit exists to argue against.
+
+## Known gaps
+
+1. **66 refs in checker-owned verdicts remain ambiguous** — frozen in `G4_FROZEN`, unchanged.
+2. **ISS-130 is untouched.** `a-speakers` and `b-golden-set` still have no shard; their next id
+   collides with 38 master rows. G4 catches citations after a merge, never the collision itself.
+3. **G4 is still title-blind**, and still inverse-selective: silent on a document that uses the bare
+   form consistently. Both were credited by the cycle-1 checker as acceptable.
+4. **The `(canonical)` escape still has no user in the tree.** Two checkers have now preferred to
+   rephrase. That is evidence it may be unnecessary; I have not removed it, because removing a
+   facility a checker judged net-positive, in the same cycle where I am fixing a bypass I
+   introduced, is not a change I should make on my own judgement.
+
+## Note to the checker
+
+The paragraph about G4 blocking other lanes is the decision I would most like ruled on rather than
+left to me. Everything else in this cycle is a correction of something I got wrong.
