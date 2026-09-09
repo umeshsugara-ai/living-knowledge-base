@@ -38,6 +38,7 @@ const API = argOf("api", "http://localhost:3300");
 const PAGES = [
   ["/", "Dashboard — stat tiles must equal the collection counts in live-verify's summary.md"],
   ["/sessions", "Sessions — list length must equal the `sessions` count"],
+  ["/ask", "Ask — page loads and whitespace stays disabled; real submission needs the external-data gate"],
   ["/brain", "Brain — graph renders from tree_index; topics/speakers/decisions are EMPTY by design today"],
   ["/calendar", "Calendar — real past sessions; upcoming is honestly empty without a connected calendar"],
   ["/sources", "Sources — rows must match GET /sources"],
@@ -55,6 +56,11 @@ if (process.argv.includes("--up")) {
   const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const apiPort = new URL(API).port || "3300";
   const webPort = new URL(WEB).port || "5173";
+  const workDb = process.env.MONGO_WORK_DB?.trim();
+  if (!workDb) {
+    console.error("Refusing to start the live demo without MONGO_WORK_DB; production/default Mongo is read-only.");
+    process.exit(2);
+  }
 
   console.log(`starting api on :${apiPort} and web on :${webPort} (foreground; Ctrl-C stops both)`);
   console.log("then, in another terminal: pnpm demo:live");
@@ -65,10 +71,11 @@ if (process.argv.includes("--up")) {
     // looks exactly like a broken app.
     spawn("node", ["--import", "tsx", "src/index.ts"], {
       cwd: join(ROOT, "apps", "api"), stdio: "inherit", shell: true,
-      env: { ...process.env, PORT: apiPort, CORS_ORIGINS: WEB },
+      env: { ...process.env, MONGODB_DB: workDb, PORT: apiPort, CORS_ORIGINS: WEB },
     }),
     spawn("npx", ["vite", "--port", webPort], {
-      cwd: join(ROOT, "apps", "web"), stdio: "inherit", shell: true, env: { ...process.env },
+      cwd: join(ROOT, "apps", "web"), stdio: "inherit", shell: true,
+      env: { ...process.env, VITE_API_BASE_URL: API },
     }),
   ];
   for (const sig of ["SIGINT", "SIGTERM"]) {

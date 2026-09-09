@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "unit": "ask-live-browser-runner",
+  "checkerMode": ["A", "D"],
+  "projectRoot": "D:\\KnowledgeBase",
+  "contract": "qa/contracts/web-ask-page.md",
+  "manifest": "qa/manifests/ask-live-browser-runner.md",
+  "fixCycle": 1,
+  "checkedAt": "2026-09-09T17:38:45.0439858+05:30",
+  "verdict": "PASS",
+  "scope": {
+    "criteria": ["C1", "C2"],
+    "applicableInvariants": ["I2"],
+    "excluded": [
+      "The original unit's I1 blast-radius rule is explicitly not reused by this follow-up.",
+      "No real Ask question was submitted because qa/gates/external-eval-data-egress.md remains unanswered.",
+      "U3.1's final real answer-and-citations exit criterion remains in progress."
+    ]
+  },
+  "environment": {
+    "apiUrl": "http://localhost:3312",
+    "webUrl": "http://localhost:5182",
+    "workDatabase": "lkb_codex_work_20260909",
+    "authentication": {
+      "result": "PASS",
+      "evidence": "The supplied work-only key returned 23 authenticated sessions from GET http://localhost:3312/sessions. In the checker-owned browser tab, protected Settings and Sessions data rendered successfully."
+    }
+  },
+  "browser": {
+    "instrument": "checker-owned Codex in-app browser tab",
+    "ask": {
+      "url": "http://localhost:5182/ask",
+      "headingVisible": true,
+      "persistentNavAskVisible": true,
+      "whitespaceEntered": "   ",
+      "buttonEnabledBeforeEnter": false,
+      "buttonEnabledAfterEnter": false,
+      "answerCardsBeforeEnter": 0,
+      "answerCardsAfterEnter": 0,
+      "urlAfterEnter": "http://localhost:5182/ask",
+      "result": "PASS"
+    },
+    "sessions": {
+      "url": "http://localhost:5182/sessions",
+      "visibleSessionLinks": 23,
+      "firstSession": {
+        "title": "Visa Blueprint Part 2: Italy, France, New Zealand",
+        "href": "/sessions/2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "detailUrl": "http://localhost:5182/sessions/2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "overviewVisible": true,
+        "claimsHeading": "Claims (6)",
+        "claimsHeadingVisible": true,
+        "transcriptHeading": "Transcript (291 turns)",
+        "transcriptHeadingVisible": true
+      },
+      "result": "PASS"
+    },
+    "console": {
+      "errorCount": 0,
+      "errors": [],
+      "warningCount": 4,
+      "warnings": [
+        "React Router v7 startTransition future-flag warning, repeated after navigation.",
+        "React Router v7 relativeSplatPath future-flag warning, repeated after navigation."
+      ],
+      "assessment": "No console errors. The four warnings are duplicate non-failing React Router future-version notices."
+    },
+    "realQuestionSubmitted": false,
+    "result": "PASS"
+  },
+  "commands": [
+    {
+      "command": "node --check scripts/demo-live.mjs",
+      "exitCode": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "apps\\web\\node_modules\\.bin\\vitest.CMD run src/pages/AskPage.test.tsx",
+      "cwd": "D:\\KnowledgeBase\\apps\\web",
+      "exitCode": 0,
+      "summary": "1 test file passed; 6/6 tests passed",
+      "result": "PASS"
+    },
+    {
+      "command": "apps\\web\\node_modules\\.bin\\tsc.CMD --noEmit -p tsconfig.json",
+      "cwd": "D:\\KnowledgeBase\\apps\\web",
+      "exitCode": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "PASS",
+      "notes": "Only Git line-ending and inaccessible global-ignore warnings were emitted; no whitespace errors."
+    },
+    {
+      "command": "node scripts/demo-live.mjs --up --api http://localhost:3412 --web http://localhost:5282",
+      "environment": {
+        "MONGO_WORK_DB": "unset",
+        "MONGODB_DB": "unset"
+      },
+      "exitCode": 2,
+      "stdout": "Refusing to start the live demo without MONGO_WORK_DB; production/default Mongo is read-only.",
+      "listenersBefore": 0,
+      "listenersAfter": 0,
+      "result": "PASS"
+    }
+  ],
+  "staticInspection": {
+    "runner": {
+      "result": "PASS",
+      "evidence": [
+        "scripts/demo-live.mjs includes /ask in PAGES.",
+        "The --up path trims and requires MONGO_WORK_DB before defining or spawning either child.",
+        "The API child receives MONGODB_DB equal to the explicit work database.",
+        "The Vite child receives VITE_API_BASE_URL equal to the selected API URL."
+      ]
+    },
+    "evalWriter": {
+      "result": "PASS",
+      "evidence": [
+        "scripts/eval-recall.mjs no longer destructures jobWrite from buildRouting().",
+        "routeEmbed receives write: async () => {}, an evaluator-local no-op.",
+        "The evaluator's Mongo collection references in this path are find(...).toArray() reads for chunks and optional turns; no jobs collection writer is passed."
+      ]
+    }
+  },
+  "criteria": [
+    {
+      "id": "C1",
+      "result": "PASS",
+      "evidence": "Ask was visible in persistent navigation and clicking/navigating to /ask rendered the Ask heading and question form."
+    },
+    {
+      "id": "C2",
+      "result": "PASS",
+      "evidence": "The 6/6 AskPage suite independently proved trimmed submission and the empty-form guard. Live browser whitespace plus Enter left Ask disabled, created no answer state, and did not navigate. Protected Sessions and detail data loaded through the distinct selected API port, confirming the corrected Vite-to-API runtime path without external-data egress."
+    }
+  ],
+  "invariants": [
+    {
+      "id": "I2",
+      "result": "PASS",
+      "evidence": "AskPage tests passed 6/6, apps/web TypeScript compilation completed cleanly, runner syntax passed, and git diff --check passed."
+    }
+  ],
+  "issues": [
+    {
+      "id": "ISS-243",
+      "priorStatus": "fixed",
+      "checkedStatus": "verified",
+      "evidence": "Independent live browser check proved Ask is present, API-backed protected data loads across ports 5182 to 3312, whitespace cannot submit, and the missing-work-database startup exits 2 before listeners appear."
+    },
+    {
+      "id": "ISS-244",
+      "priorStatus": "fixed",
+      "checkedStatus": "verified",
+      "evidence": "Independent static trace confirmed the evaluator passes an evaluator-local async no-op writer to routeEmbed and does not obtain or pass production jobWrite."
+    }
+  ]
+}

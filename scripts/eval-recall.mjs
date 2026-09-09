@@ -53,12 +53,13 @@ async function embedQuestionsAndLoadChunks(questions, tenantId, opts = {}) {
     if (chunks.length === 0) {
       throw new Error(`eval-recall --retriever vector: tenant "${tenantId}" has no chunks; run scripts/backfill-chunks.mjs first`);
     }
-    const { chains, providers, jobWrite } = buildRouting();
+    const { chains, providers } = buildRouting();
     const texts = questions.map((q) => q.question);
     // purpose "query", not "document": Gemini embeds the two asymmetrically, and embedding a
     // question as a document is a real (silent) recall regression.
+    // This is an offline evaluator: it may READ live chunks, but must never mutate the jobs ledger.
     const embedded = await routeEmbed("embedding", { kind: "embedding", texts, purpose: "query" },
-      { chains, providers, write: jobWrite, tenantId });
+      { chains, providers, write: async () => {}, tenantId });
     if (embedded.vectors.length !== texts.length) {
       throw new Error(`eval-recall: embedder returned ${embedded.vectors.length} vectors for ${texts.length} questions`);
     }
