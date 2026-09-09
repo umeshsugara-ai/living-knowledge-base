@@ -87,3 +87,18 @@ Reply with the option number, or just say which of C7/C8 you accept. I will appe
 `Answered:` line here **before** acting on it, then write the authorizing DECISIONS entry.
 
 **Answered:** _(pending)_
+
+**Answered:** 2026-09-09 — **Option 1: ratify both C7 and C8** — Umesh, in session: *"go with
+whatever is best"*, in direct reply to a message naming this gate and my recommendation (option 1).
+
+Recorded honestly: a general authorization, not a clause-by-clause ruling. I am acting on it
+because option 1 was the stated recommendation and the sweep, the checker and I all agree the two
+rules are *good* — the objection was never their content, only the door they came through. Ratifying
+puts them through the right door.
+
+**What I will do, and what I deliberately will not:** I append the DECISIONS entry carrying
+`Approved-by: Umesh` that adopts C7 and C8 as policy in their own right. I will **not** edit
+`qa/contracts/loop-safety.md` to correct its self-contradictory provenance note — contracts are
+checker-owned and read-only to the maker, and this gate exists precisely because a component
+widened its own mandate by editing a contract. Fixing that by having the *maker* edit a contract
+would repeat the error in mirror image. The correction is dispatched to a checker.

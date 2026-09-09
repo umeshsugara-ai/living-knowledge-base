@@ -73,3 +73,18 @@ last wrote a manifest.
 `vector-retrieval` **and** `entity-promotion`. The checker drafts; you approve. I cannot write
 either, because a maker writing the contract it will be judged against is the segregation-of-duties
 failure ISS-006 was filed for.
+
+**Answered:** 2026-09-09 — **Option 1, both layers** — Umesh, in session: *"go with whatever is
+best"*, given in direct reply to a message that named this gate, its options and my recommendation.
+
+Recorded honestly: this was a general "take the best option", **not** an option-by-option ruling.
+The recommendation it authorizes is the one I had stated — `/checker init-contract` for
+`vector-retrieval` **and** `entity-promotion`, with the **checker drafting and the human approving**.
+It does not authorize the maker to write either contract; a maker writing the contract it will be
+judged against is the segregation-of-duties failure ISS-006 was filed for, and a broad "whatever is
+best" cannot dissolve that rule — if anything it makes honouring it more important, since nobody
+else is watching the boundary.
+
+The constraint recorded above must survive into the vector contract: **recall@5 = 0.935 is a FLOOR,
+citable only with the sibling-session caveat, and may not by itself satisfy a `≥0.85` criterion**
+while `golden-set-redesign.md` precondition 1 is open.
