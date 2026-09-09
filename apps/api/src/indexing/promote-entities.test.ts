@@ -83,15 +83,75 @@ test("ISS-126: the written topic carries the UNIONED sessionRefs, not just the i
   assert.equal(set.tenantId, "t");
 });
 
-test("ISS-126: every write is tenant-scoped on filter and body", async () => {
+test("ISS-126/ISS-202: every write is tenant-scoped on filter AND body", async () => {
+  // ISS-202. The version this replaces was VACUOUS in three separate ways, and it is the one test
+  // in this file whose subject is tenancy — the security class this repo never round-caps.
+  //
+  //   for (const c of calls.filter(...)) {
+  //     const body = c.update?.$set;
+  //     if (body && "tenantId" in body) { assert.equal(body.tenantId, "tenant-a"); }
+  //   }
+  //
+  //   1. the filtered array was never asserted non-empty — zero writes means the loop body never
+  //      runs and the test passes having checked nothing;
+  //   2. the body check was GATED on `"tenantId" in body`, so an implementation that drops
+  //      tenantId from `$set` entirely skips the assertion instead of failing it. That is exactly
+  //      the mutation ISS-156 records as having SURVIVED on the org body;
+  //   3. it never checked the FILTER half of its own name.
+  //
+  // Every assertion below is therefore unconditional, and the non-emptiness is asserted first so
+  // nothing downstream can pass by iterating an empty list.
   const { db, calls } = fakeDb();
   await promoteAndPersistEntities("tenant-a", "s1", treeRoot(), db);
-  for (const c of calls.filter((x) => ["topics", "orgs", "claims"].includes(x.coll))) {
-    const body = (c.update as Record<string, Record<string, unknown>> | undefined)?.$set;
-    if (body && "tenantId" in body) {
-      assert.equal(body.tenantId, "tenant-a", `${c.coll}.${c.op} must not write another tenant's id`);
-    }
+
+  const scoped = calls.filter((x) => ["topics", "orgs", "claims"].includes(x.coll));
+  assert.ok(scoped.length > 0, "NON-VACUITY: no writes were captured, so this test would assert nothing");
+
+  // Both entity collections must actually have been written, or "every write" is a claim about a
+  // set that silently shrank.
+  for (const coll of ["topics", "orgs"]) {
+    assert.ok(scoped.some((c) => c.coll === coll), `no ${coll} write captured`);
   }
+
+  // Reads and writes are partitioned rather than filtered down to writes. Writing this the first
+  // time, the unconditional body assertion tripped on `claims.find` — a READ, which has no `$set`.
+  // The reflex is to narrow the loop to writes; that would drop the read entirely, and an unscoped
+  // READ is this repo's most expensive defect to date (ISS-078, a cross-tenant disclosure that
+  // survived four PASSes). So reads are checked too, on the filter alone.
+  const isWrite = (op: string) => op.startsWith("update") || op.startsWith("insert") || op.startsWith("replace");
+
+  const filterIsScoped = (f: Record<string, unknown> | undefined) =>
+    !!f &&
+    (f.tenantId === "tenant-a" ||
+      (typeof f._id === "string" && f._id.includes("tenant-a")) ||
+      // `sessionId` alone is NOT accepted: session ids are not tenant-namespaced, so a filter on
+      // one is only as safe as the caller. That is precisely ISS-121's collision.
+      false);
+
+  let writeCount = 0;
+  for (const c of scoped) {
+    const where = `${c.coll}.${c.op}`;
+
+    // FILTER — for reads AND writes. The half the old test's own name promised and never checked.
+    // A correctly-scoped body behind an unscoped filter still touches another tenant's row.
+    assert.ok(
+      filterIsScoped(c.filter),
+      `${where}: filter is not tenant-scoped — ${JSON.stringify(c.filter)}. A tenant-namespaced ` +
+        `_id counts (that is ISS-121's fix); a bare slug or a lone sessionId does not.`,
+    );
+
+    if (!isWrite(c.op)) continue;
+    writeCount++;
+
+    // BODY — unconditional for writes. Presence is asserted BEFORE value, so an implementation
+    // that drops tenantId from `$set` fails here instead of skipping the check. That is the
+    // ISS-156 mutation which this file itself records as having survived.
+    const body = (c.update as Record<string, Record<string, unknown>> | undefined)?.$set;
+    assert.ok(body, `${where}: a write with no $set body`);
+    assert.ok("tenantId" in body, `${where}: $set MUST carry tenantId — dropping it used to pass`);
+    assert.equal(body.tenantId, "tenant-a", `${where} wrote another tenant's id into the body`);
+  }
+  assert.ok(writeCount > 0, "NON-VACUITY: the body half asserted nothing — no writes were seen");
 });
 
 test("ISS-126: promotion NEVER THROWS — a write failure must not strand the session (ISS-121's lesson)", async () => {
