@@ -10,6 +10,8 @@ import assert from "node:assert/strict";
 import type { Db } from "mongodb";
 import { createAskArmsFor } from "./ask-arms.js";
 import type { TreeIndexNode } from "@lkb/core";
+import { startTestServer } from "./testUtils.js";
+import { buildTestDeps, fakeKeyStore, fakeTreeStore, fakeAskDeps } from "./fixtures.js";
 
 const TREE: TreeIndexNode = {
   node_id: "tenant:t1", title: "t1", level: "tenant", summary: "", children: [
@@ -109,4 +111,112 @@ test("no embedder configured = no vector arm, and that is NOT a degradation", as
   const res = await createAskArmsFor({ db })("t1")("visas?", TREE);
   assert.equal(res.degraded, null, "an install without embeddings is not broken");
   assert.equal(res.arms.length, 1);
+});
+
+// ---------------------------------------------------------------------------------------------
+// ISS-169 — THE BINDING SITE, not the factory's internals.
+//
+// The tests above pin what `createAskArmsFor(deps)(tenantId)` does once a tenant is known. None of
+// them pin WHERE that call happens, and that is the whole of C6: a checker hoisted
+// `deps.extraCandidateArmsFor("system")` out of the request handler in `routes/ask.ts` — so every
+// tenant's question would query the boot tenant's corpus — and 170/170 tests stayed GREEN. The
+// shipped code was correct; the proof was missing, on the one criterion this contract marks
+// security-class. `extraCandidateArmsFor` was referenced by zero tests in the repo.
+//
+// So these drive the real router over real HTTP with a RECORDING factory and assert the binding
+// itself: once per request, with the VERIFIED KEY's tenant, and re-bound between requests.
+// ---------------------------------------------------------------------------------------------
+
+/** Records each `extraCandidateArmsFor(tenantId)` binding and each arms invocation. */
+function recordingArms() {
+  const boundWith: string[] = [];
+  const calledWith: string[] = [];
+  const extraCandidateArmsFor = (tenantId: string) => {
+    boundWith.push(tenantId);
+    return async (_query: string, _tree: TreeIndexNode) => {
+      calledWith.push(tenantId);
+      return { arms: [] as TreeIndexNode[][], degraded: null };
+    };
+  };
+  return { boundWith, calledWith, extraCandidateArmsFor };
+}
+
+const TWO_TENANT_KEYS = fakeKeyStore({
+  "key-a": { tenantId: "tenant-a", scopes: ["ask"] },
+  "key-b": { tenantId: "tenant-b", scopes: ["ask"] },
+});
+
+async function askAs(baseUrl: string, key: string) {
+  return fetch(`${baseUrl}/ask`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+    body: JSON.stringify({ query: "topic one" }),
+  });
+}
+
+test("C6/ISS-169 — the arms are bound PER REQUEST from the verified key's tenant, never at boot", async () => {
+  const rec = recordingArms();
+  const server = await startTestServer(
+    buildTestDeps({
+      keyStore: TWO_TENANT_KEYS,
+      ask: {
+        tree: fakeTreeStore(),
+        askDeps: fakeAskDeps(),
+        extraCandidateArmsFor: rec.extraCandidateArmsFor,
+      },
+    }),
+  );
+  try {
+    // Nothing may be bound before a request arrives: `buildProductionDeps()` has no tenant, and its
+    // router-level id is the literal string "system".
+    assert.deepEqual(rec.boundWith, [], "binding before any request is the boot-capture bug itself");
+
+    assert.equal((await askAs(server.baseUrl, "key-a")).status, 200);
+    assert.equal((await askAs(server.baseUrl, "key-b")).status, 200);
+
+    // The ORDERED list is the assertion, not a membership check: a hoisted binding produces
+    // ["system"] and a bind-once-then-reuse produces ["tenant-a"] — both fail here, differently.
+    assert.deepEqual(rec.boundWith, ["tenant-a", "tenant-b"], "one binding per request, in order");
+    assert.deepEqual(rec.calledWith, ["tenant-a", "tenant-b"], "and each request used ITS OWN binding");
+  } finally {
+    await server.close();
+  }
+});
+
+test("C6/ISS-169 — two requests from the SAME key still re-bind, so no binding outlives its request", async () => {
+  // Caching one tenant's binding is safe today and is exactly what silently becomes unsafe the
+  // moment the cache key is dropped or the process is reused. The invariant is structural.
+  const rec = recordingArms();
+  const server = await startTestServer(
+    buildTestDeps({
+      keyStore: TWO_TENANT_KEYS,
+      ask: { tree: fakeTreeStore(), askDeps: fakeAskDeps(), extraCandidateArmsFor: rec.extraCandidateArmsFor },
+    }),
+  );
+  try {
+    await askAs(server.baseUrl, "key-a");
+    await askAs(server.baseUrl, "key-a");
+    assert.deepEqual(rec.boundWith, ["tenant-a", "tenant-a"], "two requests, two bindings");
+  } finally {
+    await server.close();
+  }
+});
+
+test("C6/ISS-169 — an UNAUTHORIZED request binds nothing at all", async () => {
+  // The bind must sit behind `requireScope("ask")`, not in front of it: a factory that runs before
+  // auth would touch a tenant's corpus for a caller who was about to be refused.
+  const rec = recordingArms();
+  const server = await startTestServer(
+    buildTestDeps({
+      keyStore: fakeKeyStore({ "no-scope": { tenantId: "tenant-a", scopes: ["sources"] } }),
+      ask: { tree: fakeTreeStore(), askDeps: fakeAskDeps(), extraCandidateArmsFor: rec.extraCandidateArmsFor },
+    }),
+  );
+  try {
+    assert.equal((await askAs(server.baseUrl, "no-scope")).status, 403);
+    assert.equal((await askAs(server.baseUrl, "not-a-key")).status, 401);
+    assert.deepEqual(rec.boundWith, [], "a refused caller must never reach the corpus");
+  } finally {
+    await server.close();
+  }
 });

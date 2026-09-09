@@ -1,0 +1,37 @@
+{
+  "unit": "hybrid-arms-binding",
+  "actor": "maker",
+  "cycle": 2,
+  "commit": "PENDING-COMMIT",
+  "servers": { "web": "http://localhost:5173", "api": "http://localhost:3300" },
+  "why_ui_touching": "qa/ui-surfaces.json matches apps/api/src/ask-arms.ts, created by this unit in cycle 1. This cycle's own diff (ask-arms.test.ts, scripts/eval-recall.mjs) does NOT match the pattern, but D-024 gates the UNIT at PASS, not the cycle, so the evidence is owed here.",
+  "pages": [
+    {
+      "path": "/ask",
+      "consoleErrors": 0,
+      "consoleWarnings": 2,
+      "interactions": [
+        {
+          "did": "typed 'What did speakers say about UK student visas and post-study work?' and clicked Ask",
+          "expected": "a real answer citing an internal session, produced through askV2 with the per-request-bound retrieval arms",
+          "observed": "answer cites UKVI's tightened Basic Compliance Assessment and Enroly CAS Shield; INTERNAL SOURCES (1) = toc/year:2026/month:08/session:2026-08-03-uk-beyond-offer-letters, which is the correct session for UK visas; WEB SOURCES (0); verdict: ambiguous",
+          "pass": true
+        },
+        {
+          "did": "read the second half of the answer",
+          "expected": "no fabricated post-study-work content",
+          "observed": "'The context does not contain information about what speakers said regarding post-study work.' It declined rather than inventing.",
+          "pass": true
+        }
+      ],
+      "screenshot": "ask.png"
+    }
+  ],
+  "verdict": "PASS",
+  "skipReason": null,
+  "limits_disclosed": [
+    "This is the MAKER's smoke pass, never the validation. D-024 / maker SKILL.md:199 - the checker runs Mode D with its own script and its own clicks.",
+    "One question, one tenant. It demonstrates the live path works end to end; it is NOT a recall measurement and must not be cited as one.",
+    "Servers were already running from an earlier launch (EADDRINUSE on 3300, vite fell through to 5175); the probed 3300/5173 pair both returned 200 and served this session."
+  ]
+}

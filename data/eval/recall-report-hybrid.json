@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-09T02:25:14.382Z",
+  "generatedAt": "2026-09-09T04:02:34.624Z",
   "k": 5,
-  "retriever": "hybrid (tree + cosine + lexical, RRF, gemini-embedding-001, 1452 chunks)",
-  "recallAtK": 0.8913043478260869,
+  "retriever": "hybrid (tree=HEURISTIC PROXY not the shipped selectNodes LLM arm; + cosine + lexical@k, RRF, gemini-embedding-001, 1452 chunks)",
+  "recallAtK": 0.8695652173913043,
   "total": 92,
-  "hits": 82,
+  "hits": 80,
   "misses": [
     {
       "id": "2026-05-23-uniaccess-atlas-skilltech-gq01",
@@ -31,15 +31,27 @@
       ]
     },
     {
+      "id": "2026-06-30-exploring-identity-success-counseling-gq02",
+      "question": "Besides just getting university offers, what do counselors see as a successful result for a student?",
+      "expectedSessionId": "2026-06-30-exploring-identity-success-counseling",
+      "got": [
+        "2026-08-03-uk-beyond-offer-letters",
+        "2026-05-22-uniaccess-xavier-university",
+        "2026-05-08-funding-dreams-loans-forex",
+        "2026-04-21-visa-blueprint-part2-italy-france-nz",
+        "2026-06-19-entrance-exams-pathways-india-part1"
+      ]
+    },
+    {
       "id": "2026-07-03-inside-the-uc-session-gq01",
       "question": "Is there a single application deadline or do they review applications as they come in?",
       "expectedSessionId": "2026-07-03-inside-the-uc-session",
       "got": [
         "2026-04-21-visa-blueprint-part2-italy-france-nz",
         "2026-08-12-uniaccess-ashoka-university",
-        "2026-06-19-entrance-exams-pathways-india-part1",
         "2026-07-08-beyond-black-robes-law-careers",
-        "2026-08-10-ucas-what-changed-what-matters"
+        "2026-08-10-ucas-what-changed-what-matters",
+        "2026-07-15-creative-futures"
       ]
     },
     {
@@ -61,8 +73,8 @@
       "got": [
         "2026-08-10-ucas-what-changed-what-matters",
         "2026-07-03-inside-the-uc-session",
-        "2026-06-03-dual-enrollment-pathway",
         "2026-08-12-uniaccess-ashoka-university",
+        "2026-06-03-dual-enrollment-pathway",
         "2026-06-19-entrance-exams-pathways-india-part1"
       ]
     },
@@ -91,6 +103,18 @@
       ]
     },
     {
+      "id": "2026-08-24-uniaccess-leeds-arts-university-gq01",
+      "question": "Are there any art programs where I don't need to submit a portfolio to apply?",
+      "expectedSessionId": "2026-08-24-uniaccess-leeds-arts-university",
+      "got": [
+        "2026-07-03-inside-the-uc-session",
+        "2026-07-22-uniaccess-cept-university",
+        "2026-05-28-in-focus-1",
+        "2026-07-15-creative-futures",
+        "2026-08-12-uniaccess-ashoka-university"
+      ]
+    },
+    {
       "id": "2026-08-27-in-focus-4-gq01",
       "question": "Is your program a standard curriculum for everyone, or is it tailored to each student's specific needs and weaknesses?",
       "expectedSessionId": "2026-08-27-in-focus-4",
@@ -107,8 +131,8 @@
       "question": "Beyond just getting into a good school, how does this help prepare students for the actual difficulty of university-level academic work?",
       "expectedSessionId": "2026-08-27-in-focus-4",
       "got": [
-        "2026-06-25-in-focus-2",
         "2026-06-03-dual-enrollment-pathway",
+        "2026-06-25-in-focus-2",
         "2026-06-19-entrance-exams-pathways-india-part1",
         "2026-07-08-beyond-black-robes-law-careers",
         "2026-06-30-exploring-identity-success-counseling"
@@ -136,12 +160,12 @@
     "k": 5,
     "sessionCount": 23,
     "chanceFloor": 0.21739130434782608,
-    "measuredRecall": 0.8913043478260869,
+    "measuredRecall": 0.8695652173913043,
     "controlRecall": 0.21739130434782608,
-    "liftOverControl": 0.6739130434782609,
+    "liftOverControl": 0.6521739130434783,
     "saturated": false,
     "verdict": "informative",
-    "reason": "0.891 vs a 0.217 question-blind control (+0.674), with 10 miss(es) left to move"
+    "reason": "0.870 vs a 0.217 question-blind control (+0.652), with 12 miss(es) left to move"
   },
   "goldenSetProvenance": {
     "generatedAt": "2026-09-08T09:01:27.115Z",
@@ -162,7 +186,7 @@
     "note": "0 candidates rejected, so the kept set IS the candidate set and the filter introduces no selection bias on this run — kept === combined by construction",
     "kept": {
       "n": 92,
-      "recallAtK": 0.8913043478260869
+      "recallAtK": 0.8695652173913043
     },
     "rejected": {
       "n": 0,
@@ -170,7 +194,7 @@
     },
     "combined": {
       "n": 92,
-      "recallAtK": 0.8913043478260869
+      "recallAtK": 0.8695652173913043
     }
   }
 }

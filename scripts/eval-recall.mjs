@@ -127,16 +127,26 @@ async function main() {
       // so the same rrfMerge is reused rather than a second implementation that could drift.
       const treeArm = treeRetrieve(question, kk);
       const vectorArm = vectorRetrieve(question, kk);
+      // ISS-170: the SHIPPED depth is `k` turns, not `k*4`. `ask-arms.ts`'s lexical arm calls
+      // `lexicalSearchTurns(query, turns, k)` and THEN dedupes by session, so it can collapse to
+      // one or two sessions. Reading 4x deeper here gave the eval a lexical arm strictly stronger
+      // than production's, which is measuring a policy that does not ship.
       const seen = new Set();
       const lexArm = [];
-      for (const h of lexicalSearchTurns(question, turns, kk * 4)) {
+      for (const h of lexicalSearchTurns(question, turns, kk)) {
         if (seen.has(h.sessionId)) continue;
         seen.add(h.sessionId);
         lexArm.push(h.sessionId);
       }
-      return rrfMerge([treeArm, vectorArm, lexArm.slice(0, kk)], { keyOf: (id) => id }).slice(0, kk);
+      return rrfMerge([treeArm, vectorArm, lexArm], { keyOf: (id) => id }).slice(0, kk);
     };
-    retrieverName = `hybrid (tree + cosine + lexical, RRF, ${model}, ${chunks.length} chunks)`;
+    // ISS-170: the tree arm is NAMED as the proxy it is. `heuristic-retriever.ts`'s own header says
+    // it is "NOT a claim that this measures the real pipeline's recall"; the shipped tree arm is
+    // `selectNodes`, an LLM call. Any reader of this report must see that in the retriever string
+    // rather than having to know it — the number characterises a near neighbour of what ships.
+    retrieverName =
+      `hybrid (tree=HEURISTIC PROXY not the shipped selectNodes LLM arm; + cosine + lexical@k, ` +
+      `RRF, ${model}, ${chunks.length} chunks)`;
   } else if (useVector) {
     const { createVectorRetriever } = await import("../packages/index/src/vector/retriever.ts");
     const { questionVectors, chunks, model } = await embedQuestionsAndLoadChunks(questions, tenantId);

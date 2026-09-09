@@ -2,11 +2,76 @@
 **Contract:** qa/contracts/hybrid-retrieval.md
 **Goal task:** U1.5 (part 2 — discharges the C6/C7 deferral)
 **Date:** 2026-09-09
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** none — roadmap feature work
 
-## THE HEADLINE: the hybrid merge is WORSE than vector alone, and I am reporting that, not burying it
+## CYCLE 2 — both cycle-1 failures fixed, and the corrected number is WORSE than the one I reported
+
+### ISS-169 (C6, security-class) — the binding site is now pinned
+
+The checker hoisted `deps.extraCandidateArmsFor("system")` out of the request handler and **170/170
+stayed green**. It was right about why: my tests pinned what the factory *does* once a tenant is
+known, and nothing pinned *where* it is called. `extraCandidateArmsFor` was referenced by zero tests
+in the repo.
+
+Three tests added to `apps/api/src/ask-arms.test.ts`, driving the real router over real HTTP with a
+recording factory (173/173 green, 0 cancelled):
+
+| mutation to `routes/ask.ts` | tests killed |
+|---|---|
+| **A — hoist the bind to boot** (the checker's own) | **3 / 3** |
+| **B — bind lazily once, then reuse** (the cheap wrong fix) | **2 / 3** |
+
+B matters more than A. A cache is safe today and becomes a cross-tenant read the moment its key is
+dropped — and it would survive a test that only asserted "not `system`". The assertion is therefore
+the **ordered list** of bindings, not a membership check: a hoist yields `["system"]` and a cache
+yields `["tenant-a"]`, and both fail, differently. The third test pins that a **refused** caller
+(401/403) binds nothing at all — the bind must sit behind `requireScope`, or a caller who is about
+to be rejected has already touched a tenant's corpus.
+
+Mutations were armed and restored through `scripts/lib/mutate.mjs` with a trap firing on
+timeout/interrupt/error (D-020); `assert-clean` reports none outstanding.
+
+### ISS-170 (C7) — the number measured an arm that does not ship
+
+Both defects the checker named were real. Fixed in `scripts/eval-recall.mjs`:
+
+1. **Lexical depth** — the eval read `k*4 = 20` turns; `ask-arms.ts` reads `k = 5` and then dedupes
+   by session. The eval's lexical arm was strictly stronger than production's.
+2. **The tree arm is now NAMED in the report's `retriever` string** as
+   `tree=HEURISTIC PROXY not the shipped selectNodes LLM arm`, so no reader has to already know it.
+
+**Re-measured at the shipped depth: 0.870 (80/92), not 0.891.**
+
+| retriever | recall@5 | hits |
+|---|---|---|
+| heuristic (tree, proxy) | 0.391 | 36/92 |
+| **vector (cosine)** | **0.935** | 86/92 |
+| **hybrid — as reported cycle 1** | 0.891 | 82/92 |
+| **hybrid — corrected, shipped depth** | **0.870** | **80/92** |
+| control (question-blind) | 0.217 | — |
+
+**The correction moved the number down, and the regression vs vector alone widened from −0.043 to
+−0.065.** Two more of the questions I had counted as hits were being carried by a lexical arm four
+times deeper than the one that ships. I have not tuned weights to recover them, for the same reason
+as cycle 1.
+
+One thing I claimed in cycle 1 is now **withdrawn**: I explained the regression as "the tree arm
+votes with almost the authority of noise." That is a property of the *heuristic proxy*, which does
+not ship. It may still be true of `selectNodes`; **I have no evidence either way**, and the checker
+was right that it was stated as a cause when it was a guess about a different arm.
+
+### Still not measured (unchanged, and I am not claiming otherwise)
+
+The eval fuses **session ids**; `askV2` fuses **nodes** through `selectNodes`. Same `rrfMerge`, same
+key discipline, different call path. 0.870 characterises the merge *policy* on a near neighbour of
+the shipped configuration — not `askV2` end to end. A bounded live `/ask` sample is the thing that
+would close this, and it is not in this cycle.
+
+---
+
+## THE HEADLINE (cycle 1, kept — numbers superseded above): the hybrid merge is WORSE than vector alone
 
 C7 required U1.5 to measure its **own** recall rather than inherit U1.4's 0.935. Measured, through
 the same harness, the same 92-question golden set and the same question-blind control:
@@ -81,5 +146,25 @@ recall@5 = 0.891 (82/92) · control 0.217 · VERDICT: INFORMATIVE, 10 misses lef
    `rrfMerge` and the same key discipline, but they are not the same call path — so the measured
    number is of the merge *policy*, not of `askV2` end to end. That is a real gap between what I
    measured and what ships.
+
+## Live browser evidence
+
+`qa/evidence/browser-hybrid-arms-binding-2026-09-09/` (D-024).
+
+**Why this unit is UI-touching:** `qa/ui-surfaces.json` matches `apps/api/src/ask-arms.ts`, which
+this unit created in cycle 1. This cycle's own diff (`ask-arms.test.ts`, `scripts/eval-recall.mjs`)
+does **not** match the pattern — but D-024 gates the **unit at PASS**, not the cycle, so the
+evidence is owed here rather than skipped on a technicality.
+
+`/ask`, real browser, **0 console errors**. Typed *"What did speakers say about UK student visas and
+post-study work?"* and clicked Ask. The answer cites UKVI's tightened Basic Compliance Assessment
+and Enroly CAS Shield, with `INTERNAL SOURCES (1)` =
+`toc/year:2026/month:08/session:2026-08-03-uk-beyond-offer-letters` — the correct session — and
+`WEB SOURCES (0)`. On the half it has no evidence for it says *"The context does not contain
+information about what speakers said regarding post-study work"* rather than inventing it.
+
+**This is a smoke pass, not the validation** (`maker/SKILL.md:199`). It shows the live path works
+end to end through the per-request-bound arms; it is **one question on one tenant** and is not a
+recall measurement. The checker runs Mode D with its own script.
 
 ## Status: ready-for-check
