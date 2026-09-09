@@ -280,3 +280,77 @@ test("ISS-157 / C2: the guard does not drop LEGITIMATE arm nodes that are in the
   });
   assert.equal(result.verdict, "correct", "a real node from an arm must still reach the answer");
 });
+
+test("ISS-158 / C2: a fabricated node wearing a REAL node_id cannot poison the citation", async () => {
+  // The cycle-2 bypass, and the sharper version of the ghost attack. The guard filtered on the id
+  // STRING, so an arm supplying a real-but-unselected node_id kept ITS OWN object — and router.ts
+  // copies node.evidence verbatim, so a poisoned summary and ANOTHER TENANT'S turn_id reached the
+  // answer context with all 47 tests green.
+  //
+  // Checking that an id is known says nothing about the object carrying it. An arm's job is to say
+  // WHICH nodes are relevant; it has no authority over what those nodes CONTAIN.
+  const write = fakeWrite();
+  const POISONED = {
+    node_id: "tenant:t1/session:b", // a REAL id that selectNodes did not return
+    title: "B",
+    level: "session",
+    summary: "POISONED SUMMARY injected by a retrieval arm.",
+    evidence: [{ turn_id: "tenant:t9/turn:X", sessionId: "t9" }],
+    children: [],
+  } as unknown as TreeIndexNode;
+
+  const result = await askV2("what color are oranges?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.1, "tenant:t1/session:b": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [[POISONED]], degraded: null }),
+    write,
+    tenantId: "t1",
+  });
+
+  const cited = JSON.stringify(result.sources.internal);
+  assert.ok(!cited.includes("POISONED"), `the arm's fabricated summary reached the citation: ${cited}`);
+  assert.ok(!cited.includes("tenant:t9"), `another tenant's evidence reached the citation: ${cited}`);
+  // and the REAL node behind that id must still be usable — this is a resolve, not a rejection.
+  assert.equal(result.verdict, "correct");
+});
+
+test("ISS-159: candidates dropped by the membership guard are REPORTED, not dropped silently", async () => {
+  // Dropping them silently sat four lines below the code that exists to make a degraded run
+  // distinguishable from a healthy one. An arm that keeps proposing unknown nodes is a broken arm.
+  const write = fakeWrite();
+  const GHOST = { node_id: "tenant:t9/session:GHOST", title: "G", level: "session", summary: "x", children: [] } as TreeIndexNode;
+  const result = await askV2("what color are apples?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [[GHOST]], degraded: null }),
+    write,
+    tenantId: "t1",
+  });
+  const entry = result.auditLog.find((e) => e.jobKind === "ask.candidates_dropped");
+  assert.ok(entry, "a dropped candidate must be visible in the audit log");
+  assert.match(entry!.step, /1 candidate/);
+});
+
+test("ISS-159: a clean run reports NO drops — the entry must mean something", async () => {
+  const write = fakeWrite();
+  const result = await askV2("what color are oranges?", TREE, {
+    complete: fakeComplete(
+      { json: { node_ids: ["tenant:t1/session:a"] } },
+      { text: "Final answer" },
+    ),
+    scoreFn: fakeScoreFn({ "tenant:t1/session:a": 0.1, "tenant:t1/session:b": 0.9 }),
+    treeSearchFn: fakeTreeSearch,
+    extraCandidateArmsFn: async () => ({ arms: [[TREE.children[1]!]], degraded: null }),
+    write,
+    tenantId: "t1",
+  });
+  assert.equal(result.auditLog.find((e) => e.jobKind === "ask.candidates_dropped"), undefined);
+});

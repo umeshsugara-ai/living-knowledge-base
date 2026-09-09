@@ -75,15 +75,15 @@ function webDocText(source: WebSource): string {
 
 /** Every node_id in this tenant's loaded tree. Local and trivial — `packages/ask` may not import
  * `packages/index` (contract C10), and a membership set does not need a tree library. */
-function collectNodeIds(root: TreeIndexNode): Set<string> {
-  const ids = new Set<string>();
+function collectNodesById(root: TreeIndexNode): Map<string, TreeIndexNode> {
+  const byId = new Map<string, TreeIndexNode>();
   const stack: TreeIndexNode[] = [root];
   while (stack.length > 0) {
     const n = stack.pop()!;
-    ids.add(n.node_id);
+    if (!byId.has(n.node_id)) byId.set(n.node_id, n);
     for (const c of n.children ?? []) stack.push(c);
   }
-  return ids;
+  return byId;
 }
 
 export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps): Promise<AskV2Result> {
@@ -137,8 +137,25 @@ export async function askV2(query: string, tree: TreeIndexNode, deps: AskV2Deps)
     // prefix, and this contract's own invariant is that tenant scoping is never a property of the
     // caller behaving well. A retrieval arm is exactly the kind of thing that will later be fed by
     // a vector index over rows another tenant wrote.
-    const known = collectNodeIds(tree);
-    candidates = merged.filter((n) => known.has(n.node_id));
+    // RESOLVE, do not merely filter (ISS-158). Filtering on the id STRING let a fabricated node
+    // wearing a REAL node_id survive as its own object — and `router.ts` copies `node.evidence`
+    // verbatim into the citation, so a poisoned summary and another tenant's `turn_id` reached the
+    // answer context with the whole suite green. Checking that an id is known says nothing about
+    // the object carrying it.
+    //
+    // The tree's own node is therefore substituted for whatever the arm supplied. An arm's job is
+    // to say WHICH nodes are relevant; it has no authority over what those nodes CONTAIN.
+    const byId = collectNodesById(tree);
+    const resolved = merged.map((n) => byId.get(n.node_id)).filter((n): n is TreeIndexNode => n !== undefined);
+    // Dropped candidates are REPORTED (ISS-159). Dropping them silently sat four lines below the
+    // code that exists to make a degraded run distinguishable from a healthy one — an arm that
+    // keeps proposing unknown nodes is a broken arm, and it must not look like a quiet one.
+    const dropped = merged.length - resolved.length;
+    if (dropped > 0) {
+      await recordJob({ tenantId, kind: "ask.candidates_dropped", status: "done" }, write);
+      auditLog.push({ jobKind: "ask.candidates_dropped", step: `${dropped} candidate(s) not in this tenant's tree` });
+    }
+    candidates = resolved;
   }
   // ask() re-scores `candidates` via `scoreFn` internally (T-005's evaluate()) — reused here, not
   // duplicated. Each candidate's node comes back on `scored[].node`, still the full node object

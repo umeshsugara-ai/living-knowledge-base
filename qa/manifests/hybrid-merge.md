@@ -2,9 +2,9 @@
 **Contract:** qa/contracts/hybrid-retrieval.md
 **Goal task:** U1.5
 **Date:** 2026-09-09
-**Fix cycle:** 2 of max 3
+**Fix cycle:** 3 of max 3
 **Dual check:** no
-**Issues addressed:** ISS-157 (high) — the cycle-1 FAIL
+**Issues addressed:** ISS-157 (fixed, cycle 2) · ISS-158 (high) + ISS-159 (medium) — the cycle-2 FAIL
 
 ## What this unit does NOT claim, stated first
 
@@ -143,5 +143,61 @@ failure mode this project keeps finding, so it is pinned explicitly.
   design need not contain; there is no vocabulary for a *legitimately deferred* criterion, so a
   correctly-scoped half-unit reads 8/11; and C7 clause 4 is policy rather than falsifiable. Worth
   a later amendment unit, by a checker.
+
+## Cycle 3 — the same attack, one refinement sharper, and the PATTERN is the real finding
+
+**Verdict:** FAIL, cycle 2, 8/11. The cycle-1 ghost is genuinely dead (the checker wrote its own
+probe rather than running mine), and both mutations re-derived exactly — including E, the one that
+catches a guard passing by doing nothing.
+
+**But it broke the fix with a variant.** My guard compared the `node_id` **string**. So an arm
+supplying a **real but unselected** id kept **its own object**, and `router.ts` copies
+`node.evidence` verbatim — so a poisoned summary and **another tenant's `turn_id`** reached the
+answer context, with all 47 tests green.
+
+**Checking that an id is known says nothing about the object carrying it.**
+
+### The checker named the pattern, and it is the most useful thing in this unit
+
+> *the second consecutive [gap] sitting one refinement behind the pinned property — cycle 1 pinned
+> ordering not membership; cycle 2 pinned id-membership not node-identity.*
+
+That is exactly right, and it is a habit rather than two accidents. Each time I secured the
+property I had just been shown, and each time the next attack lived one level in from it. Naming it
+is worth more than either fix.
+
+### The fix: RESOLVE, don't filter
+
+The tree's own node is now **substituted** for whatever the arm supplied — `treeSearchFn` was
+already injected doing this exact lookup, and ISS-157's own `fix_direction` had named it, which I
+did not follow.
+
+The principle, stated so the next arm inherits it: **an arm's job is to say WHICH nodes are
+relevant. It has no authority over what those nodes CONTAIN.**
+
+### ISS-159 — and the irony is worth recording
+
+Dropped candidates were discarded **silently, four lines below the code that exists to make a
+degraded run distinguishable from a healthy one.** ISS-157's `fix_direction` had asked for that
+reporting; I implemented neither it nor a note saying why. An arm that keeps proposing unknown
+nodes is a *broken* arm and must not look like a quiet one. Now logged as `ask.candidates_dropped`,
+with a test that a clean run reports none — so the entry means something.
+
+```
+MUTATION G  resolve -> filter (the exact ISS-158 bypass)   -> 49 pass / 1 fail
+MUTATION H  drop reporting removed (ISS-159)               -> 49 pass / 1 fail
+restored byte-identical · MUTATIONS CLEAN · clean run 50 pass / 0 fail
+pnpm -r typecheck = 0 · pnpm -r test = 0 · depcruise = 0
+```
+
+### Standing state
+
+- **C6 and C7 remain the FIRST deferral** — the checker verified this rather than accepting it
+  (zero hits for `extraCandidateArmsFn`/`rrfMerge` under `apps/`, no recall number in the commit).
+  Cycle 1's condition still binds: **a second deferral would be accretion and should be failed.**
+- **C8 met:** the cycle-2 test re-ran ISS-157's recorded reproduction **verbatim** (1/1 refused),
+  no substituted corpus — D-015's rule.
+- **This is fix cycle 3 of 3.** A further FAIL is `STALLED` and stops for the human, which is the
+  right outcome if the next variant is one refinement further in again.
 
 ## Status: ready-for-check
