@@ -3,24 +3,36 @@
 // WHAT THE GATE RECORDS. `qa/gates/golden-set-redesign.md`: "An independent read of 12 questions
 // found ~4 genuinely answerable by more than one session, driven by seven identically-formatted
 // `uniaccess-*` sessions — e.g. *'is the university in the city or a secluded campus?'* is answered
-// by all of them." That is 12 questions read by hand out of 92, and condition 4 is blocked on it.
-// This quantifies the same property across all 92.
+// by all of them." 12 of 92 read by hand, and condition 4 is blocked on it.
 //
-// WHAT THIS MEASURES, STATED BEFORE THE NUMBERS. "Genuinely answerable by more than one session" is
-// a SEMANTIC judgement and no deterministic script can make it. What is measurable is LEXICAL
-// NON-DISCRIMINATION: whether the question's distinguishing vocabulary appears in the target's
-// transcript any more than in its siblings'. A question whose target is not separable from its
-// siblings by any content signal cannot be fairly scored by a retriever — which is the property
-// condition 4 actually turns on — but a session can share the vocabulary without answering the
-// question, and can answer it without sharing the vocabulary. So this is a PROXY in both
-// directions, not a bound, and it is validated below against the gate's own worked example rather
-// than asserted.
+// WHAT THIS MEASURES. "Genuinely answerable by more than one session" is SEMANTIC and no
+// deterministic script decides it. What is measurable is LEXICAL NON-DISCRIMINATION: whether a
+// question's distinguishing vocabulary sits in the target's transcript any more than in its
+// siblings'. A proxy in BOTH directions — a session can share the vocabulary without answering, and
+// answer without sharing it.
 //
-// NO STOPWORD LIST, deliberately. This repo already carries two (`extract-topics.ts`'s STOPWORDS
-// and `gen-golden-set.mjs`'s module-local STOP) and a third would be a third definition to drift.
-// Tokens are weighted by INVERSE SESSION FREQUENCY instead: a word in every session carries almost
-// no weight and a word in one carries nearly all of it, which is the property a stopword list is a
-// crude approximation of.
+// CYCLE 2 — four defects the cycle-1 checker found, all of them in this file:
+//
+//   ISS-234  The known positive was pinned to the WRONG QUESTION. `gq01` is "support for students
+//            looking for internships"; the gate's example is `gq02`, "city or a secluded campus?".
+//            The shipped JSON carried gq01's id and text under gq02's justification, so the
+//            contradiction was already on disk. Worse, gq01 ranked 21 not because siblings answer
+//            it but because its own transcript lacks `support` and `looking` — it passed for an
+//            unrelated reason, which is the accidental known-positive this test exists to prevent.
+//            Now pinned to gq02, and the result is reported WHATEVER it turns out to be.
+//
+//   ISS-235  `coverage()` had no length normalisation, so short transcripts scored low on every
+//            question and their questions floated to the tail: 6 of 13 came from the two shortest
+//            sessions. Each session's own mean coverage is now subtracted, so what is ranked is a
+//            session's advantage on THIS question against its own baseline.
+//
+//   ISS-236  `1/df` is not IDF. It floors at 1/23, so four words present in all 23 sessions still
+//            carried 36% of the weight mass — the generic vocabulary a stopword list exists to
+//            suppress was not being suppressed. Now `log(N/df)`, which reaches exactly zero at
+//            df = N. The cycle-1 claim that this replaced a stopword list was therefore wrong.
+//
+//   ISS-237  The cluster claim was argued from the binary statistic this same file calls unusable,
+//            and it REVERSES on the usable one. Restated from rank below.
 //
 // READ-ONLY, offline, pure over files already on disk.
 // Run: node qa/probes/golden-set-ambiguity.mjs [--write]
@@ -34,149 +46,147 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const SET_PATH = join(ROOT, "data", "eval", "golden-set.json");
 const OUT_PATH = join(ROOT, "data", "eval", "golden-set-ambiguity.json");
 
-/** The gate's worked example — the KNOWN POSITIVE. If the measure does not flag this question as
- *  contested, the measure is wrong and its zero-findings elsewhere mean nothing. Testing a probe on
- *  a case whose answer is already known is the discipline this session repeatedly failed. */
-const KNOWN_POSITIVE = "2026-05-23-uniaccess-atlas-skilltech-gq01";
+/** The gate's worked example, verbatim: "Is the university located right in the city or is it more
+ *  of a secluded campus?" — that is gq02, NOT gq01 (ISS-234). */
+const KNOWN_POSITIVE = "2026-05-23-uniaccess-atlas-skilltech-gq02";
 
 const questions = JSON.parse(readFileSync(SET_PATH, "utf8"));
 const { turnsText } = loadCorpora();
 const sessionIds = [...turnsText.keys()];
+const N = sessionIds.length;
 const sessionTokens = new Map(sessionIds.map((id) => [id, new Set(tokenize(turnsText.get(id)))]));
 
-/** Sessions containing each token — the inverse-frequency weight's denominator. */
+/** Sessions containing each token. */
 const df = new Map();
 for (const toks of sessionTokens.values()) {
   for (const t of toks) df.set(t, (df.get(t) ?? 0) + 1);
 }
 
-/** Weighted share of a question's distinguishing vocabulary that appears in one session. */
-function coverage(qTokens, sessionId) {
+/** Real IDF (ISS-236): exactly zero for a word in every session, maximal for a word in one. */
+const idf = (t) => Math.log(N / df.get(t));
+
+/** IDF-weighted share of a question's distinguishing vocabulary present in one session. */
+function rawCoverage(qTokens, sessionId) {
   const toks = sessionTokens.get(sessionId);
   let hit = 0, total = 0;
   for (const t of qTokens) {
     const d = df.get(t);
-    if (d === undefined) continue;          // absent everywhere: carries no signal either way
-    const w = 1 / d;                        // in every session -> ~0; in one -> 1
+    if (d === undefined) continue;   // absent from every transcript: no discriminating signal either way
+    const w = idf(t);
     total += w;
     if (toks.has(t)) hit += w;
   }
   return total === 0 ? 0 : hit / total;
 }
 
-const rows = questions.map((q) => {
-  const qTokens = new Set(tokenize(q.question));
+// Raw coverage for every (question, session) pair, then each session's own mean across all
+// questions — its baseline (ISS-235). A short transcript scores low on everything; subtracting its
+// baseline asks the question that matters: does this session do better THAN ITSELF here?
+const qTokenSets = questions.map((q) => new Set(tokenize(q.question)));
+const raw = questions.map((_, qi) => new Map(sessionIds.map((id) => [id, rawCoverage(qTokenSets[qi], id)])));
+const sessionBaseline = new Map(
+  sessionIds.map((id) => [id, raw.reduce((a, m) => a + m.get(id), 0) / (raw.length || 1)]),
+);
+
+const rows = questions.map((q, qi) => {
   const scored = sessionIds
-    .map((id) => ({ id, cov: coverage(qTokens, id) }))
-    .sort((a, b) => b.cov - a.cov);
+    .map((id) => ({ id, adv: raw[qi].get(id) - sessionBaseline.get(id), cov: raw[qi].get(id) }))
+    .sort((a, b) => b.adv - a.adv);
   const mine = scored.find((s) => s.id === q.expectedSessionId);
-  const expectedCov = mine?.cov ?? 0;
-  // A rival is any OTHER session covering the question's distinguishing vocabulary at least as
-  // well as the target does. Ties count as rivals: a tie is precisely non-discrimination.
-  const rivals = scored.filter((s) => s.id !== q.expectedSessionId && s.cov >= expectedCov);
-  const rank = scored.findIndex((s) => s.id === q.expectedSessionId) + 1;
+  const rivals = scored.filter((s) => s.id !== q.expectedSessionId && s.adv >= (mine?.adv ?? 0));
   return {
     id: q.id,
     expectedSessionId: q.expectedSessionId,
-    expectedCoverage: Number(expectedCov.toFixed(4)),
-    rank,
+    advantage: Number((mine?.adv ?? 0).toFixed(4)),
+    rawCoverage: Number((mine?.cov ?? 0).toFixed(4)),
+    rank: scored.findIndex((s) => s.id === q.expectedSessionId) + 1,
     rivalCount: rivals.length,
-    topRival: rivals[0] ? { id: rivals[0].id, cov: Number(rivals[0].cov.toFixed(4)) } : null,
+    topRival: rivals[0] ? { id: rivals[0].id, adv: Number(rivals[0].adv.toFixed(4)) } : null,
     contested: rivals.length > 0,
   };
 });
 
-// THE BINARY "contested" FLAG IS NOT THE HEADLINE, and reporting it as one would have been the
-// mistake. `rivals >= expectedCoverage` fires on every tie, and with 23 sessions at a mean target
-// coverage of 0.769 ties dominate: it flags 77.2% of the set against the gate's hand read of 33.3%,
-// and it rates the uniaccess-* cluster LESS contested than everything else, contradicting the
-// gate's own structural claim. A statistic that disagrees with the reference reading in both rate
-// and direction is measuring something else. Kept, labelled unusable, because the next reader will
-// otherwise recompute it.
+// The binary flag stays UNUSABLE, reported only so it is not recomputed and believed. Cycle 1's
+// explanation for it was ALSO wrong: "ties" accounts for the rate, not the direction — the checker
+// showed a strict `>` keeps the cluster inversion intact.
 const contested = rows.filter((r) => r.contested);
 
-// RANK is the usable signal: where the target sits among all 23 sessions, not whether anything ties.
 const ranks = rows.map((r) => r.rank).sort((a, b) => a - b);
 const median = ranks[Math.floor(ranks.length / 2)];
 const rankAt = (n) => rows.filter((r) => r.rank <= n).length;
-// The tail is the deliverable: questions whose target is buried, i.e. the ones worth a human or LLM
-// read. Adjudicating 11 questions is tractable; adjudicating 92 is why condition 4 is still open.
 const TAIL_RANK = 10;
 const tail = rows.filter((r) => r.rank >= TAIL_RANK).sort((a, b) => b.rank - a.rank);
 
 const known = rows.find((r) => r.id === KNOWN_POSITIVE);
-const knownPositivePassed = Boolean(known && known.contested);
+const knownFlagged = Boolean(known && known.rank >= TAIL_RANK);
 
-// Cluster rates are kept only to REFUTE the gate's structural claim, not to support the binary.
 const uni = rows.filter((r) => r.expectedSessionId.includes("uniaccess"));
 const nonUni = rows.filter((r) => !r.expectedSessionId.includes("uniaccess"));
-const rate = (a) => (a.length === 0 ? 0 : a.filter((r) => r.contested).length / a.length);
+const meanRank = (a) => (a.length ? a.reduce((s, r) => s + r.rank, 0) / a.length : 0);
+const tailShare = (a) => (a.length ? a.filter((r) => r.rank >= TAIL_RANK).length / a.length : 0);
+
+// Transcript lengths, so a length artifact in the tail is visible rather than inferred (ISS-235).
+const lengths = new Map(sessionIds.map((id) => [id, sessionTokens.get(id).size]));
+const sortedByLen = [...lengths.entries()].sort((a, b) => a[1] - b[1]);
+const shortestTwo = new Set(sortedByLen.slice(0, 2).map(([id]) => id));
 
 const report = {
   measuredAt: new Date().toISOString(),
   goldenSet: "data/eval/golden-set.json",
-  measures: "LEXICAL NON-DISCRIMINATION over raw transcripts, inverse-session-frequency weighted",
-  doesNotMeasure:
-    "semantic answerability. A session can share the vocabulary without answering, and answer " +
-    "without sharing it. A proxy in BOTH directions — not an upper or lower bound.",
+  measures: "lexical non-discrimination: IDF-weighted coverage minus each session's own baseline",
+  doesNotMeasure: "semantic answerability — a proxy in BOTH directions, not a bound",
   knownPositive: {
     id: KNOWN_POSITIVE,
     question: questions.find((q) => q.id === KNOWN_POSITIVE)?.question ?? null,
     why: "the gate's own worked example, stated to be answerable by all seven uniaccess sessions",
-    flaggedContested: knownPositivePassed,
-    detail: known ?? null,
+    flagged: knownFlagged,
+    rank: known?.rank ?? null,
+    rivalCount: known?.rivalCount ?? null,
+    interpretation: knownFlagged
+      ? "the measure fires on the one case whose answer is independently known"
+      : "THE MEASURE DOES NOT DETECT THE GATE'S OWN EXAMPLE. Every other number here is a lexical " +
+        "observation, not evidence about ambiguity, and the tail is a candidate list to read rather " +
+        "than a finding.",
   },
-  headline: {
-    rank1: rankAt(1),
-    rankTop3: rankAt(3),
-    medianRank: median,
-    sessions: sessionIds.length,
-    reading:
-      "the target session ranks 1st of 23 for 26% of questions and top-3 for 62%, median rank 3. " +
-      "That is a moderately discriminating set, not a degenerate one.",
+  headline: { rank1: rankAt(1), rankTop3: rankAt(3), medianRank: median, sessions: N },
+  byCluster: {
+    // ISS-237: restated from RANK — the usable signal — not from the unusable binary.
+    uniaccess: { questions: uni.length, meanRank: Number(meanRank(uni).toFixed(2)), tailShare: Number(tailShare(uni).toFixed(4)) },
+    other: { questions: nonUni.length, meanRank: Number(meanRank(nonUni).toFixed(2)), tailShare: Number(tailShare(nonUni).toFixed(4)) },
   },
   unusableBinary: {
     contested: contested.length,
     contestedRate: Number((contested.length / rows.length).toFixed(4)),
-    whyUnusable:
-      "fires on any tie at a mean coverage of 0.769 across 23 sessions. 77.2% against the gate's " +
-      "hand-read 33.3%, and it rates the uniaccess cluster LESS contested than the rest, which " +
-      "contradicts the gate's structural claim. Reported so it is not recomputed and believed.",
-    gateHandReadSample: { read: 12, judgedAmbiguous: 4, rate: 0.333 },
-  },
-  byCluster: {
-    // Reported to REFUTE the gate's structural claim, not to support the binary rate: the
-    // uniaccess-* cluster is LESS contested than the rest under this measure, and its median rank
-    // is slightly WORSE (3.5 vs 3.0). Either the seven-sibling story is not the driver, or lexical
-    // coverage is the wrong lens for it. Both readings are open; this measure cannot choose.
-    uniaccess: { questions: uni.length, contested: uni.filter((r) => r.contested).length, rate: Number(rate(uni).toFixed(4)) },
-    other: { questions: nonUni.length, contested: nonUni.filter((r) => r.contested).length, rate: Number(rate(nonUni).toFixed(4)) },
+    whyUnusable: "fires on ties; cycle 1 also mis-explained it — a strict '>' keeps the cluster inversion",
   },
   tailForAdjudication: {
     thresholdRank: TAIL_RANK,
     count: tail.length,
-    note: "the questions a human or LLM should read — tractable where all 92 is not",
+    fromTwoShortestTranscripts: tail.filter((r) => shortestTwo.has(r.expectedSessionId)).length,
     ids: tail.map((r) => ({ id: r.id, rank: r.rank, rivals: r.rivalCount })),
   },
-  worst: [...rows].sort((a, b) => b.rivalCount - a.rivalCount).slice(0, 10),
+  transcriptLengths: Object.fromEntries(sortedByLen.map(([id, n]) => [id, n])),
   rows,
 };
 
-console.log(`golden set: ${rows.length} questions over ${sessionIds.length} sessions`);
+console.log(`golden set: ${rows.length} questions over ${N} sessions`);
 console.log("");
-console.log(`KNOWN POSITIVE (${KNOWN_POSITIVE}): ${knownPositivePassed ? "FLAGGED contested — the measure fires on the one case with a known answer" : "NOT FLAGGED — the measure is broken and every number below is meaningless"}`);
-if (known) console.log(`  rank ${known.rank}/${sessionIds.length}, coverage ${known.expectedCoverage}, rivals ${known.rivalCount}`);
+console.log(`KNOWN POSITIVE — ${KNOWN_POSITIVE}`);
+console.log(`  "${report.knownPositive.question}"`);
+console.log(`  rank ${known?.rank}/${N}, rivals ${known?.rivalCount}  ->  ${knownFlagged ? "FLAGGED" : "NOT FLAGGED"}`);
+console.log(`  ${report.knownPositive.interpretation}`);
 console.log("");
-console.log("RANK OF THE TARGET SESSION (the usable signal):");
-console.log(`  rank 1:     ${rankAt(1)}/${rows.length} = ${((rankAt(1) / rows.length) * 100).toFixed(1)}%`);
-console.log(`  rank <= 3:  ${rankAt(3)}/${rows.length} = ${((rankAt(3) / rows.length) * 100).toFixed(1)}%`);
-console.log(`  median rank ${median} of ${sessionIds.length}`);
+console.log("RANK OF THE TARGET SESSION:");
+console.log(`  rank 1:    ${rankAt(1)}/${rows.length} = ${((rankAt(1) / rows.length) * 100).toFixed(1)}%`);
+console.log(`  rank <= 3: ${rankAt(3)}/${rows.length} = ${((rankAt(3) / rows.length) * 100).toFixed(1)}%`);
+console.log(`  median rank ${median} of ${N}`);
 console.log("");
-console.log(`TAIL for adjudication (rank >= ${TAIL_RANK}): ${tail.length} questions`);
-for (const r of tail.slice(0, 12)) console.log(`  rank ${String(r.rank).padStart(2)}  ${r.id}`);
+console.log("CLUSTER, from rank (ISS-237):");
+console.log(`  uniaccess  mean rank ${report.byCluster.uniaccess.meanRank}  tail share ${(report.byCluster.uniaccess.tailShare * 100).toFixed(1)}%`);
+console.log(`  other      mean rank ${report.byCluster.other.meanRank}  tail share ${(report.byCluster.other.tailShare * 100).toFixed(1)}%`);
 console.log("");
-console.log(`UNUSABLE binary flag, reported so it is not recomputed: contested ${contested.length}/${rows.length} = ${((contested.length / rows.length) * 100).toFixed(1)}%`);
-console.log(`  gate hand read 4/12 = 33.3%  |  uniaccess ${report.byCluster.uniaccess.rate * 100}% vs other ${(report.byCluster.other.rate * 100).toFixed(1)}% — contradicts the gate's structural claim`);
+console.log(`TAIL (rank >= ${TAIL_RANK}): ${tail.length} questions, ${report.tailForAdjudication.fromTwoShortestTranscripts} from the two shortest transcripts`);
+for (const r of tail.slice(0, 13)) console.log(`  rank ${String(r.rank).padStart(2)}  ${r.id}`);
 
 if (process.argv.includes("--write")) {
   writeFileSync(OUT_PATH, JSON.stringify(report, null, 2) + "\n", "utf8");

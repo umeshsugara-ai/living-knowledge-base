@@ -4,9 +4,85 @@
 defects blocking **condition 4**.
 **Goal task:** T-021 (tier 3, roadmap).
 **Date:** 2026-09-09
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** none directly — supplies the quantification condition 4 is blocked on.
+**Issues addressed:** **ISS-234**, **ISS-235**, **ISS-236**, **ISS-237** (cycle-1 failures, all mine).
+
+## CYCLE 2 — the measure fails its own known-positive test, and that is the result
+
+The FAIL was right on all four counts. Fixing them turns the unit's conclusion over completely.
+
+### ISS-234 — my known-positive test passed by accident, in the unit where I claimed it as a virtue
+
+I pinned the test to **`gq01`** — *"What kind of support is available for students looking for
+internships?"* The gate's example is **`gq02`** — *"Is the university located right in the city or is
+it more of a secluded campus?"*
+
+**The contradiction was already in the artifact I shipped:** `golden-set-ambiguity.json` recorded
+gq01's id and gq01's text under gq02's justification, and the manifest printed gq02's text beside
+gq01's id. Anyone reading the JSON could have caught it. I wrote it and did not.
+
+And gq01 ranked 21 **not because siblings answer it** but because its own transcript lacks the words
+`support` and `looking`. It was flagged for an unrelated reason — the accidental known-positive that
+this test exists to prevent, inside the section where I called the test "the discipline I kept
+failing today".
+
+### With the right question, the measure fails
+
+```
+KNOWN POSITIVE — 2026-05-23-uniaccess-atlas-skilltech-gq02
+  "Is the university located right in the city or is it more of a secluded campus?"
+  rank 1/23, rivals 0  ->  NOT FLAGGED
+```
+
+The gate states this question is answerable by **all seven** `uniaccess` sessions. Under my measure
+it is the **single most discriminating question in the set**. That is not a near miss; it is the
+measure pointing the opposite way on the one case with an independent answer.
+
+**So the lexical proxy does not detect the property condition 4 turns on**, and I am reporting that
+rather than the numbers it produces. The probe now says so in its own output, so the next reader
+cannot lift a figure out of the report without meeting the disclaimer first.
+
+### ISS-235 / ISS-236 — the other two defects, fixed, and they changed the numbers
+
+| | cycle 1 | cycle 2 |
+|---|---|---|
+| weighting | `1/df` — floors at 1/23; four all-session words held **36%** of the weight | `log(N/df)` — exactly zero at df = N |
+| length | none — 6 of 13 tail questions were the two **shortest** transcripts | each session's own mean subtracted; now **3 of 11** |
+| rank 1 | 26.1% | **32.6%** |
+| top-3 | 62.0% | **66.3%** |
+| median rank | 3 | **2** |
+
+My cycle-1 claim that IDF weighting made a stopword list unnecessary was **wrong**: `1/df` is not
+IDF, and it was not suppressing generic vocabulary.
+
+### ISS-237 — I argued the cluster claim from the statistic I had just called unusable
+
+Cycle 1 said the `uniaccess` cluster was *less* contested and used that to undercut the gate's
+seven-sibling story — reasoning from the binary flag I had declared unusable two paragraphs earlier.
+The checker also showed my "ties" explanation was wrong: a strict `>` keeps the inversion.
+
+Restated from rank, the honest answer is **neither**:
+
+| cluster | mean rank | tail share |
+|---|---|---|
+| `uniaccess` | 3.75 | 10.0% |
+| all other | 3.99 | 12.5% |
+
+Indistinguishable. This measure neither supports nor refutes the gate's structural claim, and my
+cycle-1 refutation is **withdrawn**. Note this also differs from the checker's own cycle-1 figures
+(5.70 vs 4.44) — because the measure changed under both fixes, not because either count was wrong.
+
+### What the unit now delivers
+
+A **negative result about the cheap path**, which is worth more than a number I cannot defend: a
+deterministic lexical measure, corrected on every axis the checker named, **fails to detect the
+gate's own worked example.** Condition 4 needs semantic adjudication; it cannot be reached this way.
+
+The 11-question tail remains in the report as a **candidate list to read**, explicitly not a finding
+— and with the gate's own ambiguous question absent from it, its value is now clearly bounded.
+
+---
 
 ## What the gate asks for, and what I can honestly deliver
 
@@ -24,7 +100,7 @@ So this unit does not claim to quantify ambiguity. It reports what a lexical mea
 that measure against the gate's own worked example**, and — its actual deliverable — reduces
 adjudication from 92 questions to 13.
 
-## The headline finding is that my first statistic was wrong
+## ~~The headline finding is that my first statistic was wrong~~ (CYCLE 1 — still true, but its cluster reasoning is WITHDRAWN, see ISS-237)
 
 I built the obvious measure first: *contested* = any other session covers the question's weighted
 vocabulary at least as well as the target. It flags **71/92 = 77.2%**.
@@ -61,7 +137,7 @@ to do and hard to detect.
 That is a **moderately discriminating set, not a degenerate one** — and it is a different picture
 from what the binary flag suggested.
 
-## Known-positive test — the discipline I kept failing today
+## ~~Known-positive test — the discipline I kept failing today~~ (CYCLE 1, VOID — wrong question, ISS-234)
 
 The gate's worked example is literally in the set:
 `2026-05-23-uniaccess-atlas-skilltech-gq01` — *"Is the university located right in the city or is it
@@ -71,7 +147,7 @@ more of a secluded campus?"*, stated by the gate to be answerable by all seven `
 already known. Without that, a low finding anywhere else would mean nothing — which is exactly how
 the 16-hour gap, the `[].every()` assertion and the forced 0/92 all got past me earlier today.
 
-## The deliverable: 13 questions, not 92
+## ~~The deliverable: 13 questions, not 92~~ (CYCLE 1, SUPERSEDED — 11 questions after length normalisation)
 
 `data/eval/golden-set-ambiguity.json` → `tailForAdjudication`. Worst first:
 
@@ -94,7 +170,7 @@ Note what the tail contains: **four of thirteen are `decoding-ever-expanding-cas
 gate never mentions, while only five are `uniaccess-*`. If the gate's seven-sibling story were the
 whole driver, the tail would not look like this.
 
-## No stopword list, deliberately
+## ~~No stopword list, deliberately~~ (CYCLE 1, WRONG — `1/df` is not IDF and did not suppress generic vocabulary, ISS-236)
 
 The repo already carries two (`extract-topics.ts`'s `STOPWORDS`, `gen-golden-set.mjs`'s module-local
 `STOP`). A third would be a third definition to drift. Tokens are weighted by **inverse session
