@@ -458,3 +458,231 @@ is a human-approved START and I do not ratify it myself.
   it does not change the verdict.
 - I add the **regression direction** on C4 (five verdicts go from readable to unreadable) and the
   two **governance findings**, which the primary verdict does not carry.
+
+---
+
+# Verdict — delivery-gate-manifest-blindness (cycle 2)
+
+**Cycle checked:** 2
+**Date:** 2026-09-09
+**Manifest:** `qa/manifests/delivery-gate-manifest-blindness.md` (`Fix cycle: 2 of max 3`)
+**Commit under check:** `3477705` (KnowledgeBase) · artifact `D:/ai_os/.claude/hooks/delivery-gate-stop.ps1` @ `b6ee654` (ai_os)
+**Contract:** `qa/contracts/delivery-gate.md` (status `proposed`)
+**Mode D:** not applicable — no UI surface in the changed paths (two `.ps1` files).
+
+```
+VERDICT: FAIL
+SCOREBOARD: 4/9 criteria met, 2/3 invariants hold
+FAILURES:
+- [C2] sev: high · The field-boundary pattern counts PROSE. The middle-dot boundary matches a
+  quoted stamp inside a table cell, so THIS unit's own verdict file reads max cycle 3 when its
+  only real stamp is 1 - and the live gate therefore reports pend=0 for a manifest genuinely at
+  ready-for-check cycle 2. That is the silencing direction the maker rejected `unanchored` to
+  avoid, already present in the shipped pattern · require the stamp to be the first field on its
+  line, or exclude table/backtick contexts · issue: ISS-192
+- [C6] sev: high · "shipped PS regex over 114 verdicts -> 0 misreads" is false under the hook's
+  OWN reader, and its oracle shared the bug it was testing for · re-measure with the hook's
+  reader and an oracle that is not the rejected pattern · issue: ISS-193
+- [C5] sev: high · The census forms were transplanted into BOM'd fixture files while 114/114 real
+  verdicts are UTF-8 without BOM; the em-dash boundary is unfixtured and SURVIVES mutation (my
+  M6) · write at least one fixture byte-identical to a real corpus file · issue: ISS-194
+- [C4] sev: medium · `**PASS** — Cycle checked: 1` (evaluator-calibration) is not matched at all
+  by the shipped pattern in production · the em-dash boundary cannot survive the reader · issue:
+  ISS-193
+- [C1] sev: high · Unmet, honestly gated: mc-sessionstart.ps1 and mc-precommit.ps1 remain blind ·
+  awaiting the Approver on qa/gates/mc-hooks-manifest-blindness.md · issue: ISS-183 (stays open)
+LIVE-BROWSER: not-applicable (D:/ai_os/.claude/hooks/delivery-gate-stop.ps1, D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1)
+ISSUES-WRITTEN: ISS-192, ISS-193, ISS-194, ISS-195
+EXPLANATION: Everything the maker measured about its own corpus reproduces - 86/86 fixtures pass,
+all five of its mutants die under my independent D-020 harness with a clean control, the ISS-187
+reconciliation is exactly right (53 occurrences, 51 unique), and the ISS-186 record correction is
+true (the old regex's only manifest hit today is prose in this manifest). It fails on the same
+axis as cycle 1, one level up: it stopped choosing its own corpus and started choosing its own
+ORACLE. It scored the new pattern against the unanchored pattern, which shares the prose-match
+error, so the one place the shipped regex silences the gate - this unit's own verdict file -
+scored as agreement. The gate is blind to this very handshake right now.
+```
+
+---
+
+## What I re-ran (every number below is mine)
+
+### 1. Fixture suite — reproduces
+
+`powershell -NoProfile -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1` → **ALL PASS**,
+86 `PASS` lines, 0 `FAIL`, including both new ISS-185 checks.
+
+### 2. My own D-020 mutation harness — the maker's 5/5 reproduces, and a sixth mutant survives
+
+Independently written (backup to `%TEMP%`, SHA256 baseline, each suite run in a `Start-Job` +
+`Wait-Job -Timeout 300` so a hang is a `TIMEOUT` result, restore in a `trap` that fires on error
+and interrupt, hash asserted after restore).
+
+| mutation | result |
+|---|---|
+| `M0` no-op control | **clean** |
+| `M1` revert the emphasis strip | **KILLED** |
+| `M2` `Cycle checked` back to line-anchored | **KILLED** |
+| `M3` `Fix cycle` back to line-anchored | **KILLED** — the replaced assertion does hold |
+| `M4` `Status` back to line-anchored | **KILLED** |
+| `M5` take the first `Cycle checked` | **KILLED** |
+| `M6` **drop `\u2014` from the boundary set** | **SURVIVED** |
+| `M7` drop `\u00b7` from the boundary set | **KILLED** |
+
+```
+BASELINE 3C3B260FE6A23F875B6618DB83AC81CEE6FDCEB6AA64A93AE610DDAF821751A6
+RESTORED 3C3B260FE6A23F875B6618DB83AC81CEE6FDCEB6AA64A93AE610DDAF821751A6  match=True
+git -C D:/ai_os status --short -- .claude/hooks/delivery-gate-stop.ps1  ->  (empty)
+```
+
+The maker's disclosure about its own vacuous `-notmatch` assertion is honest and the replacement is
+real: `M3` dies on the replaced check. But `M6` shows that one of the two boundary characters the
+whole census exercise was for is pinned by nothing.
+
+### 3. The census — incomplete, and the missing form is the one that breaks
+
+Re-derived myself over all 114 verdicts (every line containing the phrase, digits normalised to N):
+
+```
+60x  Cycle checked:** N          42x  Cycle checked: N**        26x  Cycle checked: N
+ 4x  # Verdict — <slug> · **Cycle checked: N**      (the maker counted 2)
+ 1x  - **Cycle checked: N**       1x  **Status: PASS** (Cycle checked: N)
+ 1x  **PASS** — Cycle checked: N                    (ABSENT from the maker's census)
+ 1x  **Date:** … · **Mode:** A · **Cycle checked: N**
+```
+
+Six forms was an undercount. The heading form occurs 4x, not 2x, and there is a seventh: the
+mid-line em-dash form in `evaluator-calibration.md`. It is the only corpus form the shipped pattern
+cannot read at all (§4), and it is the one the census missed.
+
+### 4. Old vs new over the real corpus, under the hook's own reader
+
+`Get-Content -Raw` in Windows PowerShell 5.1 decodes with the ANSI codepage, and there is no `pwsh`
+on this machine. **All 114 verdicts are UTF-8 without a BOM** (checked byte-wise), so a U+2014 in
+one of them arrives as three ANSI characters and no `\u2014` survives — the em-dash boundary never
+fires in production. U+00B7 survives by accident, because the second byte of its UTF-8 encoding is
+0xB7.
+
+```
+OLD  '(?m)^\s*Cycle checked:'  vs unanchored : 7 files disagree  (reproduces the maker's 7)
+NEW  shipped field-boundary    vs unanchored : 1 file  disagrees (NOT 0)
+     evaluator-calibration   new = -1 (no match at all)   true = 1
+same corpus read with -Encoding UTF8         : 0 disagreements
+```
+
+So "0 misreads" is an artifact of reading the corpus in an encoding the hook does not use. Under the
+hook's own reader it is 1. The direction is noisy, not silencing, and `evaluator-calibration`'s
+manifest is not at `ready-for-check`, so there is no live miscount from this one — but the
+measurement that certified the fix was taken outside the artifact's runtime, in a cycle whose
+subject is measurement honesty.
+
+### 5. The prose match — the failure that IS live, right now
+
+The oracle problem matters because both candidate patterns make the same error, so comparing them
+hides it. Running the shipped pattern over `qa/verdicts/delivery-gate-manifest-blindness.md` and
+printing context for every match:
+
+```
+n=1  # Verdict — delivery-gate-manifest-blindness | Cycle checked: 1                    (real)
+n=1  # INDEPENDENT CONCURRENT CHECK — … | Cycle checked: 1                              (real)
+n=1  "…carries `Cycle checked: 1/2/3` and `VERDICT: FAIL`…"                              (prose)
+n=3  '…verdicts with heading form : 3 (e.g. "# Verdict — <slug> · Cycle checked: 3")'    (PROSE)
+n=3  '…| write-guard-enforcement-gaps | 3 | 2 | cycle 3 only in a `# Verdict — … ·
+      Cycle checked: 3` heading |'                                                       (PROSE)
+```
+
+`max = 3` from two table/example cells. The manifest is at `Fix cycle: 2`. Running the shipped hook
+block against the live tree:
+
+```
+pend=0 []
+unclosed=2 [delivery-gate-manifest-blindness, speaker-verbatim-token-boundary]
+```
+
+**The gate cannot see that this unit is awaiting a cycle-2 check.** The maker's stated reason for
+rejecting `unanchored` was that future prose could make a pending unit look closed. Present prose
+already does, through the `·` boundary it added instead. Invariant **I2** — "a change that trades C1
+for C2 (or the reverse) is a FAIL, not a tradeoff" — is exactly this, so I2 does not hold.
+
+A milder instance of the same class: the marker class admits a backtick, so the manifest's own prose
+line beginning `` `## Status: ready-for-check` `` matches the Status predicate (ISS-195). No live
+false-pending today, because that file's real Status line also matches; a `checked-PASS` manifest
+quoting the phrase at line start would produce one.
+
+### 6. ISS-187 — reconciliation verified exactly
+
+Counted independently over `C:/Users/Lenovo/.claude/projects/d--KnowledgeBase/*.jsonl`, main-chain
+`tool_use` blocks named `ScheduleWakeup`, window `2026-09-08T10:56` – `2026-09-09T04:10`:
+
+```
+38fdc7ba  occurrences 27  unique 26
+d3f69058  occurrences 26  unique 25
+TOTAL     occurrences 53  UNION unique 51
+```
+
+53, 26 and 51 all land. One nit: the two duplicates are intra-file (27→26 and 26→25), not "across a
+fork/resume pair" as the manifest words it; the reconciled figure is right either way.
+**ISS-187 verified.**
+
+### 7. ISS-186 — half true, half deferred, and the deferral is convenient
+
+The record correction is TRUE. Running the pre-fix predicate over the live manifests, its only hit is
+`delivery-gate-manifest-blindness`, matching the sentence at manifest line 34 rather than a Status
+line. The old gate saw zero real handshakes.
+
+The deferred half is not out of scope. `$unclosed++` sits five lines below the line this unit edited,
+inside the same nine-line block, and increments the counter this unit's own [C3] fix computes; its
+sibling `mc-sessionstart.ps1:22` does test `VERDICT:\s*PASS`. Live consequence today: both items the
+gate calls "PASS not closed out" carry `VERDICT: FAIL`. Calling it "a predicate this unit did not
+otherwise touch" is inaccurate — it is one added conjunct in the block under edit. **ISS-186 stays
+open.** Not scored as its own FAIL line (the filing was correct and the scope call is arguable), but
+the reason given for it is not honest.
+
+### 8. ISS-183 — gated correctly
+
+- `git log --all -- .claude/hooks/mc-sessionstart.ps1 .claude/hooks/mc-precommit.ps1` → last touch
+  `2be1a47` (the D-006 wiring commit). **The maker did not edit either file.** Confirmed.
+- `qa/gates/mc-hooks-manifest-blindness.md` is well-formed: the one-line question, the CLAUDE.md
+  clause that forces the gate, a measured defect table with file/line/effect, the exact change, an
+  answer format, and links.
+- Option B is honest. Declining leaves the hooks blind, and the follow-on it names — standardise
+  every manifest on the unbolded form — is the real alternative, not a strawman.
+- **The `mc-sessionstart.ps1:17` claim is true, not convenient.** `Fix cycle[:*\s]+(\d+)` against
+  `**Fix cycle:** 2`: `[:*\s]+` consumes `:`, `*`, `*`, ` `. Verified by running it, not by reading.
+  Line 19's `Select-Object -First 1` and line 15's bare literal are correctly named as the two
+  affected sites.
+
+### 9. Known Gaps, judged
+
+1. **ISS-186's message half** — real gap, accepted; the reason given for it is rejected (§7).
+2. **`(` and backtick admit a quoted stamp** — the maker was right to push here, and understated it.
+   It named `(` and backtick and missed that `·` does the same thing, *and already does it today, in
+   its own verdict file*. "Zero occurrences across 114 verdicts" is false: there are two, in the one
+   file the gate reads for this unit. This is the FAIL.
+3. **ISS-183 gated** — accepted and correctly handled (§8).
+4. **The census is a snapshot** — accepted, and the snapshot itself was incomplete (§3).
+
+### 10. [C7] — the class audit
+
+**Met.** The transcript-scanning predicates were cleared in cycle 1 (they parse JSONL, not markdown);
+the two siblings were audited and gated; the one sibling line claimed unaffected genuinely is. I
+re-derived each of those rather than adopting them. What [C7] does not yet cover is the *new* class
+this cycle introduced — a boundary set that matches prose — which is why ISS-192 asks for a sweep
+across `Status`, `Fix cycle` and `Cycle checked` together rather than a patch to one of them.
+
+### On the maker's Note to the checker
+
+You asked whether 0/0 across the real corpus should have settled the field-boundary-versus-unanchored
+choice, and whether the extra boundary characters are unjustified complexity. Neither of the two
+answers you offered. The choice of *direction* was right: a silenced gate is worse than a noisy one,
+and that reasoning stands. What is wrong is that the pattern you picked does not deliver it — the
+boundary set you added is precisely what makes it match prose, in the silencing direction, on the
+very file this check has to read. And 0/0 could never have settled it, because the comparison was
+against the pattern you were rejecting; an oracle that fails the same way scores every shared failure
+as agreement. Not unjustified complexity — complexity that bought the defect it was meant to prevent.
+
+### Counting note (observation, not a failure)
+
+`Fix cycle` in a manifest is still read with `-match`, i.e. the first occurrence, while [C3]'s second
+sentence asks for the highest. No manifest in the corpus diverges today, so this stays an observation
+rather than a FAIL line — but it is the same first-not-highest shape, one predicate over.
