@@ -14,7 +14,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { promoteAndPersistEntities, entityId } from "./promote-entities.js";
-import { fakeDb, type Call } from "./testutils.js";
+import { indexSession } from "./session.js";
+import { fakeDb, completeWith, type Call } from "./testutils.js";
 import type { TreeIndexNode } from "@lkb/core";
 
 const node = (id: string, title: string, level: string, evidence?: unknown): TreeIndexNode =>
@@ -245,4 +246,37 @@ test("C6: a topicRef resolves to a real topics._id — namespaced through the SA
     .update as Record<string, Record<string, unknown>>).$set!;
   assert.deepEqual(claimSet.topicRefs, [writtenTopicId], "the ref must equal the id actually written");
   assert.equal(writtenTopicId, entityId("x", "visa-rules"));
+});
+
+/* ── ISS-154 / contract C3: entity writes must be REACHED and tenant-scoped ON THE FILTER ──────
+ * The contract's mandatory mutation — `scopedCollection(...)` replaced by a bare
+ * `db.collection(...)` handle — SURVIVED on both `topics` and `orgs` at 159/0 green. Not because
+ * the code was wrong, but because nothing reached it: `fakeDb`'s session had no `org` and its
+ * `session_pages` read returned nothing, so `buildTree` produced no entity nodes, so the blanket
+ * tenant-confinement test in session.test.ts had NOTHING TO CONFINE for entities. A fixture that
+ * cannot reach a path silently exempts that path from every test that walks the recorded calls.
+ *
+ * Two assertions, because they fail for different reasons: the first pins that the path is
+ * REACHED at all through the real `indexSession`, the second pins that the write is tenant-scoped
+ * on the FILTER — the direct tests only ever asserted the update BODY's tenantId.
+ */
+test("ISS-154: a full indexSession run REACHES the entity writes (the fixture must not exempt them)", async () => {
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, db });
+  const entityWrites = calls.filter((c) => ["topics", "orgs"].includes(c.coll) && c.op === "updateOne");
+  assert.ok(entityWrites.some((c) => c.coll === "topics"), "the tree must yield a topic node, or nothing tests the topic write");
+  assert.ok(entityWrites.some((c) => c.coll === "orgs"), "the session must carry an org, or nothing tests the org write");
+});
+
+test("ISS-154: every entity write is tenant-scoped ON THE FILTER, not merely in the body", async () => {
+  // `scopedCollection` merges tenantId into the filter; a bare `db.collection()` handle would not,
+  // and the body-only assertions could not tell the difference.
+  const { db, calls } = fakeDb();
+  await indexSession("t", "s1", { complete: completeWith() as never, db });
+  const entityWrites = calls.filter((c) => ["topics", "orgs"].includes(c.coll) && c.op === "updateOne");
+  assert.ok(entityWrites.length >= 2, "both entity collections must be written");
+  for (const w of entityWrites) {
+    assert.equal(w.filter?.tenantId, "t",
+      `${w.coll}.updateOne filter lost its tenantId — a bare db.collection() handle would look exactly like this`);
+  }
 });

@@ -2,9 +2,9 @@
 **Contract:** qa/contracts/entity-promotion.md
 **Goal task:** U2.1c
 **Date:** 2026-09-09
-**Fix cycle:** 1 of max 3
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** contract C6 (security/tenancy class — never round-capped)
+**Issues addressed:** contract C6 (met, cycle 1) · contract C3 / ISS-154 (the cycle-1 FAIL)
 
 ## This is the second time I have shipped this exact bug
 
@@ -77,5 +77,62 @@ live, BEFORE the fix: tenant B -> E11000 duplicate key on index _id_
    that yet.
 4. **This does not change the U2.1 deferral.** `topics`/`orgs` remain 0 rows; C8's precondition
    still holds.
+
+## Cycle 2 — the fixture was exempting the code from its own tenancy test
+
+**Verdict:** FAIL, cycle 1, 8/9. **C6 is confirmed MET** — the checker settled it itself rather
+than on my word: live bare-slug gives `E11000 … index: _id_`, the shipped `<tenantId>:<slug>` lets
+both tenants through, cleanup read back at 0 leftover. It also re-derived my mutation to 155/4
+exactly and noted the detection is not tautological, since two of the four assert hard-coded
+namespaced ids.
+
+**It also corrected the contract in my favour, having proved it live.** C6 offered "namespace the
+`_id`, **or** carry a compound unique index". That "or" is false: the rejection comes from the
+implicit `_id_` index, which cannot be dropped or made partial — and `orgs` *already* carries a
+unique `tenantId_1_name_1` while the bare-slug collision still fired. The contract was amended.
+
+### The FAIL — C3's mandatory mutation survived, and the cause is the fixture
+
+Replacing `scopedCollection` with a bare `db.collection()` handle on `topics` and `orgs`
+**survived at 159/0 green with a clean typecheck.** Only the `claims` handle reddened.
+
+Cause: **no test in the repo drove an entity write through `indexSession`.** `fakeDb`'s session had
+no `org`, and its `session_pages` read returned nothing, so `buildTree` produced no entity nodes,
+so `promoteAndPersistEntities` wrote nothing — and the blanket tenant-confinement test in
+`session.test.ts` had **nothing to confine**. The direct tests asserted the update *body*'s
+`tenantId` and never the *filter*, which is exactly what a bare handle would break.
+
+**A fixture that cannot reach a path silently exempts that path from every test that walks the
+recorded calls.** This is the fifth such gap in this layer.
+
+### What changed
+
+- `testutils.ts` — the session now carries an `org`, and `session_pages.find` returns a real page
+  with a capitalised phrase so the default extractor yields a topic node. Both are load-bearing,
+  and the comment says so, so nobody "tidies" them away.
+- 2 tests: one pins that a full `indexSession` run **reaches** both entity writes; one pins that
+  each write is tenant-scoped **on the filter**. They fail for different reasons on purpose.
+
+**A real bug in my own fixture, found by the new test failing:** I wrote the page with
+`sessionRef`, but `buildTree`'s lookup and `schema/session_pages.schema.json` both use
+**`sessionId`**. So `orgs` promoted and `topics` did not — and had I written a weaker assertion, I
+would have shipped a fixture that exercised half the path while looking complete.
+
+```
+BEFORE (cycle 1): scopedCollection -> bare handle on topics+orgs  -> 159 pass / 0 fail  (SURVIVED)
+AFTER  (cycle 2): same mutation                                   -> 158 pass / 3 fail  (KILLED)
+restored byte-identical · MUTATIONS CLEAN · clean run 161 pass / 0 fail
+```
+
+### Carried forward
+
+- **The checker ruled the pure/write-boundary split right** (a `tenantId` the pure function only
+  string-templates would leak storage upstream). It suggested, and I agree, renaming
+  `PromotedTopic._id` to `slug` — it is now the one thing it is not. Not done here: it touches the
+  pure module and its tests, and this unit is a tenancy fix. Filed as a follow-up rather than
+  widened into.
+- **No ref is broken by the id change** — it checked `routes/graph.ts`, `flatten-graph.ts`,
+  BrainPage, the accessor and the schemas: no `split(":")`, prefix strip or id regex anywhere.
+- **`topics`/`orgs` still 0 rows, `topicRefs` empty on all 81 claims.** C8's deferral holds.
 
 ## Status: ready-for-check

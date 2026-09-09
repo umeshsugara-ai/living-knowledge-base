@@ -47,7 +47,15 @@ export function fakeDb(
   // {} (no root for any tenant) and replaceOne NEVER fires, so nothing about the tree_index write
   // (including the ISS-062 tenantId-stamping fix) was ever really under test. Found by testing
   // the fix's own mutation and getting a false green.
-  const SESSION = { _id: "s1", tenantId: "t", sourceId: "src1", title: "Test Session", date: "2026-09-07", status: { transcribe: "done", index: "pending" } };
+  // `org` and a topic-bearing page are LOAD-BEARING, not decoration (ISS-154). Without them
+  // `buildTree` produces no topic or org nodes, so `promoteAndPersistEntities` writes nothing, so
+  // the blanket tenant-confinement test had NOTHING TO CONFINE for entities — and the contract's
+  // mandatory `scopedCollection` -> bare-handle mutation survived on both `topics` and `orgs` at
+  // 159/0 green. A fixture that cannot reach a code path silently exempts it from every test that
+  // walks the recorded calls. This is the fifth such gap in this layer.
+  const SESSION = { _id: "s1", tenantId: "t", sourceId: "src1", title: "Test Session", date: "2026-09-07", org: "Acme University", status: { transcribe: "done", index: "pending" } };
+  // A capitalised phrase so the default `extractTopicRefs` heuristic yields a real topic node.
+  const PAGE = { _id: "p1", tenantId: "t", sessionId: "s1", summary: "Notes about New Zealand visas.", keyInsights: ["New Zealand visa rules changed."], decisions: [], actionItems: [], evidence: [{ turnId: "t1", sessionId: "s1" }] };
   const db = {
     collection(name: string) {
       const rec = (op: string, extra?: { filter?: Record<string, unknown>; docs?: Record<string, unknown>[]; update?: Record<string, unknown>; options?: Record<string, unknown> }) => {
@@ -67,6 +75,7 @@ export function fakeDb(
             rec("find", { filter });
             if (name === "turns") return [TURN];
             if (name === "sessions") return [SESSION];
+            if (name === "session_pages") return [PAGE];
             if (name === "claims") {
               // HONOURS THE FILTER (ISS-C-CLAIMS-TARGETING-001). It previously ignored it and
               // returned every seeded row, which made a scoping regression STRUCTURALLY
