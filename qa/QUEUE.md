@@ -1,24 +1,26 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-09T16:36+05:30, Mode B)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-09T17:54+05:30, Mode B)
 
-> Range: `6aed4fb..42f4253` (29 commits). Bound root `D:/KnowledgeBase`.
-> **Terminal state: FINDINGS: 1** — new ISS-242. Also: ISS-217 fixed by restoring the
-> one-line sweep stamp; ISS-241 independently re-checked and moved fixed → verified.
-> Bypass detection clean; tracker G1 green; dispatch-state 16/16; decisions additions-only;
-> maker live; no untracked verdicts; no production-source change in range, so the silent-failure
-> hunt found no new production exposure. The in-flight root edit to `scripts/eval-recall.mjs` and
-> its modified `.goal/goal.json` were not touched.
+> Range: `74b806b..b49a2ea` (1 commit). Bound root `D:/KnowledgeBase`.
+> **Terminal state: FINDINGS: 2** — ISS-054 reopened because `.last-tick` is 149 minutes stale
+> with a non-empty backlog and no pause; new ISS-245 records the browser-opener error swallow.
+> ISS-242 moved open → fixed after an independent re-check of the appended routing correction.
+> Bypass detection is clean; tracker G1/G4 is green; the one post-sweep unit has a matching-cycle
+> PASS and close-out; enforcement wiring runs; no new feedback/contract/goal-north-star drift was
+> introduced. The concurrent edits to `qa/gates/golden-set-redesign.md` and `.goal/goal.json` were
+> read as evidence and not staged.
 
 ## Current top 3
 
-1. **T-021 / golden-set embedding ambiguity — build now.** The cycle-3 PASS explicitly leaves a
-   bounded question↔session cosine pass as unblocked maker work. ISS-242 corrects only the stale
-   gate routing: ISS-093 is fixed; semantic sibling ambiguity remains to be measured. **Tier 1.**
-2. **U2.4 / ISS-104 — finish speaker resolution without guessing.** This is the only open critical
+1. **U2.4 / ISS-104 — finish speaker resolution without guessing.** This is the only open critical
    ledger row and the goal task is already `in_progress`; preserve the rule that low-confidence
    speakers remain unresolved. **Tier 1, security/data-integrity class.**
-3. **U3.1 — close the real live-browser exit, not only the component-test slice.** The goal still
-   marks Ask in progress because the remaining proof is a real question through the live API with
-   at least one speaker+timestamp citation linking to a real session page. **Tier 1, UI Mode D.**
+2. **ISS-245 / demo:live opener accountability.** Await each browser-opener result, report the URL
+   that failed, and exit non-zero if any page cannot be opened; pin the failure path with a stubbed
+   opener test. This is local-only and directly protects the mandatory live-browser gate. **Tier 1.**
+3. **T-021 / golden-set embedding ambiguity — prepare the bounded pass.** ISS-093 is retired;
+   semantic sibling ambiguity remains. The pass is the correct next measurement, but the actual
+   Gemini payload is parked at `qa/gates/external-eval-data-egress.md` until its pending answer.
+   Build/verify only the non-egress portion meanwhile; do not claim a score. **Tier 1.**
 
 ## Existing fix gap (not promoted over roadmap work)
 
