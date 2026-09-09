@@ -180,3 +180,293 @@ including worktree paths this repo actually uses — so widening CHECK 1 to four
 treated the instances, not the class. That, plus a test harness that was available and unused (and
 now encodes the wrong assertion) and a guard that is untracked in git, is three units and three
 externally-found defects on one seam. Gap 3 is not a PASS blocker, but it goes to a gate file.
+
+
+---
+---
+
+# Verdict — write-guard-enforcement-gaps · **Cycle checked: 2**
+
+**Date:** 2026-09-09
+**Cycle checked:** 2
+**Mode:** A (unit check)
+**Bound root:** `D:/KnowledgeBase`
+**Contract:** `qa/contracts/write-guard.md` (status `proposed`, authored by the cycle-1 checker)
+**Commit under check:** `d469340` (KnowledgeBase) · artifact commits `371d3b3`, `ac9e2e7` (`D:/ai_os`)
+
+```
+VERDICT: FAIL
+SCOREBOARD: 4/7 criteria met, 4/4 invariants hold
+FAILURES:
+- [C1] sev: high · the docs/DECISIONS.md deny wall returns `silent` for any non-canonical spelling
+  of the same file (`docs/sub/../DECISIONS.md`, `docs/./DECISIONS.md`), both of which resolve to the
+  protected file · canonicalise the path with [System.IO.Path]::GetFullPath before matching, instead
+  of matching the raw string · issue: ISS-172
+- [C2] sev: medium · `.claude/hooks/` is matched as `*.ps1` direct children only, so a hook in any
+  other language or in a subdirectory is silent; the criterion says `.claude/hooks/*` · widen line 102
+  the way the `.claude/rules` rule on line 105 already is · issue: ISS-173
+- [C3] sev: medium · not met by the artifact (out-of-Lab config paths are now intentionally silent);
+  this is an Approver-level change that needs a criticality-gated amendment, not a silent divergence,
+  and the checker may not soften the criterion to grant a pass · issue: ISS-174
+ISSUES-WRITTEN: ISS-172, ISS-173, ISS-174, ISS-175 (ISS-165, ISS-166, ISS-167 moved open -> fixed)
+EXPLANATION: The three highs from cycle 1 are genuinely closed and I verified each independently —
+the shape-matched block closes all six ISS-165 reproductions, the guard is tracked and is the exact
+file `~/.claude/settings.json` registers, and the harness is real and non-vacuous under my own
+mutation run (8/8 killed, control clean). The unit still fails because the survivor hunt the dispatch
+asked for found a fourth member of the very defect class this cycle was meant to close, and this one
+lands on the `deny`: the guard matches a path's spelling rather than its identity, so two ordinary
+alternative spellings of `docs/DECISIONS.md` pass straight through the append-only wall. The maker's
+own Gap 1 is answered the other way — I drove the replacement CONFIG predicate myself and it fires
+correctly, so that is not what fails this unit.
+```
+
+## What I re-ran (nothing here is the maker's pasted output)
+
+| # | Command / probe | Result |
+|---|---|---|
+| 1 | `powershell -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1` | **ALL PASS**, exit 0; **16** checks in the `aios-write-guard.ps1` block |
+| 2 | 33-case probe table against the live guard, JSON piped on stdin | see below |
+| 3 | Approval-fatigue sweep over every source file in this repo | **314 judged, 1 prompts** |
+| 4 | My own D-020 mutation harness, 9 mutants | **8 killed / 1 control survived clean** |
+| 5 | `delivery-gate-stop.ps1` CONFIG predicate, 4 synthetic transcripts | fires correctly, ordering rule correct |
+| 6 | Malformed-input sweep (7 inputs) for [I1] | all exit 0, silent |
+| 7 | `D:/ai_os` git: `371d3b3`, `ac9e2e7`, tracked status of the guard | both exist, guard tracked and unmodified |
+
+---
+
+## 1. ISS-165 and [I2] — the fourth survivor, and it reaches the `deny`
+
+The dispatch asked me to hunt a fourth member of this class after three consecutive rounds found it
+on paths the author had not named. **There is one, and it is worse than its predecessors.**
+
+```
+Write   D:/KnowledgeBase/docs/DECISIONS.md          -> deny      (canonical, correct)
+Write   D:/KnowledgeBase/docs/sub/../DECISIONS.md   -> silent    <-- ISS-172
+Write   D:/KnowledgeBase/docs/./DECISIONS.md        -> silent    <-- ISS-172
+Write   D:/KnowledgeBase/qa/../docs/DECISIONS.md    -> deny      (survives only by accident of the regex)
+Edit    D:/KnowledgeBase/docs/DECISIONS.md          -> deny
+MultiEdit D:/KnowledgeBase/docs/DECISIONS.md        -> deny
+Write   D:\KnowledgeBase\docs\DECISIONS.md          -> deny      (backslash input)
+Write   D:/KnowledgeBase/docs/DECISIONS.MD          -> deny      (case)
+```
+
+Both silent spellings name the protected file:
+
+```
+Resolve-Path 'D:\KnowledgeBase\docs\sub\..\DECISIONS.md' -> D:\KnowledgeBase\docs\DECISIONS.md
+Resolve-Path 'D:\KnowledgeBase\docs\.\DECISIONS.md'      -> D:\KnowledgeBase\docs\DECISIONS.md
+Test-Path -LiteralPath (both)                            -> True
+```
+
+`aios-write-guard.ps1:78` matches the raw string `'\\docs\\DECISIONS\.md$'` after only a `/` → `\`
+substitution. Nothing canonicalises. So the guard protects a *spelling*, not a *file* — which is the
+identical root cause as ISS-160 (named four paths), ISS-165 (matched position relative to the Lab
+root) and [I2] (varied with parent-directory existence). The cycle-2 fix moved the matching from
+*position* to *shape*; it did not move it to *identity*, which is the only formulation that closes
+the class.
+
+The same root cause, at lower impact, also hits the `ask` block:
+
+```
+Write   D:/KnowledgeBase/.claude/settings.json/     -> silent   (trailing separator)
+Write   docs/DECISIONS.md            (relative)     -> silent
+Write   .claude/settings.json        (relative)     -> silent
+```
+
+**The honest bound on this finding.** I could not establish whether the Claude Code harness
+canonicalises `file_path` before the PreToolUse hook receives it, because the only decisive test is
+to issue a real Write at `docs/DECISIONS.md`, which this checker may not do. If the harness does
+normalise, this is unexploitable *through that one route*. It is still charged as a [C1] failure,
+for two reasons: the criterion is about the guard's decision and the guard's decision is wrong; and
+the guard is registered as the sole enforcer of the wall, so "another component probably saves us"
+is exactly the reasoning D-023's Result was corrected for. Recorded in the ledger row as
+`NOT CONFIRMED` rather than asserted either way.
+
+**Everything else in the hunt came back clean.** UNC paths, mixed separators, deeply nested
+worktrees, submodules, `Edit`/`MultiEdit`, a `CLAUDE.md` inside `node_modules`, `.claude` as a file
+rather than a directory — all behave correctly:
+
+```
+KB/.claude/worktrees/lane-a/.claude/settings.json  -> ask     <- ISS-165 class, closed
+KB/sources/whatsapp_msg/.claude/settings.json      -> ask     <- submodule with its own Lab repo, closed
+KB/apps/api/.claude/hooks/h.ps1                    -> ask
+KB/.claude/rules/sub/x.md                          -> ask
+KB/CLAUDE.md, KB/.claude/CLAUDE.md                 -> ask
+KB/.claude/settings.local.json                     -> ask
+KB/scripts/append_decision.ps1                     -> ask
+```
+
+One genuine narrowing did fall out (ISS-173, medium): `.claude/hooks/newhook.mjs`,
+`.claude/hooks/newhook.py` and `.claude/hooks/sub/deep.ps1` are all silent, because line 102 encodes
+the extension `.ps1` and a no-separator segment class. [C2] says `.claude/hooks/*`, and hook commands
+are not restricted to PowerShell. No such file exists in the repo today, so it is latent — but it is
+one more enumerated spelling standing in for a class.
+
+## 2. ISS-167 — the harness is real, and non-vacuous by my own measurement
+
+I ran it: **ALL PASS**, exit 0, **16 checks** in the `aios-write-guard.ps1` block. I did not re-run
+the maker's mutations. I built my own, per D-020: the guard was copied to an isolated sandbox
+(`%TEMP%/sb/.claude/hooks/`, SHA256-identical to the live file, and the harness resolves the hooks
+dir from `$PSScriptRoot` so the sandbox copy tests itself), every run wrapped in a 240 s `timeout`,
+restore in a `finally` with a SHA256 assertion on both the sandbox **and** the live guard.
+
+| # | mutant | result |
+|---|---|---|
+| M1 | DECISIONS wall `deny` → `ask` (a downgrade, subtler than the maker's `deny`→allow) | **KILLED** |
+| M2 | drop the `.claude/hooks/*.ps1` shape rule | **KILLED** |
+| M3 | drop the `settings(.local).json` shape rule | **KILLED** |
+| M4 | drop the `CLAUDE.md` shape rule | **KILLED** |
+| M5 | drop the `.claude/rules` shape rule | **KILLED** |
+| M6 | drop the `scripts/append_decision.ps1` rule | **KILLED** |
+| M7 | **re-introduce the [I2] defect** — gate the ask on parent-directory existence | **KILLED** |
+| M8 | **re-introduce ISS-165** — ask only directly under the Lab root | **KILLED** |
+| M9 | control, comment only | **survived clean** |
+
+```
+BASELINE failures in write-guard block: 0
+RESTORE sandbox: MATCH        LIVE guard untouched: YES
+```
+
+Six of these are mutants the maker did not try, and M7/M8 are the two historical defects themselves:
+**the harness demonstrably kills the exact regressions this seam has already shipped twice.** That is
+a stronger result than the maker claimed, and [I2] is discharged on evidence rather than on argument.
+
+*A note against my own run:* my first attempt raced a background copy of itself on the same sandbox
+file and produced a contaminated table (control "killed", baseline drifting 0↔4, restore MISMATCH).
+I discarded it and re-ran sequentially. The live guard was never at risk — the sandbox is what
+absorbed it — but it is the same concurrency hazard D-020 was written for, in a harness written to
+satisfy D-020, and it is only visible because the control mutant was in the table. Reported here
+because a mutation result without a control is not evidence.
+
+## 3. ISS-166 — tracked, and the tracked file is the live one
+
+```
+371d3b3  hooks: track aios-write-guard.ps1 -- the live PreToolUse guard was untracked
+ac9e2e7  hooks/tests: pin aios-write-guard behaviour (ISS-167)
+git status .claude/hooks/  ->  aios-write-guard.ps1 absent from the output (tracked, unmodified)
+~/.claude/settings.json:163 -> powershell ... -File D:/ai_os/.claude/hooks/aios-write-guard.ps1
+```
+
+The registered path *is* the tracked file and the working tree has no divergent copy — I checked
+this specifically, because a tracked-but-superseded file would satisfy the commit while leaving the
+original defect live. Both commit messages match what they contain. **[C7] met.**
+
+## 4. The moved target — keeping it was correct, and the replacement fires
+
+Judged on the merits, three ways.
+
+**Was keeping it correct? Yes.** The maker was mid-cycle on a control that Umesh, the named Approver
+of this repo, had just removed by direct instruction. Fighting that would have been a maker
+overriding the Approver on a scope question — precisely the decision class the maker does not own.
+The reasoning in the guard's own comment is also independently right: this hook sees only
+`Write|Edit|MultiEdit`, so a `sed` or heredoc edit walks past it, and a gate with a second route
+around it buys the interruption without the safety.
+
+**Is the feedback recorded properly? Yes.** `qa/feedback-inbox.md` carries it verbatim with
+attribution, the mechanism, the measured cost, and an APPLIES NEXT that generalises past this hook.
+That is the inbox format, used well.
+
+**Can the unit PASS while the protection depends on a Stop-hook predicate this unit neither wrote
+nor verified?** The maker invited a FAIL here. **I decline it, because I verified the predicate
+myself.** `delivery-gate-stop.ps1:160-196` exists and fires. Driven with synthetic transcripts and
+fresh session ids from cwd `D:/ai_os` (from a maker-checker cwd the earlier MAKER CONTINUATION
+predicate blocks first and masks it):
+
+```
+A  config edit, no auditor        -> block: "1 config-file edit(s) this session and /aios-config-auditor never ran"
+B  config edit, auditor AFTER     -> no block
+C  config edit, auditor BEFORE    -> block          (the "only a run after the last edit counts" rule is correct)
+D  ordinary edit only             -> no block
+```
+
+It is also strictly wider than the ask it replaced: it reads the transcript, so it catches the
+Bash/`sed` route the PreToolUse hook never could. So the substance of Gap 1 is discharged — the
+protection did not evaporate, it moved and got stronger, and it is now verified by someone other
+than the session that wrote it.
+
+**What does fail is the bookkeeping (ISS-174, medium).** `[C3]` still says those paths are `ask`;
+they are silent. A checker may not soften a criterion to pass an artifact, and *removing a control*
+is a CRITICAL amendment under the criticality gate — human-decided, away from any pending verdict.
+So `[C3]` counts as not met this cycle and rides with the contract's ratification. The maker is not
+charged for it; it is not a fix direction the maker can execute.
+
+## 5. The Lab Protocol ask survives — re-probed, not read
+
+`docs/DECISIONS.md` → **deny** (canonical spellings; see §1 for the exception). Every Lab enforcement
+class → **ask**, including the nested class: `.claude/settings.json`, `.claude/settings.local.json`,
+`.claude/hooks/*.ps1`, `scripts/append_decision.ps1`, `CLAUDE.md`, `.claude/CLAUDE.md`,
+`.claude/rules/**` at the root, in a submodule, in a worktree lane, and under `apps/api/`. **[C5] met.**
+
+## 6. The approval-fatigue win survives
+
+Re-measured over this repo rather than taken from the manifest — every `.py .ts .tsx .js .jsx .go
+.rs .java .rb .cs .c .h` file outside `node_modules`/`.git`/`.venv`/`dist`/`build`, each piped
+through the live guard:
+
+```
+judged source files: 314
+PROMPTING now:       1
+  D:/KnowledgeBase/packages/ask/src/ask-v2.ts
+```
+
+**314 → 1**, and the one is a true positive: `ask-v2.ts` beside `ask.ts` is the literal `foo_v2`
+pattern the anti-drift rule exists for. Against the 84 the merge was built to remove, the win holds
+with no false positives at all. **[C4] met.**
+
+On the per-write cost: the ~5088 ms → ~1100 ms claim is a claim about *four PowerShell spawns versus
+one*, and `~/.claude/settings.json` now registers exactly one PreToolUse command for
+`Write|Edit|MultiEdit` (line 163). One spawn is the structural fact behind the number and it is
+confirmed; I did not re-derive the millisecond figures, since a single-process guard cannot cost
+four cold starts. **[I4] met.**
+
+## 7. The four Known Gaps
+
+1. **The generic-config route is carried by a Stop hook the maker did not verify.** *Discharged* —
+   §4. I verified it; it fires, with the correct ordering rule, and it is wider than what it replaced.
+2. **`Get-ProtocolRoot` still differs from the original's existence-gated walk.** *Accepted, and now
+   evidenced rather than argued.* The maker claimed the difference affects only the reason. My
+   mutant M7 re-introduced the existence gate on the decision and the fixture block **killed it**, so
+   the property is pinned, not merely asserted. [I2] holds.
+3. **The harness runs only on demand.** *Accurate and unresolved.* Nothing in any session or commit
+   path invokes `hook-fixtures.ps1`. Not charged as a failure — [C6] asks for a committed, runnable
+   harness and that exists — but it is the reason this seam keeps regressing between checks. A
+   PostToolUse or pre-commit invocation scoped to `.claude/hooks/**` is the obvious closure; it is
+   `D:/ai_os` work, not KnowledgeBase work, so I have not filed it against this repo's ledger.
+4. **ISS-168 needs the Approver.** *Correctly handled.* `qa/gates/d023-supersede.md` is well-formed:
+   dated, one-line question, why it needs the human, exactly what is false, options A/B with a
+   recommendation, an answer format, and the literal command. It has no `Answered:` line, which is
+   right — it has not been answered. **And the maker did not write the DECISIONS entry itself:**
+   `git log -S` finds no commit introducing D-024's text, `d469340`'s stat does not touch
+   `docs/DECISIONS.md`, and the file's only uncommitted change is 8 added lines — D-024, another
+   session's live-browser entry, unrelated to D-023. The append-only record was not touched by this
+   unit. Exactly right.
+
+Separately, while running the harness I found a defect in it that is **not** this unit's
+(ISS-175, low): `hook-fixtures.ps1:126` writes a double-quoted `qa\feedback-inbox.md`, so `\f`
+becomes a formfeed, `Set-Content` throws `Illegal characters in path` twice on stderr — and the suite
+still reports `ALL PASS` with exit 0. It is in the `mc-sessionstart` block, not the block the maker
+added. Recorded because a fixture whose setup silently failed can only pass vacuously, and it was
+only visible because I ran the harness instead of trusting the pasted result.
+
+## Round cap (D-014)
+
+ISS-172 is **security class** — it is the append-only DECISIONS wall, the repo's governance
+enforcement — so the class-based cap does not apply and it opens a unit at any round count. It is
+moot regardless: this seam has **zero** prior PASSed verdicts, cycle 1 having FAILed.
+
+## Contract note
+
+`qa/contracts/write-guard.md` remains `proposed`. I have made **no amendment** — [C3]'s divergence is
+a CRITICAL amendment (removing a control) and belongs to the Approver, not to a checker holding a
+pending verdict, and softening it here to reach a PASS is the one thing the criticality gate
+absolutely forbids. Ratification and the [C3] rewrite should be decided together, per ISS-174.
+
+## For the maker (cycle 3, and it should be small)
+
+One code change carries [C1]: canonicalise `$pathNorm` once with
+`[System.IO.Path]::GetFullPath(...)` (it works on paths that do not exist, unlike `Resolve-Path`),
+trim trailing separators, and match only the canonical form. ISS-173 is a one-line widening of the
+same block. **Per D-015, the regression evidence must re-run ISS-172's own four recorded
+reproductions verbatim and report them by issue id** — not a corpus authored alongside the fix.
+They belong in the `aios-write-guard` block of `hook-fixtures.ps1`, which today pins only canonical
+spellings. ISS-174 is a HUMAN_GATE and ISS-175 is another repo's low; neither blocks cycle 3.
