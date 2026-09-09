@@ -259,3 +259,271 @@ have credited it in full. No ledger row was claimed fixed that is not.
 
 Fix cycle 1 of max 3 consumed. The fix for ISS-154 is one fixture change plus a re-run; C6 does not
 need to be revisited.
+
+---
+---
+
+# CYCLE 2 — independent re-check
+
+**Date:** 2026-09-09
+**Contract:** qa/contracts/entity-promotion.md
+**Manifest:** qa/manifests/entity-id-tenant-namespace.md (`Fix cycle: 2`)
+**Cycle checked: 2**
+**Bound to:** `D:\KnowledgeBase`
+**Mode:** A (unit check), plus a live probe against `mongodb://13.202.206.101:27017` db `lkb`
+*(Cycle 1's verdict is preserved above, byte-intact.)*
+
+```
+VERDICT: PASS
+SCOREBOARD: 9/9 criteria met, 4/4 invariants hold
+FAILURES: none
+ISSUES-WRITTEN: ISS-156 (medium — ledger line only, not a unit)
+EXPLANATION: C3's mandatory (c) mutation is genuinely dead. I re-derived it three ways —
+topics alone, orgs alone, and both together — and each reddens at 158/3, where cycle 1 measured
+159/0 on two of the three collections. The tests that die are the right ones: all three are
+tenancy assertions (the new ISS-154 filter test, the ISS-060/061 blanket confinement test, and
+the degraded-run confinement test), none is an incidental crash. I instrumented `indexSession`
+and it now records `topics.updateOne` x2 and `orgs.updateOne` x1 against zero at cycle 1, so the
+`sessionRef` -> `sessionId` fixture bug is really fixed and BOTH entity writes execute. I ran the
+contract's full mutation battery (12 mutations) against the richer fixture hunting for a
+newly-vacuous assertion and found no assertion weakened — one uncovered sub-case surfaced instead
+and is filed medium as ISS-156. C8 holds live: topics 0, orgs 0, topicRefs empty on all 81 claims.
+```
+
+---
+
+## 1. What I re-ran myself (nothing here is the maker's pasted output)
+
+| Gate | My result |
+|---|---|
+| `pnpm --filter @lkb/api test` | **161 pass / 0 fail** |
+| `pnpm -r test` | exit **0** |
+| `pnpm -r typecheck` | exit **0** |
+| `npx depcruise --config .dependency-cruiser.cjs packages apps workers` | exit **0**, no violations |
+
+Every mutation below was armed through `node scripts/lib/mutate.mjs apply`, applied, run, then
+restored; `assert-clean` reports **`MUTATIONS CLEAN: none outstanding`** and `git status` shows the
+tree carrying only the concurrent lane's `.goal/goal.json`. I touched none of the reserved paths.
+
+## 2. The C3(c) mandatory mutation — re-derived three ways, not one (brief item 1)
+
+The manifest claims 158/3 for the combined mutation. It reproduces exactly. But a combined
+mutation cannot tell you whether *both* collections got covered or only one, so I also ran each
+alone:
+
+| Mutation (`scopedCollection` to bare `db.collection(...)`) | Cycle 1 | Cycle 2 |
+|---|---|---|
+| `topicsColl` **alone** | 159/0 SURVIVED | **158/3 — KILLED** |
+| `orgsColl` **alone** | 159/0 SURVIVED | **158/3 — KILLED** |
+| both together | (not run) | **158/3 — KILLED** |
+| `claimsColl` | 158/1 reddens | reddens (unchanged) |
+
+**The tests that die are the right ones.** All three are tenant-scoping assertions, and none is an
+incidental unhandled rejection:
+
+```
+x ISS-154: every entity write is tenant-scoped ON THE FILTER, not merely in the body
+    AssertionError: topics.updateOne filter lost its tenantId — a bare db.collection()
+    handle would look exactly like this   ·   undefined !== 't'
+x EVERY query AND every write indexSession issues is confined to its own tenant (ISS-060, ISS-061)
+x a DEGRADED run's writes are tenant-scoped too — the guard must not be a bypass
+```
+
+The failure message names the exact substitution, and the blanket `assertAllCallsConfined` test now
+has entity calls to confine on **both** the healthy and the degraded branch. Note what does *not*
+die: the sibling "REACHES the entity writes" test stays green, correctly — a bare handle still
+writes, it just writes unscoped. The maker's claim that the two tests "fail for different reasons
+on purpose" is true, and I verified it rather than accepting it.
+
+## 3. BOTH entity writes really execute — the `sessionRef`/`sessionId` bug (brief item 3)
+
+I instrumented a real `indexSession` run against `fakeDb` and dumped every recorded op. Cycle 1's
+dump ended `topics/orgs calls: 0`. This is cycle 2's:
+
+```
+ENTITY CALL: topics updateOne {"_id":"t:new-zealand","tenantId":"t"}
+             {"$set":{"tenantId":"t","name":"New Zealand","sessionRefs":["s1"]}} {"upsert":true}
+ENTITY CALL: topics updateOne {"_id":"t:notes","tenantId":"t"}
+             {"$set":{"tenantId":"t","name":"Notes","sessionRefs":["s1"]}} {"upsert":true}
+ENTITY CALL: orgs   updateOne {"_id":"t:acme-university","tenantId":"t"}
+             {"$set":{"tenantId":"t","name":"Acme University"}} {"upsert":true}
+
+ALL OPS: turns.find · session_pages.deleteMany · session_pages.insertOne · claims.deleteMany ·
+claims.insertMany · gaps.updateOne · sessions.find · session_pages.find · tree_index.findOne ·
+tree_index.replaceOne · topics.updateOne · topics.updateOne · orgs.updateOne · claims.find ·
+sessions.updateOne
+```
+
+**Two topic rows and one org row, both collections, filters carrying `tenantId` and the namespaced
+`_id`.** `testutils.ts:58` writes the page with `sessionId: "s1"`, matching `buildTree`'s lookup and
+`schema/session_pages.schema.json`. The fixture bug the maker disclosed is real and is fixed; the
+disclosure was accurate. Had it shipped, `orgs` would have promoted and `topics` would not — and the
+combined mutation would still have shown 3 failures, which is exactly why running each collection's
+mutation *alone* was worth doing.
+
+## 4. Does the richer fixture make anything else vacuous? (brief item 2 — the main risk)
+
+This was the cycle's real question: the fix is to the **fixture**, and `fakeDb` has ~46 call sites,
+several asserting exact op lists. A fixture change that quietly makes another assertion vacuous
+trades one blind spot for another. I checked three ways.
+
+**(a) The full contract mutation battery — 12 mutations, one survivor.** If the richer fixture had
+weakened an assertion, a mutation that used to redden would now survive. Only one survived, and it
+is not one that used to redden (see §5):
+
+| Mutation | Result |
+|---|---|
+| C3(a) `claimsColl(tenantId)` to `claimsColl("ATTACKER")` | 160/1 reddens |
+| C3(b) drop `tenantId` from **topic** `$set` | 160/1 reddens |
+| C3(b') drop `tenantId` from **org** `$set` | **161/0 SURVIVED** -> ISS-156 |
+| C1(a) `{upsert:true}` to `{upsert:false}`, both sites | 160/1 reddens |
+| C1(b) `sessionRefs: t.sessionRefs` to `[sessionId]` | 160/1 reddens |
+| C4(a) claims `.find({"evidence.sessionId":...})` to `.find({})` | 160/1 reddens |
+| C4(b) claim `updateOne({_id:c._id})` to `updateOne({})` | 159/2 reddens |
+| C4(c) topic upsert filter to `{}` | 158/3 reddens |
+| C4(d) org upsert filter to `{}` | 159/2 reddens |
+| C5 force `tagClaims` true unconditionally | 159/2 reddens |
+| C2 force the promotion body to throw | 148/13 reddens |
+| C6 `entityId` to `return slug` | 157/4 reddens |
+
+**(b) The exact-op-list assertions are untouched.** The three `deepEqual(pageOps(calls), [...])`
+assertions (`session.test.ts:114,124,134`) are scoped to `session_pages` and read *op names*, not
+returned content. `session_pages.find` was already being recorded before this change — the fixture
+only changed what it *returns*, from `[]` to `[PAGE]`. The op sequences are byte-identical, which is
+why those three stayed green without being edited. The ISS-056 assertion
+(`deepEqual(claimOps(calls), [])`) is likewise unaffected and still live: the C5 mutation reddens it.
+
+**(c) The blanket assertions got stronger, not weaker.** `session.test.ts:81` is
+`writes.length >= 4` — a lower bound, so more recorded writes can only tighten it; `:83` requires a
+non-empty insert, unaffected. `assertAllCallsConfined` now walks three more calls than it did. The
+direct tests in `promote-entities.test.ts` build their own trees and call
+`promoteAndPersistEntities` directly, so the `SESSION`/`PAGE` fixture does not reach them at all —
+none of them can have been made vacuous by this change.
+
+**Conclusion: no assertion was weakened.** The maker also put a load-bearing comment on both fixture
+fields (`testutils.ts:50-58`) so a future tidy-up cannot silently delete them, which is the right
+defence given this is the fifth gap of this shape in the layer.
+
+## 5. The next unreachable path (brief item 4) — ISS-156, and two paths I cleared
+
+**Found: the org `$set` body is uncovered where the topic one is not.** Dropping `tenantId` from the
+topic `$set` reddens; the identical mutation on the org `$set` **survives at 161/0**. It is the same
+topics-vs-orgs asymmetry class as ISS-154, one layer in — the fix covered the *filter* on both
+collections but the *body* on only one.
+
+**It is not a C3 failure, and I want to be exact about why.** C3's property is stated for "the
+entity upserts", and the shipped code does carry `tenantId` in both bodies — the code is correct.
+C3's *Verified-by* list names mutation (b) as "drop `tenantId` from the topic `$set`", and that one
+reddens. So C3 as written is met. Its live impact is also nil: `scopedCollection.updateOne` merges
+`withTenant` into the **filter** (`tenantScope.ts`), and Mongo builds an upsert-inserted document
+from the filter's equality fields, so the row still carries `tenantId` even with the `$set` stripped.
+Filed **medium** — a ledger line, verified inside the next unit that touches this test file, per this
+repo's severity gate. It is a one-line extension of an assertion that already exists.
+
+**Cleared — the never-throws catch (C2).** I mutated the catch to `throw err` with a forced throw in
+the body. It reddens 24 tests **including the named one** — `promote-entities.test.ts:94`,
+`assert.equal(res.skipped, "promotion-failed", "the failure must be reported, not thrown")`. That is
+a named assertion, not the incidental unhandled-rejection crash C2 explicitly refuses to accept.
+C2 holds.
+
+**Cleared — the `tagClaims:false` branch (C5).** Forcing `tagClaims` true unconditionally reddens
+the named ISS-056 assertion "no claims write of any kind may happen on a degraded run" plus the
+direct `tagClaims:false` test. The branch executes and is asserted.
+
+**One observation I am NOT filing.** C2's second clause asks that a failing promotion still let
+`indexSession` reach the `status.index` flip. No test names *that* pairing — `session.test.ts:309`
+asserts it for the **chunks** path (ISS-112), not the promotion path. I am not filing it: the catch
+returns a literal, so the function is structurally incapable of throwing, cycle 1 already graded C2
+met, and this unit did not touch that code. I would not defend it at >80 % as a reachable defect —
+it is a note for whoever next widens C2's coverage, not a finding.
+
+## 6. C8 / U2.1 deferral — no regression (brief item 5)
+
+Driver/TCP probe against `mongodb://13.202.206.101:27017`, db `lkb`. **No ICMP** — the host filters
+it. Checker-authored script, scratch tenants `chk2-a` / `chk2-b`, scratch slug `chk2-uk`.
+
+```
+CONNECTED (driver/TCP probe, no ICMP)
+PRE  topics= 0 orgs= 0
+PRE  claims= 81 with non-empty topicRefs= 0
+
+NS   both tenants upserted OK; scratch rows: 2
+
+CLEANUP deleted= 2   READBACK leftover= 0
+POST topics= 0 orgs= 0
+POST claims= 81 with non-empty topicRefs= 0
+```
+
+`topics` and `orgs` are still **0 rows**; `topicRefs` is empty on **all 81** claims. C8's deferral
+holds and the `<tenantId>:<slug>` convention still strands no stored id. C6 re-verified in passing
+under the shipped shape — both tenants upsert the same slug without collision. Cleanup was **read
+back from the server**, not assumed.
+
+## 7. The C6 contract amendment's provenance (D-022) — properly recorded
+
+Asked to confirm this, since a contract edited mid-unit by a checker is exactly the provenance
+problem D-022 was written about. It is clean:
+
+- The amendment log at `qa/contracts/entity-promotion.md:214-222` carries a full entry in the
+  required shape — **date** (2026-09-09) · **class** (`routine`) · **what** (C6's second remedy
+  narrowed from an independent alternative to a note) · **why** (the E11000 is raised by the
+  implicit `_id_` index, which no added index can relax; `orgs`' existing unique
+  `tenantId_1_name_1` did not prevent the collision) · **where found** (this contract's first use)
+  · and it **cites the verdict** `qa/verdicts/entity-id-tenant-namespace.md`.
+- It also records C6's status change from "believed UNMET" to **MET**, with the live evidence in
+  both directions — which is the honest thing to do, since the contract's author had explicitly
+  flagged that criterion as unverified.
+- **It is committed**, in `816a48d` ("checker: FAIL entity-id-tenant-namespace (cycle 1) +
+  ISS-154/155") — `git diff HEAD` on the contract is empty. Not a working-tree-only edit.
+- **The criticality gate is right.** This is a *narrowing* — it removes a way to satisfy C6 while
+  leaving the bug in place. Under the gate that is "tighten / record edge case" -> routine,
+  auto-apply with a reason. It weakens no invariant and reverses no goal direction, so it correctly
+  did not need a human. Had it gone the other way — adding an alternative remedy — it would have
+  been critical.
+
+Provenance is sound: written by a checker, not the maker; logged with its reason; committed;
+verdict-linked; correctly classified.
+
+## 8. Criterion-by-criterion
+
+| | Criterion | Status | Evidence |
+|---|---|---|---|
+| C1 | upsert, never delete-then-insert | **MET** | `upsert:false` and `sessionRefs`->`[sessionId]` both redden; `fakeDb` genuinely records `deleteMany` (`testutils.ts:65`), so the zero-deletes assertion is not vacuous |
+| C2 | promotion never throws | **MET** | named assertion `promote-entities.test.ts:94`; rethrow mutation reddens it |
+| C3 | every write tenant-scoped, filter **and** body | **MET** | (a) reddens · (b) reddens · **(c) reddens on topics alone, orgs alone, and both** — the cycle-1 FAIL is closed |
+| C4 | writes are targeted, not merely well-formed | **MET** | all four filter-to-`{}` mutations redden; `fakeDb.find` honours its filter (`testutils.ts:79-92`), so the precondition holds |
+| C5 | degraded run performs no claims op | **MET** | forcing `tagClaims` true reddens the named ISS-056 assertion |
+| C6 | entity `_id`s cannot collide across tenants | **MET** | re-verified live this cycle; `entityId`-to-bare-slug reddens 4 |
+| C7 | pure layer pure and deterministic | **MET** | unchanged this cycle (diff touches only `apps/api` tests + `testutils.ts` + the manifest); graded MET at cycle 1 |
+| C8 | no live entity backfill | **MET** | live: topics 0, orgs 0, topicRefs empty on 81/81 |
+| C9 | standing gates | **MET** | `pnpm -r test` 0 · `pnpm -r typecheck` 0 · `depcruise` 0 |
+
+**Invariants.** I1 holds (C2). **I2 holds, and this cycle is I2 being enforced** — coverage was
+absent until a mutation proved it present, and the fix was made because the mutation said so, not
+because a test looked missing by inspection. I3 holds — the change adds no filtering or
+re-slugifying; it is fixture and test only. I4 holds — C8 records the deferral together with the
+condition that returns it (U2.2's precision number).
+
+## 9. Ledger
+
+| Issue | Sev | Movement |
+|---|---|---|
+| ISS-154 | high | **open -> fixed.** Independently re-derived, not taken on the manifest's word. |
+| ISS-155 | medium | stays open — `backfill.mjs` untouched this cycle, correctly out of a tenancy unit's scope |
+| ISS-156 | medium | **new** — org `$set` body coverage asymmetry; ledger line only, not a unit |
+
+The manifest's `Issues addressed` were "contract C6 (met, cycle 1) · contract C3 / ISS-154". Both
+are genuinely closed and I have credited them in full. No row was claimed fixed that is not.
+
+## 10. Notes for the maker
+
+- **Close-out:** flip the manifest to `Status: checked-PASS`. Fix cycle 2 of max 3; one unused.
+- **Goal task U2.1c:** I did **not** run the `/goal` close. `.goal/goal.json` is reserved to the
+  concurrent lane in this dispatch, and a reserved-path write is not worth a task-status field.
+  Whoever owns that lane should close U2.1c.
+- **The carried-forward `PromotedTopic._id` -> `slug` rename** remains a good idea and remains
+  correctly out of a tenancy unit. It belongs with whatever unit next opens `packages/index`.
+- **The habit worth keeping:** the maker found its own fixture bug because it wrote an assertion
+  strong enough to fail — `entityWrites.some(topics)` **and** `some(orgs)` rather than
+  `entityWrites.length > 0`. A weaker assertion would have shipped a fixture exercising half the
+  path while looking complete. That is the same lesson as ISS-154 itself, one level up.
