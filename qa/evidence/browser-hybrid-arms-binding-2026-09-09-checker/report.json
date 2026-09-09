@@ -1,0 +1,50 @@
+{
+  "unit": "hybrid-arms-binding",
+  "actor": "checker",
+  "cycle": 2,
+  "commit": "526e88b",
+  "note": "Written by the CHECKER, alongside and never overwriting the maker's report.json in qa/evidence/browser-hybrid-arms-binding-2026-09-09/. The maker's screenshots were not read as verification; these are my own clicks.",
+  "servers": { "web": "http://localhost:5173", "api": "http://localhost:3300" },
+  "server_identity_caveat": "Both servers were ALREADY RUNNING when I started (my own `pnpm --filter @lkb/api dev` died with EADDRINUSE on 3300). I could not confirm from a build/commit stamp which commit they serve. Mitigating: this cycle's diff touches no server-side source at all (ask-arms.ts and routes/ask.ts are byte-identical to cycle 1), so the served behaviour is cycle 1's, which had its own live two-tenant Mongo probe.",
+  "pages": [
+    {
+      "path": "http://localhost:5173/ask",
+      "consoleErrors": 1,
+      "consoleErrorDetail": "GET /favicon.ico 404 - pre-existing, unrelated to this unit, present on every page of the web app",
+      "interactions": [
+        {
+          "did": "typed 'What did speakers say about UK student visas and post-study work?' into the Question box and clicked Ask",
+          "expected": "a real answer through askV2 with the per-request-bound retrieval arms, citing an internal session",
+          "observed": "answer names UKVI's tightened Basic Compliance Assessment, Enroly CAS Shield pre-CAS checks, and NBFC (Credila, Avanse) lending caps. INTERNAL SOURCES (1) = toc/year:2026/month:08/session:2026-08-03-uk-beyond-offer-letters. WEB SOURCES (0). Router banner: 'judged internal coverage insufficient... no web fallback is configured'. verdict: ambiguous - no candidate >= 0.7 but at least one >= 0.3",
+          "pass": true
+        },
+        {
+          "did": "read the post-study-work half of the answer",
+          "expected": "no fabricated content on the half with no evidence",
+          "observed": "'The provided context does not contain information about what speakers said regarding post-study work.' It declined.",
+          "pass": true
+        },
+        {
+          "did": "CLICKED the internal-source citation link (the maker only looked at it)",
+          "expected": "it navigates to a real session page, not a dead link - C2's 'every citation resolves to a real turn' as a user experiences it",
+          "observed": "navigated to /sessions/2026-08-03-uk-beyond-offer-letters, which rendered the real session: title 'UK: Beyond Offer Letters', 2026-08-03, TOC, an overview naming the real panellists, Claims (2), and Transcript (46 turns)",
+          "pass": true
+        }
+      ]
+    },
+    {
+      "path": "http://localhost:3300/compete",
+      "consoleErrors": 2,
+      "interactions": [
+        {
+          "did": "typed the same question into the API-served Compete page and clicked Ask",
+          "expected": "an answer, or an honest failure",
+          "observed": "'request failed: HTTP 401' - the page's PREFILLED demo API key (demo_399dcf...) is not valid against the running server. Recorded as an instrument limitation, not charged to this unit: /compete does not pass extraCandidateArmsFn (compete.ts:72) and so does not exercise this unit's arms at all.",
+          "pass": null
+        }
+      ]
+    }
+  ],
+  "verdict": "the UI path is healthy; the unit FAILS on C6 for reasons no browser can see (a coverage gap proven by mutation, not a live defect)",
+  "skipReason": null
+}

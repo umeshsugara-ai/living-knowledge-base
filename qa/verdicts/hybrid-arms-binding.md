@@ -364,3 +364,267 @@ grep for 0.891 across the repo                                  → no uncaveate
 All mutations restored via `mutate.mjs restore` and verified identical to HEAD; `assert-clean` green;
 the two eval reports my runs rewrote were `git checkout`-ed back. Working tree left carrying only the
 concurrent lane's `.goal/goal.json` and `qa/.last-tick`, which I did not touch.
+
+---
+
+# Verdict — hybrid-arms-binding (U1.5 part 2) — CYCLE 2
+
+**Contract:** qa/contracts/hybrid-retrieval.md
+**Manifest:** qa/manifests/hybrid-arms-binding.md (Fix cycle: 2 of max 3)
+**Cycle checked: 2**
+**Date:** 2026-09-09
+**Checker:** Mode A + Mode D, fresh subagent, bound to `D:\KnowledgeBase`
+**Commit under judgement:** `526e88b` (unit commit `ea5bd95`; part-1 baseline `ad6e7b7`)
+**Dispatch context:** RECOVERY — the cycle-2 manifest sat at `ready-for-check` with only a
+cycle-1 verdict on disk. Nothing from any earlier run was taken on trust; every number below is
+one I produced myself at `526e88b`.
+
+```
+VERDICT: FAIL
+SCOREBOARD: 10/11 criteria met, 4/5 invariants hold (I2 does not)
+FAILURES:
+- [C6] sev: high (security-class, NEVER round-capped) · the binding site is now genuinely pinned —
+  but the DATA BOUNDARY still is not, and that is the half C6's own Verified-by actually names. A
+  module-level cache of the tenant's `turns` or `chunks` inside `ask-arms.ts`, not keyed by tenant
+  — one `??=`, the most ordinary perf change anyone would make to this file — leaves 173/173
+  GREEN. The root cause is exact: `ask-arms.test.ts:65-66` asserts
+  `a.queriedTenants.every(q => q.endsWith(":tenant-a"))`, and `[].every()` is `true`, so a cache
+  that suppresses the second tenant's read entirely passes the assertion VACUOUSLY. The test also
+  uses two SEPARATE db fakes and asserts on the query FILTER STRING, never on what came back —
+  whereas C6 asks for a test "asserting tenant B's question never returns a candidate resolving to
+  tenant A's session" · fix direction: one test, ONE db fake, two tenants whose chunks+turns both
+  exist and whose sessions are both in the tree, asserting tenant B's arms contain only tenant B's
+  node AND that the db was read at least once per tenant (kill the `.every()` vacuity explicitly);
+  confirm it reddens under mutations R and S below · issue: ISS-179
+ISSUES-WRITTEN: ISS-179 (new). ISS-169 → fixed, ISS-170 → fixed.
+LIVE-BROWSER: qa/evidence/browser-hybrid-arms-binding-2026-09-09-checker/report.json (my own
+  browser, my own clicks; the maker's PNGs were not read as verification)
+EXPLANATION: Both cycle-1 failures are genuinely discharged and I verified each myself — the hoist
+mutation that stayed green at cycle 1 now kills 3 tests, the cache variant kills 2, and the
+corrected hybrid recall reproduces to the digit at 0.870 (80/92) against vector's 0.935, with the
+report's own `retriever` string now naming the tree arm as the heuristic proxy. The unit fails on a
+DIFFERENT leg of the same security-class criterion, found by the sibling hunt the dispatch asked
+for: the binding is pinned, the corpus read is not. This is C6's third distinct unpinned path
+(factory internals → binding site → data boundary), and C6 is explicitly never round-capped.
+```
+
+## 0 · What is new in this verdict, in one paragraph
+
+Cycle 1 failed C6 and C7. **Both fixes are real and I re-derived both.** C7 is now MET. C6 fails
+again, and I want to be precise that this is **not** the cycle-1 finding restated: mutation K —
+the exact hoist that cycle 1 ran and that stayed 170/170 green — now kills **3 of 3** new tests.
+What I found instead is the leg of C6 that neither cycle has covered: the shipped `ask-arms.ts`
+reads the tenant's corpus, and **nothing asserts that what came back belongs to the tenant that
+asked.**
+
+## 1 · My mutation harness (D-020), and why the control matters
+
+Written by me, repo-scoped, `timeout 600` on every test run, restore in a `finally` that fires on
+timeout/interrupt/error, **every restore asserted SHA256-identical to the pre-mutation bytes**,
+arm/restore through `scripts/lib/mutate.mjs`, and a final `git status --porcelain` +
+`assert-clean`. Each mutant is additionally **asserted present in the file** before its run counts
+— a check I added after the harness silently produced two no-op "mutants".
+
+**The control earned its place twice in this session, which is the argument for the rule.**
+
+1. Batch 2's control came back `tests: null`. Not a kill, not a survival — a broken parser (a
+   heredoc had eaten a backslash, so `\d` was matching a literal `d`). Without a control I would
+   have read three `null`s as three survivals and filed a security finding on a regex bug.
+2. Batch 3's first attempt reported R and S as **survivors** when the load-bearing half of each
+   edit had never applied — my needle used `\n` against a CRLF working copy, so only the harmless
+   `let CACHE;` line landed. The `mutant_verified_present` assertion caught it. **A table without
+   a control cannot distinguish a kill from a broken harness**, and mine was broken twice.
+
+Every row below is from a run where the control was green and the mutant was verified present.
+
+| # | mutation | file | result | reading |
+|---|---|---|---|---|
+| **CONTROL** | insert a no-op comment | `routes/ask.ts` | **173 pass / 0 fail / 0 cancelled** | harness can show green |
+| **CONTROL3** | insert a no-op comment | `ask-arms.ts` | **173 / 0 / 0** | same, for the second file |
+| **K** | hoist the bind to router construction, tenant `"system"` (**cycle 1's own mutation, which stayed green**) | `routes/ask.ts` | **170 / 3** | **ISS-169 FIXED** — kills all three new tests |
+| **B** | bind lazily once, then reuse (the cheap wrong fix) | `routes/ask.ts` | **171 / 2** | matches the manifest exactly |
+| **P** | bind *in front of* `requireScope`, so a refused caller binds a tenant | `routes/ask.ts` | **170 / 3** | the auth-ordering test is real |
+| **T** | hardcode the LEXICAL read to `"tenant-a"` | `ask-arms.ts` | **172 / 1** | the filter assertion works — for this shape |
+| **U** | hardcode the VECTOR read to `"tenant-a"` | `ask-arms.ts` | **172 / 1** | ditto |
+| **N** | take the tenant from the **request body** instead of the verified key | `routes/ask.ts` | **173 / 0** | survivor (see §4, not charged) |
+| **R** | module-level `CHUNK_CACHE ??=`, not keyed by tenant | `ask-arms.ts` | **173 / 0** | **SURVIVOR — ISS-179** |
+| **S** | module-level `TURN_CACHE ??=`, not keyed by tenant | `ask-arms.ts` | **173 / 0** | **SURVIVOR — ISS-179** |
+
+`0 cancelled` on every row: no timed-out test is hiding behind a `fail 0`. The working tree after
+all runs carried only the concurrent lane's `.goal/goal.json` and `qa/.last-tick`; `assert-clean`
+reports none outstanding.
+
+## 2 · C6 — the third unpinned path, stated exactly
+
+`ask-arms.test.ts:60-67`:
+
+```ts
+const a = fakeDb(); const b = fakeDb();
+await createAskArmsFor({ embed: embedOk as never, db: a.db })("tenant-a")("q", TREE);
+await createAskArmsFor({ embed: embedOk as never, db: b.db })("tenant-b")("q", TREE);
+assert.ok(a.queriedTenants.every((q) => q.endsWith(":tenant-a")));
+assert.ok(b.queriedTenants.every((q) => q.endsWith(":tenant-b")));
+```
+
+Two independent defects, and they compound:
+
+1. **`[].every(...)` is `true`.** Under mutation S the second tenant's read never reaches the db,
+   so `b.queriedTenants` is empty and the assertion passes without examining anything. Mutations T
+   and U prove the assertion is not decorative — a *hardcoded wrong tenant* does die here. It is
+   specifically the **absence** of a query that is invisible, and "the query didn't happen because
+   something upstream is serving stale cross-tenant data" is precisely the failure mode C6 exists
+   for.
+2. **It asserts on the request, not the response.** Two separate `fakeDb()`s mean tenant A's rows
+   and tenant B's rows never coexist in one corpus, so no assertion can be made — and none is —
+   about tenant B's arms containing tenant A's session. C6's Verified-by is literal about this:
+   *"a named test with two tenants whose chunks/turns both exist, asserting tenant B's question
+   never returns a candidate resolving to tenant A's session."* That test does not exist.
+
+**Is this in scope, or am I inventing a criterion?** It is the plainest reading of C6's own
+verification clause, and the dispatch asked for exactly this hunt ("any other place a per-tenant
+value could be captured once at boot and still pass"). A module-level cache is that place — not a
+boot capture in `production.ts`, but a boot capture *inside the arms module*, reachable by the
+single most natural optimisation anyone would apply to a function that does two unindexed
+`find({}).toArray()` calls per request. `search-store.ts` already documents that the turns scan is
+~663 ms unindexed; the pressure to cache it is real and near.
+
+**Severity high, not critical, and the reason is on record:** the shipped code is correct. I did
+not re-run cycle 1's live two-tenant Mongo probe — `ask-arms.ts` and `routes/ask.ts` are
+**byte-unchanged** this cycle (`ea5bd95` touches neither), so that probe's result stands and there
+is no live disclosure today. This is a proof-shaped hole where C6 put one, which is what **I2**
+forbids.
+
+## 3 · C7 — MET. I re-derived the number rather than reading it
+
+Run by me at `526e88b`, against the live Mongo and the real embedding key:
+
+```
+node scripts/eval-recall.mjs --retriever hybrid → recall@5 = 0.870 (80/92) · control 0.217 · INFORMATIVE · 12 misses
+node scripts/eval-recall.mjs --retriever vector → recall@5 = 0.935 (86/92) · control 0.217 · INFORMATIVE ·  6 misses
+```
+
+**0.870 to the digit, and the delta vs vector alone is −0.065**, exactly as the manifest states —
+including that the correction moved the number **down** and **widened** the regression from −0.043.
+A maker reporting a worse number than the one it had already banked is the behaviour C7 clause 4
+protects, and it deserves to be said plainly rather than buried in a scoreboard.
+
+Both cycle-1 defects are fixed in the source, not merely in the prose:
+
+- **Lexical depth** — `scripts/eval-recall.mjs` now calls `lexicalSearchTurns(question, turns, kk)`
+  where it called `kk * 4`, and the `.slice(0, kk)` that compensated is gone. That is the shipped
+  depth.
+- **The proxy is named in the artifact itself.** The report's `retriever` field, read by me out of
+  `data/eval/recall-report-hybrid.json`, is now
+  `hybrid (tree=HEURISTIC PROXY not the shipped selectNodes LLM arm; + cosine + lexical@k, RRF, gemini-embedding-001, 1452 chunks)`.
+  A future reader of the JSON cannot miss it. That is precisely the discharge cycle 1's fix
+  direction offered.
+
+**The stated cause of the regression — the specific thing I was asked to judge.** Cycle 1 explained
+the regression as *"the tree arm scores 0.391 … it is voting with almost the authority of noise"*,
+which was a property of an arm that does not ship. Cycle 2 does **not** substitute a better-argued
+cause; it **withdraws** the claim and writes *"It may still be true of `selectNodes`; I have no
+evidence either way."* That is the correct response to the finding. The manifest now asserts no
+cause at all, so there is no unsupported causal claim left to charge — and it is a better outcome
+than a replacement story, which is what I was watching for.
+
+**Citation hygiene (C7's own verification clause), re-grepped by me.** `0.891` survives nowhere as
+a live claim; `0.870` appears only inside the report's own `reason` string and the manifest's
+regression framing. `.goal/goal.json`, `docs/PROGRESS.md`, `TASKS.md` and `docs/DECISIONS.md`
+carry **no** hybrid number, and every `≥ 0.85` occurrence in the repo is a statement that the
+target is **not** met or may not be closed. No bare PASS claim exists. Clauses 1–4 all satisfied.
+
+**Baseline integrity.** `data/eval/recall-report.json` md5 `de3c11aa95fb9f44f07afd18816bcb64`
+before and after both of my runs — the heuristic baseline the delta is measured against was not
+clobbered, which this harness has done before.
+
+## 4 · The survivor I am NOT charging, and why
+
+**Mutation N** — `const tenantId = req.body.tenantId ?? req.auth!.tenantId` — survives 173/173.
+A caller-supplied tenant override is a cross-tenant read of the same class. I am leaving it in
+EXPLANATION rather than FAILURES because it *adds* an override that no code path has, rather than
+removing a guard that exists, and mutation evidence is weakest exactly there. It is worth one
+extra line in the ISS-179 test (post a body carrying `tenantId: "tenant-b"` under tenant A's key
+and assert the binding is still `tenant-a`), and I would rather the maker got it for free while
+writing that test than burn a cycle on it. Flagging, not charging.
+
+**ISS-171 (medium, cycle 1) is still open and still unpinned** — my mutation M (delete the lexical
+`seen` dedupe) → 173/173. Per this repo's severity gate a medium is verified inside the next unit
+touching the file; this cycle touched only the test file, so it correctly stays open. Not charged.
+
+## 5 · Mode D — my own browser, my own clicks
+
+`qa/evidence/browser-hybrid-arms-binding-2026-09-09-checker/report.json`, written alongside the
+maker's and overwriting nothing. I did not read the maker's `ask.png`.
+
+On `http://localhost:5173/ask` I typed the question, clicked Ask, and got a real grounded answer
+(UKVI Basic Compliance Assessment, Enroly CAS Shield, NBFC lending caps) with
+`INTERNAL SOURCES (1)` = `…session:2026-08-03-uk-beyond-offer-letters` and `WEB SOURCES (0)`; the
+post-study-work half was declined rather than invented. **Then I clicked the citation** — the
+maker only looked at it — and it navigated to a real session page rendering the real panel, 2
+claims and a 46-turn transcript. One console error on the page: a `favicon.ico` 404, present on
+every page of the web app and unrelated to this unit.
+
+Two honest limits: the servers were **already running** and I could not stamp which commit they
+serve (mitigated by this cycle changing no server-side source at all); and the API-served
+`/compete` page returned **HTTP 401** because its prefilled demo key is stale — recorded as an
+instrument limitation and not charged, since `/compete` passes no `extraCandidateArmsFn`
+(`compete.ts:72`) and so never exercises this unit's arms at all.
+
+## 6 · Every criterion
+
+| C | Verdict | Evidence I produced at `526e88b` |
+|---|---|---|
+| C1 | **MET** | `git diff ad6e7b7 HEAD -- packages/ask/src/router.ts packages/ask/src/evaluator.ts` → empty. `ea5bd95` touches 6 files, none in `packages/ask`. |
+| C2 | **MET** | Unchanged from cycle 1 (arms resolve only via `bySession.get()` from the passed tree). Live: the rendered citation resolved to a real 46-turn session (§5). |
+| C3 | **MET** | `merge.ts` byte-unchanged since its own PASS; not touched by `ea5bd95`. |
+| C4 | **MET** | Unchanged module; and the hybrid figure reproduced **exactly** across my run and the maker's, which is the criterion's stated purpose. |
+| C5 | **MET** | Unchanged module; C5's named tests among the 173 green. |
+| **C6** | **FAILED** | §2. Mutations R and S → **173/173 green** with a verified mutant and a green control. ISS-179. |
+| C7 | **MET** | §3. 0.870/0.935 re-derived by me; shipped lexical depth in the source; proxy named in the report artifact; causal claim withdrawn; citation grep clean; baseline md5 stable. |
+| C8 | **MET (vacuous)** | Manifest: `Issues addressed: none`. `ea5bd95` closes no ledger row by claim, so D-015's substitution rule is not engaged. |
+| C9 | **MET** | `pnpm -r typecheck` exit **0**; `compete.ts` untouched and still arm-free, so its behaviour is unchanged, which is what C9 asks. |
+| C10 | **MET** | `npx depcruise --config .dependency-cruiser.cjs packages apps` exit **0**. |
+| C11 | **MET** | `pnpm -r typecheck` exit **0**, `pnpm -r test` exit **0**, by their own exit codes. |
+
+**Invariants.** **I1** holds (router/evaluator byte-unchanged; no number chased — the maker
+published a *worse* one). **I2 does NOT hold** — mutations R and S prove a claimed property
+unpinned on the security-class criterion. **I3** holds. **I4** holds — 0.870 closes nothing, and
+this verdict records the `≥ 0.85` gate as still open. **I5** holds in the code and, again, is
+**not defended by any test at the data boundary** — which is why C6 fails rather than I5.
+
+## 7 · Cycle 3 is the LAST — precisely what must land
+
+**A cycle-3 FAIL means the unit STALLS.** One test discharges this. Nothing else is required and
+nothing else should be attempted.
+
+1. **The C6 data-boundary test.** ONE `fakeDb()`, not two. Seed tenant A's and tenant B's `chunks`
+   and `turns` in it with distinct `sessionId`s, and put **both** sessions in the tree so a leaked
+   hit could actually resolve rather than being silently dropped. Then:
+   - assert tenant B's arms contain **only** tenant B's node (the response, not the filter);
+   - assert `queriedTenants.length > 0` for each tenant — an explicit kill for the `.every()`
+     vacuity, so a suppressed read can never pass again;
+   - **confirm it reddens under mutations R and S** (module-level `CHUNK_CACHE ??=` /
+     `TURN_CACHE ??=` in `ask-arms.ts`). Report both counts, with a no-op control.
+2. **Free while you are there (§4), not required:** one extra assertion that a request body
+   carrying `tenantId: "tenant-b"` under tenant A's key still binds `tenant-a` (kills mutation N).
+
+**Do NOT** tune weights, do not re-measure recall, do not touch `merge.ts`, `router.ts` or
+`evaluator.ts`. C7 is met and the regression needs no action for this contract.
+
+## Commands re-run by this checker
+
+```
+pnpm --filter @lkb/api test                                   → 173 pass / 0 fail / 0 cancelled
+pnpm -r typecheck                                             → exit 0
+pnpm -r test                                                  → exit 0
+npx depcruise --config .dependency-cruiser.cjs packages apps  → exit 0
+node scripts/eval-recall.mjs --retriever hybrid               → 0.870 (80/92), control 0.217
+node scripts/eval-recall.mjs --retriever vector               → 0.935 (86/92), control 0.217
+md5sum data/eval/recall-report.json (before + after)          → de3c11aa… unchanged
+git diff ad6e7b7 HEAD -- packages/ask/src/{router,evaluator}.ts → empty
+git show --stat ea5bd95                                       → 6 files; no server-side source
+grep 0.891 / 0.870 / 0.85 across md,json,ts,mjs               → no bare PASS claim, no uncaveated cite
+own mutation harness (D-020): CONTROL, CONTROL3, K, B, P, T, U, N, R, S — table in §1
+  every restore SHA256-identical · git status clean · mutate.mjs assert-clean green
+live browser: localhost:5173/ask — typed, clicked Ask, CLICKED the citation through to the session
+```
