@@ -13,7 +13,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { promoteAndPersistEntities } from "./promote-entities.js";
+import { promoteAndPersistEntities, entityId } from "./promote-entities.js";
 import { fakeDb, type Call } from "./testutils.js";
 import type { TreeIndexNode } from "@lkb/core";
 
@@ -131,7 +131,7 @@ test("ISS-126(4): tagClaims writes the session's REAL topicRefs onto each of its
   assert.equal(res.claimsTagged, 2);
   for (const w of claimWrites) {
     const set = (w.update as Record<string, Record<string, unknown>>).$set!;
-    assert.deepEqual(set.topicRefs, ["visa-rules"],
+    assert.deepEqual(set.topicRefs, ["t:visa-rules"],
       "the REAL topic slugs must be written — an empty array here is the mutation that stayed green");
   }
 });
@@ -197,6 +197,52 @@ test("ISS-C-TARGETING: each claim update targets ONE claim by _id, never an open
 test("ISS-C-TARGETING: topic and org upserts target their own _id, not an open filter", async () => {
   const { db, calls } = fakeDb();
   await promoteAndPersistEntities("t", "s1", treeRoot(), db);
-  assert.equal((writes(calls, "topics")[0]!.filter as Record<string, unknown>)._id, "visa-rules");
-  assert.equal((writes(calls, "orgs")[0]!.filter as Record<string, unknown>)._id, "acme");
+  assert.equal((writes(calls, "topics")[0]!.filter as Record<string, unknown>)._id, "t:visa-rules");
+  assert.equal((writes(calls, "orgs")[0]!.filter as Record<string, unknown>)._id, "t:acme");
+});
+
+/* ── C6: corpus-wide entity ids must not collide across tenants ────────────────────────────────
+ * REPRODUCED LIVE before fixing: two scratch tenants upserting the slug `uk` into `topics` — A
+ * inserted, B failed `E11000 duplicate key ... index: _id_`. `scopedCollection` merges tenantId
+ * into the FILTER, but Mongo's `_id_` index is unique per COLLECTION.
+ *
+ * This is the SECOND time this project has paid for this exact shape. ISS-121 was the same bug in
+ * `recordVectorGap`, fixed by me one unit earlier with `vectorGapId(tenantId, sessionId)` — and I
+ * did not carry the lesson across a file. It is worse here: ISS-121's throw stranded one session,
+ * while this sits inside a catch that swallows it, so tenant B would lose ALL entity promotion
+ * silently and permanently.
+ */
+test("C6: two tenants promoting the SAME slug write to different _ids", async () => {
+  const a = fakeDb();
+  const b = fakeDb();
+  await promoteAndPersistEntities("tenant-a", "s1", treeRoot(), a.db);
+  await promoteAndPersistEntities("tenant-b", "s1", treeRoot(), b.db);
+  const idA = (writes(a.calls, "topics")[0]!.filter as Record<string, unknown>)._id;
+  const idB = (writes(b.calls, "topics")[0]!.filter as Record<string, unknown>)._id;
+  assert.notEqual(idA, idB, "a bare slug makes the second tenant's upsert an E11000 and it loses ALL promotion");
+  assert.equal(idA, "tenant-a:visa-rules");
+  assert.equal(idB, "tenant-b:visa-rules");
+});
+
+test("C6: org ids are namespaced too — the same collision applies to orgs", async () => {
+  const a = fakeDb();
+  const b = fakeDb();
+  await promoteAndPersistEntities("tenant-a", "s1", treeRoot(), a.db);
+  await promoteAndPersistEntities("tenant-b", "s1", treeRoot(), b.db);
+  assert.notEqual(
+    (writes(a.calls, "orgs")[0]!.filter as Record<string, unknown>)._id,
+    (writes(b.calls, "orgs")[0]!.filter as Record<string, unknown>)._id,
+  );
+});
+
+test("C6: a topicRef resolves to a real topics._id — namespaced through the SAME helper", async () => {
+  // If the rows are namespaced and the refs are not, every claim points at an id that does not
+  // exist. The two must derive from one function, not two conventions that happen to agree.
+  const { db, calls } = fakeDb({ claims: [{ _id: "c1", tenantId: "x", evidence: [{ turnId: "t1", sessionId: "s1" }] }] });
+  await promoteAndPersistEntities("x", "s1", treeRoot(), db);
+  const writtenTopicId = (writes(calls, "topics")[0]!.filter as Record<string, unknown>)._id;
+  const claimSet = (calls.find((c) => c.coll === "claims" && c.op === "updateOne")!
+    .update as Record<string, Record<string, unknown>>).$set!;
+  assert.deepEqual(claimSet.topicRefs, [writtenTopicId], "the ref must equal the id actually written");
+  assert.equal(writtenTopicId, entityId("x", "visa-rules"));
 });

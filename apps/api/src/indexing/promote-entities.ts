@@ -19,6 +19,23 @@ import type { Claims, Orgs, Topics } from "@lkb/core";
 import { promoteTreeEntities, topicRefsForSession, type PromotedTopic } from "@lkb/index";
 import type { TreeIndexNode } from "@lkb/core";
 
+/**
+ * Tenant-namespaced entity id (C6, and the SECOND time this project has paid for this shape).
+ *
+ * `scopedCollection` merges `tenantId` into the FILTER, but Mongo's `_id_` index is unique per
+ * COLLECTION, not per tenant. So a bare slug means tenant B's upsert of a slug tenant A already
+ * holds matches nothing, attempts an insert, and is rejected `E11000`. Reproduced live before
+ * fixing (two scratch tenants, same slug `uk`: A inserted, B failed, cleanup verified).
+ *
+ * This is exactly ISS-121, whose fix was `vectorGapId(tenantId, sessionId)` — written by me, one
+ * unit earlier, and then not applied here. Worse than the first instance: `recordVectorGap`'s throw
+ * stranded one session, whereas this sits inside a catch that swallows it, so tenant B would lose
+ * ALL entity promotion silently and permanently while the log reads `promotion-failed`.
+ */
+export function entityId(tenantId: string, slug: string): string {
+  return `${tenantId}:${slug}`;
+}
+
 export interface PromotionResult {
   topics: number;
   orgs: number;
@@ -46,14 +63,14 @@ export async function promoteAndPersistEntities(
 
     for (const t of topics) {
       await topicsColl(tenantId).updateOne(
-        { _id: t._id } as never,
+        { _id: entityId(tenantId, t._id) } as never,
         { $set: { tenantId, name: t.name, sessionRefs: t.sessionRefs } } as never,
         { upsert: true },
       );
     }
     for (const o of orgs) {
       await orgsColl(tenantId).updateOne(
-        { _id: o._id } as never,
+        { _id: entityId(tenantId, o._id) } as never,
         { $set: { tenantId, name: o.name } } as never,
         { upsert: true },
       );
@@ -93,7 +110,9 @@ async function tagClaimsForSession(
   topics: PromotedTopic[],
   claimsColl: ReturnType<typeof scopedCollection<Claims>>,
 ): Promise<number> {
-  const refs = topicRefsForSession(sessionId, topics);
+  // Namespaced through the SAME helper the rows are written with, so a topicRef always resolves to
+  // a real `topics._id`. A bare slug here would point at nothing once the ids carry a tenant.
+  const refs = topicRefsForSession(sessionId, topics).map((slug) => entityId(tenantId, slug));
   const claims = await claimsColl(tenantId).find({ "evidence.sessionId": sessionId } as never).toArray();
   for (const c of claims) {
     await claimsColl(tenantId).updateOne({ _id: c._id } as never, { $set: { topicRefs: refs } } as never);
