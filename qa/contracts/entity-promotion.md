@@ -119,8 +119,16 @@ tenant-namespace the id (`vectorGapId(tenantId, sessionId)`, `vector-gap.ts:54`)
 un-namespaced here. Because C2's catch swallows it, tenant B loses **all** entity promotion silently
 and forever, reporting `skipped: "promotion-failed"`.
 *Verified by:* a two-tenant test (or a live scratch-tenant run, as ISS-121 was found) writing the same
-slug for two tenants and asserting both rows exist. Either tenant-namespace the `_id`, or carry a
-compound unique index and prove the upsert path uses it.
+slug for two tenants and asserting both rows exist. **Tenant-namespace the `_id`.**
+*(Amended 2026-09-09, cycle 1 — the original wording offered "or carry a compound unique index and
+prove the upsert path uses it" as an independent alternative. It is not one. The rejection comes
+from `_id_`, the collection's own implicit unique index on `_id`, which cannot be dropped or made
+partial; an added unique `(tenantId, slug)` index does not stop tenant B's insert of `_id: "uk"`
+from colliding with tenant A's, it only stacks a second constraint on the one that already rejected
+it. Live proof that an index alone is not enough: `orgs` already carries a unique
+`tenantId_1_name_1` and the bare-slug collision still reproduced. A compound index is viable only
+alongside an `_id` that is no longer a bare slug — i.e. the first remedy plus an extra index, which
+this criterion permits but does not require.)*
 **Recorded honestly: this criterion is believed UNMET at the time of writing.** I derived it from the
 code and the ISS-121 precedent; I did **not** execute a live two-tenant reproduction, so it is stated
 as a criterion for the next check to settle, not as a verdict. It is in the security/tenancy class
@@ -203,3 +211,12 @@ rows are not chargeable here — name them and move on.
   targeting, and non-tenant-namespaced ids on corpus-wide rows — are checkable rather than
   rediscovered by mutation each cycle. C6 is recorded as believed-unmet and unverified by live
   reproduction; it is stated as a criterion, never as a verdict.
+- 2026-09-09 · **routine** · C6's second remedy ("or carry a compound unique index") narrowed to a
+  note, because it is not an independent remedy · found on this contract's FIRST use
+  (`entity-id-tenant-namespace` cycle 1): re-derived live against `lkb`, the E11000 is raised by the
+  implicit `_id_` index, which no added index can relax, and `orgs`' existing unique
+  `tenantId_1_name_1` did not prevent the collision. As originally written a maker could satisfy C6
+  by adding an index while the bug remained. C6's live status also changes from "believed UNMET" to
+  **MET** — reproduced in both directions by the checker (bare slug → `E11000 … index: _id_ dup key:
+  { _id: "chk-uk" }`; namespaced → both tenants upserted, cleanup read back at 0 leftover).
+  Verdict: `qa/verdicts/entity-id-tenant-namespace.md`.
