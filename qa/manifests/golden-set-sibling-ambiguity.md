@@ -106,7 +106,7 @@ without sharing it.
 
 So this unit does not claim to quantify ambiguity. It reports what a lexical measure sees, **tests
 that measure against the gate's own worked example**, and — its actual deliverable — reduces
-adjudication from 92 questions to 13.
+adjudication from 92 questions to 11.
 
 ## ~~The headline finding is that my first statistic was wrong~~ (CYCLE 1 — still true, but its cluster reasoning is WITHDRAWN, see ISS-237)
 
@@ -208,8 +208,8 @@ human-vs-LLM choice a real one.
 **Condition 4 is not unblocked by this unit.** A lexical proxy cannot decide semantic answerability,
 and its disagreement with the gate's hand read is unresolved in both directions — I do not know
 whether the hand read was conservative or my measure over-flags. What the unit provides is a
-**prioritised 13-question list**, so the adjudication that does settle it (a human read, or a
-bounded LLM pass) is tractable. Choosing between those two, and paying for the second, is the
+**prioritised 11-question reading list with known transcript-length bias**, so the adjudication that
+does settle it (a human read, or a bounded LLM pass) is tractable. Choosing between those two, and paying for the second, is the
 Approver's call — as is ISS-232's caveat that this set shares ~82% of its questions with the one the
 earlier hand read sampled.
 
@@ -219,4 +219,7 @@ earlier hand read sampled.
 `data/eval/golden-set-ambiguity.json`. `qa/**` is `genuinely_not_user_facing` in
 `qa/ui-surfaces.json`; `data/**` matches no pattern in it.
 
-## Status: ready-for-check
+## Status: checked-PASS
+
+Independent checker PASS recorded in `qa/verdicts/golden-set-sibling-ambiguity.md` (cycle 3: 7/7
+criteria, 3/3 invariants). ISS-241 was corrected during maker close-out.
