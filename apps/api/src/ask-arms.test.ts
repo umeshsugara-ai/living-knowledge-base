@@ -201,11 +201,11 @@ const TWO_TENANT_KEYS = fakeKeyStore({
   "key-b": { tenantId: "tenant-b", scopes: ["ask"] },
 });
 
-async function askAs(baseUrl: string, key: string) {
+async function askAs(baseUrl: string, key: string, body: Record<string, unknown> = { query: "topic one" }) {
   return fetch(`${baseUrl}/ask`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({ query: "topic one" }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -226,7 +226,7 @@ test("C6/ISS-169 — the arms are bound PER REQUEST from the verified key's tena
     // router-level id is the literal string "system".
     assert.deepEqual(rec.boundWith, [], "binding before any request is the boot-capture bug itself");
 
-    assert.equal((await askAs(server.baseUrl, "key-a")).status, 200);
+    assert.equal((await askAs(server.baseUrl, "key-a", { query: "topic one", tenantId: "tenant-b" })).status, 200);
     assert.equal((await askAs(server.baseUrl, "key-b")).status, 200);
 
     // The ORDERED list is the assertion, not a membership check: a hoisted binding produces
