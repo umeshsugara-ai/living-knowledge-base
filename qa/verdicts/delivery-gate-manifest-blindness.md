@@ -264,3 +264,197 @@ result is stated — "checked, not affected" is an acceptable answer; silence is
 
 ISS-186 (medium) and ISS-187 (low) are ledger entries per the repo's severity gate and are not
 required for the cycle-2 PASS.
+
+---
+
+# INDEPENDENT CONCURRENT CHECK — delivery-gate-manifest-blindness
+
+**Cycle checked: 1**
+**Date:** 2026-09-09
+**Checker:** second, independently dispatched Mode A check (the orchestrator dispatched this unit
+believing no verdict existed; one did, at commit `6c85d39`). Per checker/SKILL.md the earlier
+verdict is left byte-intact and this one is appended. I re-derived the corpus counts before
+reading the primary verdict's reasoning; where we agree the agreement is independent, and where
+we differ it is named below.
+**Commit under check:** `4119563` (KnowledgeBase) · artifact `D:/ai_os/.claude/hooks/delivery-gate-stop.ps1` @ `4a71633` (ai_os)
+**Contract:** `qa/contracts/delivery-gate.md` — see "Contract ruling" below. I concur with it and
+adopt it as the contract for this check.
+**Mode D:** not applicable — changed paths are two `.ps1` files, no UI surface.
+
+```
+VERDICT: FAIL
+SCOREBOARD: 5/9 criteria met, 3/3 invariants hold
+FAILURES:
+- [C1] sev: high · The blindness class is unfixed in the two sibling readers of the same
+  handshake state: mc-sessionstart.ps1:15 and mc-precommit.ps1:43 both match the bare literal
+  'Status: ready-for-check', which cannot see '**Status:** ready-for-check' · apply the same
+  strip-then-anchor correction · issue: ISS-183 (concurred, not re-filed)
+- [C3] sev: high · mc-sessionstart.ps1:19 still takes `Select-Object -First 1` on the cycle
+  stamp — the identical first-not-highest defect, one file over · take the maximum ·
+  issue: ISS-183 (concurred)
+- [C4] sev: high · The committed fix is a STRICT REGRESSION on five verdicts: the anchored
+  Cycle-checked pattern returns NO match (-1) on calendar-auto-join, eval-baseline-control,
+  evaluator-calibration, T-012-compete-screen and transcription-empty-result-guard, where the
+  old unanchored regex found 1; write-guard-enforcement-gaps reads 2 against a true 3 ·
+  allow the list/heading/parenthetical lead-in · issue: ISS-184 (concurred, regression
+  direction added here)
+- [C5] sev: medium · Neither new fixture uses a stamp form that breaks the new regex ·
+  derive fixtures from the corpus · issue: ISS-185 (concurred)
+- [C7] sev: high · The class audit the maker's own Gap 4 names was declined, and the two
+  siblings that share the predicate were never opened · state the audit result ·
+  issue: ISS-183 (concurred)
+- [GOV] sev: high · The enforcement-path edit shipped with NO authorizing docs/DECISIONS.md
+  entry carrying 'Approved-by: Umesh'. D-024 authorizes the BROWSER predicate; D-025 is
+  withdrawn; D-026 states 'Changes-authorized: none'; D:/ai_os/decisions/log.md's 2026-09-09
+  entry authorizes only the turn-scoping + budget change (8fd5625), (a) and (b), not this
+  regex change. HUMAN_GATE for the Approver, not a maker fix · issue: ISS-189
+- [GOV] sev: high · D:/ai_os working tree carries UNCOMMITTED edits to three enforcement
+  files — delivery-gate-stop.ps1, edit-in-place-guard.ps1, hook-fixtures.ps1 — so the hook
+  running on every session on this machine is not any reviewed commit · issue: ISS-190
+LIVE-BROWSER: not-applicable (.claude/hooks/delivery-gate-stop.ps1, .claude/hooks/tests/hook-fixtures.ps1)
+ISSUES-WRITTEN: ISS-189, ISS-190, ISS-191
+EXPLANATION: The named defect is real and the committed fix closes it — I reproduced both the
+blindness and the cure over the live corpus, and the fix over-matches none of my prose probes.
+It fails on the class: the two sibling hooks that read the same handshake still carry both
+defects, and the cycle-stamp anchoring is itself a regression on five verdicts. Separately, the
+change shipped on an enforcement path with no Approved-by entry, and further unreviewed edits to
+that hook are sitting uncommitted in the AIOS working tree right now.
+```
+
+## What I re-derived myself (not read from the manifest)
+
+**Manifest forms, counted over all 114 files in `qa/manifests/`** — the manifest claims 15
+bolded; I count **16 today**, and its own manifest is one of them, so 15 before this unit: claim
+verified rather than accepted. Full census, including a fifth form the manifest does not mention:
+
+| form | files | old regex sees it | committed fix sees it |
+|---|---|---|---|
+| bolded key (`**Status:**` + value) | 16 | **no** | yes |
+| heading (`## Status:` + value) | 45 | yes | yes |
+| bare (`Status:` at line start) | 29 | yes | yes |
+| whole-line emphasis (`**Status: checked-PASS**`, e.g. `bom-and-unreadable-evidence.md:92`) | present | yes | yes |
+| no line-start Status at all (prose only) | remainder | n/a | n/a |
+
+**Old vs new over the live tree** (my own PowerShell re-implementation of both predicates):
+
+```
+OLD       : matched 1 manifest  - delivery-gate-manifest-blindness   (and only via the PROSE
+                                  line 35, which quotes the heading form inside backticks -
+                                  its real bolded Status line was invisible)
+COMMITTED : matched 2 manifests - delivery-gate-manifest-blindness, speaker-verbatim-token-boundary
+```
+
+`speaker-verbatim-token-boundary` is a **cycle-3-of-3** unit at the bolded form. The old gate
+could not see it. That is the manifest's central claim, independently reproduced. The manifest's
+literal figures (`OLD pend=1 unclosed=0 / NEW pend=2 unclosed=1`) do not reproduce today because
+the tree moved — `hybrid-arms-binding` and `write-guard-enforcement-gaps` have both since closed
+out — but the *shape* reproduces exactly. Not a finding; recorded so a later reader does not
+mistake drift for a false claim.
+
+**C2 over-match probe.** Ten fixtures, four of them prose shapes that merely quote the phrase:
+
+| fixture | OLD | COMMITTED |
+|---|---|---|
+| bolded key, `(cycle 1)` suffix | no | **yes** |
+| heading form | yes | yes |
+| bare form | yes | yes |
+| whole-line emphasis | yes | yes |
+| prose, mid-sentence | yes | **no** |
+| prose, code-span quoting the heading form | yes | **no** |
+| prose, bullet with a code-span quote | yes | **no** |
+| prose, blockquote of an old manifest | yes | **no** |
+| prose, inside a table row | yes | **no** |
+| closed unit (`checked-PASS`) | no | no |
+
+The committed anchor is correct on all ten. **C2 met** — and the manifest's claim that stripping
+emphasis *alone* would be noisy is true and demonstrated (the OLD column).
+
+**Cycle-stamp scan over all 113 verdicts.** This is where it breaks:
+
+| verdict | true max | committed fix reads | stamp form that defeats it |
+|---|---|---|---|
+| calendar-auto-join | 1 | **-1** | stamp inside a prose sentence |
+| eval-baseline-control | 1 | **-1** | `- **Cycle checked:** 1` (bullet lead-in) |
+| evaluator-calibration | 1 | **-1** | `**PASS** — Cycle checked: 1` (mid-line) |
+| T-012-compete-screen | 1 | **-1** | `- **Cycle checked: 1**` |
+| transcription-empty-result-guard | 1 | **-1** | `**Status: PASS** (Cycle checked: 1)` |
+| write-guard-enforcement-gaps | 3 | **2** | cycle 3 only in a `# Verdict — … · **Cycle checked: 3**` heading |
+
+Five of those six are a **regression against the code being replaced**: the old unanchored
+pattern found the stamp, the anchored one does not. That distinction is not in ISS-184's row and
+I add it here — this is not only "still fragile", it is "worse at the site it fixed".
+
+**Fixture suite.** `powershell -File D:/ai_os/.claude/hooks/tests/hook-fixtures.ps1` → `ALL PASS`,
+including the two ISS-176 fixtures. **That does not evidence the unit under check.** The suite
+runs against the *working tree*, which already contains an uncommitted cycle-2 attempt (widened
+character classes plus `ISS-185` fixtures) absent from `4a71633`. A green suite here is evidence
+about work in progress, not about the submitted commit. The ISS-175 concern about
+`hook-fixtures.ps1:126` did not affect this check: line 126's fixture writes its verdict file
+correctly and its assertion is live, not vacuous.
+
+**Sibling audit, performed (C7).** `mc-sessionstart.ps1:15` and `mc-precommit.ps1:43` match the
+bare literal and are blind to all 16 bolded manifests; `mc-sessionstart.ps1:19` takes
+`Select-Object -First 1`. Both defects, both siblings, unfixed. The other
+`delivery-gate-stop.ps1` predicates (review, learning-file, config, browser) parse JSONL and file
+paths, not markdown emphasis — checked, not affected.
+
+## The finding the primary verdict does not carry: no `Approved-by`
+
+`.claude/hooks/*` is an enforcement path. This repo's `.claude/CLAUDE.md` "Update Authorization"
+requires an authorizing `docs/DECISIONS.md` entry carrying `**Approved-by:** Umesh`, **written
+first**. I looked for one and there is none:
+
+- **D-024** authorizes `delivery-gate-stop.ps1`'s *fifth (BROWSER) predicate* — a different
+  predicate, and its `Changes-authorized` names that work.
+- **D-025** authorized a scoping change to the maker predicate and is **withdrawn by D-026**.
+- **D-026** states verbatim: `**Changes-authorized:** none - this entry withdraws an
+  authorization and changes no file.`
+- `docs/DECISIONS.md` ends at **D-026**. No entry mentions ISS-176.
+- `D:/ai_os/decisions/log.md` has **zero** occurrences of `ISS-176`. Its 2026-09-09 entry
+  ("the maker loop's continuation guard was asking the wrong question") carries
+  `Approved-by: Umesh` for exactly two decisions — *(a)* scope the test to the current turn and
+  raise the budget to 3 blocks, *(b)* fix it in the global hook. That is commit `8fd5625`. It
+  does not reach a markdown-form change to the manifest predicate.
+
+So `4a71633` shipped unauthorized. **This is a HUMAN_GATE, not a maker fix.** The maker cannot
+retroactively authorize its own enforcement-path edit, and the repo has direct precedent for
+routing exactly this to the Approver (`ISS-C-UNRUN-WRITERS-005` and `-013` both stop at
+"ENFORCEMENT PATH … needs the Approver"). The correct next step is one `append_decision.ps1`
+entry that either ratifies `4a71633` (and the cycle-2 widening) with `Approved-by: Umesh`, or
+orders its revert. The direction of harm here is mild — the change makes a blind gate see — which
+is exactly why the process finding matters more than the code one: an enforcement path that may
+be edited without an entry whenever the edit *looks* good is not an enforcement path.
+
+**Compounding it:** `git status` in `D:/ai_os` shows `M .claude/hooks/delivery-gate-stop.ps1`,
+`M .claude/hooks/edit-in-place-guard.ps1`, `M .claude/hooks/tests/hook-fixtures.ps1`. The hook
+executing on every Stop on this machine right now is **not** `4a71633` and not any commit
+(ISS-190).
+
+**A latent defect in that uncommitted version (ISS-191, medium).** The cycle-2 widening replaces
+the anchor with a character class that contains a backtick and `>`, so it re-opens C2: my
+code-span probe and blockquote probe both match again, and the code-span form exists on line 35
+of this unit's own manifest. It is **latent, not live** — I re-ran the full corpus and the widened
+regex matches the same 2 manifests as the committed one today, because the file carrying that
+prose line is itself genuinely at `ready-for-check`. Filed medium so cycle 2 does not trade C1
+for C2 (contract `[I2]`).
+
+## Contract ruling (the judgement the manifest asked for)
+
+**`qa/contracts/write-guard.md` does NOT cover this, and I concur with the primary check's
+decision to author `qa/contracts/delivery-gate.md` instead.** Independently reasoned: different
+hook *events* (`PreToolUse` vs `Stop`), different failure directions (write-guard fails by
+prompting or by letting a write through; this one fails by silence or by blocking a healthy
+session), different blast radii (a write vs a session). Folding them would leave write-guard's
+`[C1]`–`[C7]` untestable against half their own artifact. The new contract's `[C1]`–`[C9]` are
+the right criteria, and `[I2]` — "a change that trades C1 for C2 is a FAIL, not a tradeoff" — is
+the criterion that caught ISS-191 here. It stays at `Status: proposed`; initial contract creation
+is a human-approved START and I do not ratify it myself.
+
+## Where I differ from the primary verdict
+
+- Scoreboard **5/9** here vs 4/9. I judge **[C3]** met *for the artifact this unit changed* — the
+  highest-cycle loop in `delivery-gate-stop.ps1` is correct — and charge the sibling's `-First 1`
+  under C1/C7 rather than counting C3 twice. Same defects, same issue id, different bookkeeping;
+  it does not change the verdict.
+- I add the **regression direction** on C4 (five verdicts go from readable to unreadable) and the
+  two **governance findings**, which the primary verdict does not carry.
