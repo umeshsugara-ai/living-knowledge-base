@@ -115,4 +115,4 @@ If that checker dies, this is the first unit in the repo whose death is visible 
 `scripts/lib/dispatch-state.test.mjs`; `qa/ui-surfaces.json` lists `scripts/**` under
 `genuinely_not_user_facing`, and neither file is imported by `apps/` or `packages/`.
 
-## Status: ready-for-check
+## Status: checked-PASS
