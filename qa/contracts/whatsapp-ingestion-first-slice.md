@@ -21,6 +21,11 @@ a real session+turns, exactly as far as the URL/document adapters already go. Cl
 topic detection, and any review/approval UI over WhatsApp content are separate, larger follow-up
 units.
 
+As of the 2026-09-10 amendment, the already-PASSed first-slice criteria 1–6 below remain
+unchanged. The additive **Full T-007 / A9 follow-up** section after criterion 6 now governs the
+review-and-publish work that this scope note originally deferred. T-007 is not complete until
+those follow-up criteria pass too.
+
 ## Real data found (disclosed, not assumed)
 
 The one currently-tracked group ("Millionaires", 50 real captured text messages, real people —
@@ -84,6 +89,95 @@ something this unit does or needs to wait for.
    actual shipped `whatsapp-store.ts` + `createWhatsAppSource` and runs the full real pipeline
    (`listTrackableGroups` → `fetch` → `toTurns`) against the real, currently-running
    `whatsapp_msg` Mongo — no mocks, the real database. See Real evidence below.
+
+## Full T-007 / A9 follow-up (additive; criteria 1–6 stay in force)
+
+The remaining A9 flow is: detect topics, decisions, files/attachments, sensitive content,
+duplicates and personal/excluded material → persist reviewable **candidates** → explicitly
+approve or reject each candidate → publish only approved knowledge. “Candidate” is a quarantine
+state, not a softer spelling of “already searchable”. Raw WhatsApp `sources`/`sessions`/`turns`
+may be persisted immediately and displayed to an authorised reviewer, but they are source
+material, not trusted/citable knowledge until the review transition below succeeds.
+
+The current baseline makes this boundary necessary rather than hypothetical: `indexSession()`
+immediately writes `needs-review` `claims`, `session_pages`, `chunks`, promoted entities and a
+replacement `tree_index`; `/ask` then reads that tree plus vector chunks and lexical turns without
+a WhatsApp review predicate. A `needs-review` label therefore does not currently quarantine the
+content. The criteria below allow candidate artifacts to be stored, but forbid any unapproved
+artifact from influencing a trusted reader or aggregate.
+
+7. **Schema-backed candidate and review lifecycle.** There is one canonical, schema-defined
+   representation for a WhatsApp-derived review candidate, keyed by a stable natural identity and
+   carrying `tenantId`, its source/group and session reference, candidate kind, proposed content,
+   non-empty turn-level evidence, flags, and review state. The review states distinguish at least
+   `needs-review`, `approved` and `rejected`; an approval/rejection records who decided and when.
+   Topic, decision, claim/knowledge-chunk and file/attachment candidates use this same lifecycle
+   (or an explicitly linked schema-defined review record), rather than inferring trust from
+   `status.index: "done"`, LLM confidence, or mere presence in `claims`/`session_pages`. Generated
+   types and schema drift checks remain green.
+8. **A9 detection is visible and falsifiable.** WhatsApp indexing emits reviewable detections for
+   topics and decisions; surfaces file/attachment metadata when present; flags sensitive content;
+   flags duplicates against both the same import and already-known tenant knowledge; and marks
+   personal/excluded material so it cannot be proposed for publication. Every flag includes the
+   evidence/reason the reviewer needs to judge it. Standing positive and negative fixtures cover
+   each class, including a same-text/different-tenant non-duplicate, and mutation probes prove the
+   assertions fail if topic detection, decision detection, sensitive/personal exclusion, duplicate
+   flagging, or evidence attachment is removed. Sensitive, personal/excluded, or duplicate status
+   never causes silent auto-approval.
+9. **Quarantine covers every trusted read path.** Before approval, and after rejection,
+   WhatsApp-derived candidate text/evidence contributes to none of: the trusted `tree_index` or
+   its parent/topic/org summaries; `/ask` tree candidates; `/ask` vector candidates; `/ask`
+   lexical candidates; trusted `/search`, `/graph`, entity-promotion, or public citation results.
+   It is acceptable to persist candidate `session_pages`, `claims`, `chunks` or candidate-tree
+   material early only if the trust boundary excludes it before aggregation and retrieval. Tests
+   plant unique answer-bearing text in an unapproved WhatsApp session and prove each tree, vector
+   and lexical arm would select it when the guard is removed, while the real `/ask` response
+   neither uses nor cites it. The same text becomes answerable with a resolvable internal citation
+   only after approval, and remains unavailable after rejection. An unapproved child must also be
+   unable to leak through a precomputed parent summary.
+10. **Explicit tenant-scoped review API and atomic publish.** Authenticated, scope-protected API
+    routes list pending candidates, return one candidate with its evidence, and explicitly approve
+    or reject it. `tenantId` comes only from the verified key; a client-supplied tenant is ignored
+    or rejected, and another tenant receives no existence disclosure. Review is per candidate:
+    approving one candidate never publishes its unreviewed siblings. Approval atomically makes
+    only that candidate eligible for trusted materialisation/retrieval and records the audit
+    decision; if materialisation fails, the candidate remains non-trusted and the API reports the
+    failure. Rejection preserves the candidate, decision and evidence for audit while keeping it
+    non-citable. Retries are idempotent, and concurrent approve/reject attempts cannot both win.
+11. **Review state survives ingest and re-index.** Re-ingesting an unchanged group creates zero
+    duplicate candidates; new messages create only their new/changed candidates. Re-indexing must
+    not delete an approved/rejected decision and recreate it as `needs-review`, nor may it publish
+    a previously rejected candidate. Duplicate identity is tenant-namespaced, and all candidate,
+    review, evidence and publish reads/writes include the authenticated `tenantId`. Cross-tenant
+    route, direct-store and same-natural-id tests prove both confidentiality and write isolation.
+12. **Provenance opens to the exact source evidence.** Candidate and approved-knowledge responses
+    expose resolvable evidence containing the WhatsApp session and exact turn/message reference,
+    real speaker attribution, and real occurrence time. The reviewer can open that evidence from
+    the candidate to the matching session transcript with the cited turn visibly identified; an
+    approved `/ask` citation opens through the normal citation/session surfaces to the same text.
+    Missing or tenant-mismatched source/turn references are surfaced as errors, never replaced by
+    fabricated evidence or silently omitted.
+13. **Shipped UI completes the review loop.** The WhatsApp/session-detail experience shows the
+    pending-review count and, in the main content region, each candidate’s kind, trust state,
+    sensitive/duplicate/personal-exclusion flags, evidence link, and explicit Approve and Reject
+    controls when action is permitted. A successful action updates the visible state and the
+    trusted-read behavior without a manual reload; loading, empty, forbidden, conflict and failed-
+    publish states are honest and actionable. Mode-D verification uses the shipped Vite UI and
+    real API routes to run group → ingest → review candidate → open exact evidence → approve and
+    separately reject → verify `/ask`; it asserts zero console/page errors. The 2026-09-10
+    in-memory live run is baseline evidence only: it reached session detail and visibly rendered a
+    `needs-review` claim plus attributed transcript with zero console errors, but had **zero**
+    main-region approve/reject controls and **zero** main-region links of any kind (including
+    evidence links), so it does not satisfy this criterion.
+14. **Verification and real persistence gate.** Focused API/store/indexing/UI tests cover criteria
+    7–13, then the affected package typechecks, full workspace tests, schema/type drift check and
+    `pnpm lint:structure` pass. T-007 completion also requires a live main-Mongo run (not only an
+    in-memory store): ingest creates quarantined candidates; a process restart and unchanged
+    re-ingest preserve their ids and decisions; approval makes only approved knowledge retrievable
+    with evidence; rejection stays excluded; and a second tenant cannot read or mutate the first
+    tenant’s candidates. The current remote main Mongo (`13.202.206.101:27017`) is unreachable and
+    local Docker could not be started, so this required persistence proof remains pending and is
+    not waived by the successful in-memory UI run.
 
 ## Disclosed limitation (real, not hidden)
 
@@ -178,6 +272,16 @@ Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)
    at manifest time.
 
 ## Amendment log
+- 2026-09-10 · routine additive tightening · Added the full remaining T-007/A9 review contract as
+  criteria 7–14 without changing or weakening the checker-PASSed first-slice criteria 1–6. The
+  amendment makes the candidate/quarantine boundary explicit because the current implementation
+  writes `needs-review` claims plus `session_pages`/chunks/tree material during `indexSession()`
+  and every `/ask` arm can consume that material before review. It preserves the original A9
+  semantics (topic/decision/file/sensitive detection, duplicate and personal-exclusion flags,
+  explicit per-candidate approve/reject, publish only after approval), plus the project’s H3
+  provenance and tenancy rules, and turns the observed no-controls/no-evidence-links UI into a
+  recorded failing baseline rather than implied completion. Real main-Mongo persistence remains a
+  required gate; the 2026-09-10 infrastructure outage is disclosed, not converted into a pass.
 - 2026-09-07 · significant · Contract ADOPTED-WITH-AMENDMENT by /checker on the
   contract-adoption-backfill sweep (ISS-006/ISS-055 remedy). Governs the unit checker-PASSed
   cycle 1 (`qa/verdicts/whatsapp-ingestion-first-slice.md`, commit `b549f37`). Read the contract
