@@ -115,3 +115,75 @@ it exactly and confirmed the artifact is byte-identical to the maker's version
 is from that final state. This is not charged against the unit — the edit improved it — but a
 live-edited artifact under check is a race that could easily have produced a verdict against code
 nobody shipped. Preferred handling next time: land the fix, then re-submit at `Fix cycle: 2`.
+
+## CYCLE 2 — INDEPENDENT CHECK
+
+**Date:** 2026-09-10
+**Contract:** `qa/contracts/web-ask-page.md`
+**Cycle checked:** 2
+**Mode:** A (event-driven unit check)
+**Bound root:** `D:\KnowledgeBase`
+**Submitted commits:** `725f94c72a142c8ff50f6f8e93dc746ca99f73a5` (test-only artifact) and `c59436d0f8887065bb7863c782b425a54ff8caa0` (cycle-2 manifest)
+
+```text
+VERDICT: PASS
+SCOREBOARD: 8/8 criteria met, 3/3 invariants hold
+FAILURES (if any): none
+LIVE-BROWSER: not-applicable (cycle-2 changed path is test-only: apps/web/src/pages/AskPage.test.tsx)
+ISSUES-WRITTEN: none
+EXPLANATION: The focused AskPage suite, full @lkb/web suite, and web typecheck all pass from the root-bound dependency tree. The new C5 assertion is non-vacuous: mutating the missing-sessionRef branch to emit a link makes exactly that test fail, while the source restores byte-identically and the explicit C4 wait remains bounded at 3,000 ms with no retries.
+```
+
+### Commands and independently reproduced results
+
+```text
+D:\KnowledgeBase\apps\web> .\node_modules\.bin\vitest.CMD run src/pages/AskPage.test.tsx --cache=false
+Test Files  1 passed (1)
+Tests       7 passed (7)
+
+D:\KnowledgeBase> corepack pnpm --filter @lkb/web test -- --cache=false
+Test Files  11 passed (11)
+Tests       47 passed (47)
+
+D:\KnowledgeBase> corepack pnpm --filter @lkb/web typecheck
+tsc --noEmit -p tsconfig.json
+TYPECHECK_EXIT=0
+
+D:\KnowledgeBase> git diff-tree --no-commit-id --name-status -r 725f94c
+M  apps/web/src/pages/AskPage.test.tsx
+```
+
+### Criterion and invariant evidence
+
+| Item | Result | Independent evidence |
+|---|---|---|
+| C1 | met | `App.tsx` binds the first `/ask` route to `AskPage`; `NavSidebar.tsx` carries the persistent `/ask` Ask entry. |
+| C2 | met | `handleSubmit` trims and refuses empty/loading submissions; `ask.ts` delegates to shared `apiFetch`; tests assert the trimmed call and a real form submission with whitespace produces no call. |
+| C3 | met | `result.answer` is rendered and asserted by the focused suite. |
+| C4 | met | Runtime has distinct Internal/Web cards, labels, counts, and empty states. The changed wait is `{ timeout: 3_000 }`; neither the test nor `vitest.config.ts` defines retries. |
+| C5 | met | Runtime URL-encodes real `sessionRef` values and otherwise renders plain text. The new missing-ref test was mutation-proven as detailed below. |
+| C6 | met | `insufficient_coverage`, both web-fallback messages, and `verdict` are rendered; the no-fallback branch is asserted. |
+| C7 | met | The focused suite asserts that an `ApiError`'s literal message is rendered. |
+| C8 | met | `safeHttpUrl` admits only HTTP(S); the focused suite asserts unsafe schemes stay visible but inert. |
+| I1 | holds | Commit `725f94c` changes only `apps/web/src/pages/AskPage.test.tsx`. |
+| I2 | holds | Full web suite 47/47 and web TypeScript check exit 0. |
+| I3 | holds | No application import/export in `apps/web/src` references `@lkb/*`; `AskResponse` remains structurally declared in `apps/web/src/api/types.ts`. |
+
+### C5 mutation probe and cleanup
+
+The probe temporarily changed the missing-ref return from `null` to `"missing"`, under a hard
+30-second child-process timeout and an in-memory byte backup restored in `finally`. Result:
+
+```text
+MUTATION_TIMEOUT=False
+MUTATION_TEST_EXIT=1
+FAIL: renders an internal source without a sessionRef as plain text, never as a broken link
+AssertionError: expected <a href="/sessions/missing"></a> to be null
+RESTORE_SHA256=EC60594AAD528F41C66CBDBAB6B6AA4DA2D682E1F7CAA4715DECA34EC0D512D7
+RESTORE_BYTE_IDENTICAL=True
+MUTATIONS CLEAN: none outstanding
+VITE_CACHE_PRESENT=False
+```
+
+ISS-246 therefore moves `open → fixed`; it is not verified. U3.1 remains `in_progress` and was
+not edited or closed by this test-only check.
