@@ -1,4 +1,54 @@
-# QUEUE — top-3 recommended next units (checker sweep 2026-09-10T06:05+05:30, Mode B)
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-10T10:39+05:30, Mode B)
+
+## Current sweep — 2026-09-10T10:39+05:30
+
+> Range: `2650e22..fb57a81` (14 commits after the prior sweep commit). Bound root
+> `D:/KnowledgeBase`; nothing outside it was inspected. **Terminal state: FINDINGS: 3.**
+> ISS-054 reopened because `.last-tick` is 154 minutes stale with 82 open union-ledger rows,
+> 17 pending goal tasks, no pause, and a live `AUTO-CONTINUE REQUIRED` hook result. ISS-006
+> recurred when maker-path commit `f891487` changed the checker-owned WhatsApp contract; this
+> sweep independently reviewed and adopted the additive criteria, so the recurrence is repaired
+> without claiming implementation PASS. New ISS-250 records that T-007's current plan gate exists
+> only in the overwrite-on-next-tick `.last-tick`, not a durable `qa/gates/` file.
+>
+> Pair reconciliation found no missing verdict and no skipped PASS close-out. The only active
+> ready-for-check unit, `delivery-gate-stamp-adoption` cycle 1, already has its matching-cycle FAIL
+> and is therefore a maker fix gap, not a dispatch gap. Both STALLED units have cycle-3 debug
+> reports. The root-local SessionStart hook still misreports a completed STALLED unit as pending
+> and reads only `qa/issues.jsonl`; existing ISS-183/ISS-129 already cover those defects. The Mongo
+> gate's old `Answered:` lines precede a later `Reopened` section, reproducing open ISS-161's stale
+> first-answer shape. No post-sweep production code changed, so the silent-failure hunt had no new
+> code surface. `contracts/verify_contracts.py`, snapshot, tracker G1/G4, lint tests and dependency
+> cruise pass; `lint-root` alone fails on known ISS-248 (`AGENTS.md`: 16 root files, 224 lines).
+> Goal north star is unchanged; ten pending tasks are currently dependency-unblocked, so coverage
+> remains partial rather than missing. No `.regrill-due`, pause, or undiagnosed stall exists.
+
+### Current top 3
+
+1. **U2.4 / ISS-104 — segment-safe speaker identity.** This remains the sole open critical
+   data-integrity item. It is correctly parked at `qa/gates/speaker-segment-identity.md`; do not
+   publish model-derived speaker mappings before A/B/C is answered. **Tier 2 critical, gated.**
+2. **ISS-250 — persist the T-007 plan gate once.** Copy the exact plan already recorded in
+   `.last-tick` into `qa/gates/t007-candidate-lifecycle-plan.md` with one durable `Answered:` slot;
+   do not reconstruct or re-ask it after the tick stamp changes. **Tier 2 high, unblocked QA work.**
+3. **ISS-215 + ISS-214 — consolidate the human-gate queue.** Fold Umesh's instruction without
+   weakening the Lab Approver rule, merge the two questions that target `mc-sessionstart.ps1`, and
+   distinguish genuine enforcement approvals from checker-resolvable record accuracy. **Tier 2
+   high.**
+
+### Live gates and known residuals
+
+- **Maker asleep:** ISS-054 is open; the next maker continuation should refresh `.last-tick` only
+  after real progress or a durable gate is recorded.
+- **T-007 persistence:** `qa/gates/mongo-host-unreachable.md` was reopened at 08:00; its newest
+  section supersedes the older self-resolved answer until TCP plus driver reads pass.
+- **Other gated high work:** ISS-245 waits on `qa/gates/iss-245-multifile-plan.md`; external
+  Gemini validation and GitHub export remain pending in their named gate files.
+- **Ledger union:** 274 rows, 274 distinct ids, zero parse errors; open = 1 critical / 22 high /
+  36 medium / 23 low. Fixed 128 vs verified 64 remains a large verification debt, not a clean
+  state.
+
+## Previous sweep detail (superseded as routing; retained below)
 
 > Range: `d358090..a3f371b` (9 commits after the prior sweep commit). Bound root
 > `D:/KnowledgeBase`. A root-local `node_modules` junction unexpectedly resolved one dependency

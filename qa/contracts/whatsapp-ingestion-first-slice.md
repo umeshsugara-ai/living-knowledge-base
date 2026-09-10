@@ -272,6 +272,13 @@ Packets: Sent = 2, Received = 0, Lost = 2 (100% loss)
    at manifest time.
 
 ## Amendment log
+- 2026-09-10 · checker Mode B adoption · Independently reviewed the maker-authored additive
+  amendment in commit `f891487`. Criteria 7–14 are adopted unchanged: they tighten the existing
+  first-slice contract with a schema-backed review lifecycle, full pre-approval quarantine across
+  every trusted reader, tenant-scoped atomic decisions, durable provenance, UI validation, and a
+  real-persistence gate. They preserve criteria 1–6 and the project's existing H3, tenancy,
+  idempotency, and never-silently-drop rules. This adoption records checker ownership; it is not a
+  PASS on an implementation that does not yet exist. Recurrence of ISS-006 closed by review.
 - 2026-09-10 · routine additive tightening · Added the full remaining T-007/A9 review contract as
   criteria 7–14 without changing or weakening the checker-PASSed first-slice criteria 1–6. The
   amendment makes the candidate/quarantine boundary explicit because the current implementation
