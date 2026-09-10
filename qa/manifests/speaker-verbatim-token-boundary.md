@@ -9,7 +9,7 @@ instead. Please amend C2 to require whole-word containment and a name-shaped `di
 **Dual check:** no
 **Issues addressed:** none filed — the cycle-1 checker recorded both in EXPLANATION, correctly
 declining to FAIL an artifact that met C2 *as written*.
-**Status:** ready-for-check (cycle 3)
+**Status:** superseded-by speaker-denylist-ledger-corpus (cycle 3 checker PASS; see `qa/verdicts/speaker-denylist-ledger-corpus.md`)
 **Branch:** `lane/a-speakers`
 
 ## Why
