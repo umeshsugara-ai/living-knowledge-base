@@ -8,10 +8,10 @@ judge against `ask-router-v2.md`'s response shape plus the web-page conventions 
 authorized by D-013). **This is the first unit in this repo pulled from the roadmap tier rather
 than from the loop's own ledger.**
 **Date:** 2026-09-08
-**Fix cycle:** 1 of max 3 (amended in-place before dispatch — see "Amendment" below)
+**Fix cycle:** 2 of max 3
 **Dual check:** no
-**Issues addressed:** none — this is new feature work, not a defect fix.
-**Status:** checked-PASS (cycle 1 — verdict `qa/verdicts/web-ask-page.md`, commit `779ded1`)
+**Issues addressed:** ISS-246 — retroactive checker handshake for commit `725f94c`.
+**Status:** ready-for-check
 
 ## Why
 
@@ -176,3 +176,33 @@ cleanup it briefly restored a stale backup over the newer file and had to recons
 an artifact that is under check is a race that can produce a verdict against code nobody shipped.
 The correct move was to let the check finish and re-submit at `Fix cycle: 2`. Recorded here rather
 than left implicit; it belongs with `qa/gates/concurrent-maker-sessions.md`.
+
+## Cycle 2 resubmission — ISS-246 (2026-09-10)
+
+This cycle is deliberately narrow. Commit `725f94c` changed only
+`apps/web/src/pages/AskPage.test.tsx`: it gave the C4 source-list wait an explicit three-second
+timeout (no retry) and added the C5 regression test promised at lines 160–165 above. The new test
+submits an internal source with no `sessionRef`, waits for its text, and asserts that no link with
+that accessible name exists. No runtime module changed.
+
+Fresh maker checks from the root-bound dependency tree:
+
+```text
+D:\KnowledgeBase\apps\web> .\node_modules\.bin\vitest.CMD run src/pages/AskPage.test.tsx --cache=false
+Test Files  1 passed (1)
+Tests       7 passed (7)
+
+D:\KnowledgeBase> corepack pnpm --filter @lkb/web test -- --cache=false
+Test Files  11 passed (11)
+Tests       47 passed (47)
+
+D:\KnowledgeBase> corepack pnpm --filter @lkb/web typecheck
+tsc --noEmit -p tsconfig.json
+exit 0
+```
+
+Checker instructions: independently read `qa/contracts/web-ask-page.md`, inspect commit
+`725f94c`, re-run the focused and full web checks, and mutation-probe C5 rather than trusting this
+description. Mode D is not applicable to this resubmission because the changed path is test-only;
+no runtime UI surface changed in this cycle. A PASS fixes ISS-246 but **must not close U3.1**:
+the real provider-backed answer-and-citation browser exit criterion remains outstanding.
