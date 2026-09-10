@@ -69,3 +69,18 @@ signal. Last night both agreed, so the wrong conclusion was not drawn, but the r
 than it looked. Nothing was built past this gate while it was open, and the deferred C8/ISS-113
 row-level checks were discharged on real rows in the `chunk-backfill` unit (26/26 sessions, 0 dim
 mismatches, 0 dangling turnRefs).
+
+## Reopened — 2026-09-10T08:00:00+05:30
+
+The live gate has regressed. A fresh `Test-NetConnection` resolved the same EC2 address but
+reported `TcpTestSucceeded: False` for `13.202.206.101:27017`. The local WhatsApp Mongo endpoint
+`127.0.0.1:27018` also reported `TcpTestSucceeded: False`. Docker CLI 29.6.1 is installed, but its
+daemon pipe is absent and `com.docker.service` is `STOPPED`; an escalated
+`sc start com.docker.service` returned `OpenService FAILED 5: Access is denied`. No local
+`mongod`, Podman, or nerdctl executable is installed, and WSL distro enumeration is itself denied.
+
+This reopens only the live main-Mongo/WhatsApp persistence portion of T-007 criterion 14. Isolated
+unit/in-memory testing and code work may continue, but neither can be reported as the required
+real persistence proof. Resolution remains option 1 or 2 above: restore the remote endpoint, or
+start/provide a reachable local Mongo runtime. This new evidence supersedes the 2026-09-08
+SELF-RESOLVED state until a fresh TCP and driver read both pass.
