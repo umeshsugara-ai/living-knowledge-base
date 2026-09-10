@@ -1,3 +1,41 @@
+# QUEUE — top-3 recommended next units (checker sweep 2026-09-10T06:05+05:30, Mode B)
+
+> Range: `d358090..a3f371b` (9 commits after the prior sweep commit). Bound root
+> `D:/KnowledgeBase`. A root-local `node_modules` junction unexpectedly resolved one dependency
+> read into a sibling worktree; inspection stopped at discovery and the escape is ISS-247.
+> **Terminal state: FINDINGS: 4** — ISS-246 records an unmanifested/unverdictable code commit;
+> ISS-247 records that the main API runtime resolves `@lkb/index` through a junction outside the
+> bound root; ISS-248 records the Codex runtime projection breaking `lint:structure`; ISS-249
+> records the loop spec omitting the mandatory roadmap tier. One genuine prior fix gap remains
+> (`delivery-gate-stamp-adoption` cycle 1 after FAIL); the live hook misnames it as
+> `delivery-gate-manifest-blindness`, already covered by ISS-183/184. G1/G4 and SNAPSHOT are green;
+> `.last-tick` is fresh; no pause, re-grill, or undiagnosed stall exists. The two newly PASSed
+> post-sweep units touched tests only, so the silent-failure hunt found no new production-code
+> swallow. Runtime `.codex` hook copies match their tracked `.claude` sources byte-for-byte and
+> were left untouched. `.goal/goal.json`, `.codex/`, and `AGENTS.md` remain concurrent/runtime state
+> and were not staged.
+
+## Current top 3
+
+1. **U2.4 / ISS-104 — finish speaker resolution without guessing.** Still the only open critical
+   data-integrity row. It is HUMAN_GATE-blocked at `qa/gates/speaker-segment-identity.md`; preserve
+   unresolved identities until Umesh chooses A/B/C. **Tier 2 critical, gated.**
+2. **ISS-247 — restore root-bound test isolation.** Relink every `@lkb/*` workspace dependency to
+   `D:/KnowledgeBase`, add a confinement preflight, then re-run affected API evidence; current
+   `ask-arms` cannot even load because `@lkb/index` resolves into `a-speakers`. **Tier 2 high.**
+3. **ISS-246 — recover the missing checker handshake for commit `725f94c`.** Write a bounded
+   retroactive manifest and obtain a fresh Mode A verdict for the test-only Ask citation guard;
+   keep U3.1 open. **Tier 2 high.**
+
+## Existing gates and deferred high work
+
+- `ISS-245` remains open behind `qa/gates/iss-245-multifile-plan.md` (`Answered: pending`).
+- T-021 semantic embedding and U3.1's provider-backed browser rerun remain behind
+  `qa/gates/external-eval-data-egress.md` (`Answered: pending`).
+- `delivery-gate-stamp-adoption` remains a cycle-1 fix gap behind its enforcement-path decisions.
+
+## Previous sweep detail (superseded as routing; retained below)
+
 # QUEUE — top-3 recommended next units (checker sweep 2026-09-09T17:54+05:30, Mode B)
 
 > Range: `74b806b..b49a2ea` (1 commit). Bound root `D:/KnowledgeBase`.
