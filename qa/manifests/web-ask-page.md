@@ -11,7 +11,7 @@ than from the loop's own ledger.**
 **Fix cycle:** 2 of max 3
 **Dual check:** no
 **Issues addressed:** ISS-246 — retroactive checker handshake for commit `725f94c`.
-**Status:** ready-for-check
+**Status:** checked-PASS (cycle 2 — verdict appended in `qa/verdicts/web-ask-page.md`, commit `b53f23a`)
 
 ## Why
 
