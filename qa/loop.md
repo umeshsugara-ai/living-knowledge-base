@@ -12,11 +12,12 @@ publishable loop schema so the checker sweep (Mode B, check 4) can verify it sta
 Prompt: Bind to `D:\KnowledgeBase`. If `qa/.paused` exists, stop. Otherwise reconcile disk state
 (flip any manifest with a matching-cycle PASS verdict to `checked-PASS`; re-dispatch any
 `ready-for-check` manifest with no matching verdict), sweep if due (`qa/.last-sweep` >2h old),
-then pull ONE unit from `qa/QUEUE.md` top row / open `qa/issues.jsonl` by severity / contract
-gaps / `qa/feedback-inbox.md`. Build it, write a real evidence manifest, dispatch a fresh isolated
-`/checker` subagent — never self-certify. On FAIL, fix exactly what the verdict names (max 3
-cycles, then STALLED). On PASS, flip the manifest, close the matching `/goal` task, commit with a
-narrow pathspec. Stop for approval before any CRITICAL action.
+then pull ONE unit by the project tiers: `qa/QUEUE.md` top clear TODO; critical/high open issue;
+next unblocked pending roadmap task from `.goal/goal.json` or `TASKS.md`; medium open issue;
+contract gap; feedback. Build it, write real evidence, and dispatch a fresh isolated `/checker`
+subagent — never self-certify. On FAIL, fix only what the verdict names (max 3 cycles, then
+STALLED). On PASS, checker closes the matching `/goal` task; maker confirms closure, flips the
+manifest, and commits narrowly. Stop for approval before any CRITICAL action.
 
 Verify: the adapter's slot-1 check (this project uses the DEFAULT coding adapter — no
 `qa/adapter.json` on disk): `pnpm -r test` exits 0 with every package's own reported count
@@ -26,22 +27,25 @@ matching a fresh re-run (never trust a pasted total — sum it), `pnpm lint:stru
 independently re-runnable by the checker, not a fixture stand-in claimed as proof.
 
 Steps:
-1. **Observe** — bind to the root, read `qa/.last-tick`, `qa/QUEUE.md`, open issues, the active
-   `.goal/goal.json` task.
-2. **Choose** — pick exactly one unit; state which and why in one line.
+1. **Observe** — bind to the root; read `qa/.last-tick`, `qa/QUEUE.md`, open issues,
+   `.goal/goal.json`, and `TASKS.md`.
+2. **Choose** — pick exactly one unit using the six project backlog tiers in Prompt order; state
+   which and why in one line.
 3. **Act** — build the slice; run the real verify commands as you go, not just at the end.
 4. **Verify** — write the evidence manifest (`qa/manifests/<slug>.md`, `Status: ready-for-check`)
    with real pasted command output.
 5. **Record** — dispatch a fresh, isolated `/checker` subagent; it writes
-   `qa/verdicts/<slug>.md` independently, re-running every command itself.
-6. **Repeat or stop** — PASS: flip the manifest, close the goal task, commit narrowly, continue
-   to the next unit. FAIL: fix exactly what's named, re-dispatch (max 3 cycles). Empty backlog:
-   stop.
+   `qa/verdicts/<slug>.md` independently, re-runs every command itself, and on PASS closes the
+   matching goal task.
+6. **Repeat or stop** — PASS: maker confirms checker-owned goal closure, flips the manifest,
+   commits narrowly, and continues to the next unit. FAIL: fix exactly what's named, re-dispatch
+   (max 3 cycles). Empty backlog: stop.
 
 Stop: named terminal states, per `/maker`'s own contract —
 `ADVANCED` (one unit moved on evidence) → continue · `BACKLOG_EMPTY` (no pending handshake, no
-open issues, no queue rows, sweep fresh) → stop · `HUMAN_GATE` (next unit needs a decision only
-Umesh can make, nothing else unblocked) → heartbeat up to 8×, then stop · `STALLED` (max fix
+open issues, no queue rows, sweep fresh, and no unblocked pending roadmap task in
+`.goal/goal.json` or `TASKS.md`) → stop · `HUMAN_GATE` (next unit needs a decision only Umesh can
+make, nothing else unblocked) → heartbeat up to 8×, then stop · `STALLED` (max fix
 cycles hit) → diagnose via `/agent-debugger`, then stop · `EXHAUSTED` (tick/token bound hit) →
 diagnose, then stop, never report as success · `BLOCKED` (environment prevents execution) →
 retry heartbeat · `PAUSED` (`qa/.paused` exists) → stop immediately, nothing auto-continues until
