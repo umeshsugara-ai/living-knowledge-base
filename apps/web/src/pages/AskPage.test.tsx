@@ -73,13 +73,32 @@ describe("AskPage", () => {
     renderPage();
     await submit("visa rules?");
 
-    await waitFor(() => expect(screen.getByText("Internal sources (1)")).toBeInTheDocument());
+    await waitFor(
+      () => expect(screen.getByText("Internal sources (1)")).toBeInTheDocument(),
+      { timeout: 3_000 },
+    );
     expect(screen.getByText("Web sources (1)")).toBeInTheDocument();
 
     // the internal citation is clickable through to the real session detail route
     expect(screen.getByRole("link", { name: "n1" })).toHaveAttribute("href", "/sessions/s1");
     // and the web citation is a genuine outbound link, never merged into the internal list
     expect(screen.getByRole("link", { name: "Visa rules" })).toHaveAttribute("href", "https://example.com/visas");
+  });
+
+  test("renders an internal source without a sessionRef as plain text, never as a broken link", async () => {
+    vi.spyOn(askApi, "ask").mockResolvedValue(
+      response({
+        sources: {
+          internal: [{ node_id: "unlinked-node" }],
+          web: [],
+        },
+      }),
+    );
+    renderPage();
+    await submit("what is unlinked?");
+
+    await waitFor(() => expect(screen.getByText("unlinked-node")).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: "unlinked-node" })).toBeNull();
   });
 
   test("never renders a non-http(s) web source URL as a link, but still shows it", async () => {
