@@ -84,3 +84,18 @@ unit/in-memory testing and code work may continue, but neither can be reported a
 real persistence proof. Resolution remains option 1 or 2 above: restore the remote endpoint, or
 start/provide a reachable local Mongo runtime. This new evidence supersedes the 2026-09-08
 SELF-RESOLVED state until a fresh TCP and driver read both pass.
+
+### Fresh live-browser audit — 2026-09-10T11:02+05:30
+
+The Vite frontend was started directly from `apps/web` on `127.0.0.1:5173` without reinstalling
+dependencies. A real in-app browser then exercised three shipped surfaces using a non-secret local
+test key. `/meeting-bot` rendered its explicit "Not live yet" disclosure and correctly stated that
+all three joiners are stubs. `/ingest` changed state to `enter a URL first` after an empty submit.
+`/whatsapp` moved from `Loading...` to `failed to load WhatsApp groups`; `/ask` enabled after a
+question was entered, showed `Asking...`, then returned to enabled with `failed to ask`. The
+browser reported zero console errors and two React Router v7 future-flag warnings. This proves the
+frontend's degraded states remain interactive and honest during the outage; it does not satisfy
+T-007 criterion 14 because neither API nor Mongo persistence ran.
+
+Immediately before the browser run, fresh TCP probes again returned `False` for both
+`13.202.206.101:27017` and `127.0.0.1:27018`; `com.docker.service` remained `Stopped`.
