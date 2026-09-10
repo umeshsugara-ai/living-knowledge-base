@@ -7,6 +7,12 @@
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
+export const AUTH_INVALIDATED_EVENT = "lkb:auth-invalidated";
+
+export interface AuthInvalidationEventDetail {
+  apiKey: string;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -32,6 +38,10 @@ export async function apiFetch<T>(path: string, apiKey: string | null, options: 
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
   if (!res.ok) {
+    if ((res.status === 401 || res.status === 403) && typeof window !== "undefined" && window.dispatchEvent) {
+      const event = new CustomEvent<AuthInvalidationEventDetail>(AUTH_INVALIDATED_EVENT, { detail: { apiKey } });
+      window.dispatchEvent(event);
+    }
     let message = `HTTP ${res.status}`;
     try {
       const body = (await res.json()) as { message?: string };

@@ -1,8 +1,10 @@
 import { render, screen } from "@testing-library/react";
+import { useEffect } from "react";
 import userEvent from "@testing-library/user-event";
-import { describe, test, expect, beforeEach } from "vitest";
-import { AuthProvider } from "./AuthContext.js";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { AuthProvider, useAuth } from "./AuthContext.js";
 import { LoginGate } from "./LoginGate.js";
+import { apiFetch } from "../api/client.js";
 
 function renderGate() {
   return render(
@@ -14,8 +16,20 @@ function renderGate() {
   );
 }
 
+function SessionLoadProbe() {
+  const { apiKey } = useAuth();
+  useEffect(() => {
+    void apiFetch("/sessions", apiKey).catch(() => {});
+  }, [apiKey]);
+  return null;
+}
+
 describe("LoginGate", () => {
   beforeEach(() => localStorage.clear());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
 
   test("hides children until a key is submitted", () => {
     renderGate();
@@ -36,5 +50,31 @@ describe("LoginGate", () => {
     localStorage.setItem("lkbApiKey", "already-there");
     renderGate();
     expect(screen.getByText("real protected content")).toBeInTheDocument();
+  });
+
+  test("an invalid stored key returns to login gate after API 401", async () => {
+    localStorage.setItem("lkbApiKey", "stale-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: "invalid api key" }), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    render(
+      <AuthProvider>
+        <LoginGate>
+          <SessionLoadProbe />
+          <div>real protected content</div>
+        </LoginGate>
+      </AuthProvider>,
+    );
+
+    expect(screen.getByText("real protected content")).toBeInTheDocument();
+    expect(await screen.findByLabelText("API key")).toBeInTheDocument();
+    expect(localStorage.getItem("lkbApiKey")).toBeNull();
   });
 });
