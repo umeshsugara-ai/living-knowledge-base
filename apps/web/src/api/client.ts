@@ -8,9 +8,25 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export const AUTH_INVALIDATED_EVENT = "lkb:auth-invalidated";
+export const AUTH_KEY_STORAGE_KEY = "lkbApiKey";
 
 export interface AuthInvalidationEventDetail {
   apiKey: string;
+}
+
+function invalidateAuth(apiKey: string): void {
+  if (typeof window === "undefined" || !window.dispatchEvent) return;
+
+  try {
+    if (window.localStorage) {
+      window.localStorage.removeItem(AUTH_KEY_STORAGE_KEY);
+    }
+  } catch {
+    // LocalStorage access can fail in some browser states; treat it as non-fatal.
+  }
+
+  const event = new CustomEvent<AuthInvalidationEventDetail>(AUTH_INVALIDATED_EVENT, { detail: { apiKey } });
+  window.dispatchEvent(event);
 }
 
 export class ApiError extends Error {
@@ -38,10 +54,7 @@ export async function apiFetch<T>(path: string, apiKey: string | null, options: 
     body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
   if (!res.ok) {
-    if ((res.status === 401 || res.status === 403) && typeof window !== "undefined" && window.dispatchEvent) {
-      const event = new CustomEvent<AuthInvalidationEventDetail>(AUTH_INVALIDATED_EVENT, { detail: { apiKey } });
-      window.dispatchEvent(event);
-    }
+    if (res.status === 401) invalidateAuth(apiKey);
     let message = `HTTP ${res.status}`;
     try {
       const body = (await res.json()) as { message?: string };

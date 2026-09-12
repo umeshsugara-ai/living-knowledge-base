@@ -12,9 +12,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AUTH_INVALIDATED_EVENT, type AuthInvalidationEventDetail } from "../api/client.js";
-
-const STORAGE_KEY = "lkbApiKey";
+import { AUTH_INVALIDATED_EVENT, AUTH_KEY_STORAGE_KEY, type AuthInvalidationEventDetail } from "../api/client.js";
 
 export interface AuthContextValue {
   apiKey: string | null;
@@ -25,21 +23,23 @@ export interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }): ReactNode {
-  const [apiKey, setApiKeyState] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [apiKey, setApiKeyState] = useState<string | null>(() => localStorage.getItem(AUTH_KEY_STORAGE_KEY));
 
   const setApiKey = useCallback((key: string) => {
-    localStorage.setItem(STORAGE_KEY, key);
+    localStorage.setItem(AUTH_KEY_STORAGE_KEY, key);
     setApiKeyState(key);
   }, []);
 
   const clearApiKey = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(AUTH_KEY_STORAGE_KEY);
     setApiKeyState(null);
   }, []);
 
   const handleAuthInvalidated = useCallback((event: Event) => {
     const detail = (event as CustomEvent<AuthInvalidationEventDetail>).detail;
-    if (!detail || detail.apiKey !== apiKey) return;
+    const storageKey = localStorage.getItem(AUTH_KEY_STORAGE_KEY);
+    if (!detail) return;
+    if (detail.apiKey !== apiKey && detail.apiKey !== storageKey && storageKey !== null) return;
     clearApiKey();
   }, [apiKey, clearApiKey]);
 
