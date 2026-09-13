@@ -5,7 +5,28 @@
  * Attaches Authorization: Bearer, throws a typed ApiError on any non-2xx so callers can render a
  * real error state instead of guessing from a thrown generic Error.
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+function normalizeBaseUrl(raw: string | undefined): string {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  return trimmed.replace(/\/+$/, "");
+}
+
+function resolveApiBaseUrl(): string {
+  const configured = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL);
+  if (configured) return configured;
+
+  if (typeof window === "undefined") return "";
+
+  const { hostname, protocol } = window.location;
+  if (hostname !== "localhost" && hostname !== "127.0.0.1") return "";
+  if (import.meta.env.PROD) return "";
+
+  // Dev mode default: web runs on Vite (usually :5173), API on :3300.
+  return `${protocol}//${hostname}:3300`;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export const AUTH_INVALIDATED_EVENT = "lkb:auth-invalidated";
 export const AUTH_KEY_STORAGE_KEY = "lkbApiKey";
@@ -45,14 +66,23 @@ export interface ApiFetchOptions {
 
 export async function apiFetch<T>(path: string, apiKey: string | null, options: ApiFetchOptions = {}): Promise<T> {
   if (!apiKey) throw new ApiError(401, "no API key set");
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      ...(options.body !== undefined ? { "content-type": "application/json" } : {}),
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      method: options.method ?? "GET",
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        ...(options.body !== undefined ? { "content-type": "application/json" } : {}),
+      },
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+  } catch (err) {
+    const target = API_BASE_URL || "same origin";
+    const detail = `failed to connect to ${target}`;
+    throw new ApiError(0, `${detail} (${err instanceof Error ? err.message : "network error"})`);
+  }
+
   if (!res.ok) {
     if (res.status === 401) invalidateAuth(apiKey);
     let message = `HTTP ${res.status}`;

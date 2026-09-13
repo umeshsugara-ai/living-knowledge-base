@@ -3,12 +3,10 @@ import {
   DashboardIcon, SessionsIcon, AskIcon, BrainIcon, CalendarIcon, SourcesIcon,
   IngestIcon, MeetingBotIcon, WhatsAppIcon, SettingsIcon, ExternalLinkIcon, DocsIcon,
 } from "../components/icons.js";
+import { API_BASE_URL } from "../api/client.js";
 
 // apps/api serves /compete and /docs-ui itself, not apps/web -- in dev these run on different
-// ports (apps/web on Vite's 5173, apps/api on 3300+), so a bare relative href would 404 against
-// the wrong origin. Same VITE_API_BASE_URL apps/web's fetch client uses (empty string = same
-// origin, correct for the production/Docker case where both are behind one reverse proxy).
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+// ports, so links need to target the API origin.
 
 interface NavItem {
   to: string;
