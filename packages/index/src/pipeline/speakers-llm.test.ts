@@ -174,7 +174,7 @@ test("still accepts the legitimate names the hardening must not break", async ()
 test("accepts a name at the very start and very end of a turn", async () => {
   // Still testing the offset arithmetic at both edges of a turn -- now with turns that
   // actually name someone, which is what the cue rule requires.
-  for (const text of ["Ruby speaking.", "Over to Ruby"]) {
+  for (const text of ["Ruby speaking.", "My name is Ruby"]) {
     const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
       { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
     ]));
@@ -326,9 +326,7 @@ for (const [text, name] of [
   ["My name is Ruby-Anne Smith.", "Ruby-Anne Smith"],
   ["Good morning Prasanti, please go ahead.", "Prasanti"],
   ["Prasanti, what do you think about this?", "Prasanti"],
-  ["Our next presenter is Nilesh Gotecha.", "Nilesh Gotecha"],
   ["This is Makrand Rajadhyaksha speaking.", "Makrand Rajadhyaksha"],
-  ["Over to Ruby", "Ruby"],
   ["Ruby speaking.", "Ruby"],
 ] as [string, string][]) {
   test(`ISS-094: still accepts ${JSON.stringify(name)} in a genuine naming form`, async () => {
@@ -353,6 +351,27 @@ test("ISS-093: a demonstrative alone does not name a SINGLE-token candidate", as
   ]));
   assert.equal(strong.resolved.length, 1, "a two-token name keeps the demonstrative cue");
 });
+
+/**
+ * ISS-255 SUPERSEDES the two handover-form rows that stood in the ISS-094 corpus above ("Our next
+ * presenter is Nilesh Gotecha.", "Over to Ruby"): the live U2.4 phase-3 eval measured that exact
+ * shape shipping a WRONG identity (the moderator accepted as Ruby off his own handover turn,
+ * evidence t205, while the real Ruby self-named at t206 as spk:2). Per ISS-255's fix_direction, a
+ * handover cue binds the name to the label whose block FOLLOWS, never to the speaking label — so
+ * these now assert REFUSAL for a same-label proposal. The old accept-expectation was the belief
+ * the live eval measured false; the ISS-255 ledger row carries the supersession note.
+ */
+for (const [text, name] of [
+  ["Our next presenter is Nilesh Gotecha.", "Nilesh Gotecha"],
+  ["Over to Ruby", "Ruby"],
+] as [string, string][]) {
+  test(`ISS-255 supersedes ISS-094: handover cue does NOT credit the speaking label — ${JSON.stringify(name)}`, async () => {
+    const { resolved } = await extractSpeakers([turn("t1", "spk:0", text)], replies([
+      { speakerRef: "spk:0", displayName: name, turnIds: ["t1"] },
+    ]));
+    assert.deepEqual(resolved, [], "handover evidence binds the FOLLOWING speaker, not the speaking label (ISS-255)");
+  });
+}
 
 
 test("empty input never calls the provider", async () => {

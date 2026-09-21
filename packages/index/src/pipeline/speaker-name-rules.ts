@@ -165,6 +165,25 @@ const NAMING_CUES_BEFORE = [
   "speaker is", "presenter is", "please welcome",
 ];
 /**
+ * Handover markers (ISS-255): a turn whose before-context contains one of these is the CURRENT
+ * speaker INTRODUCING SOMEONE ELSE — "I invite our next speaker, Ruby, from Uni-Italia". Such a
+ * cue is evidence Ruby exists and speaks NEXT, never that the turn's own label IS Ruby. The live
+ * U2.4 phase-3 eval shipped exactly that inversion: the moderator was accepted as `Ruby` off his
+ * own handover turn while the real Ruby (spk:2) self-named one turn later.
+ *
+ * So when a handover marker sits in the before-context, only a SELF-NAMING cue can still bind
+ * the name to the speaking label ("my name is X" inside the same turn); every other cue branch
+ * (after-cues like `from`/`here`/`speaking`, greetings, demonstratives, address) is refused for
+ * that occurrence.
+ */
+const HANDOVER_MARKERS = [
+  "invite", "invited", "inviting", "welcome our next speaker", "next speaker",
+  "next presenter", "next up", "hand over", "handing over", "over to",
+  "take us forward", "to take us through", "to take us into", "pass the mic",
+];
+/** Cues whose subject is the SPEAKER THEMSELF — the only ones that survive a handover context. */
+const SELF_NAMING_CUES = ["my name is", "my name's", "i am", "i'm", "call me"];
+/**
  * Demonstratives point at anything -- "This is India calling.", "This is Wednesday.", "This is
  * Great news." A bare demonstrative plus ONE capitalised token is not evidence of a person, so it
  * counts only for a multi-token name ("This is Makrand Rajadhyaksha"). Single-token candidates
@@ -200,6 +219,13 @@ const FUNCTION_FOLLOWERS = new Set([
 function hasNamingCue(text: string, name: string, at: number): boolean {
   const rawBefore = text.slice(Math.max(0, at - 40), at);
   const before = rawBefore.toLowerCase().replace(/[\s,:;."'\u2019()\u2014-]+$/u, "");
+  // ISS-255: a handover marker in the before-context means the CURRENT speaker is introducing
+  // someone else ("I invite our next speaker, Ruby"). Only an explicit self-naming cue may then
+  // bind the name to this label; every other branch would credit the moderator with the
+  // introduced person's name. The marker is checked against the wider before-context because
+  // the cue phrase sits immediately before the name while the marker can sit a clause earlier.
+  const handover = HANDOVER_MARKERS.some((m) => before.includes(m) || rawBefore.toLowerCase().includes(m));
+  if (handover && !SELF_NAMING_CUES.some((cue) => before.endsWith(cue))) return false;
   if (NAMING_CUES_BEFORE.some((cue) => before.endsWith(cue))) return true;
   const multiToken = name.trim().split(/\s+/).filter(Boolean).length > 1;
   if (multiToken && DEMONSTRATIVE_CUES.some((cue) => before.endsWith(cue))) return true;
