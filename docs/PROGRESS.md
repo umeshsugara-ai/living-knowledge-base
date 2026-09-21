@@ -2,24 +2,24 @@
      Edit .goal/catalogue.json (probes / manual downgrades), then re-run. -->
 # Progress — what actually exists
 
-**44.7% of the 57-feature product catalogue.**
-Machine-derived alone: 57.9%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
+**28.1% of the 57-feature product catalogue.**
+Machine-derived alone: 39.5%. Scoring: REAL=1, PARTIAL=0.5, STUB=0, MISSING=0.
 
 Denominator pinned to plan §4c (57 features; dropping one fails the run). Probe fingerprint `9d285be83601` —
 if that changes, a probe or a human downgrade was edited (the hash covers both) and the score is not comparable to the previous run.
 19 feature(s) declare no probe and therefore score MISSING by default: A12, B12, C5, C6, C7, C10, C11, C12, C13, C14, D2, D4, D5, D6, E4, E5, E7, F1, F2.
 
-Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (run 2026-09-08T11:06:33.153Z, content `e0cb4a506b12`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
+Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (run 2026-09-08T11:06:33.153Z, content `37031dce7956`). Chosen by the timestamp inside the file, not by folder name. Re-run `pnpm verify:live` for fresher numbers.
 
 ## By group
 
 | group | | score | REAL | PARTIAL | STUB | MISSING |
 |---|---|---|---|---|---|---|
-| **A. LEARN — ingestion** | `████████░░░░░░░░░░░░` | 38.5% | 3 | 4 | 1 | 5 |
-| **B. REMEMBER — knowledge model** | `███████████████░░░░░` | 76.9% | 8 | 4 | 0 | 1 |
-| **C. REASON — ask & answer** | `██████░░░░░░░░░░░░░░` | 32.1% | 3 | 3 | 0 | 8 |
-| **D. IMPROVE — the living loop** | `████████░░░░░░░░░░░░` | 37.5% | 2 | 2 | 0 | 4 |
-| **E. PLATFORM — API & hosting** | `█████████░░░░░░░░░░░` | 42.9% | 2 | 2 | 0 | 3 |
+| **A. LEARN — ingestion** | `██████░░░░░░░░░░░░░░` | 30.8% | 2 | 4 | 1 | 6 |
+| **B. REMEMBER — knowledge model** | `████████░░░░░░░░░░░░` | 42.3% | 4 | 3 | 0 | 6 |
+| **C. REASON — ask & answer** | `██████░░░░░░░░░░░░░░` | 28.6% | 2 | 4 | 0 | 8 |
+| **D. IMPROVE — the living loop** | `████░░░░░░░░░░░░░░░░` | 18.8% | 0 | 3 | 0 | 5 |
+| **E. PLATFORM — API & hosting** | `███░░░░░░░░░░░░░░░░░` | 14.3% | 0 | 2 | 0 | 5 |
 | **F. OPERATIONS automation** | `░░░░░░░░░░░░░░░░░░░░` | 0% | 0 | 0 | 0 | 2 |
 
 ## Every feature
@@ -30,7 +30,7 @@ Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (ru
 | A2 | Transcription pipeline (diarize + timestamps + name-map) | **REAL** | collection sessions (26 docs); collection turns (2118 docs) |
 | A3 | Transcript Review & Speaker Mapping UI | **MISSING** | page /transcript-review (absent) |
 | A4 | Sessions Library (filters, coverage %) | **PARTIAL** _(auto: REAL, lowered)_ | route GET /sessions; page /sessions |
-| A5 | Missing Recording Workflow (request, SLA, reminders) | **REAL** | collection gaps (4242 docs) |
+| A5 | Missing Recording Workflow (request, SLA, reminders) | **MISSING** | collection gaps (empty) |
 | A6 | Document/PDF/XLSX ingestion with page-level evidence | **PARTIAL** _(auto: REAL, lowered)_ | collection sources (26 docs) |
 | A7 | Integrations (Drive, Zoom, Teams, Meet, Sheets) | **PARTIAL** _(auto: REAL, lowered)_ | route GET /calendar/upcoming; route POST /gmail/scan |
 | A8 | WhatsApp Knowledge Connector | **REAL** | route GET /whatsapp/groups; route POST /whatsapp/ingest; page /whatsapp |
@@ -38,20 +38,20 @@ Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (ru
 | A10 | Meeting Bot (calendar connect, consent, auto-join) | **STUB** _(auto: PARTIAL, lowered)_ | page /meeting-bot |
 | A11 | Live Meeting Bot Monitor | **MISSING** | page /meeting-bot/live (absent) |
 | A12 | Web capture of public webinars (YouTube etc.) | **MISSING** | no probe declared |
-| A13 | Watched Sources (bookmark + change-tracking + re-ingest) | **MISSING** _(auto: REAL, lowered)_ | collection watched_sources (4242 docs) |
+| A13 | Watched Sources (bookmark + change-tracking + re-ingest) | **MISSING** | collection watched_sources (empty) |
 | B1 | Mongo schema + deterministic validators | **REAL** | collection sessions (26 docs); collection sources (26 docs); collection turns (2118 docs) |
 | B2 | Migrate TOC sessions with turn-level citations | **REAL** | collection sessions (26 docs); collection turns (2118 docs); collection session_pages (24 docs) |
 | B3 | Speaker identity resolution (aliases, orgs, roles, confidence) | **PARTIAL** _(auto: REAL, lowered)_ | collection speakers (2 docs) |
 | B4 | Claim extraction with evidence[] | **REAL** | collection claims (81 docs) |
 | B5 | Vectorless tree index generator + incremental regeneration | **REAL** | route GET /graph; collection tree_index (1 docs) |
-| B6 | Vector index for unstructured (hybrid semantic + keyword) | **REAL** | collection chunks (4242 docs) |
-| B7 | Knowledge Graph (graph_edges) with confidence filter | **REAL** | collection graph_edges (4242 docs) |
+| B6 | Vector index for unstructured (hybrid semantic + keyword) | **MISSING** | collection chunks (empty) |
+| B7 | Knowledge Graph (graph_edges) with confidence filter | **MISSING** | collection graph_edges (empty) |
 | B8 | Knowledge Explorer tree UI (year->month->session) | **PARTIAL** _(auto: REAL, lowered)_ | page /brain |
-| B9 | Topic pages (coverage, risks, decisions, timeline) | **PARTIAL** | collection topics (4242 docs) |
+| B9 | Topic pages (coverage, risks, decisions, timeline) | **MISSING** | collection topics (empty) |
 | B10 | Speaker Intelligence profiles | **PARTIAL** | collection speakers (2 docs) |
-| B11 | Decisions & Action Tracker | **REAL** | collection decisions (4242 docs) |
+| B11 | Decisions & Action Tracker | **MISSING** | collection decisions (empty) |
 | B12 | Collections builder (curated sets + answer scope) | **MISSING** | no probe declared |
-| B13 | Program & resource directories | **REAL** | collection programs (4242 docs) |
+| B13 | Program & resource directories | **MISSING** | collection programs (empty) |
 | C1 | POST /ask CRAG router (tree-search -> evaluator -> cited answer) | **PARTIAL** _(auto: REAL, lowered)_ | route POST /ask |
 | C2 | Ask AI UI (evidence mode, filters, history) | **PARTIAL** _(auto: REAL, lowered)_ | page /ask |
 | C3 | Answer page (confidence, internal-vs-web sources, follow-ups) | **PARTIAL** _(auto: REAL, lowered)_ | page /ask |
@@ -60,7 +60,7 @@ Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (ru
 | C6 | Conflicting Evidence Resolution | **MISSING** | no probe declared |
 | C7 | AI Answer Review Queue | **MISSING** | no probe declared |
 | C8 | Universal Search (sessions, moments, docs, decisions, speakers) | **REAL** | route GET /search |
-| C9 | Unstructured Knowledge Search (structured + vector side by side) | **REAL** | route GET /search; collection chunks (4242 docs) |
+| C9 | Unstructured Knowledge Search (structured + vector side by side) | **PARTIAL** | route GET /search |
 | C10 | AI FAQ Builder | **MISSING** | no probe declared |
 | C11 | Reports builder (exec summary / insights / decisions / risks) | **MISSING** | no probe declared |
 | C12 | Meeting Preparation Brief | **MISSING** | no probe declared |
@@ -68,18 +68,18 @@ Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (ru
 | C14 | 3D-avatar AI Knowledge Assistant | **MISSING** | no probe declared |
 | D1 | Dashboard (sessions, coverage, knowledge health) | **PARTIAL** _(auto: REAL, lowered)_ | route GET /sessions; route GET /sources; route GET /gaps; page / |
 | D2 | Activity & Knowledge Health (jobs, freshness, errors, retries) | **MISSING** | no probe declared |
-| D3 | Knowledge Gaps Dashboard | **REAL** | route GET /gaps; collection gaps (4242 docs) |
+| D3 | Knowledge Gaps Dashboard | **PARTIAL** | route GET /gaps |
 | D4 | Usage & Value Analytics | **MISSING** | no probe declared |
 | D5 | Notification Center, saved views, scheduled digests | **MISSING** | no probe declared |
 | D6 | Google Sheet sync | **MISSING** | no probe declared |
 | D7 | Counsellor eval harness (golden set, judge, leaderboard) | **PARTIAL** _(auto: REAL, lowered)_ | route POST /compete/start; collection eval_runs (4 docs) |
-| D8 | Loss -> gap -> capture -> re-index -> re-run flywheel | **REAL** | collection gaps (4242 docs) |
-| E1 | Multi-tenant hosting | **REAL** | collection tenants (4242 docs) |
+| D8 | Loss -> gap -> capture -> re-index -> re-run flywheel | **MISSING** | collection gaps (empty) |
+| E1 | Multi-tenant hosting | **MISSING** | collection tenants (empty) |
 | E2 | Auth, roles, permissions matrix, audit log | **PARTIAL** _(auto: REAL, lowered)_ | route GET /keys; page /settings |
 | E3 | Developer API + scoped keys + webhooks | **PARTIAL** | route POST /ask; route GET /sessions; route GET /sources; route GET /search; route GET /citations/:claimId |
 | E4 | Setup wizard | **MISSING** | no probe declared |
 | E5 | Enterprise Security & Compliance (SSO/MFA, residency, DLP) | **MISSING** | no probe declared |
-| E6 | Data retention / archive / exclusions / quotas | **REAL** | collection media (4242 docs); collection consent_policies (4242 docs) |
+| E6 | Data retention / archive / exclusions / quotas | **MISSING** | collection media (empty) |
 | E7 | Own-model training path | **MISSING** | no probe declared |
 | F1 | Registration / application-form automation | **MISSING** | no probe declared |
 | F2 | Ops task intake -> bot-monitored automations | **MISSING** | no probe declared |
@@ -91,7 +91,6 @@ Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (ru
 - **A6** REAL → PARTIAL — Document adapter is real and sources are populated, but there is no page-level evidence highlight, no detected-topics/orgs panel, no source quality score.
 - **A7** REAL → PARTIAL — Only Google Calendar + Gmail, via the gws CLI. No Drive, Zoom, Teams or Sheets connector, and no per-source ingestion rules.
 - **A10** PARTIAL → STUB — All three joiners (vexa/browser/system-audio) are explicit stubs and the package is dead code imported by nothing. The page honestly self-labels as not live. Plan §10 U4.2.
-- **A13** REAL → MISSING — Schema + accessor + schedule code exist, but nothing ever calls them -- no scheduler runs, so the collection is permanently empty. Code without a caller is not a feature.
 - **B3** REAL → PARTIAL — The speakers collection is real and non-empty as of 2026-09-08 (2 documents, written by scripts/sync-speakers.mjs from real transcripts, each citing a real turn that contains the name verbatim). But this feature's own name is 'aliases, orgs, roles, confidence' and only aliases and confidence are emitted -- no org and no role is extracted at all. Coverage is also thin: 2 speakers against 88 distinct name strings in the corpus, resolving 78 of 494 positional turns (15.8%). The probe flips REAL on a non-empty collection alone, which over-credits exactly as the C2/C3 /ask-page probe did. Downgraded 2026-09-08 by the session that wrote the rows. Plan §10 U2.4.
 - **B8** REAL → PARTIAL — The Brain graph renders real tree_index nodes, but there is no year->month->session drill-down explorer and no overview/topics/speakers/orgs tabs.
 - **C1** REAL → PARTIAL — Works end-to-end and citations resolve to real sessions, but retrieval is tree-only -- there is no vector layer, so the 'two indexes' hypothesis H1 is half-built. Plan §10 U1.5.
@@ -104,4 +103,4 @@ Collection counts from `qa/evidence/live-2026-09-08-11-06-33/preflight.json` (ru
 ## Notes (context that does NOT change a verdict)
 
 - **B3** (PARTIAL) — Superseded 2026-09-08. The old note read 'the speakers collection is empty and TOC turns are still spk:0' -- the first half is now false (2 real documents) and the second is still true (no turn's speakerRef has been rewritten; the documents carry the mapping instead). WhatsApp turns do carry a real speakerLabel, but that remains an INPUT to this feature, not the feature. See the B3 downgrade above for the current verdict and its reason.
-- **E1** (REAL) — Every collection carries tenantId and every accessor is tenant-scoped — real groundwork — but the tenants collection is empty and exactly one tenant ('toc') exists, so multi-tenant HOSTING is not a thing that exists yet. Scored MISSING deliberately; the scorer refused an earlier PARTIAL as an upgrade.
+- **E1** (MISSING) — Every collection carries tenantId and every accessor is tenant-scoped — real groundwork — but the tenants collection is empty and exactly one tenant ('toc') exists, so multi-tenant HOSTING is not a thing that exists yet. Scored MISSING deliberately; the scorer refused an earlier PARTIAL as an upgrade.
