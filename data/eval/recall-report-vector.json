@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-09-08T12:56:59.741Z",
+  "generatedAt": "2026-09-21T09:41:08.835Z",
   "k": 5,
   "retriever": "vector (brute-force cosine, gemini-embedding-001, 1452 chunks)",
   "latency": {
     "unit": "ms",
     "note": "ranking only, 1452 chunks x 3072 dims, excludes the batched embed",
     "n": 92,
-    "p50": 28.84,
-    "p95": 62.35,
-    "max": 127.55
+    "p50": 28.72,
+    "p95": 44.89,
+    "max": 110.17
   },
   "recallAtK": 0.9347826086956522,
   "total": 92,

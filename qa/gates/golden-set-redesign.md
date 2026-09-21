@@ -275,3 +275,28 @@ pass. That semantic pass is buildable, but its actual Gemini run is waiting on
 `qa/gates/external-eval-data-egress.md`; no score or adjudication result may be claimed before that
 run completes. The remaining blocker is therefore the unresolved semantic sibling ambiguity plus
 the pending bounded embedding evidence—not ISS-093.
+
+---
+
+## Condition-4 semantic evidence delivered (2026-09-21, unit golden-set-semantic-leg)
+
+The external-eval-data-egress gate was ANSWERED A (2026-09-21), so the semantic sibling pass the
+lexical probe named as its next step has been run: `qa/probes/golden-set-sibling-semantic.mjs`
+(one batched 92-question `purpose=query` embed, work DB `lkb_codex_work_20260909` only, jobs
+writer disabled). Per-question margins (expected session best-chunk cosine minus best rival) are
+in `data/eval/golden-set-sibling-semantic.json`.
+
+Findings the re-pointer of U1.4/U1.5 gates must read:
+- The gate's own known-positive (gq02, "city or secluded campus") is DETECTED: margin −0.0297,
+  rival `2026-05-22-uniaccess-xavier-university` scores higher (0.6919 vs 0.6622). The lexical
+  probe missed exactly this question (ISS-234) — the semantic pass closes that gap.
+- The margin distribution is CONTINUOUS (p10 −0.041, p50 0.005, p90 0.068); no natural ambiguity
+  cut exists. A 0.03 lens marks 61/92 — that is a lens, not a verdict.
+- All 6 of the vector run's misses carry NEGATIVE margins (−0.0386…−0.0849): they score the
+  expected session BELOW the best rival, consistent with genuine sibling ambiguity in the
+  uniaccess-*/format-sibling families rather than pure retriever failure. Adjudication is a
+  human/later-unit step; this unit claims the measurement, not the verdict.
+- The same run re-measured T-021 conditions 1–3 under the answered gate: recall@5 = 0.935
+  (86/92), question-blind control 0.217 cited beside it, 6 non-zero misses, pin rate 10.9%
+  (threshold: well below 63%), near-verbatim 0/0. Condition 2's band holds (not 1.000 — no
+  Option B escalation). Manifest: `qa/manifests/golden-set-semantic-leg.md`.
