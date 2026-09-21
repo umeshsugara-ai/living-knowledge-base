@@ -35,7 +35,7 @@ const argOf = (n, d) => {
 const WEB = argOf("web", "http://localhost:5173");
 const API = argOf("api", "http://localhost:3300");
 
-const PAGES = [
+export const PAGES = [
   ["/", "Dashboard — stat tiles must equal the collection counts in live-verify's summary.md"],
   ["/sessions", "Sessions — list length must equal the `sessions` count"],
   ["/ask", "Ask — page loads and whitespace stays disabled; real submission needs the external-data gate"],
@@ -93,34 +93,58 @@ async function isUp(url) {
   }
 }
 
-const webUp = await isUp(WEB);
-const apiUp = await isUp(`${API}/sessions`); // 401 without a key is still "up"
-
-if (!webUp || !apiUp) {
-  console.error(`Not running: ${!apiUp ? `api (${API}) ` : ""}${!webUp ? `web (${WEB})` : ""}\n`);
-  console.error("Start them in two terminals, then re-run:");
-  console.error("  pnpm demo:up                       (both, foreground)");
-  console.error("  — or, in two terminals —");
-  console.error("  cd apps/api && PORT=3300 CORS_ORIGINS=http://localhost:5173 pnpm dev");
-  console.error("  cd apps/web && pnpm dev");
-  process.exit(1);
+export async function openPages(pages, baseUrl, { staggerMs = 350 } = {}) {
+  const [cmd, baseArgs] = opener;
+  const failures = [];
+  for (const [path] of pages) {
+    const url = `${baseUrl}${path}`;
+    try {
+      await new Promise((resolve, reject) => {
+        execFile(cmd, [...baseArgs, url], (err) => (err ? reject(err) : resolve()));
+      });
+    } catch (err) {
+      failures.push({ path, url, error: err instanceof Error ? err.message : String(err) });
+    }
+    if (staggerMs > 0) await new Promise((r) => setTimeout(r, staggerMs)); // keep browser tab order
+  }
+  return failures;
 }
 
-// `start` on Windows, `open` on macOS, `xdg-open` elsewhere — the user's default browser, so
-// what they see is a real browser session, not an automation-flagged one.
+export function printChecklist(pages) {
+  console.log("Check each page against the live-verify evidence (qa/evidence/live-*/summary.md):\n");
+  for (const [path, expect] of pages) console.log(`  ${path.padEnd(14)} ${expect}`);
+  console.log(`A page is only PASS if its numbers reconcile with that summary.md.
+A blank panel whose collection is genuinely empty is a MISSING feature, not a bug —
+a blank panel whose collection has documents is a real FAIL.`);
+}
+
 const opener = platform === "win32" ? ["cmd", ["/c", "start", ""]] : platform === "darwin" ? ["open", []] : ["xdg-open", []];
 
-console.log(`Opening ${PAGES.length} pages in your default browser…\n`);
-for (const [path] of PAGES) {
-  const [cmd, args] = opener;
-  execFile(cmd, [...args, `${WEB}${path}`], () => {});
-  await new Promise((r) => setTimeout(r, 350)); // stagger so the browser keeps tab order
-}
+const RUNNING_AS_CLI = process.argv[1] &&
+  (await import("node:url")).pathToFileURL(process.argv[1]).href === import.meta.url;
 
-console.log("Check each page against the live-verify evidence (qa/evidence/live-*/summary.md):\n");
-for (const [path, expect] of PAGES) console.log(`  ${path.padEnd(14)} ${expect}`);
-console.log(`
-A page is only PASS if its numbers reconcile with that summary.md.
-A blank panel whose collection is genuinely empty is a MISSING feature, not a bug —
-a blank panel whose collection has documents is a real FAIL.
-`);
+if (RUNNING_AS_CLI) {
+  const webUp = await isUp(WEB);
+  const apiUp = await isUp(`${API}/sessions`); // 401 without a key is still "up"
+
+  if (!webUp || !apiUp) {
+    console.error(`Not running: ${!apiUp ? `api (${API}) ` : ""}${!webUp ? `web (${WEB})` : ""}\n`);
+    console.error("Start them in two terminals, then re-run:");
+    console.error("  pnpm demo:up                       (both, foreground)");
+    console.error("  — or, in two terminals —");
+    console.error("  cd apps/api && PORT=3300 CORS_ORIGINS=http://localhost:5173 pnpm dev");
+    console.error("  cd apps/web && pnpm dev");
+    process.exit(1);
+  }
+
+  console.log(`Opening ${PAGES.length} pages in your default browser…\n`);
+  const failures = await openPages(PAGES, WEB);
+  if (failures.length > 0) {
+    for (const f of failures) {
+      console.error(`FAILED to open ${f.url}: ${f.error}`);
+    }
+    console.error(`\n${failures.length} of ${PAGES.length} page(s) failed to open in the browser. Fix the opener error above and re-run.`);
+    process.exit(1);
+  }
+  printChecklist(PAGES);
+}

@@ -33,4 +33,4 @@ No browser page, API route, Mongo collection, production data, or external servi
 
 **Opened:** 2026-09-09T18:00:46+05:30 after checker sweep `d358090`.
 
-**Answered:** pending
+**Answered:** 2026-09-21 — **A (approve the two-file plan)**. Umesh approved the exact in-place plan above (scripts/demo-live.mjs opener accountability + scripts/lint.test.mjs regression test; no browser page, API route, Mongo collection, production data, or external service changed).
