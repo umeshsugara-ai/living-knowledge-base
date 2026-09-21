@@ -31,6 +31,14 @@ export class OllamaProvider implements Provider {
 
   async complete(job: Job): Promise<CompleteResult> {
     const model = this.config.model ?? DEFAULT_MODEL;
+    // Speaker-segment-identity gate (Option A, phase 2): jobs may carry structured-output
+    // requirements and determinism options. `format` passes a JSON schema straight through to
+    // Ollama's structured-outputs mode; `options` seeds deterministic local sampling; `think`
+    // disables the reasoning token block for models like qwen3 that would otherwise spend the
+    // whole prediction budget there. All three are opt-in via the job so other jobKinds are
+    // unchanged.
+    const opts = (job as Job & { structured?: { format?: unknown; options?: Record<string, unknown>; think?: boolean } })
+      .structured;
     const res = await this.transport({
       kind: "http",
       url: `${this.baseUrl}/api/chat`,
@@ -40,6 +48,9 @@ export class OllamaProvider implements Provider {
         model,
         stream: false,
         messages: job.messages.map((m) => ({ role: m.role, content: m.content })),
+        ...(opts?.format ? { format: opts.format } : {}),
+        ...(opts?.options ? { options: opts.options } : {}),
+        ...(opts?.think !== undefined ? { think: opts.think } : {}),
       },
     });
 

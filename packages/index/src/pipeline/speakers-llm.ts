@@ -1,5 +1,5 @@
-/**
- * packages/index/src/pipeline/speakers-llm.ts — U2.4 (catalogue B3/B10), the LLM half.
+﻿/**
+ * packages/index/src/pipeline/speakers-llm.ts â€” U2.4 (catalogue B3/B10), the LLM half.
  *
  * `speakers.ts` resolves 78/494 positional turns (15.8%) from explicit self-naming alone. This is
  * the path to the other ~84%, and it inherits `claims.ts`'s posture wholesale: the model is asked
@@ -7,16 +7,16 @@
  *
  * One guard here has no counterpart in `claims.ts`, and it is the reason this module exists in
  * this shape. A claim is prose the model composes, so it can only be checked for *provenance*. A
- * speaker name is a string that must actually have been SPOKEN — so it can be checked for
+ * speaker name is a string that must actually have been SPOKEN â€” so it can be checked for
  * *identity*, and it is: every `displayName` must appear verbatim in every turn cited as its
- * evidence (plan §10, "zero speaker name that does not appear verbatim in a cited turn").
+ * evidence (plan Â§10, "zero speaker name that does not appear verbatim in a cited turn").
  *
  * That check is not theoretical. The generated summary for one real session says "Juben Thakur"
- * while its transcript says "Jubin Thakkar" — a normalisation the summarizer introduced. A model
+ * while its transcript says "Jubin Thakkar" â€” a normalisation the summarizer introduced. A model
  * given the same corpus can reach the same wrong spelling honestly. Without this guard a
  * plausible, well-formed, completely unspoken name would ship as a cited fact about a real person.
  *
- * Degradation is deliberate and follows §10's "keep the regex as the degradation fallback": if the
+ * Degradation is deliberate and follows Â§10's "keep the regex as the degradation fallback": if the
  * provider call fails or returns junk, this falls back to the deterministic pass rather than
  * returning an empty result that a caller would mistake for "no speakers in this session"
  * (the ISS-056 failure mode that made `claims.ts` grow its own `degraded` flag).
@@ -30,6 +30,24 @@ import { looksLikeAName, isDiscourseOnly, citesNameAsAnIntroduction } from "./sp
 export type SpeakersCompleteFn = (job: Job) => Promise<CompleteResult>;
 
 const POSITIONAL = /^spk:\d+$/;
+
+/**
+ * Segment-aware windows (speaker-segment-identity gate, Option A, phase 2): the model never sees
+ * the whole transcript. Each window is <=8 turns around one contiguous positional-label block —
+ * the block plus just enough before-context for a handover/greeting to land inside the window.
+ * Measured over the real corpus: 494 positional turns form 240 contiguous blocks (gate evidence),
+ * so a session-wide prompt asks the model to do exactly the merge across people the gate measured
+ * as unsafe. Windows do that merge per-segment instead.
+ */
+const WINDOW_CONTEXT_BEFORE = 3;
+const MAX_WINDOW = 8;
+
+export interface SpeakerWindow {
+  label: string;
+  startTurnIndex: number;
+  endTurnIndex: number;
+  turns: Turns[];
+}
 
 const SPEAKERS_SYSTEM_PROMPT = [
   "You identify who each anonymous speaker in a transcript actually is. Each line is one turn,",
@@ -74,6 +92,71 @@ function fallback(turns: Turns[], reason: string): SpeakerExtractionResult {
 }
 
 /**
+ * Contiguous positional-label blocks over the full turn list (same definition as
+ * `speakers.ts`'s scoping: a block ends at any label change or a named turn).
+ */
+function labelBlocks(turns: Turns[]): Map<string, { startTurnIndex: number; endTurnIndex: number }[]> {
+  const blocks = new Map<string, { startTurnIndex: number; endTurnIndex: number }[]>();
+  let current: { label: string; start: number; end: number } | null = null;
+  const close = () => {
+    if (!current) return;
+    const list = blocks.get(current.label) ?? [];
+    list.push({ startTurnIndex: current.start, endTurnIndex: current.end });
+    blocks.set(current.label, list);
+    current = null;
+  };
+  for (let i = 0; i < turns.length; i++) {
+    const ref = turns[i]?.speakerRef ?? "";
+    if (POSITIONAL.test(ref)) {
+      if (current && current.label === ref) current.end = i;
+      else {
+        if (current) blocks.set(current.label, [...(blocks.get(current.label) ?? []), { startTurnIndex: current.start, endTurnIndex: current.end }]);
+        current = { label: ref, start: i, end: i };
+      }
+    } else {
+      if (current) {
+        blocks.set(current.label, [...(blocks.get(current.label) ?? []), { startTurnIndex: current.start, endTurnIndex: current.end }]);
+        current = null;
+      }
+    }
+  }
+  if (current) blocks.set(current.label, [...(blocks.get(current.label) ?? []), { startTurnIndex: current.start, endTurnIndex: current.end }]);
+  return blocks;
+}
+
+/**
+ * One <=MAX_WINDOW-turn window per contiguous block: up to WINDOW_CONTEXT_BEFORE turns of
+ * before-context (named turns included — a handover names its speaker), and the WHOLE block
+ * (a block longer than the window is covered in full — the window bound applies to the context,
+ * never to truncating the evidence the block carries).
+ *
+ * Context NEVER reaches back into the previous window's turns: a different label's unresolved
+ * block must not be fed into this label's window, or the model is asked to merge identities the
+ * gate measured as unsafe (240 blocks, 29 session/label pairs).
+ */
+export function buildSpeakerWindows(turns: Turns[]): SpeakerWindow[] {
+  const blocks = labelBlocks(turns);
+  const windows: SpeakerWindow[] = [];
+  let prevEnd = -1;
+  for (const [label, list] of [...blocks.entries()].sort()) {
+    for (const block of list) {
+      // Context must not reach back into ANOTHER unresolved block of a different label (that
+      // would feed two identities into one window): it stops after the previous block end.
+      const from = Math.max(0, block.startTurnIndex - WINDOW_CONTEXT_BEFORE, prevEnd + 1);
+      // A block longer than MAX_WINDOW is chunked: each chunk is its own window with the
+      // same label and its true block scope, so the model never sees >MAX_WINDOW turns while
+      // every evidence turn in a chunk is still inside the block it names.
+      for (let s = block.startTurnIndex; s <= block.endTurnIndex; s += MAX_WINDOW) {
+        const to = Math.min(block.endTurnIndex, s + MAX_WINDOW - 1);
+        windows.push({ label, startTurnIndex: block.startTurnIndex, endTurnIndex: block.endTurnIndex, turns: turns.slice(from, to + 1) });
+        prevEnd = to;
+      }
+    }
+  }
+  return windows;
+}
+
+/**
  * Speaker identities for one session's positional labels, via the injected LLM `complete`.
  *
  * Never throws. Every returned `displayName` is verbatim-present in every turn it cites, every
@@ -86,21 +169,36 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
   const byId = new Map(turns.map((t) => [t._id, t]));
   const labels = new Set(positionalLabels(turns));
 
-  let raw: unknown;
-  try {
-    const completion = await complete({
-      kind: "speakers",
-      messages: [
-        { role: "system", content: SPEAKERS_SYSTEM_PROMPT },
-        { role: "user", content: buildCitableTranscript(turns) },
-      ],
-    });
-    raw = completion.json ?? parseJsonLoose(completion.text);
-  } catch (err) {
-    return fallback(turns, `speakers provider call failed: ${err instanceof Error ? err.message : String(err)}`);
+  // Segment-aware (gate Option A, phase 2): one bounded window per contiguous block instead of
+  // one session-wide prompt. A window whose provider call fails is recorded; if EVERY window
+  // fails the whole extraction degrades to the deterministic floor. A partially-failing session
+  // keeps its successful windows and reports the failures via `degraded.reason`.
+  const windows = buildSpeakerWindows(turns);
+  const raws: unknown[] = [];
+  const windowFailures: string[] = [];
+  for (const w of windows) {
+    try {
+      const completion = await complete({
+        kind: "speakers",
+        messages: [
+          { role: "system", content: SPEAKERS_SYSTEM_PROMPT },
+          { role: "user", content: buildCitableTranscript(w.turns) },
+        ],
+      });
+      const parsed = completion.json ?? parseJsonLoose(completion.text);
+      raws.push(parsed);
+    } catch (err) {
+      windowFailures.push(`${w.label}@${w.startTurnIndex}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  if (raws.length === 0 && windowFailures.length > 0) {
+    return fallback(turns, `speakers provider call failed on all ${windows.length} window(s); first: ${windowFailures[0]}`);
   }
 
-  if (!Array.isArray(raw)) return fallback(turns, "speakers response was not a JSON array");
+  const raw: unknown = raws.flat();
+  if (raws.length > 0 && raws.every((r) => !Array.isArray(r))) {
+    return fallback(turns, "speakers responses were not JSON arrays in any window");
+  }
 
   // label -> name -> evidence. Kept per-name so a contradiction is visible rather than overwritten.
   const claims = new Map<string, Map<string, { turnId: string; sessionId: string }[]>>();
@@ -148,7 +246,7 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
     if (!entry) continue;
     const [displayName, evidence] = entry;
     // Segment-aware scope (speaker-segment-identity gate): the LLM path's identity evidence is
-    // scoped the same way as the deterministic pass — to the contiguous block(s) holding its
+    // scoped the same way as the deterministic pass â€” to the contiguous block(s) holding its
     // citing turns. The LLM path has no block map of its own, so the deterministic floor is
     // re-run for the scoping only; its identity decisions here are already re-filtered above.
     const floor = resolveSpeakers(turns);
@@ -162,6 +260,10 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
   return {
     resolved,
     unresolved: [...labels].filter((l) => !named.has(l)).sort(),
-    degraded: null,
+    degraded:
+      windowFailures.length > 0
+        ? { reason: `${windowFailures.length} of ${windows.length} speaker window(s) failed their provider call: ${windowFailures[0]}` }
+        : null,
   };
 }
+

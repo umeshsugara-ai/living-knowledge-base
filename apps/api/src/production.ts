@@ -58,6 +58,16 @@ export function buildRouting(): {
     "claude-code": new ClaudeCodeProvider(realTransport),
     ollama: new OllamaProvider(realTransport, { baseUrl: process.env.OLLAMA_BASE_URL }),
   };
+  // Speaker-segment-identity gate (Option A, phase 2, answered 2026-09-21): the speakers
+  // jobKind is pinned to the LOCAL chain and its model is the gate's frozen qwen3:8b digest,
+  // with deterministic sampling (temperature 0, fixed seed). No env override silently swaps in a
+  // public model for identity adjudication; changing the pin is a gate-level change.
+  providers.ollama = new OllamaProvider(realTransport, {
+    baseUrl: process.env.OLLAMA_BASE_URL,
+    // The gate's frozen local model; deterministic sampling is passed per-job by the speakers
+    // route, not here (other jobKinds on the ollama chain keep their own defaults).
+    model: process.env.SPEAKERS_OLLAMA_MODEL ?? "qwen3:8b",
+  });
   return { chains, providers, jobWrite };
 }
 
