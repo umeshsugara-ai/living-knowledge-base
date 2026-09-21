@@ -99,3 +99,41 @@ T-007 criterion 14 because neither API nor Mongo persistence ran.
 
 Immediately before the browser run, fresh TCP probes again returned `False` for both
 `13.202.206.101:27017` and `127.0.0.1:27018`; `com.docker.service` remained `Stopped`.
+
+### Partial recovery — 2026-09-19
+
+Main Mongo recovered during the 05:29 UTC heartbeat. A read-only MongoClient check with
+`serverSelectionTimeoutMS: 5000`, `db.command({ping:1})`, and
+`db.collection("sessions").countDocuments({})` against ONLY
+`lkb_codex_work_20260909` returned `{"ping":1,"sessions":23}`.
+The local API was restarted using `node --import tsx src/index.ts`, with
+`MONGODB_DB=lkb_codex_work_20260909`, `PORT=3300`, and both localhost/127.0.0.1
+frontend CORS origins. Output: `@lkb/api listening on :3300` (exec session 52107).
+Maker browser smoke at `http://localhost:5173/sessions` showed 23 session links;
+clicking In Focus #4 loaded its overview, 3 claims and 51 transcript turns.
+
+**Answered (partial):** main-Mongo runtime dependency self-resolved on these checks.
+This does NOT close the local WhatsApp endpoint or T-007 persistence requirement;
+neither was tested in this recovery. No production writes, model calls, or auth
+code changes were made. Independent recovery smoke is separate from formal unit PASS.
+
+### Both endpoints responding — 2026-09-19, 06:08 UTC heartbeat
+
+Fresh read-only checks returned remote work DB `{"ping":1,"sessions":23}` and
+local `mongodb://127.0.0.1:27018` `{"localMongoPing":1}` using MongoClient with a
+5-second server-selection bound and `admin.command({ping:1})` for the local endpoint.
+Frontend `/sessions` and API `/health` both returned HTTP 200.
+
+**Answered (connectivity only):** both recorded endpoints are currently reachable.
+T-007 criterion 14 remains unverified: no WhatsApp application read, ingestion or
+persistence test was performed. Connectivity must not be counted as workflow PASS.
+
+### WhatsApp read surface recovered — 2026-09-19, 06:40 UTC heartbeat
+
+Maker live-browser smoke at `http://localhost:5173/whatsapp` transitioned from
+`Loading...` to one real tracked group with 3 tracked participants and an enabled
+`Ingest into knowledge base` button. Existing authentication worked. The button was
+NOT clicked. The page continues to disclose that topic/decision detection, duplicate
+flagging and the review-before-publish queue are not built yet.
+This extends the recovery evidence to the application's group-list read path only;
+T-007 persistence and review lifecycle remain unverified/incomplete.

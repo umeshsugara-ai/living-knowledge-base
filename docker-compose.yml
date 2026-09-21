@@ -10,12 +10,13 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     ports:
-      - "3000:3000"
+      - "3300:3300"
     environment:
-      MONGO_URL: ${MONGO_URL:?set MONGO_URL (see .env's MONGODB_URL)}
-      MONGO_DB: ${MONGO_DB:-lkb}
+      MONGODB_URL: ${MONGODB_URL:?set MONGODB_URL (see .env's MONGODB_URL)}
+      MONGODB_DB: ${MONGODB_DB:-lkb}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
       GEMINI_API_KEY: ${GEMINI_API_KEY:?set GEMINI_API_KEY}
-      PORT: 3000
+      PORT: 3300
     restart: unless-stopped
 
   local-mongo:

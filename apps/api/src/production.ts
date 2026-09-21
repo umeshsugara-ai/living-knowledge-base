@@ -98,7 +98,21 @@ export function buildProductionDeps(): ServerDeps {
     // CORS_ORIGINS is a comma-separated allowlist (e.g. "http://localhost:5173" in dev, the real
     // apps/web deployment origin in prod) — no default beyond "" -> empty list, matching
     // server.ts's safe-by-default stance.
-    corsOrigins: (process.env.CORS_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+    // Keep localhost and 127.0.0.1 in sync when one is configured, so local dev URLs
+    // remain functional regardless of how the page is opened.
+    corsOrigins: (() => {
+      const parsed = (process.env.CORS_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+      const expanded = new Set(parsed);
+      for (const origin of parsed) {
+        if (origin.endsWith("://localhost:5173")) {
+          expanded.add(origin.replace("localhost", "127.0.0.1"));
+        }
+        if (origin.endsWith("://127.0.0.1:5173")) {
+          expanded.add(origin.replace("127.0.0.1", "localhost"));
+        }
+      }
+      return [...expanded];
+    })(),
     ask: {
       tree: createMongoTreeStore(),
       // U1.5 C6: a FACTORY. There is no tenant at this point in the process, so there is nothing

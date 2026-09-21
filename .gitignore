@@ -55,3 +55,6 @@ apps/api/src/routes/ghost.ts
 # another session's `git add -A` on this shared tree would do exactly that. Same-tree visibility
 # -- which is all the handshake needs -- works without tracking.
 qa/dispatch/
+
+# pnpm local store (created by offline install runs)
+.pnpm-store/

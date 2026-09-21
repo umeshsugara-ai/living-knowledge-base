@@ -49,4 +49,11 @@ work jobs delta were both zero. The resulting preflight found:
 This discharges the local preparation only. It does not answer the gate and does not prove semantic
 sibling ambiguity; that still requires the bounded provider run or a later local embedding route.
 
-**Answered:** pending
+**Answered:** 2026-09-21 — **A (both)**. Umesh approved both bounded payloads — the U3.1 live-browser
+Ask question (question + internal tree/retrieved candidate context → Gemini) and the T-021
+92-question golden-set embedding leg (exact outbound payload as preflighted 2026-09-09: 9,920 bytes,
+SHA-256 `0e00f22840b14d2317fd81cbdddb4947f7448b5a035d9a1da4f98909042e5cf5`) — via a plan-mode
+approval question in the live-browser trust-check session (recorded as what actually happened).
+Runs must still use the explicit work database (`MONGO_WORK_DB`); production/default Mongo stays
+read-only. The T-021 semantic leg is unblocked but remains queued for the maker/eval flow, not run
+in this trust-check session.

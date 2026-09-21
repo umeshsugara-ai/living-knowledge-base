@@ -53,4 +53,10 @@ catalogue work.
 
 **Opened:** 2026-09-09T18:00:46+05:30 after corpus block measurement and fresh AI-engineering review.
 
-**Answered:** pending
+**Answered:** 2026-09-21 — **A (segment-aware plan)**. Umesh approved the four-phase plan, with an
+added product direction recorded alongside it: every resolved speaker should ultimately carry a
+**full persona + knowledge profile** (their organisations, roles, topics, and cited claims), not
+just a display name. That persona end-state is the target data-model shape for the eventual
+speaker write unit; it does NOT change the phase order here — the deterministic block floor
+(phase 1) and no-write precision eval (phase 3) still come first, and `schema/` changes stay
+behind the separate approved write unit (phase 4).

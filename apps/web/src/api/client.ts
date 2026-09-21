@@ -39,7 +39,11 @@ function invalidateAuth(apiKey: string): void {
   if (typeof window === "undefined" || !window.dispatchEvent) return;
 
   try {
-    if (window.localStorage) {
+    const stored = window.localStorage?.getItem(AUTH_KEY_STORAGE_KEY) ?? null;
+    // Only clear storage when the failed key is still the stored one. A late 401 for an
+    // already-replaced key must not delete its replacement (the AuthContext event handler
+    // guards React state; this guards localStorage the same way).
+    if (window.localStorage && (stored === null || stored === apiKey)) {
       window.localStorage.removeItem(AUTH_KEY_STORAGE_KEY);
     }
   } catch {

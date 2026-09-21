@@ -26,4 +26,8 @@ an external GitHub destination. Local commits are continuing; only the network e
 
 **Opened:** 2026-09-09T18:00:46+05:30 after the environment rejected the attempted push.
 
-**Answered:** pending
+**Answered:** 2026-09-21 — **A (approve repo + content scope)**. Umesh approved pushing the
+accumulated verified commits — including the internal QA ledger, manifests, verdicts, gate
+records, and browser/evaluation evidence — to
+`https://github.com/umeshsugara-ai/living-knowledge-base.git`, and continuing to push future
+checked-PASS increments under this same scope.

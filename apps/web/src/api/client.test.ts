@@ -50,5 +50,43 @@ describe("apiFetch", () => {
     expect(localStorage.getItem(AUTH_KEY_STORAGE_KEY)).toBe("forbidden-key");
     expect(dispatchEventSpy).not.toHaveBeenCalled();
   });
+
+  test("a late 401 for the old key does not delete its replacement key", async () => {
+    // The recorded reproduction (2026-09-19 HUMAN_GATE session-auth repair): an in-flight
+    // request made with old key A resolves 401 AFTER the user has already stored key B.
+    // Storage must keep B; the event still fires so React state can reconcile.
+    localStorage.setItem(AUTH_KEY_STORAGE_KEY, "new-key-b");
+    const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: "invalid api key" }), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    await expect(apiFetch("/sessions", "old-key-a")).rejects.toBeInstanceOf(ApiError);
+    expect(localStorage.getItem(AUTH_KEY_STORAGE_KEY)).toBe("new-key-b");
+    const event = dispatchEventSpy.mock.calls[0]?.[0];
+    expect((event as CustomEvent<{ apiKey: string }>).detail.apiKey).toBe("old-key-a");
+  });
+
+  test("a 401 still clears storage when the failed key IS the stored key", async () => {
+    localStorage.setItem(AUTH_KEY_STORAGE_KEY, "same-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ message: "invalid api key" }), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        }),
+      ),
+    );
+
+    await expect(apiFetch("/sessions", "same-key")).rejects.toBeInstanceOf(ApiError);
+    expect(localStorage.getItem(AUTH_KEY_STORAGE_KEY)).toBeNull();
+  });
 });
 

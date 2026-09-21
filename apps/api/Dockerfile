@@ -40,5 +40,5 @@ COPY packages ./packages
 COPY apps/api ./apps/api
 COPY config ./config
 
-EXPOSE 3000
+EXPOSE 3300
 CMD ["npx", "tsx", "apps/api/src/index.ts"]
