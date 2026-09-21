@@ -1,5 +1,8 @@
 ﻿# Manifest — session-loading verification + runtime landing (2026-09-21)
 
+Status: checked-PASS (see qa/verdicts/session-loading-verification.md)
+Fix cycle: 0
+
 **Unit:** land the dead trust-check session's verified work + close its recorded auth gap
 **Scope:** apps/web auth/session-loading fixes (5 commits fd1a5b3, 2ad648d, dd6a3b2, 026a5a6,
 91d7ed2), one gap fix (late-401 localStorage deletion), the dirty runtime files
@@ -56,3 +59,4 @@ No checker verdict exists yet for this manifest. Live-browser re-verification of
 session flow was NOT re-run in this unit (the trust-check session's own browser evidence from
 2026-09-15 stands; Mongo was reachable but a fresh authenticated browser pass is Phase 5 U3.1
 work). The lint-root over-budget state is declared, not hidden.
+
