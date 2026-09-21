@@ -42,6 +42,16 @@ const POSITIONAL = /^spk:\d+$/;
 const WINDOW_CONTEXT_BEFORE = 3;
 const MAX_WINDOW = 8;
 
+/**
+ * ISS-255 fix_direction (2): the eval measured single-run acceptance UNSTABLE (different name
+ * sets accepted across runs 1 vs 2-3 of the same session, temperature 0 + seed notwithstanding).
+ * The windows are therefore sampled AGREEMENT_RUNS times and an identity proceeds to the
+ * evidence filters only when >=AGREEMENT_THRESHOLD runs proposed the same (label, name) pair —
+ * a 2-of-3 majority. Lower agreement = the label stays unresolved.
+ */
+const AGREEMENT_RUNS = 3;
+const AGREEMENT_THRESHOLD = 2;
+
 export interface SpeakerWindow {
   label: string;
   startTurnIndex: number;
@@ -173,31 +183,60 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
   // one session-wide prompt. A window whose provider call fails is recorded; if EVERY window
   // fails the whole extraction degrades to the deterministic floor. A partially-failing session
   // keeps its successful windows and reports the failures via `degraded.reason`.
+  //
+  // ISS-255 fix_direction (2): single-run acceptance is NOT stable — the live eval measured the
+  // same session accepting different name sets across runs despite temperature 0 + seed. So the
+  // windows are sampled THREE times and only the identities that agree in >=AGREE_OF runs
+  // proceed to the filters. A label that resolves differently across runs is left unresolved —
+  // the module's stated contract, now backed by voting rather than hope.
   const windows = buildSpeakerWindows(turns);
-  const raws: unknown[] = [];
+  const runRaw: unknown[][] = [];
   const windowFailures: string[] = [];
-  for (const w of windows) {
-    try {
-      const completion = await complete({
-        kind: "speakers",
-        messages: [
-          { role: "system", content: SPEAKERS_SYSTEM_PROMPT },
-          { role: "user", content: buildCitableTranscript(w.turns) },
-        ],
-      });
-      const parsed = completion.json ?? parseJsonLoose(completion.text);
-      raws.push(parsed);
-    } catch (err) {
-      windowFailures.push(`${w.label}@${w.startTurnIndex}: ${err instanceof Error ? err.message : String(err)}`);
+  for (let run = 1; run <= AGREEMENT_RUNS; run++) {
+    const raws: unknown[] = [];
+    for (const w of windows) {
+      try {
+        const completion = await complete({
+          kind: "speakers",
+          messages: [
+            { role: "system", content: SPEAKERS_SYSTEM_PROMPT },
+            { role: "user", content: buildCitableTranscript(w.turns) },
+          ],
+        });
+        const parsed = completion.json ?? parseJsonLoose(completion.text);
+        raws.push(parsed);
+      } catch (err) {
+        windowFailures.push(`run${run} ${w.label}@${w.startTurnIndex}: ${err instanceof Error ? err.message : String(err)}`);
+      }
     }
+    runRaw.push(raws);
   }
-  if (raws.length === 0 && windowFailures.length > 0) {
-    return fallback(turns, `speakers provider call failed on all ${windows.length} window(s); first: ${windowFailures[0]}`);
+  const allRaw = runRaw.flat();
+  if (allRaw.length === 0 && windowFailures.length > 0) {
+    return fallback(turns, `speakers provider call failed on all ${windows.length * AGREEMENT_RUNS} window call(s); first: ${windowFailures[0]}`);
   }
 
-  const raw: unknown = raws.flat();
-  if (raws.length > 0 && raws.every((r) => !Array.isArray(r))) {
+  const raw: unknown = allRaw.flat();
+  if (allRaw.length > 0 && allRaw.every((r) => !Array.isArray(r))) {
     return fallback(turns, "speakers responses were not JSON arrays in any window");
+  }
+
+  // Count how many RUNS proposed each (label, name) pair with surviving evidence; only pairs
+  // proposed in >=AGREEMENT_THRESHOLD runs carry on to the claims map. Votes are keyed on
+  // (speakerRef, lowercased displayName) — casing variants of the same name vote together.
+  const votes = new Map<string, number>();
+  for (const run of runRaw) {
+    const seenThisRun = new Set<string>();
+    for (const entry of run.flat() as RawSpeaker[]) {
+      if (typeof entry !== "object" || entry === null) continue;
+      const ref = entry.speakerRef;
+      const nm = entry.displayName;
+      if (typeof ref !== "string" || !labels.has(ref)) continue;
+      if (typeof nm !== "string" || nm.trim() === "") continue;
+      if (!looksLikeAName(nm.trim()) || isDiscourseOnly(nm.trim())) continue;
+      seenThisRun.add(`${ref}|${nm.trim().toLowerCase()}`);
+    }
+    for (const key of seenThisRun) votes.set(key, (votes.get(key) ?? 0) + 1);
   }
 
   // label -> name -> evidence. Kept per-name so a contradiction is visible rather than overwritten.
@@ -214,6 +253,9 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
     const displayName = entry.displayName;
     if (typeof displayName !== "string" || displayName.trim() === "") continue;
     const name = displayName.trim();
+    // ISS-255 (2): 2-of-3 run agreement required before ANY acceptance. An identity proposed in
+    // fewer runs is unstable output, not a citable fact.
+    if ((votes.get(`${speakerRef}|${name.toLowerCase()}`) ?? 0) < AGREEMENT_THRESHOLD) continue;
     // Shape check BEFORE containment: a greeting can be verbatim in the transcript and still not
     // be a name. Cheaper too -- it rejects without touching any turn.
     if (!looksLikeAName(name)) continue;
@@ -234,8 +276,12 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
     }
     if (evidence.length === 0) continue;                 // nothing survived -- the speaker does not ship
 
+    // Merge across runs WITHOUT duplicating evidence: the same (label, name) pair is filtered
+    // in every run, so its surviving turns recur verbatim. One copy per turn id.
     const byName = claims.get(speakerRef) ?? new Map<string, { turnId: string; sessionId: string }[]>();
-    byName.set(name, [...(byName.get(name) ?? []), ...evidence]);
+    const merged = [...(byName.get(name) ?? [])];
+    for (const e of evidence) if (!merged.some((m) => m.turnId === e.turnId)) merged.push(e);
+    byName.set(name, merged);
     claims.set(speakerRef, byName);
   }
 

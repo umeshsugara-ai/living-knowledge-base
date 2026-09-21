@@ -444,3 +444,37 @@ test("a window's provider failure degrades THAT extraction; total failure degrad
   assert.match(r2.degraded.reason, /1 of 2 speaker window\(s\) failed/);
   assert.equal(r2.degraded.reason.includes("flaky"), true);
 });
+
+test("ISS-255 (2): an identity proposed in fewer than 2 of 3 runs never ships", async () => {
+  const turns = [
+    turn("t1", "spk:0", "My name is Ruby."),
+    turn("t2", "Bhakti", "Welcome Ruby."),
+    turn("t3", "spk:1", "Hi, Nilesh here."),
+  ];
+  // Run 1 proposes spk:1 as Nilesh; runs 2-3 propose nothing for spk:1 — 1/3 votes, refused.
+  let call = 0;
+  const flaky: SpeakersCompleteFn = async () => {
+    call++;
+    if (call === 1) {
+      return completion("", [
+        { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
+        { speakerRef: "spk:1", displayName: "Nilesh", turnIds: ["t3"] },
+      ]);
+    }
+    return completion("", [{ speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] }]);
+  };
+  const { resolved } = await extractSpeakers(turns, flaky);
+  const nilesh = resolved.find((r) => r.displayName === "Nilesh");
+  assert.equal(nilesh, undefined, "1-of-3 agreement is unstable output, never a citable identity");
+  assert.equal(resolved.length, 1, "the 3-of-3-agreed identity still ships");
+  assert.equal(resolved[0]?.displayName, "Ruby");
+});
+
+test("ISS-255 (2): evidence merges across runs without duplication", async () => {
+  const turns = [turn("t1", "spk:0", "My name is Ruby.")];
+  const { resolved } = await extractSpeakers(turns, replies([
+    { speakerRef: "spk:0", displayName: "Ruby", turnIds: ["t1"] },
+  ]));
+  assert.equal(resolved.length, 1);
+  assert.deepEqual(resolved[0]?.evidence, [{ turnId: "t1", sessionId: "s1" }], "3 runs proposing the same turns yield ONE evidence row");
+});
