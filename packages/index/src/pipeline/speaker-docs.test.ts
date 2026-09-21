@@ -23,6 +23,9 @@ function res(sessionId: string, displayName: string, personId: string, turnIds: 
       displayName,
       personId,
       evidence: turnIds.map((turnId) => ({ turnId, sessionId })),
+      // Segment-aware scope (speaker-segment-identity gate): fixtures claim the block holding
+      // their evidence turn; block windows are indexes into the fixture's turn list.
+      blocks: turnIds.map((_, i) => ({ startTurnIndex: i, endTurnIndex: i })),
     }],
   };
 }
@@ -42,7 +45,7 @@ test("builds one schema-shaped doc per resolved speaker", () => {
 
 test("evidence is never empty -- the schema forbids it", () => {
   const { docs } = buildSpeakerDocs("toc", [{ sessionId: "s1", resolved: [
-    { speakerRef: "spk:0", displayName: "Ghost", personId: "person:ghost", evidence: [] },
+    { speakerRef: "spk:0", displayName: "Ghost", personId: "person:ghost", evidence: [], blocks: [] },
   ] }]);
   assert.deepEqual(docs, [], "a speaker with no evidence must not be written");
 });
@@ -75,8 +78,8 @@ test("a cross-session merge lowers confidence -- it is an inference, not an obse
 
 test("two speakers in ONE session sharing a name merge without a cross-session collision", () => {
   const { docs, collisions } = buildSpeakerDocs("toc", [{ sessionId: "s1", resolved: [
-    { speakerRef: "spk:0", displayName: "Ruby", personId: "person:ruby", evidence: [{ turnId: "t1", sessionId: "s1" }] },
-    { speakerRef: "spk:3", displayName: "Ruby", personId: "person:ruby", evidence: [{ turnId: "t4", sessionId: "s1" }] },
+    { speakerRef: "spk:0", displayName: "Ruby", personId: "person:ruby", evidence: [{ turnId: "t1", sessionId: "s1" }], blocks: [{ startTurnIndex: 0, endTurnIndex: 0 }] },
+    { speakerRef: "spk:3", displayName: "Ruby", personId: "person:ruby", evidence: [{ turnId: "t4", sessionId: "s1" }], blocks: [{ startTurnIndex: 3, endTurnIndex: 3 }] },
   ] }]);
   assert.equal(docs.length, 1);
   assert.deepEqual(collisions, [], "same session, same name is diarization splitting one voice");
@@ -85,8 +88,8 @@ test("two speakers in ONE session sharing a name merge without a cross-session c
 
 test("different names never merge, even when they share a session", () => {
   const { docs } = buildSpeakerDocs("toc", [{ sessionId: "s1", resolved: [
-    { speakerRef: "spk:0", displayName: "Ruby", personId: "person:ruby", evidence: [{ turnId: "t1", sessionId: "s1" }] },
-    { speakerRef: "spk:1", displayName: "Anita Desai", personId: "person:anita-desai", evidence: [{ turnId: "t2", sessionId: "s1" }] },
+    { speakerRef: "spk:0", displayName: "Ruby", personId: "person:ruby", evidence: [{ turnId: "t1", sessionId: "s1" }], blocks: [{ startTurnIndex: 0, endTurnIndex: 0 }] },
+    { speakerRef: "spk:1", displayName: "Anita Desai", personId: "person:anita-desai", evidence: [{ turnId: "t2", sessionId: "s1" }], blocks: [{ startTurnIndex: 1, endTurnIndex: 1 }] },
   ] }]);
   assert.equal(docs.length, 2);
   assert.deepEqual(docs.map((d) => d.personId).sort(), ["person:anita-desai", "person:ruby"]);

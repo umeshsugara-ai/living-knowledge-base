@@ -147,7 +147,14 @@ export async function extractSpeakers(turns: Turns[], complete: SpeakersComplete
     const entry = [...byName.entries()][0];
     if (!entry) continue;
     const [displayName, evidence] = entry;
-    resolved.push({ speakerRef, displayName, personId: personIdFor(displayName), evidence });
+    // Segment-aware scope (speaker-segment-identity gate): the LLM path's identity evidence is
+    // scoped the same way as the deterministic pass — to the contiguous block(s) holding its
+    // citing turns. The LLM path has no block map of its own, so the deterministic floor is
+    // re-run for the scoping only; its identity decisions here are already re-filtered above.
+    const floor = resolveSpeakers(turns);
+    const ownBlocks =
+      floor.resolved.find((r) => r.speakerRef === speakerRef && r.displayName === displayName)?.blocks ?? [];
+    resolved.push({ speakerRef, displayName, personId: personIdFor(displayName), evidence, blocks: ownBlocks });
   }
   resolved.sort((a, b) => a.speakerRef.localeCompare(b.speakerRef));
 

@@ -51,6 +51,16 @@ export interface ResolvedSpeaker {
   personId: string;
   /** Real turn ids, each verified to contain `displayName` verbatim. */
   evidence: { turnId: string; sessionId: string }[];
+  /**
+   * Segment-aware scope (speaker-segment-identity gate, Option A): the [tStart, tEnd] turn-index
+   * window of the CONTIGUOUS speaker block(s) in which this label's self-naming evidence was
+   * found. A session-wide `spk:N -> person` mapping is UNSAFE — measured over the real corpus,
+   * 494 positional turns form 240 contiguous blocks but only 29 session/label pairs, so one
+   * label can cover multiple people (in the visa session, spk:0/spk:1 recur around four named
+   * participants). Identity evidence therefore applies to the block, never to the label as a
+   * whole. Turn indexes are positions in the `turns` array passed to `resolveSpeakers`.
+   */
+  blocks: { startTurnIndex: number; endTurnIndex: number }[];
 }
 
 export interface SpeakerResolution {
@@ -69,10 +79,47 @@ export function personIdFor(displayName: string): string {
  *
  * Pure and synchronous — no provider call, so it cannot fail partway and cannot fabricate. Turns
  * that already carry a real name are untouched: this only ever fills in `spk:N`.
+ *
+ * Segment-aware (speaker-segment-identity gate, Option A): the resolved identity carries the
+ * turn-index windows of the contiguous block(s) containing its self-naming evidence, so a
+ * downstream consumer can scope the identity to those blocks instead of treating every turn with
+ * the same label in the session as the same person.
  */
 export function resolveSpeakers(turns: Turns[]): SpeakerResolution {
   const positional = turns.filter((t) => POSITIONAL.test(t.speakerRef ?? ""));
   if (positional.length === 0) return { resolved: [], unresolved: [] };
+
+  // Contiguous speaker blocks over the FULL turn list: a block ends when the positional label
+  // changes (including via a named turn, which breaks contiguity). Turn indexes refer to `turns`.
+  const blocks = new Map<string, { startTurnIndex: number; endTurnIndex: number }[]>();
+  let current: { label: string; start: number; end: number } | null = null;
+  for (let i = 0; i < turns.length; i++) {
+    const ref = turns[i]?.speakerRef ?? "";
+    if (POSITIONAL.test(ref)) {
+      if (current && current.label === ref) {
+        current.end = i;
+      } else {
+        if (current) {
+          const list = blocks.get(current.label) ?? [];
+          list.push({ startTurnIndex: current.start, endTurnIndex: current.end });
+          blocks.set(current.label, list);
+        }
+        current = { label: ref, start: i, end: i };
+      }
+    } else {
+      if (current) {
+        const list = blocks.get(current.label) ?? [];
+        list.push({ startTurnIndex: current.start, endTurnIndex: current.end });
+        blocks.set(current.label, list);
+        current = null;
+      }
+    }
+  }
+  if (current) {
+    const list = blocks.get(current.label) ?? [];
+    list.push({ startTurnIndex: current.start, endTurnIndex: current.end });
+    blocks.set(current.label, list);
+  }
 
   // label -> spoken name -> the turns that say it, in transcript order.
   const claims = new Map<string, Map<string, { turnId: string; sessionId: string }[]>>();
@@ -98,7 +145,23 @@ export function resolveSpeakers(turns: Turns[]): SpeakerResolution {
     const entry = [...byName.entries()][0];
     if (!entry) continue;
     const [displayName, evidence] = entry;
-    resolved.push({ speakerRef, displayName, personId: personIdFor(displayName), evidence });
+    // Scope the identity to the block(s) that actually contain the citing turns (segment-aware,
+    // not label-wide). A citing turn index is located via its id; labels recur across the
+    // session, so only the blocks that hold evidence are claimed.
+    const indexById = new Map(turns.map((t, i) => [t._id, i]));
+    const ownBlocks = (blocks.get(speakerRef) ?? []).filter((b) =>
+      evidence.some((e) => {
+        const idx = indexById.get(e.turnId);
+        return idx !== undefined && idx >= b.startTurnIndex && idx <= b.endTurnIndex;
+      }),
+    );
+    resolved.push({
+      speakerRef,
+      displayName,
+      personId: personIdFor(displayName),
+      evidence,
+      blocks: ownBlocks,
+    });
   }
   resolved.sort((a, b) => a.speakerRef.localeCompare(b.speakerRef));
 
