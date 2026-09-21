@@ -52,8 +52,16 @@ async function main() {
     positional += pos.length;
     const { resolved } = resolveSpeakers(turns);
     if (resolved.length === 0) continue;
-    const named = new Set(resolved.map((r) => r.speakerRef));
-    resolvedTurns += pos.filter((t) => named.has(t.speakerRef)).length;
+    // Segment-aware coverage (speaker-segment-identity gate, phase 1): a turn counts as
+    // attributable ONLY when it lies inside a claimed block of its label's resolution — never
+    // label-wide (494 positional turns form 240 blocks across 29 session/label pairs, so one
+    // label can cover multiple people).
+    const posIndex = new Map(turns.map((t, i) => [t._id, i]));
+    for (const t of pos) {
+      const idx = posIndex.get(t._id);
+      if (idx === undefined) continue;
+      if (resolved.some((r) => (r.blocks ?? []).some((b) => idx >= b.startTurnIndex && idx <= b.endTurnIndex))) resolvedTurns++;
+    }
     sessions.push({ sessionId, resolved });
   }
 
