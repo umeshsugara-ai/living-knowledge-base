@@ -58,3 +58,6 @@ qa/dispatch/
 
 # pnpm local store (created by offline install runs)
 .pnpm-store/
+
+# ephemeral chrome CDP profiles used for live-proof screenshots
+qa/evidence/*/cdp-profile/

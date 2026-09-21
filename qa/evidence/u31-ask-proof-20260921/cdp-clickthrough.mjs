@@ -1,0 +1,17 @@
+﻿const DEBUG_PORT = 9222;
+const list = await (await fetch(`http://localhost:${DEBUG_PORT}/json`)).json();
+const page = list.find((t) => t.type === "page" && t.url.includes("localhost:5173"));
+const ws = new WebSocket(page.webSocketDebuggerUrl);
+let id = 0; const pending = new Map();
+ws.onmessage = (ev) => { const m = JSON.parse(ev.data); if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); } };
+const send = (method, params = {}) => new Promise((res) => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
+await new Promise((r) => ws.onopen = r);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+await send("Page.navigate", { url: "http://localhost:5173/sessions/2026-08-03-uk-beyond-offer-letters" });
+await sleep(6000);
+const body = await send("Runtime.evaluate", { expression: `document.querySelector("main")?.innerText || ""`, returnByValue: true });
+const shot = await send("Page.captureScreenshot", { format: "png" });
+const { writeFileSync } = await import("node:fs");
+writeFileSync("D:/KnowledgeBase/qa/evidence/u31-ask-proof-20260921/session-detail-cdp.png", Buffer.from(shot.result.data, "base64"));
+console.log("---SESSION DETAIL (head)---"); console.log((body.result?.result?.value || "").slice(0, 900));
+ws.close(); process.exit(0);
